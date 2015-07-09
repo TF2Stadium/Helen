@@ -5,7 +5,6 @@ import "container/list"
 type Player struct {
 	steamid string //Players steam ID
 	name    string //Player name
-	ready   bool
 }
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
@@ -54,7 +53,7 @@ func (lobby *Lobby) Add(steamid string, name string, team int, slot int) error {
 	}
 
 	steamLobbyMap[steamid] = lobby
-	player := &Player{steamid: steamid, name: name, ready: false}
+	player := &Player{steamid: steamid, name: name}
 	steamPlayerMap[steamid] = player
 	lobby.team[team][slot] = player
 
@@ -74,29 +73,6 @@ func (lobby *Lobby) Add(steamid string, name string, team int, slot int) error {
 //Remove player from lobby
 func (lobby *Lobby) Remove(steamid string) {
 	delete(steamLobbyMap, steamid)
-	steamPlayerMap[steamid] = &Player{steamid: "", name: "id", ready: false}
+	steamPlayerMap[steamid] = &Player{steamid: "", name: "id"}
 	delete(steamPlayerMap, steamid)
-}
-
-/* Loops through all players of both teams in lobby, returns true if all players
- * ready, else false.
- */
-func (lobby *Lobby) AllReady() bool {
-	for _, team := range lobby.team {
-		for _, player := range team {
-			if !player.ready {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func Ready(steamid string) {
-	steamPlayerMap[steamid].ready = true
-	if steamLobbyMap[steamid].AllReady() { //Everybody's ready
-		/* Create mumble channel, use RCON interface to start match
-		 * Ask frontend to create join buttons.
-		 */
-	}
 }
