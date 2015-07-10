@@ -43,19 +43,19 @@ func (lobby *Lobby) Add(steamid string, name string, team int, slot int) error {
 		//return error, player is already in a lobby
 	}
 
-	if lobby.team[team][slot].steamid != "" {
+	if lobby.team[team][slot].SteamId != "" {
 		//return error, slot has been filled
 	}
 
 	steamLobbyMap[steamid] = lobby
-	player := &Player{steamid: steamid, name: name}
+	player := &Player{SteamId: steamid, Name: name}
 	steamPlayerMap[steamid] = player
 	lobby.team[team][slot] = player
 
 	//Check if all slots have been filled
 	for _, team := range lobby.team {
 		for _, player := range team {
-			if player.steamid == "" { //Slots haven't been filled
+			if player.SteamId == "" { //Slots haven't been filled
 				return nil
 			}
 		}
@@ -68,6 +68,6 @@ func (lobby *Lobby) Add(steamid string, name string, team int, slot int) error {
 //Remove player from lobby
 func (lobby *Lobby) Remove(steamid string) {
 	delete(steamLobbyMap, steamid)
-	steamPlayerMap[steamid] = &Player{steamid: "", name: "id"}
+	steamPlayerMap[steamid] = &Player{SteamId: "", Name: "id"}
 	delete(steamPlayerMap, steamid)
 }

@@ -9,6 +9,7 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 
 	"github.com/TeamPlayTF/Server/config"
+	"github.com/TeamPlayTF/Server/database"
 	"github.com/TeamPlayTF/Server/routes"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
@@ -16,6 +17,7 @@ import (
 
 func main() {
 	config.SetupConstants()
+	database.Init()
 
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 	fmt.Println("Starting the server")

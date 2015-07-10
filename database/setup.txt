@@ -1,0 +1,15 @@
+Test Local MongoDB Database Setup Tutorial
+
+1. get mongodb and robomongo (you'll love it, like you love me)
+2. start mongod
+3. start mongo
+4. type these commands:
+
+	use TESTteamplaytf
+	db.createUser({ user: "teamplaytf", pwd: "YOUR PASSWORD", roles: [ { role: "readWrite", db: "TESTteamplaytf" } ]})
+	
+	use teamplaytf
+	db.createUser({ user: "teamplaytf", pwd: "YOUR PASSWORD", roles: [ { role: "readWrite", db: "teamplaytf" } ]})
+
+5. test db_test
+6. if no errors, scream hallelujah

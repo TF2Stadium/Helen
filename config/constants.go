@@ -12,6 +12,13 @@ type constants struct {
 	CookieStoreSecret  string
 	StaticFileLocation string
 	SessionName        string
+
+	// database
+	DbHosts            string
+	DbDatabase         string
+	DbTestDatabase     string
+	DbUsername         string
+	DbPassword         string
 }
 
 func overrideFromEnv(constant *string, name string) {
@@ -32,6 +39,9 @@ func SetupConstants() {
 
 	overrideFromEnv(&Constants.Port, "PORT")
 	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET")
+	
+	// TODO: database url from env
+	// TODO: database info from env
 }
 
 func setupDevelopmentConstants() {
@@ -42,6 +52,12 @@ func setupDevelopmentConstants() {
 		CookieStoreSecret:  "dev secret is very secret",
 		SessionName:        "defaultSession",
 		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",
+		
+		DbHosts:            "127.0.0.1:27017",
+		DbDatabase:         "teamplaytf",
+		DbTestDatabase:     "TESTteamplaytf",
+		DbUsername:         "teamplaytf",
+		DbPassword:         "dickbutt", // change this
 	}
 }
 
@@ -53,5 +69,11 @@ func setupProductionConstants() {
 		OpenIDRealm:        "http://localhost:8080",
 		CookieStoreSecret:  "dev secret is very secret",
 		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",
+		
+		DbHosts:            "127.0.0.1:27017",
+		DbDatabase:         "teamplaytf",
+		DbTestDatabase:     "TESTteamplaytf",
+		DbUsername:         "teamplaytf",
+		DbPassword:         "dickbutt", // change this
 	}
 }
