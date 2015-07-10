@@ -13,6 +13,7 @@ import (
 	"github.com/TeamPlayTF/Server/routes"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -41,7 +42,11 @@ func main() {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
 		http.FileServer(http.Dir(config.Constants.StaticFileLocation))))
 
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins: config.Constants.AllowedCorsOrigins,
+	}).Handler(r)
+
 	// start the server
 	log.Println("Serving at localhost:" + config.Constants.Port + "...")
-	graceful.Run(":"+config.Constants.Port, 10*time.Second, r)
+	graceful.Run(":"+config.Constants.Port, 10*time.Second, corsHandler)
 }
