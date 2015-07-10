@@ -1,6 +1,9 @@
 # TeamPlayTF
 TeamPlayTF Server is the backend server component for the TeamPlay.tf project written in Go.
 
+### Setup
+The project uses MongoDB as a database. Default production account data can be found at `database/setup.txt`
+
 ### Structure
 The code is divided into multiple packages that follow the usual web application structure:
 * models go in `models`

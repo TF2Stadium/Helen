@@ -6,10 +6,10 @@ Test Local MongoDB Database Setup Tutorial
 4. type these commands:
 
 	use TESTteamplaytf
-	db.createUser({ user: "teamplaytf", pwd: "YOUR PASSWORD", roles: [ { role: "readWrite", db: "TESTteamplaytf" } ]})
-	
+	db.createUser({ user: "teamplaytf", pwd: "dickbutt", roles: [ { role: "readWrite", db: "TESTteamplaytf" } ]})
+
 	use teamplaytf
-	db.createUser({ user: "teamplaytf", pwd: "YOUR PASSWORD", roles: [ { role: "readWrite", db: "teamplaytf" } ]})
+	db.createUser({ user: "teamplaytf", pwd: "dickbutt", roles: [ { role: "readWrite", db: "teamplaytf" } ]})
 
 5. test db_test
 6. if no errors, scream hallelujah
