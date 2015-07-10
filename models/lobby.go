@@ -8,18 +8,17 @@ import (
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
 type Lobby struct {
-	id        int         //Lobby id
-	mapName   string      //map name
-	team      [][]*Player //RED - team[0], BLU - team[1]
-	server    string      //server address, with port
-	rconpwd   string      //password to server's rcon
-	whitelist int         //whitelist.tf ID
+	id      int        //Lobby id
+	mapName string     //map name
+	team    [][]string /* RED - team[0], BLU - team[1]
+	 * players are identified by their DB id */
+	server    string //server address, with port
+	rconpwd   string //password to server's rcon
+	whitelist int    //whitelist.tf ID
 }
 
-var steamPlayerMap = make(map[string]*Player) //maps steamid --> player
-var steamLobbyMap = make(map[string]*Lobby)   //maps steamid --> lobby
-var LobbyMap = make(map[int]*Lobby)           //maps looby id --> lobby
-var lobList = list.New()                      //list of all lobbies
+var dbLobbyMap = make(map[string]*Lobby) //maps mongoDB id --> lobby
+var lobbyMap = make(map[int]*Lobby)      //maps lobby id --> lobby
 
 //id should be maintained in the main loop
 func NewLobby(mapName string, players int, server string, rconpwd string, id int,
@@ -27,7 +26,7 @@ func NewLobby(mapName string, players int, server string, rconpwd string, id int
 	lobby := &Lobby{
 		id:        id,
 		mapName:   mapName,
-		team:      make([][]*Player, 2),
+		team:      make([][]string, 2),
 		server:    server,
 		rconpwd:   rconpwd,
 		whitelist: whilelist,
@@ -39,30 +38,34 @@ func NewLobby(mapName string, players int, server string, rconpwd string, id int
 	return lobby
 }
 
+func CloseLobby(id int) {
+	delete(lobbyMap, id)
+}
+
 //Add player to lobby
-func (lobby *Lobby) Add(steamid string, name string, team int, slot int) error {
+func (lobby *Lobby) AddPlayer(id string, team int, slot int) error {
 	/* Possible errors while joining
 	 * Slot has been filled
 	 * Player has already joined a lobby
 	 * anything else?
 	 */
-	if _, exists := steamLobbyMap[steamid]; exists {
-		//return error, player is already in a lobby
+	if _, exists := dbLobbyMap[id]; exists {
+		//player is already in a lobby
+		return 1
 	}
 
-	if lobby.team[team][slot].SteamId != "" {
-		//return error, slot has been filled
+	if lobby.team[team][slot].id != "" {
+		//slot has been filled
+		return 2
 	}
 
-	steamLobbyMap[steamid] = lobby
-	player := &Player{SteamId: steamid, Name: name}
-	steamPlayerMap[steamid] = player
-	lobby.team[team][slot] = player
+	dbLobbyMap[id] = lobby
+	lobby.team[team][slot] = id
 
 	//Check if all slots have been filled
 	for _, team := range lobby.team {
 		for _, player := range team {
-			if player.SteamId == "" { //Slots haven't been filled
+			if player.id == "" { //Slots haven't been filled
 				return nil
 			}
 		}
@@ -73,8 +76,19 @@ func (lobby *Lobby) Add(steamid string, name string, team int, slot int) error {
 }
 
 //Remove player from lobby
-func (lobby *Lobby) Remove(steamid string) {
-	delete(steamLobbyMap, steamid)
-	steamPlayerMap[steamid] = &Player{SteamId: "", Name: "id"}
-	delete(steamPlayerMap, steamid)
+func (lobby *Lobby) Remove(id string) {
+	delete(dbLobbyMap, id)
+}
+
+//Return an array of all lobbies
+func GetLobbyList(open bool) {
+	arr := make([]*Lobby, len(lobbyMap))
+
+	i := 0
+	for _, lobby := range lobbyID {
+		arr[i] = lobby
+		i++
+	}
+
+	return arr
 }
