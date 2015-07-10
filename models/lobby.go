@@ -1,29 +1,36 @@
 package models
 
-import "container/list"
+import (
+	"container/list"
+	"fmt"
+	"net/http"
+)
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
 type Lobby struct {
-	id      int         //Lobby id
-	mapName string      // map name
-	team    [][]*Player //RED - team[0], BLU - team[1]
-	server  string      //server address, with port
-	rconpwd string      //password to server's rcon
+	id        int         //Lobby id
+	mapName   string      //map name
+	team      [][]*Player //RED - team[0], BLU - team[1]
+	server    string      //server address, with port
+	rconpwd   string      //password to server's rcon
+	whitelist int         //whitelist.tf ID
 }
 
 var steamPlayerMap = make(map[string]*Player) //maps steamid --> player
 var steamLobbyMap = make(map[string]*Lobby)   //maps steamid --> lobby
 var LobbyMap = make(map[int]*Lobby)           //maps looby id --> lobby
-var lobList = list.New()                      // list of all lobbies
+var lobList = list.New()                      //list of all lobbies
 
 //id should be maintained in the main loop
-func NewLobby(mapName string, players int, server string, rconpwd string, id int) *Lobby {
+func NewLobby(mapName string, players int, server string, rconpwd string, id int,
+	whitelist int) *Lobby {
 	lobby := &Lobby{
-		id:      id,
-		mapName: mapName,
-		team:    make([][]*Player, 2),
-		server:  server,
-		rconpwd: rconpwd,
+		id:        id,
+		mapName:   mapName,
+		team:      make([][]*Player, 2),
+		server:    server,
+		rconpwd:   rconpwd,
+		whitelist: whilelist,
 	}
 
 	lobby.team[0] = make([]*Player, players)
