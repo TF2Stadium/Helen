@@ -43,7 +43,8 @@ func main() {
 		http.FileServer(http.Dir(config.Constants.StaticFileLocation))))
 
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins: config.Constants.AllowedCorsOrigins,
+		AllowedOrigins:   config.Constants.AllowedCorsOrigins,
+		AllowCredentials: true,
 	}).Handler(r)
 
 	// start the server
