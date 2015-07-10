@@ -1,6 +1,11 @@
 package models
 
-import "container/list"
+import (
+	"container/list"
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
 type Lobby struct {
@@ -11,10 +16,45 @@ type Lobby struct {
 	rconpwd string      //password to server's rcon
 }
 
+//Response structure
+//github.com/TeamPlayTF/Specifications/blob/master/Communication.md#response-format
+type Response struct {
+	Successful bool        `json:"successful"` //true if operation was successful
+	Data       interface{} `json:"data"`       //response message, if any
+	Code       int         `json: "code"`      //errcode, if sucessful == false
+}
+
 var steamPlayerMap = make(map[string]*Player) //maps steamid --> player
 var steamLobbyMap = make(map[string]*Lobby)   //maps steamid --> lobby
 var LobbyMap = make(map[int]*Lobby)           //maps looby id --> lobby
-var lobList = list.New()                      // list of all lobbies
+var lobList = list.New()                      //list of all lobbies
+
+func SendJSON(w http.ResponseWriter, j string) {
+	w.Header().Add("Content-Type", "application/json")
+	fmt.Fprintf(w, j)
+}
+
+func SendError(w http.ResponseWriter, code int, message string) string {
+	r := &Response{
+		Successful: false,
+		Data:       data,
+		Code:       code,
+	}
+	j, _ := json.Marshall(r)
+	sendJSON(w, j)
+	return string(j)
+}
+
+func SendSuccess(w http.ResponseWriter, data interface{}) string {
+	r := &Response{
+		Successful: true,
+		Data:       data,
+		Code:       -1,
+	}
+	j, _ := json.Marshall(r)
+	sendJSON(w, j)
+	return string(j)
+}
 
 //id should be maintained in the main loop
 func NewLobby(mapName string, players int, server string, rconpwd string, id int) *Lobby {
