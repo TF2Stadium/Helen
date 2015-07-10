@@ -8,7 +8,10 @@ import (
 
 func SetupHTTPRoutes(router *mux.Router) {
 	router.HandleFunc("/", controllers.MainHandler)
+	router.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
+	router.HandleFunc("/startLogin", controllers.LoginHandler)
 	router.HandleFunc("/{param}", controllers.ExampleHandler)
+
 }
 
 func SetupSocketRoutes(server *socketio.Server) {

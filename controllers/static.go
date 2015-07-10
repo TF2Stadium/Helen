@@ -8,7 +8,7 @@ import (
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello!")
+	fmt.Fprintf(w, "<html><head></head><body>hello! You can log in <a href='/startLogin'>here</a></body></html>")
 }
 
 func ExampleHandler(w http.ResponseWriter, r *http.Request) {

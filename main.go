@@ -8,21 +8,17 @@ import (
 
 	"gopkg.in/tylerb/graceful.v1"
 
-	"os"
-
+	"github.com/TeamPlayTF/Server/config"
 	"github.com/TeamPlayTF/Server/routes"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
 )
 
 func main() {
-	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
-	fmt.Print("Starting the server")
+	config.SetupConstants()
 
-	port := ":" + os.Getenv("PORT")
-	if port == ":" {
-		port += "8080"
-	}
+	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
+	fmt.Println("Starting the server")
 
 	r := mux.NewRouter()
 
@@ -41,10 +37,9 @@ func main() {
 	// init static FileServer
 	// TODO be careful to set this to correct location when deploying
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
-		http.FileServer(http.Dir(os.Getenv("GOPATH")+"/src/github.com/TeamPlayTF/Server/static"))))
+		http.FileServer(http.Dir(config.Constants.StaticFileLocation))))
 
 	// start the server
-	graceful.Run(port, 10*time.Second, r)
-
-	log.Println("Serving at localhost:" + port + "...")
+	log.Println("Serving at localhost:" + config.Constants.Port + "...")
+	graceful.Run(":"+config.Constants.Port, 10*time.Second, r)
 }
