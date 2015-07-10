@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/TeamPlayTF/Server/config"
@@ -8,12 +9,13 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-func SendJSON(w http.ResponseWriter, json simplejson.Json) {
+func sendJSON(w http.ResponseWriter, json *simplejson.Json) {
 	w.Header().Add("Content-Type", "application/json")
-	fmt.Fprintf(w, string(json))
+	val, _ := json.String()
+	fmt.Fprintf(w, val)
 }
 
-func BuildSuccessJSON(data simplejson.Json) simplejson.Json {
+func buildSuccessJSON(data simplejson.Json) *simplejson.Json {
 	j := simplejson.New()
 	j.Set("success", true)
 	j.Set("data", data)
@@ -21,7 +23,7 @@ func BuildSuccessJSON(data simplejson.Json) simplejson.Json {
 	return j
 }
 
-func BuildFailureJSON(code int, message string) simplejson.Json {
+func buildFailureJSON(code int, message string) *simplejson.Json {
 	j := simplejson.New()
 	j.Set("success", false)
 	j.Set("message", message)
