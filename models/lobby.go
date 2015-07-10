@@ -92,3 +92,7 @@ func GetLobbyList(open bool) {
 
 	return arr
 }
+
+func GetLobbyDetails(id int) {
+	return lobbyMap[d]
+}
