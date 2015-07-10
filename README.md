@@ -14,6 +14,10 @@ The code is divided into multiple packages that follow the usual web application
 ### Contribution guidelines
 The project uses the Pull Request workflow to contribute code. More info on that here: https://help.github.com/articles/using-pull-requests/.
 
-**Each pull request must pass all existing tests and include new appropriate tests.**
+**Each pull request must pass all existing tests (go test ./...) and include new appropriate tests.**
+
+The pull request shoul be squashed (no more than 1 temporary commit per 100 loc, more info here: http://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit)
 
 Submitted code has to be formatted with `go fmt`.
+
+
