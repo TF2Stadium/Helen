@@ -2,10 +2,11 @@ package database
 
 import (
 	"fmt"
-	"github.com/TeamPlayTF/Server/config"
-	"gopkg.in/mgo.v2"
 	"log"
 	"time"
+
+	"github.com/TeamPlayTF/Server/config"
+	"gopkg.in/mgo.v2"
 )
 
 /**
@@ -22,7 +23,6 @@ var IsTest bool = false
 func Init() {
 	fmt.Println("[Database]: Database name -> [" + getDatabaseName() + "]")
 	fmt.Println("[Database]: Database user -> [" + config.Constants.DbUsername + "]")
-	fmt.Println("[Database]: Database pass -> [" + config.Constants.DbPassword + "]")
 	fmt.Println("[Database]: Connecting to database -> [" + config.Constants.DbDatabase + "]")
 
 	// mdb connection
