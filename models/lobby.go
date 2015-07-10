@@ -2,7 +2,6 @@ package models
 
 import (
 	"container/list"
-	"encoding/json"
 	"fmt"
 	"net/http"
 )
