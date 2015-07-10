@@ -1,5 +1,7 @@
 package config
 
-import "github.com/gorilla/sessions"
+import (
+	"github.com/gorilla/sessions"
+)
 
-var CookieStore = sessions.NewCookieStore([]byte("cookie-secret"))
+var CookieStore = sessions.NewCookieStore([]byte(Constants.SessionName))

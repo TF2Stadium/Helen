@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/TeamPlayTF/Server/config"
+	"github.com/gorilla/sessions"
 	"github.com/yohcop/openid-go"
 )
 
@@ -23,6 +24,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	session := getDefaultSession(r)
+	session.Options = &sessions.Options{MaxAge: -1}
+	session.Save(r, w)
+
+	http.Redirect(w, r, "/", 303)
+}
+
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	fullURL := "http://localhost:8080" + r.URL.String()
 	log.Print(fullURL)
@@ -35,7 +44,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(id, "/")
 	steamid := parts[len(parts)-1]
 
-	session, _ := config.CookieStore.Get(r, "session-name")
+	session := getDefaultSession(r)
 	session.Values["steamid"] = steamid
 	session.Save(r, w)
 

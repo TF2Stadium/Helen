@@ -10,6 +10,7 @@ func SetupHTTPRoutes(router *mux.Router) {
 	router.HandleFunc("/", controllers.MainHandler)
 	router.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
 	router.HandleFunc("/startLogin", controllers.LoginHandler)
+	router.HandleFunc("/logout", controllers.LogoutHandler)
 	router.HandleFunc("/{param}", controllers.ExampleHandler)
 
 }

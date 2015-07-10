@@ -11,6 +11,7 @@ type constants struct {
 	OpenIDRealm        string
 	CookieStoreSecret  string
 	StaticFileLocation string
+	SessionName        string
 }
 
 func overrideFromEnv(constant *string, name string) {
@@ -39,6 +40,7 @@ func setupDevelopmentConstants() {
 		Domain:             "http://localhost:8080",
 		OpenIDRealm:        "http://localhost:8080",
 		CookieStoreSecret:  "dev secret is very secret",
+		SessionName:        "defaultSession",
 		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",
 	}
 }

@@ -8,7 +8,14 @@ import (
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "<html><head></head><body>hello! You can log in <a href='/startLogin'>here</a></body></html>")
+	if isLoggedIn(r) {
+		session := getDefaultSession(r)
+		var steamid = session.Values["steamid"].(string)
+		fmt.Fprintf(w, `<html><head></head><body>hello! You're logged in and your steam id is
+			`+steamid+`. You can log out <a href='/logout'>here</a></body></html>`)
+	} else {
+		fmt.Fprintf(w, "<html><head></head><body>hello! You can log in <a href='/startLogin'>here</a></body></html>")
+	}
 }
 
 func ExampleHandler(w http.ResponseWriter, r *http.Request) {
