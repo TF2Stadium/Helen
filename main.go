@@ -18,6 +18,7 @@ import (
 
 func main() {
 	config.SetupConstants()
+	config.SetupStores()
 	database.Init()
 
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)

@@ -32,6 +32,44 @@ func buildFailureJSON(code int, message string) *simplejson.Json {
 	return j
 }
 
+func buildFakeSocketRequest(request *simplejson.Json) *http.Request {
+	cookiesObj := request.Get("cookies")
+
+	if cookiesObj == nil {
+		return &http.Request{}
+	}
+
+	cookies, err := cookiesObj.Map()
+	if err != nil {
+		return &http.Request{}
+	}
+
+	str := ""
+
+	first := true
+	for k, v := range cookies {
+		vStr, ok := v.(string)
+		if !ok {
+			continue
+		}
+
+		if !first {
+			str += ";"
+		}
+		str += k + "=" + vStr
+		first = false
+	}
+
+	if str == "" {
+		return &http.Request{}
+	}
+
+	headers := http.Header{}
+	headers.Add("Cookie", str)
+
+	return &http.Request{Header: headers}
+}
+
 func isLoggedIn(r *http.Request) bool {
 	session, _ := config.CookieStore.Get(r, config.Constants.SessionName)
 

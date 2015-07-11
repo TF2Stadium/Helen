@@ -5,3 +5,7 @@ import (
 )
 
 var CookieStore = sessions.NewCookieStore([]byte(Constants.SessionName))
+
+func SetupStores() {
+	CookieStore.Options.HttpOnly = false
+}
