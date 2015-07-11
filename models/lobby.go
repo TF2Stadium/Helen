@@ -46,12 +46,12 @@ func (lobby *Lobby) AddPlayer(player *Player, team int, slot int) error {
 	 */
 	if _, exists := dbLobbyMap[player.Id.Hex()]; exists {
 		//player is already in a lobby
-		return helpers.NewError("Player is already in a lobby", 1)
+		return helpers.NewTPError("Player is already in a lobby", 1)
 	}
 
 	if lobby.team[team][slot].Id != "" {
 		//slot has been filled
-		return helpers.NewError("This slot has been filled.", 2)
+		return helpers.NewTPError("This slot has been filled.", 2)
 	}
 
 	dbLobbyMap[player.Id.Hex()] = lobby
