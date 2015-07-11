@@ -1,10 +1,10 @@
 package config
 
 import (
+	"config"
 	"os"
 	"testing"
 
-	"github.com/TeamPlayTF/Server/config"
 	"github.com/stretchr/testify/assert"
 )
 

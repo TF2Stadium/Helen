@@ -2,13 +2,14 @@ package database
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"testing"
+
 	"github.com/TeamPlayTF/Server/config"
 	"github.com/TeamPlayTF/Server/database"
 	"github.com/TeamPlayTF/Server/models"
 	"gopkg.in/mgo.v2/bson"
-	"log"
-	"strconv"
-	"testing"
 )
 
 // should always be the 1st test (like a setup)
