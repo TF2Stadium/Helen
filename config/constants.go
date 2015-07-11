@@ -12,6 +12,7 @@ type constants struct {
 	CookieStoreSecret  string
 	StaticFileLocation string
 	SessionName        string
+	SocketMockUp	   bool
 	AllowedCorsOrigins []string
 
 	// database
@@ -53,6 +54,7 @@ func setupDevelopmentConstants() {
 		CookieStoreSecret:  "dev secret is very secret",
 		SessionName:        "defaultSession",
 		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",
+		SocketMockUp:		false,
 		AllowedCorsOrigins: []string{"*"},
 
 		DbHosts:        "127.0.0.1:27017",
@@ -72,6 +74,7 @@ func setupProductionConstants() {
 		OpenIDRealm:        "http://localhost:8080",
 		CookieStoreSecret:  "dev secret is very secret",
 		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",
+		SocketMockUp:		false,
 		AllowedCorsOrigins: []string{"http://teamplay.tf", "http://api.teamplay.tf"},
 
 		DbHosts:        "127.0.0.1:27017",
