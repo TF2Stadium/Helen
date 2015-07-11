@@ -1,10 +1,6 @@
 package models
 
-import (
-	"container/list"
-	"fmt"
-	"net/http"
-)
+import "github.com/TeamPlayTF/Server/helpers"
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
 type Lobby struct {
@@ -20,15 +16,14 @@ var dbLobbyMap = make(map[string]*Lobby) //maps mongoDB id --> lobby
 var lobbyMap = make(map[int]*Lobby)      //maps lobby id --> lobby
 
 //id should be maintained in the main loop
-func NewLobby(mapName string, players int, server string, rconpwd string, id int,
-	whitelist int) *Lobby {
+func NewLobby(mapName string, players int, server string, rconpwd string, id int, whitelist int) *Lobby {
 	lobby := &Lobby{
 		id:        id,
 		mapName:   mapName,
 		team:      make([][]*Player, 2),
 		server:    server,
 		rconpwd:   rconpwd,
-		whitelist: whilelist,
+		whitelist: whitelist,
 	}
 
 	lobby.team[0] = make([]*Player, players)
@@ -43,23 +38,23 @@ func CloseLobby(id int) {
 }
 
 //Add player to lobby
-func (lobby *Lobby) AddPlayer(player Player, team int, slot int) error {
+func (lobby *Lobby) AddPlayer(player *Player, team int, slot int) error {
 	/* Possible errors while joining
 	 * Slot has been filled
 	 * Player has already joined a lobby
 	 * anything else?
 	 */
-	if _, exists := dbLobbyMap[player.Id]; exists {
+	if _, exists := dbLobbyMap[player.Id.Hex()]; exists {
 		//player is already in a lobby
-		return 1
+		return helpers.NewError("Player is already in a lobby", 1)
 	}
 
 	if lobby.team[team][slot].Id != "" {
 		//slot has been filled
-		return 2
+		return helpers.NewError("This slot has been filled.", 2)
 	}
 
-	dbLobbyMap[player.Id] = lobby
+	dbLobbyMap[player.Id.Hex()] = lobby
 	lobby.team[team][slot] = player
 
 	//Check if all slots have been filled
@@ -81,16 +76,16 @@ func (lobby *Lobby) Remove(id string) {
 }
 
 //Return an array of all lobbies
-func GetLobbyList(open bool) {
+func GetLobbyList(open bool) []*Lobby {
 	var arr []*Lobby
 
 	for _, val := range lobbyMap {
-		append(arr, val)
+		arr = append(arr, val)
 	}
 
 	return arr
 }
 
-func GetLobbyDetails(id int) {
-	return lobbyMap[d]
+func GetLobbyDetails(id int) *Lobby {
+	return lobbyMap[id]
 }
