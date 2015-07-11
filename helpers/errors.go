@@ -1,16 +1,16 @@
 package helpers
 
 type TPError struct {
-	str  string
-	code int
+	Str  string
+	Code int
 }
 
 func (e *TPError) Error() string {
-	return e.str
+	return e.Str
 }
 
-func NewError(str string, code int) error {
+func NewTPError(str string, code int) error {
 	return &TPError{
-		str:  str,
-		code: code}
+		Str:  str,
+		Code: code}
 }
