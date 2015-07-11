@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/TeamPlayTF/Server/config"
+	"github.com/TeamPlayTF/Server/database"
+	"github.com/TeamPlayTF/Server/models"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -14,15 +16,15 @@ import (
 func TestDatabase(t *testing.T) {
 	// start the database connection
 	config.SetupConstants()
-	Test()
-	fmt.Println("[Test.Database] IsTest? " + strconv.FormatBool(IsTest))
-	Init()
+	database.Test()
+	fmt.Println("[Test.Database] IsTest? " + strconv.FormatBool(database.IsTest))
+	database.Init()
 
 	// check if user exists then remove it
 	// just to be sure we won't get any errors
-	fErr := Database.C("players").Find(bson.M{"steamid": "76561198074578368"})
+	fErr := database.Database.C("players").Find(bson.M{"steamid": "76561198074578368"})
 	if fErr == nil {
-		rErr := Database.C("players").Remove(bson.M{"steamid": "76561198074578368"})
+		rErr := database.Database.C("players").Remove(bson.M{"steamid": "76561198074578368"})
 		if rErr != nil {
 			log.Fatal(rErr)
 		}
