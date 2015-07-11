@@ -8,13 +8,12 @@ import (
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
 type Lobby struct {
-	id      int        //Lobby id
-	mapName string     //map name
-	team    [][]string /* RED - team[0], BLU - team[1]
-	 * players are identified by their DB id */
-	server    string //server address, with port
-	rconpwd   string //password to server's rcon
-	whitelist int    //whitelist.tf ID
+	id        int         //Lobby id
+	mapName   string      //map name
+	team      [][]*Player // RED - team[0], BLU - team[1]
+	server    string      //server address, with port
+	rconpwd   string      //password to server's rcon
+	whitelist int         //whitelist.tf ID
 }
 
 var dbLobbyMap = make(map[string]*Lobby) //maps mongoDB id --> lobby
@@ -26,7 +25,7 @@ func NewLobby(mapName string, players int, server string, rconpwd string, id int
 	lobby := &Lobby{
 		id:        id,
 		mapName:   mapName,
-		team:      make([][]string, 2),
+		team:      make([][]*Player, 2),
 		server:    server,
 		rconpwd:   rconpwd,
 		whitelist: whilelist,
@@ -38,34 +37,35 @@ func NewLobby(mapName string, players int, server string, rconpwd string, id int
 	return lobby
 }
 
+//Close lobby, given the lobby id
 func CloseLobby(id int) {
 	delete(lobbyMap, id)
 }
 
 //Add player to lobby
-func (lobby *Lobby) AddPlayer(id string, team int, slot int) error {
+func (lobby *Lobby) AddPlayer(player Player, team int, slot int) error {
 	/* Possible errors while joining
 	 * Slot has been filled
 	 * Player has already joined a lobby
 	 * anything else?
 	 */
-	if _, exists := dbLobbyMap[id]; exists {
+	if _, exists := dbLobbyMap[player.Id]; exists {
 		//player is already in a lobby
 		return 1
 	}
 
-	if lobby.team[team][slot].id != "" {
+	if lobby.team[team][slot].Id != "" {
 		//slot has been filled
 		return 2
 	}
 
-	dbLobbyMap[id] = lobby
-	lobby.team[team][slot] = id
+	dbLobbyMap[player.Id] = lobby
+	lobby.team[team][slot] = player
 
 	//Check if all slots have been filled
 	for _, team := range lobby.team {
 		for _, player := range team {
-			if player.id == "" { //Slots haven't been filled
+			if player.Id == "" { //Slots haven't been filled
 				return nil
 			}
 		}
@@ -82,12 +82,10 @@ func (lobby *Lobby) Remove(id string) {
 
 //Return an array of all lobbies
 func GetLobbyList(open bool) {
-	arr := make([]*Lobby, len(lobbyMap))
+	var arr []*Lobby
 
-	i := 0
-	for _, lobby := range lobbyID {
-		arr[i] = lobby
-		i++
+	for _, val := range lobbyMap {
+		append(arr, val)
 	}
 
 	return arr
