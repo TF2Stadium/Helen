@@ -12,7 +12,7 @@ import (
 /**
  * Stores the connection with mongodb
  */
-var Conection *mgo.Session
+var Connection *mgo.Session
 var Database *mgo.Database
 
 // we'll use Test() to set this
@@ -42,17 +42,21 @@ func Init() {
 
 	con.SetMode(mgo.Monotonic, true)
 
-	Conection = con
+	Connection = con
 	Database = con.DB(getDatabaseName())
 
 	fmt.Println("[Database]: Connected!")
+}
+
+func GetCollection(collection string) *mgo.Collection {
+	return Connection.DB(getDatabaseName()).C(collection)
 }
 
 func Get(collection string) (*mgo.Session, *mgo.Collection) {
 	fmt.Println("[Database.Session]: Getting new session...")
 
 	// creates a new session
-	sess := Conection.Copy()
+	sess := Connection.Copy()
 
 	fmt.Println("[Database.Session]: Getting collection -> [" + collection + "]")
 

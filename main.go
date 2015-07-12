@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/tylerb/graceful.v1"
 
 	"github.com/TeamPlayTF/Server/config"
 	"github.com/TeamPlayTF/Server/database"
+	"github.com/TeamPlayTF/Server/models"
 	"github.com/TeamPlayTF/Server/routes"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
@@ -25,6 +27,15 @@ func main() {
 	fmt.Println("Starting the server")
 
 	r := mux.NewRouter()
+
+	// TEST CODE
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 5)
+	lobby.Save()
+	log.Println(lobby.GetPlayerObjects())
+
+	lobby2 := database.GetCollection("lobby").Find(bson.M{"map": "cp_badlands"})
+
+	log.Println(lobby2)
 
 	// init http server
 	routes.SetupHTTPRoutes(r)
