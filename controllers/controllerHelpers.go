@@ -15,7 +15,7 @@ func sendJSON(w http.ResponseWriter, json *simplejson.Json) {
 	fmt.Fprintf(w, val)
 }
 
-func buildSuccessJSON(data simplejson.Json) *simplejson.Json {
+func buildSuccessJSON(data *simplejson.Json) *simplejson.Json {
 	j := simplejson.New()
 	j.Set("success", true)
 	j.Set("data", data)
