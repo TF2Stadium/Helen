@@ -12,7 +12,7 @@ type constants struct {
 	CookieStoreSecret  string
 	StaticFileLocation string
 	SessionName        string
-	SocketMockUp	   bool
+	SocketMockUp       bool
 	AllowedCorsOrigins []string
 
 	// database
@@ -21,6 +21,9 @@ type constants struct {
 	DbTestDatabase string
 	DbUsername     string
 	DbPassword     string
+
+	DbLobbiesCollection string
+	DbPlayersCollection string
 }
 
 func overrideFromEnv(constant *string, name string) {
@@ -54,7 +57,7 @@ func setupDevelopmentConstants() {
 		CookieStoreSecret:  "dev secret is very secret",
 		SessionName:        "defaultSession",
 		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",
-		SocketMockUp:		false,
+		SocketMockUp:       false,
 		AllowedCorsOrigins: []string{"*"},
 
 		DbHosts:        "127.0.0.1:27017",
@@ -63,6 +66,8 @@ func setupDevelopmentConstants() {
 		DbUsername:     "teamplaytf",
 		DbPassword:     "dickbutt", // change this
 
+		DbLobbiesCollection: "lobbies", // change this
+		DbPlayersCollection: "players", // change this
 	}
 }
 
@@ -74,7 +79,7 @@ func setupProductionConstants() {
 		OpenIDRealm:        "http://localhost:8080",
 		CookieStoreSecret:  "dev secret is very secret",
 		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",
-		SocketMockUp:		false,
+		SocketMockUp:       false,
 		AllowedCorsOrigins: []string{"http://teamplay.tf", "http://api.teamplay.tf"},
 
 		DbHosts:        "127.0.0.1:27017",

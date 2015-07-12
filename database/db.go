@@ -52,6 +52,13 @@ func GetCollection(collection string) *mgo.Collection {
 	return Connection.DB(getDatabaseName()).C(collection)
 }
 
+func GetLobbiesCollection() *mgo.Collection {
+	return GetCollection(config.Constants.DbLobbiesCollection)
+}
+func GetPlayersCollection() *mgo.Collection {
+	return GetCollection(config.Constants.DbPlayersCollection)
+}
+
 func Get(collection string) (*mgo.Session, *mgo.Collection) {
 	fmt.Println("[Database.Session]: Getting new session...")
 
