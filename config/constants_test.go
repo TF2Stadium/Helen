@@ -1,7 +1,6 @@
 package config
 
 import (
-	"config"
 	"os"
 	"testing"
 
@@ -10,12 +9,12 @@ import (
 
 func TestEnvVariablesOverrideConfig(t *testing.T) {
 	os.Unsetenv("PORT")
-	config.SetupConstants()
-	port := config.Constants.Port
+	SetupConstants()
+	port := Constants.Port
 
 	os.Setenv("PORT", "123456as")
-	config.SetupConstants()
-	port2 := config.Constants.Port
+	SetupConstants()
+	port2 := Constants.Port
 
 	assert.NotEqual(t, port, port2)
 }
