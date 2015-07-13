@@ -1,0 +1,40 @@
+{
+	"ugc": {
+		"6v6": [
+			"6v_ctf",
+			"6v_ctf_overtime",
+			"6v_golden",
+			"6v_koth",
+			"6v_koth_overtime",
+			"6v_standard",
+			"6v_standard_overtime",
+			"6v_stopwatch",
+			"6v_custom",
+			"6v_base",
+			"off"
+		],
+		"9v9": [
+			"HL_koth",
+			"HL_standard",
+			"HL_stopwatch",
+			"HL_custom",
+			"HL_base",
+			"off"
+		]
+	},
+
+	"etf2l": {
+		"6v6": [
+			"6v6_5cp",
+			"6v6_koth",
+			"6v6_ctf",
+			"6v6_stopwatch"
+		],
+		"9v9": [
+			"9v9_5cp",
+			"9v9_ctf",
+			"9v9_koth",
+			"9v9_stopwatch"
+		]
+	}
+}
