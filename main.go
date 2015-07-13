@@ -10,6 +10,7 @@ import (
 
 	"github.com/TeamPlayTF/Server/config"
 	"github.com/TeamPlayTF/Server/database"
+	"github.com/TeamPlayTF/Server/models/lobby"
 	"github.com/TeamPlayTF/Server/routes"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
@@ -20,6 +21,7 @@ func main() {
 	config.SetupConstants()
 	config.SetupStores()
 	database.Init()
+	lobby.InitConfigs()
 
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 	fmt.Println("Starting the server")
