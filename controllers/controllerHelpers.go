@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/TeamPlayTF/Server/config"
+	"github.com/TeamPlayTF/Server/helpers"
 	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/sessions"
 )
@@ -23,13 +24,9 @@ func buildSuccessJSON(data *simplejson.Json) *simplejson.Json {
 	return j
 }
 
-func buildFailureJSON(code int, message string) *simplejson.Json {
-	j := simplejson.New()
-	j.Set("success", false)
-	j.Set("message", message)
-	j.Set("code", code)
-
-	return j
+func buildFailureJSON(message string, code int) *simplejson.Json {
+	e := helpers.NewTPError(message, code)
+	return e.ErrorJSON()
 }
 
 func buildFakeSocketRequest(request *simplejson.Json) *http.Request {
