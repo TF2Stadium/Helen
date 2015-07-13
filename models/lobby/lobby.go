@@ -148,6 +148,17 @@ func (lobby *Lobby) AddPlayer(player *models.Player, slot int) *helpers.TPError 
 	return nil
 }
 
+func (lobby *Lobby) RemovePlayer(player *models.Player) *helpers.TPError {
+	slot, err := lobby.GetPlayerSlot(player)
+
+	if err != nil {
+		return helpers.NewTPError("Player not in any lobby.", 4)
+	}
+	lobby.PlayerIds[slot] = ""
+	return nil
+
+}
+
 func (lobby *Lobby) allSlotsFilled() bool {
 	for _, playerId := range lobby.PlayerIds {
 		if !bson.ObjectId(playerId).Valid() { //Slots haven't been filled
