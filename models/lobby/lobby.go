@@ -78,7 +78,7 @@ func (lobby *Lobby) GetPlayerObjects() []*models.Player {
 	}
 
 	var result []*models.Player
-	database.GetLobbiesCollection().Find(bson.M{"_id": ids}).All(&result)
+	database.GetPlayersCollection().Find(bson.M{"_id": ids}).All(&result)
 
 	return result
 }
@@ -98,7 +98,7 @@ func (lobby *Lobby) GetPlayerSlot(player *models.Player) (slot int, err error) {
 }
 
 // // //Add player to lobby
-func (lobby *Lobby) AddPlayer(player *models.Player, slot int) error {
+func (lobby *Lobby) AddPlayer(player *models.Player, slot int) *helpers.TPError {
 	/* Possible errors while joining
 	 * Slot has been filled
 	 * Player has already joined a lobby
