@@ -1,0 +1,23 @@
+<html>
+<head>
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+var getCookie = function C(k){return(document.cookie.match('(^|; )'+k+'=([^;]*)')||0)[2]}
+
+var io = io();
+
+io.on("connect", function(){
+  var c1 = getCookie("defaultSession")
+  if (c1 != null) {
+    io.emit("auth_test", JSON.stringify({cookies: {defaultSession: c1}}));
+    // io.emit("auth_test", "bububu");
+  } else {
+    console.log("no cookie");
+  }
+});
+</script>
+</head>
+<body>
+</body>
+</html>

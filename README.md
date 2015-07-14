@@ -16,7 +16,7 @@ The project uses the Pull Request workflow to contribute code. More info on that
 
 **Each pull request must pass all existing tests (go test ./...) and include new appropriate tests.**
 
-The pull request shoul be squashed (no more than 1 temporary commit per 100 loc, more info here: http://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit)
+The pull request should be squashed (no more than 1 temporary commit per 100 loc, more info here: http://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit)
 
 Submitted code has to be formatted with `go fmt`.
 
