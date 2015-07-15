@@ -68,7 +68,7 @@ func (lobby *Lobby) Save() error {
 	return err
 }
 
-func (lobby *Lobby) GetPlayerObjects() []*models.Player {
+func (lobby *Lobby) GetPlayerObjects() ([]*models.Player, error) {
 	var ids []bson.ObjectId
 
 	for _, playerID := range lobby.PlayerIds {
@@ -78,9 +78,9 @@ func (lobby *Lobby) GetPlayerObjects() []*models.Player {
 	}
 
 	var result []*models.Player
-	database.GetPlayersCollection().Find(bson.M{"_id": ids}).All(&result)
+	err := database.GetPlayersCollection().Find(bson.M{"_id": ids}).All(&result)
 
-	return result
+	return result, err
 }
 
 func (lobby *Lobby) GetPlayerSlot(player *models.Player) (slot int, err error) {
@@ -156,10 +156,50 @@ func (lobby *Lobby) RemovePlayer(player *models.Player) *helpers.TPError {
 	}
 	lobby.PlayerIds[slot] = ""
 	return nil
-
 }
 
-func (lobby *Lobby) allSlotsFilled() bool {
+func (lobby *Lobby) KickAndBanPlayer(player *models.Player) *helpers.TPError {
+	// TODO implement
+	return nil
+}
+
+func (lobby *Lobby) ReadyPlayer(player *models.Player) *helpers.TPError {
+	// TODO implement
+	return nil
+}
+
+func (lobby *Lobby) UnreadyPlayer(player *models.Player) *helpers.TPError {
+	// TODO implement
+	return nil
+}
+
+func (lobby *Lobby) IsPlayerReady(player *models.Player) (bool, *helpers.TPError) {
+	// TODO implement
+	return false, nil
+}
+
+func (lobby *Lobby) IsStarted() (bool, *helpers.TPError) {
+	// TODO implement
+	return false, nil
+}
+
+func (lobby *Lobby) AddSpectator(player *models.Player) *helpers.TPError {
+	// TODO implement
+	return nil
+}
+
+func (lobby *Lobby) RemoveSpectator(player *models.Player) *helpers.TPError {
+	// TODO implement
+	return nil
+}
+
+func (lobby *Lobby) GetSpectatorObjects() ([]*models.Player, *helpers.TPError) {
+	// TODO implement
+	return nil, nil
+}
+
+func (lobby *Lobby) IsFull() bool {
+	// TODO broken, fix
 	for _, playerId := range lobby.PlayerIds {
 		if !bson.ObjectId(playerId).Valid() { //Slots haven't been filled
 			return false
