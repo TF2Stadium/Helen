@@ -21,7 +21,7 @@ type Server struct {
 	LobbyId bson.ObjectId
 
 	Players        []TF2RconWrapper.Player // current number of players in the server
-	AllowedPlayers []TF2RconWrapper.Player
+	AllowedPlayers map[string]bool
 
 	Config *ServerConfig // config that should run before the lobby starts
 	Ticker verifyTicker  // timer that will verify()
@@ -42,7 +42,10 @@ func (t *verifyTicker) Close() {
 }
 
 func NewServer() *Server {
-	return new(Server)
+	s := new(Server)
+	s.AllowedPlayers = make(map[string]bool)
+
+	return s
 }
 
 // after create the server var, you should run this
@@ -214,14 +217,18 @@ func (s *Server) KickAll() error {
 }
 
 func (s *Server) AllowPlayer(commId string) {
-	s.AllowedPlayers = append(s.AllowedPlayers, TF2RconWrapper.Player{SteamID: commId})
+	s.AllowedPlayers[commId] = true
+}
+
+func (s *Server) DisallowPlayer(commId string) {
+	if s.IsPlayerAllowed(commId) {
+		delete(s.AllowedPlayers, commId)
+	}
 }
 
 func (s *Server) IsPlayerAllowed(commId string) bool {
-	for i := range s.AllowedPlayers {
-		if commId == s.AllowedPlayers[i].SteamID {
-			return true
-		}
+	if _, ok := s.AllowedPlayers[commId]; ok {
+		return true
 	}
 
 	return false
