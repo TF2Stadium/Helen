@@ -15,7 +15,7 @@ func TestInitConfigs(t *testing.T) {
 
 func TestUgcHighlander(t *testing.T) {
 	config := lobby.NewServerConfig()
-	config.League = "ugc"
+	config.League = lobby.LeagueUgc
 	config.Type = lobby.LobbyTypeHighlander
 	config.Map = "cp_process_final"
 	_, cfgErr := config.Get()
@@ -27,7 +27,7 @@ func TestUgcHighlander(t *testing.T) {
 
 func TestUgcSixes(t *testing.T) {
 	config := lobby.NewServerConfig()
-	config.League = "ugc"
+	config.League = lobby.LeagueUgc
 	config.Type = lobby.LobbyTypeSixes
 	config.Map = "cp_process_final"
 	_, cfgErr := config.Get()
@@ -39,7 +39,7 @@ func TestUgcSixes(t *testing.T) {
 
 func TestEtf2lSixes(t *testing.T) {
 	config := lobby.NewServerConfig()
-	config.League = "etf2l"
+	config.League = lobby.LeagueEtf2l
 	config.Type = lobby.LobbyTypeSixes
 	config.Map = "cp_process_final"
 	_, cfgErr := config.Get()
@@ -51,7 +51,7 @@ func TestEtf2lSixes(t *testing.T) {
 
 func TestEtf2lHighlander(t *testing.T) {
 	config := lobby.NewServerConfig()
-	config.League = "etf2l"
+	config.League = lobby.LeagueEtf2l
 	config.Type = lobby.LobbyTypeHighlander
 	config.Map = "cp_process_final"
 	_, cfgErr := config.Get()
