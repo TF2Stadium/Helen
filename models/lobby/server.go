@@ -1,12 +1,12 @@
 package lobby
 
 import (
-	"fmt"
 	"log"
-	"strconv"
 	"time"
 
+	"github.com/TeamPlayTF/PlayerStatsScraper/steamid"
 	"github.com/TeamPlayTF/TF2RconWrapper"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Server struct {
@@ -14,21 +14,17 @@ type Server struct {
 	Name string // server name
 	Rcon *TF2RconWrapper.TF2RconConnection
 
-	League string
+	League League
 	Type   LobbyType // 9v9 6v6 4v4...
 
 	Address string // server ip:port
-	LobbyId int
+	LobbyId bson.ObjectId
 
 	Players        []TF2RconWrapper.Player // current number of players in the server
 	AllowedPlayers []TF2RconWrapper.Player
 
-	Config     *ServerConfig // config that should run before the lobby starts
-	WhiteList  string        // whitelist that should run before the lobby starts
-	MaxPlayers int
-
-	// timer that will verify()
-	Ticker verifyTicker
+	Config *ServerConfig // config that should run before the lobby starts
+	Ticker verifyTicker  // timer that will verify()
 
 	//ChatListener  *TF2RconWrapper.RconChatListener
 	RconPassword  string // will store the rcon password specified by the client
@@ -43,13 +39,6 @@ type verifyTicker struct {
 
 func (t *verifyTicker) Close() {
 	close(t.Quit)
-}
-
-type Map struct {
-	Name   string
-	Config string
-	League string
-	Mode   string
 }
 
 func NewServer() *Server {
@@ -68,31 +57,31 @@ func NewServer() *Server {
 // -> LobbyPassword
 //
 func (s *Server) Setup() error {
-	fmt.Println("[Server.Setup]: Setting up server -> [" + s.Address + "] from lobby [#" + strconv.Itoa(s.LobbyId) + "]")
+	log.Println("[Server.Setup]: Setting up server -> [" + s.Address + "] from lobby [" + s.LobbyId.Hex() + "]")
 
 	// connect to rcon
 	var err error
 	s.Rcon, err = TF2RconWrapper.NewTF2RconConnection(s.Address, s.RconPassword)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// changing server password
-	passErr := s.ChangePassword(s.LobbyPassword)
+	passErr := s.Rcon.ChangeServerPassword(s.LobbyPassword)
 
 	if passErr != nil {
-		log.Fatal(passErr)
+		return passErr
 	}
 
 	// kick players
-	fmt.Println("[Server.Setup]: Connected to server, getting players...")
+	log.Println("[Server.Setup]: Connected to server, getting players...")
 	kickErr := s.KickAll()
 
 	if kickErr != nil {
-		log.Fatal(kickErr)
+		return kickErr
 	} else {
-		fmt.Println("[Server.Setup]: Players kicked, running config!")
+		log.Println("[Server.Setup]: Players kicked, running config!")
 	}
 
 	// run config
@@ -107,17 +96,17 @@ func (s *Server) Setup() error {
 		configErr := s.ExecConfig(config)
 
 		if configErr != nil {
-			log.Fatal(configErr)
+			return configErr
 		}
 	} else {
-		log.Fatal(cfgErr)
+		return cfgErr
 	}
 
 	// change map
-	mapErr := s.ChangeMap(s.Map)
+	mapErr := s.Rcon.ChangeMap(s.Map)
 
 	if mapErr != nil {
-		log.Fatal(mapErr)
+		return mapErr
 	}
 
 	// verify's timer
@@ -140,58 +129,77 @@ func (s *Server) Setup() error {
 
 // runs each 10 sec
 func (s *Server) Verify() {
-	fmt.Println("[Server.Verify]: Verifing server -> [" + s.Address + "] from lobby [#" + strconv.Itoa(s.LobbyId) + "]")
+	log.Println("[Server.Verify]: Verifing server -> [" + s.Address + "] from lobby [" + s.LobbyId.Hex() + "]")
 
 	// check if all players in server are in lobby
 	s.Players = s.Rcon.GetPlayers()
 	for i := range s.Players {
-		// check if player is not in lobby but is in server
-		// ignores BOT (SourceTV)
-		if s.Players[i].SteamID != "BOT" && s.IsPlayerInLobby(s.Players[i].SteamID) == false {
-			fmt.Println("[Server.Verify]: Kicking player not allowed -> Username [" +
-				s.Players[i].Username + "] SteamID [" + s.Players[i].SteamID + "]")
+		if s.Players[i].SteamID != "BOT" {
+			commId, idErr := steamid.SteamIdToCommId(s.Players[i].SteamID)
 
-			kickErr := s.Rcon.KickPlayer(s.Players[i], "[TeamPlay.TF]: You're not in this lobby...")
+			if idErr != nil {
+				log.Printf("[Server.Verify]: ERROR -> %s", idErr)
+			}
 
-			if kickErr != nil {
-				log.Fatal(kickErr)
+			// check if player is not in lobby but is in server
+			playerIsIn, inErr := s.IsPlayerInLobby(commId)
+
+			if inErr != nil {
+				log.Printf("[Server.Verify]: ERROR -> %s", inErr)
+			}
+
+			if playerIsIn == false {
+				log.Println("[Server.Verify]: Kicking player not allowed -> Username [" +
+					s.Players[i].Username + "] CommID [" + commId + "] SteamID [" + s.Players[i].SteamID + "] ")
+
+				kickErr := s.Rcon.KickPlayer(s.Players[i], "[TeamPlay.TF]: You're not in this lobby...")
+
+				if kickErr != nil {
+					log.Printf("[Server.Verify]: ERROR -> %s", kickErr)
+				}
 			}
 		}
 	}
-
 }
 
-// check if the given steamId is in the server
-func (s *Server) IsPlayerInServer(steamId string) bool {
+// check if the given commId is in the server
+func (s *Server) IsPlayerInServer(playerCommId string) (bool, error) {
 	for i := range s.Players {
-		if steamId == s.Players[i].SteamID {
-			return true
+		commId, idErr := steamid.SteamIdToCommId(s.Players[i].SteamID)
+
+		if idErr != nil {
+			return false, idErr
+		}
+
+		if playerCommId == commId {
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
-// check if the given steamId is in the allowedPlayers list
-func (s *Server) IsPlayerInLobby(steamId string) bool {
-	// SourceTV
-	if steamId == "BOT" {
-		return false
-	}
-
+// check if the given commId is in the allowedPlayers list
+func (s *Server) IsPlayerInLobby(commId string) (bool, error) {
 	for i := range s.AllowedPlayers {
-		if steamId == s.AllowedPlayers[i].SteamID {
-			return true
+		allowedCommId, idErr := steamid.SteamIdToCommId(s.Players[i].SteamID)
+
+		if idErr != nil {
+			return false, idErr
+		}
+
+		if commId == allowedCommId {
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 // TODO: get end event from logs
 // `World triggered "Game_Over"`
 func (s *Server) End() {
-	fmt.Println("[Server.End]: Ending server -> [" + s.Address + "] from lobby [" + strconv.Itoa(s.LobbyId) + "]")
+	log.Println("[Server.End]: Ending server -> [" + s.Address + "] from lobby [" + s.LobbyId.Hex() + "]")
 	// TODO: upload logs
 
 	s.Rcon.Close()
@@ -199,11 +207,11 @@ func (s *Server) End() {
 }
 
 func (s *Server) ExecConfig(config *ServerConfig) error {
-	fmt.Println("[Server.ExecConfig]: Running config!")
+	log.Println("[Server.ExecConfig]: Running config!")
 	configErr := s.Rcon.ExecConfig(config.Data)
 
 	if configErr != nil {
-		fmt.Println("[Server.ExecConfig]: Error while trying to run config!")
+		log.Println("[Server.ExecConfig]: Error while trying to run config!")
 
 		return configErr
 	}
@@ -212,7 +220,7 @@ func (s *Server) ExecConfig(config *ServerConfig) error {
 }
 
 func (s *Server) KickAll() error {
-	fmt.Println("[Server.KickAll]: Kicking players...")
+	log.Println("[Server.KickAll]: Kicking players...")
 	s.Players = s.Rcon.GetPlayers()
 
 	for i := range s.Players {
@@ -226,30 +234,16 @@ func (s *Server) KickAll() error {
 	return nil
 }
 
-func (s *Server) ChangeMap(newMap string) error {
-	fmt.Println("[Server.ChangeMap]: Changing [" + s.Address + "]'s map to [" + newMap + "]...")
-	_, queryErr := s.Rcon.Query("changelevel " + newMap)
-
-	return queryErr
+func (s *Server) AllowPlayer(commId string) {
+	s.AllowedPlayers = append(s.AllowedPlayers, TF2RconWrapper.Player{SteamID: commId})
 }
 
-func (s *Server) ChangePassword(newPassword string) error {
-	// reset password if length is 0
-	// command would be: sv_password ""
-	if newPassword == "" {
-		newPassword = `""`
+func (s *Server) IsPlayerAllowed(commId string) bool {
+	for i := range s.AllowedPlayers {
+		if commId == s.AllowedPlayers[i].SteamID {
+			return true
+		}
 	}
 
-	fmt.Println("[Server.ChangePassword]: Changing [" + strconv.Itoa(s.LobbyId) + " @ " + s.Address + "]'s password...")
-	_, queryErr := s.Rcon.Query("sv_password " + newPassword)
-
-	if queryErr == nil {
-		fmt.Println("[Server.ChangePassword]: Changed [" + strconv.Itoa(s.LobbyId) + " @ " + s.Address + "]'s password!")
-	}
-
-	return queryErr
-}
-
-func (s *Server) AllowPlayer(steamId string) {
-	s.AllowedPlayers = append(s.AllowedPlayers, TF2RconWrapper.Player{SteamID: steamId})
+	return false
 }
