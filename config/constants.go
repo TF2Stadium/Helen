@@ -9,6 +9,7 @@ type constants struct {
 	Port               string
 	Domain             string
 	OpenIDRealm        string
+	LoginRedirectPath  string
 	CookieStoreSecret  string
 	StaticFileLocation string
 	SessionName        string
@@ -54,6 +55,7 @@ func setupDevelopmentConstants() {
 		Port:               "8080",
 		Domain:             "http://localhost:8080",
 		OpenIDRealm:        "http://localhost:8080",
+		LoginRedirectPath:  "http://localhost:8080/",
 		CookieStoreSecret:  "dev secret is very secret",
 		SessionName:        "defaultSession",
 		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",

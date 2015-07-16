@@ -5,7 +5,11 @@ import (
 	"net/http"
 	"strings"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/TeamPlayTF/Server/config"
+	"github.com/TeamPlayTF/Server/database"
+	"github.com/TeamPlayTF/Server/models"
 	"github.com/gorilla/sessions"
 	"github.com/yohcop/openid-go"
 )
@@ -33,11 +37,10 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	fullURL := "http://localhost:8080" + r.URL.String()
-	log.Print(fullURL)
+	fullURL := config.Constants.Domain + r.URL.String()
 	id, err := openid.Verify(fullURL, discoveryCache, nonceStore)
 	if err != nil {
-		log.Print(err)
+		log.Println(err)
 		return
 	}
 
@@ -46,7 +49,18 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	session := getDefaultSession(r)
 	session.Values["steamid"] = steamid
-	session.Save(r, w)
 
-	http.Redirect(w, r, "/", 303)
+	player := &models.Player{}
+	err = database.GetPlayersCollection().Find(bson.M{"steamid": steamid}).One(&player)
+
+	if err != nil {
+		player := models.NewPlayer(steamid)
+		player.Save()
+	}
+
+	session.Values["id"] = player.Id.String()
+
+	err = session.Save(r, w)
+
+	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
