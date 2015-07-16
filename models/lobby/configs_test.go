@@ -1,62 +1,57 @@
 package lobby
 
 import (
-	"log"
 	"testing"
 
 	"github.com/TeamPlayTF/Server/config"
-	"github.com/TeamPlayTF/Server/models/lobby"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInitConfigs(t *testing.T) {
 	config.SetupConstants()
-	lobby.InitConfigs()
+	InitConfigs()
 }
 
 func TestUgcHighlander(t *testing.T) {
-	config := lobby.NewServerConfig()
-	config.League = lobby.LeagueUgc
-	config.Type = lobby.LobbyTypeHighlander
-	config.Map = "cp_process_final"
-	_, cfgErr := config.Get()
+	config := NewServerConfig()
+	config.League = LeagueUgc
+	config.Type = LobbyTypeHighlander
+	config.Map = "pl_upward"
+	cfg, cfgErr := config.Get()
 
-	if cfgErr != nil {
-		log.Fatal(cfgErr)
-	}
+	assert.Nil(t, cfgErr, "cfg error")
+	assert.NotEmpty(t, cfg, "cfg shouldn't be empty")
 }
 
 func TestUgcSixes(t *testing.T) {
-	config := lobby.NewServerConfig()
-	config.League = lobby.LeagueUgc
-	config.Type = lobby.LobbyTypeSixes
-	config.Map = "cp_process_final"
-	_, cfgErr := config.Get()
+	config := NewServerConfig()
+	config.League = LeagueUgc
+	config.Type = LobbyTypeSixes
+	config.Map = "cp_badlands"
+	cfg, cfgErr := config.Get()
 
-	if cfgErr != nil {
-		log.Fatal(cfgErr)
-	}
+	assert.Nil(t, cfgErr, "cfg error")
+	assert.NotEmpty(t, cfg, "cfg shouldn't be empty")
 }
 
 func TestEtf2lSixes(t *testing.T) {
-	config := lobby.NewServerConfig()
-	config.League = lobby.LeagueEtf2l
-	config.Type = lobby.LobbyTypeSixes
-	config.Map = "cp_process_final"
-	_, cfgErr := config.Get()
+	config := NewServerConfig()
+	config.League = LeagueEtf2l
+	config.Type = LobbyTypeSixes
+	config.Map = "cp_gullywash_final1"
+	cfg, cfgErr := config.Get()
 
-	if cfgErr != nil {
-		log.Fatal(cfgErr)
-	}
+	assert.Nil(t, cfgErr, "cfg error")
+	assert.NotEmpty(t, cfg, "cfg shouldn't be empty")
 }
 
 func TestEtf2lHighlander(t *testing.T) {
-	config := lobby.NewServerConfig()
-	config.League = lobby.LeagueEtf2l
-	config.Type = lobby.LobbyTypeHighlander
-	config.Map = "cp_process_final"
-	_, cfgErr := config.Get()
+	config := NewServerConfig()
+	config.League = LeagueEtf2l
+	config.Type = LobbyTypeHighlander
+	config.Map = "pl_badwater"
+	cfg, cfgErr := config.Get()
 
-	if cfgErr != nil {
-		log.Fatal(cfgErr)
-	}
+	assert.Nil(t, cfgErr, "cfg error")
+	assert.NotEmpty(t, cfg, "cfg shouldn't be empty")
 }
