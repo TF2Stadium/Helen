@@ -78,11 +78,11 @@ func NewServerConfig() *ServerConfig {
 }
 
 func (c *ServerConfig) Get() (string, error) {
-	if c.IsLeagueValid() == false {
+	if !c.IsLeagueValid() {
 		return "", errors.New("[Configs.Get]: No league specified!")
 	}
 
-	if c.IsLobbyTypeValid() == false {
+	if !c.IsLobbyTypeValid() {
 		return "", errors.New("[Configs.Get]: The type you specified doesn't exists!")
 	}
 
@@ -184,11 +184,11 @@ func (c *ServerConfig) Get() (string, error) {
 }
 
 func (c *ServerConfig) GetName() (string, error) {
-	if c.IsLeagueValid() == false {
+	if !c.IsLeagueValid() {
 		return "", errors.New("[Configs.GetName]: Invalid league!")
 	}
 
-	if c.IsLobbyTypeValid() == false {
+	if !c.IsLobbyTypeValid() {
 		return "", errors.New("[Configs.GetName]: Invalid LobbyType!")
 	}
 
