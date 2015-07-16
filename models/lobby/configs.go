@@ -3,94 +3,74 @@ package lobby
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"path/filepath"
-	"strings"
 
 	"github.com/TeamPlayTF/Server/config"
 )
 
 const (
 	ConfigsPath = "/configs/"
-	ConfigsFile = "configs.json"
 	MapsFile    = "maps.json"
 )
 
-var ConfigsData *ConfigData
+type League string
+
+const (
+	LeagueUgc   League = "ugc"
+	LeagueEtf2l League = "etf2l"
+)
+
+func (l *League) String() string {
+	return string(*l)
+}
+
+// valid leagues
+var Leagues = [...]League{
+	LeagueUgc,
+	LeagueEtf2l,
+}
+
+// pre config list
+const (
+	// etf2l
+	Etf2lInitConfig           = "/etf2l/etf2l.cfg"
+	Etf2lBaseSixesConfig      = "/etf2l/etf2l_6v6.cfg"
+	Etf2lBaseHighlanderConfig = "/etf2l/etf2l_9v9.cfg"
+
+	// ugc
+	UgcBaseSixesConfig      = "/ugc/ugc_6v_base.cfg"
+	UgcBaseHighlanderConfig = "/ugc/ugc_HL_base.cfg"
+)
 
 // MapsData holds the map + config list from maps.json
-//
-// think about it like this:
-// -> MapsData["MAP NAME"].V6.Ugc -> would return the ugc's 6v6 cfg for that map
-// -> MapsData[string].GameMode.LeagueConfig
-var MapsData map[string]GameMode
-
-type LeagueConfig struct {
-	Ugc   string `json:"ugc"`
-	Etf2l string `json:"etf2l"`
-}
-
-type GameMode struct {
-	V6 *LeagueConfig `json:"6v6"`
-	V9 *LeagueConfig `json:"9v9"`
-}
-
-// league configs from configs.json
-type ConfigData struct {
-	Etf2l struct {
-		V6 []string `json:"6v6"`
-		V9 []string `json:"9v9"`
-	} `json:"etf2l"`
-
-	Ugc struct {
-		V6 []string `json:"6v6"`
-		V9 []string `json:"9v9"`
-	} `json:"ugc"`
-}
+var MapsData map[string]map[string]map[League]string
 
 // configs.json
 type ServerConfig struct {
 	Name   string    // example: HL_stopwatch
-	League string    // ugc, etf2l...
+	League League    // ugc, etf2l...
 	Type   LobbyType // 9v9, 6v6...
 	Data   string    // config file's text
 	Map    string
 }
 
-// maps.json
-type MapConfig struct {
-	Name   string        // map name
-	Config *ServerConfig // config info (name, league, type and data)
-}
-
-func InitConfigs() {
-	// configs
-	fmt.Println("[Configs.Init] Loading server configs...")
-	cfgFile, cfgErr := ioutil.ReadFile(config.Constants.StaticFileLocation + ConfigsPath + ConfigsFile)
-
-	if cfgErr == nil {
-		json.Unmarshal(cfgFile, &ConfigsData)
-		fmt.Println("[Configs.Init] Server configs loaded!")
-
-	} else {
-		fmt.Println("[Configs.Init] ERROR while trying to load server configs!")
-		log.Fatal(cfgErr)
-	}
-
+func InitConfigs() error {
 	// maps
-	fmt.Println("[Configs.Init] Loading maps configs...")
+	log.Println("[Configs.Init] Loading maps configs...")
 	mapFile, mapErr := ioutil.ReadFile(config.Constants.StaticFileLocation + ConfigsPath + MapsFile)
 
 	if mapErr == nil {
 		json.Unmarshal(mapFile, &MapsData)
-		fmt.Println("[Configs.Init] Maps configs loaded!")
+		log.Println("[Configs.Init] Maps configs loaded!")
 
 	} else {
-		fmt.Println("[Configs.Init] ERROR while trying to load maps configs!")
-		log.Fatal(mapErr)
+		log.Println("[Configs.Init] ERROR while trying to load maps configs!")
+		return mapErr
 	}
+
+	return nil
 }
 
 func NewServerConfig() *ServerConfig {
@@ -98,23 +78,22 @@ func NewServerConfig() *ServerConfig {
 }
 
 func (c *ServerConfig) Get() (string, error) {
-	if c.League == "" {
+	if c.IsLeagueValid() == false {
 		return "", errors.New("[Configs.Get]: No league specified!")
 	}
 
-	if c.Type != LobbyTypeSixes && c.Type != LobbyTypeHighlander {
+	if c.IsLobbyTypeValid() == false {
 		return "", errors.New("[Configs.Get]: The type you specified doesn't exists!")
 	}
 
 	if c.Name == "" {
 		configName, configNameErr := c.GetMapConfig(c.Map)
 
-		// if happens, rip
 		if configNameErr != nil {
-			log.Fatal(configNameErr)
+			return "", configNameErr
 		}
 
-		fmt.Println("[Configs.Get]: Map config choosen: " + configName)
+		log.Println("[Configs.Get]: Map config choosen: " + configName)
 
 		if configName == "" {
 			return "", errors.New("[Configs.Get]: No config name or map specified!")
@@ -126,7 +105,7 @@ func (c *ServerConfig) Get() (string, error) {
 	// get config's name
 	cfgName, nameErr := c.GetName()
 
-	fmt.Println("[Configs.Get]: Config that will be used: " + cfgName)
+	log.Println("[Configs.Get]: Config that will be used: " + cfgName)
 
 	if nameErr != nil {
 		return "", nameErr
@@ -139,15 +118,15 @@ func (c *ServerConfig) Get() (string, error) {
 	var etf2lPreErr error
 
 	// etf2l
-	if c.League == "etf2l" {
-		preConfigName = "/etf2l/etf2l.cfg"
+	if c.League == LeagueEtf2l {
+		preConfigName = Etf2lInitConfig
 
 		var etf2lPreConfigName string
 		if c.Type == LobbyTypeSixes {
-			etf2lPreConfigName = "/etf2l/etf2l_6v6.cfg"
+			etf2lPreConfigName = Etf2lBaseSixesConfig
 
 		} else if c.Type == LobbyTypeHighlander {
-			etf2lPreConfigName = "/etf2l/etf2l_9v9.cfg"
+			etf2lPreConfigName = Etf2lBaseHighlanderConfig
 		}
 
 		// etf2l pre configs's pre config lol
@@ -155,18 +134,18 @@ func (c *ServerConfig) Get() (string, error) {
 			ConfigsPath + etf2lPreConfigName))
 
 		if etf2lPreErr == nil {
-			fmt.Println("[Configs.Init] Etf2l's server pre-configs loaded!")
+			log.Println("[Configs.Init] Etf2l's server pre-configs loaded!")
 		} else {
 			return "", etf2lPreErr
 		}
 
 		// ugc
-	} else if c.League == "ugc" {
+	} else if c.League == LeagueUgc {
 		if c.Type == LobbyTypeSixes {
-			preConfigName = "/ugc/ugc_6v_base.cfg"
+			preConfigName = UgcBaseSixesConfig
 
 		} else if c.Type == LobbyTypeHighlander {
-			preConfigName = "/ugc/ugc_HL_base.cfg"
+			preConfigName = UgcBaseHighlanderConfig
 		}
 	}
 
@@ -175,7 +154,7 @@ func (c *ServerConfig) Get() (string, error) {
 		ConfigsPath + preConfigName))
 
 	if preErr == nil {
-		fmt.Println("[Configs.Init] Server pre-configs loaded!")
+		log.Println("[Configs.Init] Server pre-configs loaded!")
 	} else {
 		return "", preErr
 	}
@@ -183,11 +162,11 @@ func (c *ServerConfig) Get() (string, error) {
 	// get config file's data
 	cfgData, cfgErr := ioutil.ReadFile(filepath.Clean(config.Constants.StaticFileLocation +
 		ConfigsPath + "/" +
-		strings.ToLower(c.League) + "/" +
+		c.League.String() + "/" +
 		cfgName))
 
 	if cfgErr == nil {
-		fmt.Println("[Configs.Init] Server configs loaded!")
+		log.Println("[Configs.Init] Server configs loaded!")
 	} else {
 		return "", cfgErr
 	}
@@ -195,7 +174,7 @@ func (c *ServerConfig) Get() (string, error) {
 	var cfg string
 
 	// insert etf2l pre config into server pre config
-	if c.League == "etf2l" {
+	if c.League == LeagueEtf2l {
 		cfg = string(etf2lPreConfig[:]) + string(preConfig[:]) + string(cfgData[:])
 	} else {
 		cfg = string(preConfig[:]) + string(cfgData[:])
@@ -205,26 +184,21 @@ func (c *ServerConfig) Get() (string, error) {
 }
 
 func (c *ServerConfig) GetName() (string, error) {
-	if c.League != "ugc" && c.League != "etf2l" {
-		return "", errors.New("[Configs.GetName]: League can only be [ugc] or [etf2l]!")
+	if c.IsLeagueValid() == false {
+		return "", errors.New("[Configs.GetName]: Invalid league!")
 	}
 
-	if c.Type != LobbyTypeSixes && c.Type != LobbyTypeHighlander {
-		return "", errors.New("[Configs.GetName]: The type you specified doesn't exists!")
+	if c.IsLobbyTypeValid() == false {
+		return "", errors.New("[Configs.GetName]: Invalid LobbyType!")
 	}
 
 	// game type as string
 	var t string
 
-	if c.League == "etf2l" {
-		switch {
-		case c.Type == LobbyTypeSixes:
-			t = "6v6"
-		case c.Type == LobbyTypeHighlander:
-			t = "9v9"
-		}
+	if c.League == LeagueEtf2l {
+		t = LobbyTypeToString(c.Type)
 
-	} else if c.League == "ugc" {
+	} else if c.League == LeagueUgc {
 		switch {
 		case c.Type == LobbyTypeSixes:
 			t = "6v"
@@ -235,36 +209,50 @@ func (c *ServerConfig) GetName() (string, error) {
 
 	// build config name
 	// ugc -> 6v6 = ugc_6v_koth.cfg
-	cfgName := strings.ToLower(c.League + "_" + t + "_" + c.Name + ".cfg")
+	cfgName := c.League.String() + "_" + t + "_" + c.Name + ".cfg"
 
 	return cfgName, nil
 }
 
 func (c *ServerConfig) GetMapConfig(mapName string) (string, error) {
-	fmt.Println("[Configs.GetMapConfig]: Getting config for map -> [" + mapName + "]")
+	log.Println("[Configs.GetMapConfig]: Getting config for map -> [" + mapName + "]")
 
 	var mapConfig string
 
-	// ugc 6v6
-	if c.League == "ugc" && c.Type == LobbyTypeSixes && MapsData[mapName].V6 != nil {
-		mapConfig = MapsData[mapName].V6.Ugc
-
-		// ugc 9v9
-	} else if c.League == "ugc" && c.Type == LobbyTypeHighlander && MapsData[mapName].V9 != nil {
-		mapConfig = MapsData[mapName].V9.Ugc
-
-		// etf2l 6v6
-	} else if c.League == "etf2l" && c.Type == LobbyTypeSixes && MapsData[mapName].V6 != nil {
-		mapConfig = MapsData[mapName].V6.Etf2l
-
-		// etf2l 9v9
-	} else if c.League == "etf2l" && c.Type == LobbyTypeHighlander && MapsData[mapName].V9 != nil {
-		mapConfig = MapsData[mapName].V9.Etf2l
-
-		// can't find any config in the maps.json
+	if MapsData[mapName] != nil {
+		mapConfig = MapsData[mapName][LobbyTypeToString(c.Type)][c.League]
 	} else {
-		return "", errors.New("[Configs.GetMapConfig]: No config can be found for this map in this mode and league!")
+		return "", errors.New("[Configs.GetMapConfig]: No config can be found for this map in this game type and league!")
 	}
 
 	return mapConfig, nil
+}
+
+func (c *ServerConfig) IsLobbyTypeValid() bool {
+	if c.Type == LobbyTypeSixes || c.Type == LobbyTypeHighlander {
+		return true
+	}
+
+	return false
+}
+
+func (c *ServerConfig) IsLeagueValid() bool {
+	for i := range Leagues {
+		if c.League == Leagues[i] {
+			return true
+		}
+	}
+
+	return false
+}
+
+func LobbyTypeToString(t LobbyType) string {
+	switch {
+	case t == LobbyTypeSixes:
+		return "6v6"
+	case t == LobbyTypeHighlander:
+		return "9v9"
+	}
+
+	return ""
 }
