@@ -50,6 +50,7 @@ func NewServer() *Server {
 // things that needs to be specified before run this:
 // -> Map
 // -> Mode
+// -> Type
 // -> League
 // -> LobbyId
 // -> Address
@@ -141,14 +142,9 @@ func (s *Server) Verify() {
 				log.Printf("[Server.Verify]: ERROR -> %s", idErr)
 			}
 
-			// check if player is not in lobby but is in server
-			playerIsIn, inErr := s.IsPlayerInLobby(commId)
+			isPlayerAllowed := s.IsPlayerAllowed(commId)
 
-			if inErr != nil {
-				log.Printf("[Server.Verify]: ERROR -> %s", inErr)
-			}
-
-			if playerIsIn == false {
+			if isPlayerAllowed == false {
 				log.Println("[Server.Verify]: Kicking player not allowed -> Username [" +
 					s.Players[i].Username + "] CommID [" + commId + "] SteamID [" + s.Players[i].SteamID + "] ")
 
@@ -172,23 +168,6 @@ func (s *Server) IsPlayerInServer(playerCommId string) (bool, error) {
 		}
 
 		if playerCommId == commId {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
-// check if the given commId is in the allowedPlayers list
-func (s *Server) IsPlayerInLobby(commId string) (bool, error) {
-	for i := range s.AllowedPlayers {
-		allowedCommId, idErr := steamid.SteamIdToCommId(s.Players[i].SteamID)
-
-		if idErr != nil {
-			return false, idErr
-		}
-
-		if commId == allowedCommId {
 			return true, nil
 		}
 	}
