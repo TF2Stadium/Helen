@@ -17,7 +17,7 @@ type Player struct {
 }
 
 func NewPlayer(steamId string) *Player {
-	player := &Player{SteamId: steamId}
+	player := &Player{SteamId: steamId, CreatedAt: bson.Now()}
 
 	// magically get the player's name, avatar and other stuff from steam
 

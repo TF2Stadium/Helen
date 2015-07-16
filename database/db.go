@@ -40,7 +40,7 @@ func Init() {
 		log.Fatal(err)
 	}
 
-	con.SetMode(mgo.Monotonic, true)
+	con.SetMode(mgo.Strong, true)
 
 	Connection = con
 	Database = con.DB(getDatabaseName())
@@ -60,17 +60,17 @@ func GetPlayersCollection() *mgo.Collection {
 }
 
 func Get(collection string) (*mgo.Session, *mgo.Collection) {
-	fmt.Println("[Database.Session]: Getting new session...")
+	log.Println("[Database.Session]: Getting new session...")
 
 	// creates a new session
 	sess := Connection.Copy()
 
-	fmt.Println("[Database.Session]: Getting collection -> [" + collection + "]")
+	log.Println("[Database.Session]: Getting collection -> [" + collection + "]")
 
 	// gets the specified collection
 	col := sess.DB(getDatabaseName()).C(collection)
 
-	fmt.Println("[Database.Session]: Got session, returning!")
+	log.Println("[Database.Session]: Got session, returning!")
 	return sess, col
 }
 

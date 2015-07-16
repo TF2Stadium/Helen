@@ -8,6 +8,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/TeamPlayTF/Server/config"
+	"github.com/TeamPlayTF/Server/controllers/controllerhelpers"
 	"github.com/TeamPlayTF/Server/database"
 	"github.com/TeamPlayTF/Server/models"
 	"github.com/gorilla/sessions"
@@ -29,7 +30,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	session := getDefaultSession(r)
+	session, _ := controllerhelpers.GetSessionHTTP(r)
 	session.Options = &sessions.Options{MaxAge: -1}
 	session.Save(r, w)
 
@@ -47,7 +48,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(id, "/")
 	steamid := parts[len(parts)-1]
 
-	session := getDefaultSession(r)
+	session, _ := controllerhelpers.GetSessionHTTP(r)
 	session.Values["steamid"] = steamid
 
 	player := &models.Player{}

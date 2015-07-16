@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/TeamPlayTF/Server/controllers/controllerhelpers"
 	"github.com/gorilla/mux"
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
-	if isLoggedIn(r) {
-		session := getDefaultSession(r)
+	if controllerhelpers.IsLoggedInHTTP(r) {
+		session, _ := controllerhelpers.GetSessionHTTP(r)
 		var steamid = session.Values["steamid"].(string)
 		fmt.Fprintf(w, `<html><head></head><body>hello! You're logged in and your steam id is
 			`+steamid+`. You can log out <a href='/logout'>here</a></body></html>`)

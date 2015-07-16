@@ -1,10 +1,10 @@
 package routes
 
 import (
+	"github.com/TeamPlayTF/Server/config"
 	"github.com/TeamPlayTF/Server/controllers"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
-	"github.com/TeamPlayTF/Server/config"
 )
 
 func SetupHTTPRoutes(router *mux.Router) {
@@ -18,12 +18,12 @@ func SetupHTTPRoutes(router *mux.Router) {
 
 func SetupSocketRoutes(server *socketio.Server) {
 
-	var socketController func(socketio.Socket);
+	var socketController func(socketio.Socket)
 
 	if config.Constants.SocketMockUp {
-		socketController = controllers.SocketMockUpInit;
+		socketController = controllers.SocketMockUpInit
 	} else {
-		socketController = controllers.SocketInit;
+		socketController = controllers.SocketInit
 	}
 
 	server.On("connection", socketController)

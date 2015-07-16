@@ -4,24 +4,52 @@ import (
 	"log"
 	"strings"
 
+	"gopkg.in/mgo.v2/bson"
+
+	chelpers "github.com/TeamPlayTF/Server/controllers/controllerhelpers"
 	"github.com/TeamPlayTF/Server/database"
 	"github.com/TeamPlayTF/Server/models"
 	"github.com/TeamPlayTF/Server/models/lobby"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func SocketInit(so socketio.Socket) {
+	so.On("authenticate", func(msg string) {
+		json, err := simplejson.NewJson([]byte(msg))
+		if err != nil {
+			log.Println("Failed to authenticate ", msg)
+			return
+		}
+
+		chelpers.AuthenticateSocket(so.Id(), json)
+	})
+
+	so.On("disconnection", func() {
+		// chelpers.DeauthenticateSocket(so.Id())
+		log.Println("on disconnect")
+	})
+
+	so.On("authenticationTest", func(ns *socketio.Namespace, testArg int, callback func(...interface{})) {
+		log.Println("started authentication test")
+		var answer string
+		if chelpers.IsLoggedInSocket(so.Id()) {
+			answer = "authenticated"
+		} else {
+			answer = "not authenticated"
+		}
+		log.Println("ended authentication test", answer)
+
+		callback(testArg)
+	})
+
 	log.Println("on connection")
 	so.Join("chat")
 	so.On("chat message", func(msg string) {
 		log.Println("emit:", so.Emit("chat message", msg))
 		so.BroadcastTo("chat", "chat message", msg)
 	})
-	so.On("disconnection", func() {
-		log.Println("on disconnect")
-	})
+
 	so.On("createLobby", func(jsonstr string, response func(interface{}) interface{}) {
 		js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
 
@@ -46,7 +74,7 @@ func SocketInit(so socketio.Socket) {
 
 		lobby_id := simplejson.New()
 		lobby_id.Set("id", string(lob.Id))
-		bytes, _ := buildSuccessJSON(lobby_id).Encode()
+		bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
 		response(string(bytes))
 	})
 	so.On("addPlayer", func(jsonstr string, response func(interface{}) interface{}) {
@@ -64,19 +92,19 @@ func SocketInit(so socketio.Socket) {
 		//schalla is evil, assume he'll send us all sorts of stuff
 		//check lobbyidstring
 		if !bson.IsObjectIdHex(lobbyidstring) {
-			bytes, _ = buildFailureJSON("lobbyid is not a valid hex representation", -2).Encode()
+			bytes, _ = chelpers.BuildFailureJSON("lobbyid is not a valid hex representation", -2).Encode()
 		} else {
 			lobbyid := bson.ObjectId(lobbyidstring)
 			err := database.GetLobbiesCollection().FindId(lobbyid).One(&lob)
 
 			if err != nil {
-				bytes, _ = buildFailureJSON("Lobby not in the database", -1).Encode()
+				bytes, _ = chelpers.BuildFailureJSON("Lobby not in the database", -1).Encode()
 			} else {
 				err := lob.AddPlayer(player, slot)
 				if err != nil {
 					bytes, _ = err.ErrorJSON().Encode()
 				} else {
-					bytes, _ = buildSuccessJSON(simplejson.New()).Encode()
+					bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 					lob.Save()
 				}
 			}
@@ -99,17 +127,17 @@ func SocketInit(so socketio.Socket) {
 			steamid, _ = steamidjson.String()
 			err := database.GetPlayersCollection().Find(bson.M{"steamid": steamid}).One(&player)
 			if err != nil {
-				bytes, _ = buildFailureJSON("Player not in the database", -1).Encode()
+				bytes, _ = chelpers.BuildFailureJSON("Player not in the database", -1).Encode()
 			} else {
 				lobbyid, err := player.InLobby()
 				if err != nil {
-					bytes, _ = buildFailureJSON("Player not in any Lobby.", 4).Encode()
+					bytes, _ = chelpers.BuildFailureJSON("Player not in any Lobby.", 4).Encode()
 				} else {
 					var lob *lobby.Lobby
 					database.GetLobbiesCollection().FindId(lobbyid).One(&lob)
 					lob.RemovePlayer(player)
 					lob.Save()
-					bytes, _ = buildSuccessJSON(simplejson.New()).Encode()
+					bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 				}
 			}
 			response(string(bytes))
