@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/TeamPlayTF/Server/config"
-	"github.com/TeamPlayTF/Server/controllers"
+	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/controllers"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
 )

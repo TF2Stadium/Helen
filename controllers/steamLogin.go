@@ -7,10 +7,10 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/TeamPlayTF/Server/config"
-	"github.com/TeamPlayTF/Server/controllers/controllerhelpers"
-	"github.com/TeamPlayTF/Server/database"
-	"github.com/TeamPlayTF/Server/models"
+	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/models"
 	"github.com/gorilla/sessions"
 	"github.com/yohcop/openid-go"
 )

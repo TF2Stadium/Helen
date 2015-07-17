@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/TeamPlayTF/Server/config"
-	"github.com/TeamPlayTF/Server/database"
-	"github.com/TeamPlayTF/Server/models"
+	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/models"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )

@@ -8,11 +8,11 @@ import (
 
 	"gopkg.in/tylerb/graceful.v1"
 
-	"github.com/TeamPlayTF/Server/config"
-	"github.com/TeamPlayTF/Server/config/stores"
-	"github.com/TeamPlayTF/Server/database"
-	"github.com/TeamPlayTF/Server/models/lobby"
-	"github.com/TeamPlayTF/Server/routes"
+	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/config/stores"
+	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/models/lobby"
+	"github.com/TF2Stadium/Server/routes"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"

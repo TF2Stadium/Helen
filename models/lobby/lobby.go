@@ -5,9 +5,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/TeamPlayTF/Server/database"
-	"github.com/TeamPlayTF/Server/helpers"
-	"github.com/TeamPlayTF/Server/models"
+	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/helpers"
+	"github.com/TF2Stadium/Server/models"
 	"gopkg.in/mgo.v2/bson"
 )
 

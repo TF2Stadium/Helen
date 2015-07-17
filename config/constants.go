@@ -58,14 +58,14 @@ func setupDevelopmentConstants() {
 		LoginRedirectPath:  "http://localhost:8080/",
 		CookieStoreSecret:  "dev secret is very secret",
 		SessionName:        "defaultSession",
-		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",
+		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Server/static",
 		SocketMockUp:       false,
 		AllowedCorsOrigins: []string{"*"},
 
 		DbHosts:        "127.0.0.1:27017",
-		DbDatabase:     "teamplaytf",
-		DbTestDatabase: "TESTteamplaytf",
-		DbUsername:     "teamplaytf",
+		DbDatabase:     "tf2stadium",
+		DbTestDatabase: "TESTtf2stadium",
+		DbUsername:     "tf2stadium",
 		DbPassword:     "dickbutt", // change this
 
 		DbLobbiesCollection: "lobbies", // change this
@@ -80,14 +80,14 @@ func setupProductionConstants() {
 		Domain:             "http://localhost:8080",
 		OpenIDRealm:        "http://localhost:8080",
 		CookieStoreSecret:  "dev secret is very secret",
-		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TeamPlayTF/Server/static",
+		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Server/static",
 		SocketMockUp:       false,
-		AllowedCorsOrigins: []string{"http://teamplay.tf", "http://api.teamplay.tf"},
+		AllowedCorsOrigins: []string{"http://tf2stadium.com", "http://api.tf2stadium.com"},
 
 		DbHosts:        "127.0.0.1:27017",
-		DbDatabase:     "teamplaytf",
-		DbTestDatabase: "TESTteamplaytf",
-		DbUsername:     "teamplaytf",
+		DbDatabase:     "tf2stadium",
+		DbTestDatabase: "TESTtf2stadium",
+		DbUsername:     "tf2stadium",
 		DbPassword:     "dickbutt", // change this
 	}
 }

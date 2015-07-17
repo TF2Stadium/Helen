@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/TeamPlayTF/Server/database"
+	"github.com/TF2Stadium/Server/database"
 
 	"gopkg.in/mgo.v2/bson"
 )

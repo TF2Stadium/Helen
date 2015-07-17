@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/TeamPlayTF/Server/config"
-	"github.com/TeamPlayTF/Server/config/stores"
+	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/config/stores"
 	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/sessions"
 )

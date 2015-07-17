@@ -3,7 +3,7 @@ package lobby
 import (
 	"testing"
 
-	"github.com/TeamPlayTF/Server/config"
+	"github.com/TF2Stadium/Server/config"
 	"github.com/stretchr/testify/assert"
 )
 

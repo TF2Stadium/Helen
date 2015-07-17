@@ -7,7 +7,7 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/TeamPlayTF/Server/config"
+	"github.com/TF2Stadium/Server/config"
 )
 
 const (

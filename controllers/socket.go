@@ -6,10 +6,10 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	chelpers "github.com/TeamPlayTF/Server/controllers/controllerhelpers"
-	"github.com/TeamPlayTF/Server/database"
-	"github.com/TeamPlayTF/Server/models"
-	"github.com/TeamPlayTF/Server/models/lobby"
+	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/models"
+	"github.com/TF2Stadium/Server/models/lobby"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
 )

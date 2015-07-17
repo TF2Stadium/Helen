@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/TeamPlayTF/Server/config"
+	"github.com/TF2Stadium/Server/config"
 	"gopkg.in/mgo.v2"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/TeamPlayTF/Server/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	"github.com/gorilla/mux"
 )
 

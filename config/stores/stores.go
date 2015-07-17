@@ -1,8 +1,8 @@
 package stores
 
 import (
-	"github.com/TeamPlayTF/Server/config"
-	"github.com/TeamPlayTF/Server/database"
+	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/database"
 	"github.com/gorilla/sessions"
 	"gopkg.in/bluesuncorp/mongostore.v4"
 )

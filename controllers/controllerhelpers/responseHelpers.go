@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/TeamPlayTF/Server/config"
-	"github.com/TeamPlayTF/Server/helpers"
+	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/bitly/go-simplejson"
 )
 

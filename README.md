@@ -1,5 +1,5 @@
-# TeamPlayTF
-TeamPlayTF Server is the backend server component for the TeamPlay.tf project written in Go.
+# TF2Stadium
+TF2Stadium Server is the backend server component for the tf2stadium.com project written in Go.
 
 ### Setup
 The project uses MongoDB as a database. Default production account data can be found at `database/setup.txt`

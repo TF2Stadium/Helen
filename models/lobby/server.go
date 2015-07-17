@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/TeamPlayTF/PlayerStatsScraper/steamid"
-	"github.com/TeamPlayTF/TF2RconWrapper"
+	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
+	"github.com/TF2Stadium/TF2RconWrapper"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -151,7 +151,7 @@ func (s *Server) Verify() {
 				log.Println("[Server.Verify]: Kicking player not allowed -> Username [" +
 					s.Players[i].Username + "] CommID [" + commId + "] SteamID [" + s.Players[i].SteamID + "] ")
 
-				kickErr := s.Rcon.KickPlayer(s.Players[i], "[TeamPlay.TF]: You're not in this lobby...")
+				kickErr := s.Rcon.KickPlayer(s.Players[i], "[tf2stadium.com]: You're not in this lobby...")
 
 				if kickErr != nil {
 					log.Printf("[Server.Verify]: ERROR -> %s", kickErr)
@@ -206,7 +206,7 @@ func (s *Server) KickAll() error {
 	s.Players = s.Rcon.GetPlayers()
 
 	for i := range s.Players {
-		kickErr := s.Rcon.KickPlayer(s.Players[i], "[TeamPlay.TF]: Setting up lobby...")
+		kickErr := s.Rcon.KickPlayer(s.Players[i], "[tf2stadium.com]: Setting up lobby...")
 
 		if kickErr != nil {
 			return kickErr

@@ -3,8 +3,8 @@ package helpers
 import (
 	"sync"
 
-	"github.com/TeamPlayTF/Server/database"
-	"github.com/TeamPlayTF/Server/models/lobby"
+	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/models/lobby"
 
 	"gopkg.in/mgo.v2/bson"
 )
