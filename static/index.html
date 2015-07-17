@@ -7,17 +7,36 @@ var getCookie = function C(k){return(document.cookie.match('(^|; )'+k+'=([^;]*)'
 
 var io = io();
 
-io.on("connect", function(){
+var sendAuthenticate = function() {
   var c1 = getCookie("defaultSession")
   if (c1 != null) {
-    io.emit("auth_test", JSON.stringify({cookies: {defaultSession: c1}}));
-    // io.emit("auth_test", "bububu");
+    io.emit("authenticate", JSON.stringify({defaultSession: c1}));
   } else {
     console.log("no cookie");
   }
+}
+
+io.on("connect", function(){
+  sendAuthenticate();
+  // console.log("Sent authenticate");
 });
+
+io.on("asdf", function() {
+  console.log("asdf received");
+})
+
+
+function sendAuthTest() {
+  io.emit("authenticationTest", "asdf", function(response){
+    alert(response)
+  })
+}
 </script>
 </head>
 <body>
+  <button onclick="sendAuthTest()">Test authentication</button>
+  <a href="/startLogin"> Login </a>
+  <a href="/logout"> Logout </a>
+
 </body>
 </html>
