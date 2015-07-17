@@ -15,14 +15,19 @@ import (
 )
 
 func SocketInit(so socketio.Socket) {
-	so.On("authenticate", func(msg string) {
+	so.On("authenticate", func(msg string) string {
 		json, err := simplejson.NewJson([]byte(msg))
 		if err != nil {
 			log.Println("Failed to authenticate ", msg)
-			return
+			return err.Error()
 		}
 
-		chelpers.AuthenticateSocket(so.Id(), json)
+		err2 := chelpers.AuthenticateSocket(so.Id(), json)
+		if err2 != nil {
+			return err2.Error()
+		}
+
+		return ""
 	})
 
 	so.On("disconnection", func() {
@@ -30,17 +35,15 @@ func SocketInit(so socketio.Socket) {
 		log.Println("on disconnect")
 	})
 
-	so.On("authenticationTest", func(ns *socketio.Namespace, testArg int, callback func(...interface{})) {
-		log.Println("started authentication test")
+	so.On("authenticationTest", func(data string) string {
 		var answer string
 		if chelpers.IsLoggedInSocket(so.Id()) {
 			answer = "authenticated"
 		} else {
 			answer = "not authenticated"
 		}
-		log.Println("ended authentication test", answer)
 
-		callback(testArg)
+		return answer
 	})
 
 	log.Println("on connection")

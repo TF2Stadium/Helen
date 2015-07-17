@@ -42,13 +42,16 @@ func buildFakeSocketRequest(cookiesObj *simplejson.Json) *http.Request {
 	return &http.Request{Header: headers}
 }
 
-func AuthenticateSocket(socketid string, cookiesObj *simplejson.Json) {
+func AuthenticateSocket(socketid string, cookiesObj *simplejson.Json) error {
 	r := buildFakeSocketRequest(cookiesObj)
 	s, _ := GetSessionHTTP(r)
 
-	if _, ok := s.Values["playerid"]; ok {
+	if _, ok := s.Values["id"]; ok {
 		stores.SocketAuthStore[socketid] = s
+		return nil
 	}
+
+	return errors.New("Player isn't logged in")
 }
 
 func DeauthenticateSocket(socketid string) {
@@ -63,7 +66,7 @@ func IsLoggedInSocket(socketid string) bool {
 func IsLoggedInHTTP(r *http.Request) bool {
 	session, _ := stores.SessionStore.Get(r, config.Constants.SessionName)
 
-	val, ok := session.Values["playerid"]
+	val, ok := session.Values["id"]
 	return ok && val != ""
 }
 
