@@ -43,6 +43,8 @@ type Lobby struct {
 	ServerId  bson.ObjectId `bson:",omitempty"` // server id
 	Whitelist Whitelist     //whitelist.tf ID
 	CreatedAt time.Time
+
+	BannedPlayers map[bson.ObjectId]bool
 }
 
 //id should be maintained in the main loop
@@ -105,12 +107,17 @@ func (lobby *Lobby) AddPlayer(player *models.Player, slot int) *helpers.TPError 
 	 * anything else?
 	 */
 
+	lobbyBanError := helpers.NewTPError("The player has been banned from this lobby.", 4)
 	badSlotError := helpers.NewTPError("This slot does not exist.", 3)
 	filledError := helpers.NewTPError("This slot has been filled.", 2)
 	alreadyInLobbyError := helpers.NewTPError("Player is already in a lobby", 1)
 
 	if !player.Id.Valid() {
 		return helpers.NewTPError("Player not in the database", -1)
+	}
+
+	if _, ok := lobby.BannedPlayers[player.Id]; ok {
+		return lobbyBanError
 	}
 
 	if slot >= len(lobby.PlayerIds) {
@@ -159,8 +166,8 @@ func (lobby *Lobby) RemovePlayer(player *models.Player) *helpers.TPError {
 }
 
 func (lobby *Lobby) KickAndBanPlayer(player *models.Player) *helpers.TPError {
-	// TODO implement
-	return nil
+	lobby.BannedPlayers[player.Id] = true
+	return lobby.RemovePlayer(player)
 }
 
 func (lobby *Lobby) ReadyPlayer(player *models.Player) *helpers.TPError {
