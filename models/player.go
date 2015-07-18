@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/TF2Stadium/Server/database"
-
+	"github.com/TF2Stadium/Server/helpers"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -49,4 +49,14 @@ func (player *Player) InLobby() (bson.ObjectId, error) {
 		return "", err
 	}
 	return res.Id, nil
+}
+
+
+func GetPlayerBySteamId(steamid string) (*Player, *helpers.TPError) {
+	var player *Player
+	err := database.GetPlayersCollection().Find(bson.M{"steamid": steamid}).One(player)
+	if err != nil {
+		return nil, helpers.NewTPError("Player is not in the database", -1)
+	}
+	return player, nil
 }
