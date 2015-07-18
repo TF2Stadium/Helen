@@ -39,6 +39,7 @@ type Lobby struct {
 	Type    LobbyType
 
 	// Dependencies are objectId's
+	Room string //socket.io room for lobby.
 	PlayerIds []string
 	ServerId  bson.ObjectId `bson:",omitempty"` // server id
 	Whitelist Whitelist     //whitelist.tf ID
@@ -95,6 +96,25 @@ func (lobby *Lobby) GetPlayerSlot(player *models.Player) (slot int, err error) {
 
 	}
 	return -1, err
+}
+
+func GetLobbyById(id string) (*Lobby, *helpers.TPError) {
+	invalidHex := helpers.NewTPError("lobbyid is not a valid hex representation", -2)
+	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1) 
+
+	if !bson.IsObjectIdHex(id) {
+		return nil, invalidHex
+	}
+	
+	lob := &Lobby{}
+	lobbyid := bson.ObjectIdHex(id)
+	err := database.GetLobbiesCollection().Find(lobbyid).One(lob)
+
+	if err != nil {
+		return nil, nonExistentLobby
+	}
+
+	return lob, nil
 }
 
 // // //Add player to lobby

@@ -53,7 +53,7 @@ func SocketInit(so socketio.Socket) {
 		so.BroadcastTo("chat", "chat message", msg)
 	})
 
-	so.On("createLobby", func(jsonstr string, response func(interface{}) interface{}) {
+	so.On("lobbyCreate", func(jsonstr string) string {
 		js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
 
 		mapName, _ := js.Get("mapName").String()
@@ -61,7 +61,8 @@ func SocketInit(so socketio.Socket) {
 		//server, _ := js.Get("server").String()
 		//rconPwd, _ := js.Get("rconpwd").String()
 		whitelist, _ := js.Get("whitelist").Int()
-
+		//mumble, _ := js.Get("mumbleRequired").Bool()
+		
 		var playermap = map[string]lobby.LobbyType{
 			"sixes":      lobby.LobbyTypeSixes,
 			"highlander": lobby.LobbyTypeHighlander,
@@ -78,9 +79,9 @@ func SocketInit(so socketio.Socket) {
 		lobby_id := simplejson.New()
 		lobby_id.Set("id", string(lob.Id))
 		bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
-		response(string(bytes))
+		return string(bytes)
 	})
-	so.On("addPlayer", func(jsonstr string, response func(interface{}) interface{}) {
+	so.On("lobbyJoin", func(jsonstr string) string {
 		js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
 
 		//TODO: Use websockets session code for getting Player
@@ -92,59 +93,57 @@ func SocketInit(so socketio.Socket) {
 		var lob *lobby.Lobby
 		var bytes []byte
 
-		//schalla is evil, assume he'll send us all sorts of stuff
-		//check lobbyidstring
-		if !bson.IsObjectIdHex(lobbyidstring) {
-			bytes, _ = chelpers.BuildFailureJSON("lobbyid is not a valid hex representation", -2).Encode()
-		} else {
-			lobbyid := bson.ObjectId(lobbyidstring)
-			err := database.GetLobbiesCollection().FindId(lobbyid).One(&lob)
+		lob, tperr := lobby.GetLobbyById(lobbyidstring) 
+		if tperr != nil {
+			bytes, _ = tperr.ErrorJSON().Encode()
+			return string(bytes)
+		} 
 
-			if err != nil {
-				bytes, _ = chelpers.BuildFailureJSON("Lobby not in the database", -1).Encode()
-			} else {
-				err := lob.AddPlayer(player, slot)
-				if err != nil {
-					bytes, _ = err.ErrorJSON().Encode()
-				} else {
-					bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-					lob.Save()
-				}
-			}
+		tperr = lob.AddPlayer(player, slot)
+		if tperr != nil {
+			bytes, _ = tperr.ErrorJSON().Encode()
+			return string(bytes)
 		}
-		response(string(bytes))
+		
+		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		lob.Save()
+		return string(bytes)
 	})
-	so.On("removePlayer", func(jsonstr string, response func(interface{}) interface{}) {
+	so.On("lobbyRemovePlayer", func(jsonstr string) string {
 		js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
 
-		var player *models.Player
 		var steamid string
 		var bytes []byte
 
 		steamidjson, gotem := js.CheckGet("steamid")
 		if !gotem {
-			//Remove the current player
+			//Get SteamID of current player
 			//TODO: Use websockets session code for getting Player
 			//something like player := session.Values["steamid"]
 		} else {
 			steamid, _ = steamidjson.String()
-			err := database.GetPlayersCollection().Find(bson.M{"steamid": steamid}).One(&player)
-			if err != nil {
-				bytes, _ = chelpers.BuildFailureJSON("Player not in the database", -1).Encode()
-			} else {
-				lobbyid, err := player.InLobby()
-				if err != nil {
-					bytes, _ = chelpers.BuildFailureJSON("Player not in any Lobby.", 4).Encode()
-				} else {
-					var lob *lobby.Lobby
-					database.GetLobbiesCollection().FindId(lobbyid).One(&lob)
-					lob.RemovePlayer(player)
-					lob.Save()
-					bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-				}
-			}
-			response(string(bytes))
 		}
-	})
 
+		player, tperr := models.GetPlayerBySteamId(steamid)
+
+		if tperr != nil {
+			bytes, _ = tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		
+		lobbyid, err := player.InLobby()
+
+		if err != nil {
+			bytes, _ = chelpers.BuildFailureJSON("Player not in any Lobby.", 4).Encode()
+			return string(bytes)
+		}
+		
+		var lob *lobby.Lobby
+		database.GetLobbiesCollection().FindId(lobbyid).One(&lob)
+		lob.RemovePlayer(player)
+		lob.Save()
+		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		return string(bytes)
+	})
+	
 }
