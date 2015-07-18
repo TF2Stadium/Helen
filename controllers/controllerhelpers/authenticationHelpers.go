@@ -42,8 +42,7 @@ func buildFakeSocketRequest(cookiesObj *simplejson.Json) *http.Request {
 	return &http.Request{Header: headers}
 }
 
-func AuthenticateSocket(socketid string, cookiesObj *simplejson.Json) error {
-	r := buildFakeSocketRequest(cookiesObj)
+func AuthenticateSocket(socketid string, r *http.Request) error {
 	s, _ := GetSessionHTTP(r)
 
 	if _, ok := s.Values["id"]; ok {

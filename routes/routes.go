@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/TF2Stadium/Server/config"
 	"github.com/TF2Stadium/Server/controllers"
+	"github.com/TF2Stadium/Server/controllers/socket"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
 )
@@ -21,9 +22,9 @@ func SetupSocketRoutes(server *socketio.Server) {
 	var socketController func(socketio.Socket)
 
 	if config.Constants.SocketMockUp {
-		socketController = controllers.SocketMockUpInit
+		socketController = socket.SocketMockUpInit
 	} else {
-		socketController = controllers.SocketInit
+		socketController = socket.SocketInit
 	}
 
 	server.On("connection", socketController)

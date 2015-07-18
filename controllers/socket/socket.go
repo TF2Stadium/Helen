@@ -1,10 +1,8 @@
-package controllers
+package socket
 
 import (
 	"log"
 	"strings"
-
-	"gopkg.in/mgo.v2/bson"
 
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Server/database"
@@ -15,20 +13,7 @@ import (
 )
 
 func SocketInit(so socketio.Socket) {
-	so.On("authenticate", func(msg string) string {
-		json, err := simplejson.NewJson([]byte(msg))
-		if err != nil {
-			log.Println("Failed to authenticate ", msg)
-			return err.Error()
-		}
-
-		err2 := chelpers.AuthenticateSocket(so.Id(), json)
-		if err2 != nil {
-			return err2.Error()
-		}
-
-		return ""
-	})
+	chelpers.AuthenticateSocket(so.Id(), so.Request())
 
 	so.On("disconnection", func() {
 		// chelpers.DeauthenticateSocket(so.Id())
@@ -62,7 +47,7 @@ func SocketInit(so socketio.Socket) {
 		//rconPwd, _ := js.Get("rconpwd").String()
 		whitelist, _ := js.Get("whitelist").Int()
 		//mumble, _ := js.Get("mumbleRequired").Bool()
-		
+
 		var playermap = map[string]lobby.LobbyType{
 			"sixes":      lobby.LobbyTypeSixes,
 			"highlander": lobby.LobbyTypeHighlander,
@@ -93,18 +78,18 @@ func SocketInit(so socketio.Socket) {
 		var lob *lobby.Lobby
 		var bytes []byte
 
-		lob, tperr := lobby.GetLobbyById(lobbyidstring) 
+		lob, tperr := lobby.GetLobbyById(lobbyidstring)
 		if tperr != nil {
 			bytes, _ = tperr.ErrorJSON().Encode()
 			return string(bytes)
-		} 
+		}
 
 		tperr = lob.AddPlayer(player, slot)
 		if tperr != nil {
 			bytes, _ = tperr.ErrorJSON().Encode()
 			return string(bytes)
 		}
-		
+
 		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		lob.Save()
 		return string(bytes)
@@ -130,14 +115,14 @@ func SocketInit(so socketio.Socket) {
 			bytes, _ = tperr.ErrorJSON().Encode()
 			return string(bytes)
 		}
-		
+
 		lobbyid, err := player.InLobby()
 
 		if err != nil {
 			bytes, _ = chelpers.BuildFailureJSON("Player not in any Lobby.", 4).Encode()
 			return string(bytes)
 		}
-		
+
 		var lob *lobby.Lobby
 		database.GetLobbiesCollection().FindId(lobbyid).One(&lob)
 		lob.RemovePlayer(player)
@@ -145,5 +130,5 @@ func SocketInit(so socketio.Socket) {
 		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
-	
+
 }
