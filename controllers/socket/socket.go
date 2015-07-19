@@ -38,7 +38,11 @@ func SocketInit(so socketio.Socket) {
 	})
 
 	so.On("lobbyCreate", func(jsonstr string) string {
-		js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
 
 		mapName, _ := js.Get("mapName").String()
 		format, _ := js.Get("format").String()
@@ -54,7 +58,7 @@ func SocketInit(so socketio.Socket) {
 
 		//TODO: Configure server here
 		lob := models.NewLobby(mapName, playermap[format], whitelist)
-		err := lob.Save()
+		err = lob.Save()
 
 		if err != nil {
 			//TODO: Add stuff here
@@ -66,7 +70,11 @@ func SocketInit(so socketio.Socket) {
 		return string(bytes)
 	})
 	so.On("lobbyJoin", func(jsonstr string) string {
-		js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
 
 		//TODO: Use websockets session code for getting Player
 		//something like session.Values["steamid"]
@@ -93,7 +101,11 @@ func SocketInit(so socketio.Socket) {
 		return string(bytes)
 	})
 	so.On("lobbyRemovePlayer", func(jsonstr string) string {
-		js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
 
 		var steamid string
 		var bytes []byte
@@ -128,4 +140,47 @@ func SocketInit(so socketio.Socket) {
 		return string(bytes)
 	})
 
+	so.On("readyPlayer", func(jsonstr string) string {
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
+
+		steamid, _ := js.Get("steamid").String()
+		player, err := models.GetPlayerBySteamId(steamid)
+		if err != nil {
+			bytes, _ := err.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		err = models.ReadyPlayer(player)
+		if err != nil {
+			bytes, _ := err.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		return string(bytes)
+	})
+
+	so.On("unReadyPlayer", func(jsonstr string) string {
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
+
+		steamid, _ := js.Get("steamid").String()
+		player, err := models.GetPlayerBySteamId(steamid)
+		if err != nil {
+			bytes, _ := err.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		err = models.UnreadyPlayer(player)
+		if err != nil {
+			bytes, _ := err.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		return string(bytes)
+	})
 }
