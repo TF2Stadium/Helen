@@ -1,15 +1,11 @@
-Test Local MongoDB Database Setup Tutorial
+Test Local Postgres Database Setup Tutorial
 
-1. get mongodb and robomongo (you'll love it, like you love me)
-2. start mongod
-3. start mongo
-4. type these commands:
+1. get and start a postgres server
+2. run `createdb tf2stadium`
+3. run `createdb TESTtf2stadium`
+4. run `createuser -sP tf2stadium`
+5. enter `dickbutt` (the password) and press enter
+6. run `createuser -sP TESTtf2stadium`
+7. enter `dickbutt` (the password) and press enter
 
-	use TESTtf2stadium
-	db.createUser({ user: "tf2stadium", pwd: "dickbutt", roles: [ { role: "readWrite", db: "TESTtf2stadium" } ]})
-
-	use tf2stadium
-	db.createUser({ user: "tf2stadium", pwd: "dickbutt", roles: [ { role: "readWrite", db: "tf2stadium" } ]})
-
-5. test db_test
-6. if no errors, scream hallelujah
+8. if no errors, scream hallelujah

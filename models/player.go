@@ -2,22 +2,20 @@ package models
 
 import (
 	"errors"
-	"time"
 
-	"github.com/TF2Stadium/Server/database"
+	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/helpers"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/jinzhu/gorm"
 )
 
 type Player struct {
-	Id        bson.ObjectId `bson:"_id,omitempty"` // MongoDB ID
-	SteamId   string        // Players steam ID
-	Name      string        // Player name
-	CreatedAt time.Time     // Account creation time (not steam)
+	gorm.Model
+	SteamId string `sql:"unique"` // Players steam ID
+	Name    string // Player name
 }
 
 func NewPlayer(steamId string) *Player {
-	player := &Player{SteamId: steamId, CreatedAt: bson.Now()}
+	player := &Player{SteamId: steamId}
 
 	// magically get the player's name, avatar and other stuff from steam
 
@@ -25,38 +23,32 @@ func NewPlayer(steamId string) *Player {
 }
 
 func (player *Player) Save() error {
-	if !player.Id.Valid() {
-		player.Id = bson.NewObjectId()
+	var err error
+	if db.DB.NewRecord(player) {
+		err = db.DB.Create(player).Error
+	} else {
+		err = db.DB.Save(player).Error
 	}
-	_, err := database.GetPlayersCollection().UpsertId(player.Id, player)
 	return err
 }
 
-func (player *Player) InLobby() (bson.ObjectId, error) {
-	if !player.Id.Valid() {
-		return "", errors.New("Player is not in the database")
-	}
-
-	type idStruct struct {
-		Id bson.ObjectId
-	}
-
-	res := &idStruct{}
-	err := database.GetLobbiesCollection().
-		Find(bson.M{"playerids": string(player.Id)}).Select(bson.M{"_id": true}).One(res)
-
-	if err != nil {
-		return "", err
-	}
-	return res.Id, nil
-}
-
-
 func GetPlayerBySteamId(steamid string) (*Player, *helpers.TPError) {
-	var player *Player
-	err := database.GetPlayersCollection().Find(bson.M{"steamid": steamid}).One(player)
+	var player = Player{}
+	err := db.DB.Where("steam_id = ?", steamid).First(&player).Error
 	if err != nil {
 		return nil, helpers.NewTPError("Player is not in the database", -1)
 	}
-	return player, nil
+	return &player, nil
+}
+
+func (player *Player) GetLobbyId() (uint, error) {
+	playerSlot := &LobbySlot{}
+	err := db.DB.Where("player_id = ?", player.ID).Find(playerSlot)
+
+	// if the player is in a different lobby, return error
+	if err != nil {
+		return 0, errors.New("Player not in any lobby")
+	}
+
+	return playerSlot.LobbyId, nil
 }

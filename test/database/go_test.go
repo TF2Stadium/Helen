@@ -6,26 +6,29 @@ import (
 	"testing"
 
 	"github.com/TF2Stadium/Server/config"
-	"github.com/TF2Stadium/Server/database"
+	db "github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/database/migrations"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/mgo.v2/bson"
 )
-
-// should always be the 1st test (like a setup)
-func TestDatabase(t *testing.T) {
-	// start the database connection
-	config.SetupConstants()
-	database.Test()
-	fmt.Println("[Test.Database] IsTest? " + strconv.FormatBool(database.IsTest))
-	database.Init()
-
-}
 
 var steamid = "76561198074578368"
 
 func cleanup() {
-	database.Database.C("players").Remove(bson.M{"steamid": steamid})
+	config.SetupConstants()
+	db.Test()
+	fmt.Println("[Test.Database] IsTest? " + strconv.FormatBool(db.IsTest))
+	db.Init()
+
+	db.DB.Exec("DROP TABLE lobbies;")
+	db.DB.Exec("DROP TABLE players;")
+
+	migrations.Do()
+}
+
+func TestDatabasePing(t *testing.T) {
+	cleanup()
+	assert.Nil(t, db.DB.DB().Ping())
 }
 
 // test the creation of a player
@@ -35,7 +38,7 @@ func TestDatabaseSave(t *testing.T) {
 
 	err := player.Save()
 	assert.Equal(t, err, nil)
-	assert.NotEqual(t, player.Id, "")
+	assert.NotEqual(t, player.ID, 0)
 	assert.Equal(t, player.SteamId, steamid)
 
 	player.Name = "John"

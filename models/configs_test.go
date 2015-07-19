@@ -1,4 +1,4 @@
-package lobby
+package models
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 
 func TestInitConfigs(t *testing.T) {
 	config.SetupConstants()
-	InitConfigs()
+	InitServerConfigs()
 }
 
 func TestUgcHighlander(t *testing.T) {

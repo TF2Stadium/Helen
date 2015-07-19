@@ -1,4 +1,4 @@
-package lobby
+package models
 
 import (
 	"encoding/json"
@@ -56,7 +56,7 @@ type ServerConfig struct {
 	Map    string
 }
 
-func InitConfigs() error {
+func InitServerConfigs() error {
 	// maps
 	log.Println("[Configs.Init] Loading maps configs...")
 	mapFile, mapErr := ioutil.ReadFile(config.Constants.StaticFileLocation + ConfigsPath + MapsFile)

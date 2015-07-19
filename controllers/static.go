@@ -11,7 +11,7 @@ import (
 func MainHandler(w http.ResponseWriter, r *http.Request) {
 	if controllerhelpers.IsLoggedInHTTP(r) {
 		session, _ := controllerhelpers.GetSessionHTTP(r)
-		var steamid = session.Values["steamid"].(string)
+		var steamid = session.Values["steam_id"].(string)
 		fmt.Fprintf(w, `<html><head></head><body>hello! You're logged in and your steam id is
 			`+steamid+`. You can log out <a href='/logout'>here</a></body></html>`)
 	} else {
