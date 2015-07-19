@@ -1,17 +1,17 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
-
-	"gopkg.in/mgo.v2/bson"
 
 	"github.com/TF2Stadium/Server/config"
 	"github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/gorilla/sessions"
+	"github.com/jinzhu/gorm"
 	"github.com/yohcop/openid-go"
 )
 
@@ -49,17 +49,21 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	steamid := parts[len(parts)-1]
 
 	session, _ := controllerhelpers.GetSessionHTTP(r)
-	session.Values["steamid"] = steamid
+	session.Values["steam_id"] = steamid
 
 	player := &models.Player{}
-	err = database.GetPlayersCollection().Find(bson.M{"steamid": steamid}).One(&player)
+	err = database.DB.Where("steam_id = ?", steamid).First(player).Error
 
-	if err != nil {
-		player := models.NewPlayer(steamid)
-		player.Save()
+	if err == gorm.RecordNotFound {
+		player = models.NewPlayer(steamid)
+		database.DB.Create(player)
+	} else if err != nil {
+		log.Println("steamLogin.go:60 ", err)
 	}
 
-	session.Values["id"] = player.Id.String()
+	session.Values["id"] = fmt.Sprint(player.ID)
+
+	log.Println(session)
 
 	err = session.Save(r, w)
 

@@ -17,7 +17,8 @@ type constants struct {
 	AllowedCorsOrigins []string
 
 	// database
-	DbHosts        string
+	DbHost         string
+	DbPort         string
 	DbDatabase     string
 	DbTestDatabase string
 	DbUsername     string
@@ -62,7 +63,8 @@ func setupDevelopmentConstants() {
 		SocketMockUp:       false,
 		AllowedCorsOrigins: []string{"*"},
 
-		DbHosts:        "127.0.0.1:27017",
+		DbHost:         "127.0.0.1",
+		DbPort:         "5724",
 		DbDatabase:     "tf2stadium",
 		DbTestDatabase: "TESTtf2stadium",
 		DbUsername:     "tf2stadium",
@@ -84,7 +86,8 @@ func setupProductionConstants() {
 		SocketMockUp:       false,
 		AllowedCorsOrigins: []string{"http://tf2stadium.com", "http://api.tf2stadium.com"},
 
-		DbHosts:        "127.0.0.1:27017",
+		DbHost:         "127.0.0.1",
+		DbPort:         "5724",
 		DbDatabase:     "tf2stadium",
 		DbTestDatabase: "TESTtf2stadium",
 		DbUsername:     "tf2stadium",

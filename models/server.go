@@ -1,12 +1,12 @@
-package lobby
+package models
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
 	"github.com/TF2Stadium/TF2RconWrapper"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type Server struct {
@@ -18,7 +18,7 @@ type Server struct {
 	Type   LobbyType // 9v9 6v6 4v4...
 
 	Address string // server ip:port
-	LobbyId bson.ObjectId
+	LobbyId uint
 
 	Players        []TF2RconWrapper.Player // current number of players in the server
 	AllowedPlayers map[string]bool
@@ -61,7 +61,7 @@ func NewServer() *Server {
 // -> LobbyPassword
 //
 func (s *Server) Setup() error {
-	log.Println("[Server.Setup]: Setting up server -> [" + s.Address + "] from lobby [" + s.LobbyId.Hex() + "]")
+	log.Println("[Server.Setup]: Setting up server -> [" + s.Address + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 
 	// connect to rcon
 	var err error
@@ -133,7 +133,7 @@ func (s *Server) Setup() error {
 
 // runs each 10 sec
 func (s *Server) Verify() {
-	log.Println("[Server.Verify]: Verifing server -> [" + s.Address + "] from lobby [" + s.LobbyId.Hex() + "]")
+	log.Println("[Server.Verify]: Verifing server -> [" + s.Address + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 
 	// check if all players in server are in lobby
 	s.Players = s.Rcon.GetPlayers()
@@ -181,7 +181,7 @@ func (s *Server) IsPlayerInServer(playerCommId string) (bool, error) {
 // TODO: get end event from logs
 // `World triggered "Game_Over"`
 func (s *Server) End() {
-	log.Println("[Server.End]: Ending server -> [" + s.Address + "] from lobby [" + s.LobbyId.Hex() + "]")
+	log.Println("[Server.End]: Ending server -> [" + s.Address + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 	// TODO: upload logs
 
 	s.Rcon.Close()

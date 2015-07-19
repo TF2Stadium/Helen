@@ -5,9 +5,7 @@ import (
 	"strings"
 
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
-	"github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/models"
-	"github.com/TF2Stadium/Server/models/lobby"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
 )
@@ -48,13 +46,13 @@ func SocketInit(so socketio.Socket) {
 		whitelist, _ := js.Get("whitelist").Int()
 		//mumble, _ := js.Get("mumbleRequired").Bool()
 
-		var playermap = map[string]lobby.LobbyType{
-			"sixes":      lobby.LobbyTypeSixes,
-			"highlander": lobby.LobbyTypeHighlander,
+		var playermap = map[string]models.LobbyType{
+			"sixes":      models.LobbyTypeSixes,
+			"highlander": models.LobbyTypeHighlander,
 		}
 
 		//TODO: Configure server here
-		lob := lobby.New(mapName, playermap[format], whitelist)
+		lob := models.NewLobby(mapName, playermap[format], whitelist)
 		err := lob.Save()
 
 		if err != nil {
@@ -62,72 +60,72 @@ func SocketInit(so socketio.Socket) {
 		}
 
 		lobby_id := simplejson.New()
-		lobby_id.Set("id", string(lob.Id))
+		lobby_id.Set("id", string(lob.ID))
 		bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
 		return string(bytes)
 	})
 	so.On("lobbyJoin", func(jsonstr string) string {
-		js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		// js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		//
+		// //TODO: Use websockets session code for getting Player
+		// //something like session.Values["steamid"]
+		// var player *models.Player
+		//
+		// slot, _ := js.Get("slot").Int()
+		// lobbyid, _ := js.Get("lobbyid").Uint64()
+		// var lob *models.Lobby
+		// var bytes []byte
+		//
+		// lob, tperr := models.GetLobbyById(uint(lobbyid))
+		// if tperr != nil {
+		// 	bytes, _ = tperr.ErrorJSON().Encode()
+		// 	return string(bytes)
+		// }
+		//
+		// tperr = lob.AddPlayer(player, slot)
+		// if tperr != nil {
+		// 	bytes, _ = tperr.ErrorJSON().Encode()
+		// 	return string(bytes)
+		// }
 
-		//TODO: Use websockets session code for getting Player
-		//something like session.Values["steamid"]
-		var player *models.Player
-
-		slot, _ := js.Get("slot").Int()
-		lobbyidstring, _ := js.Get("lobbyid").String()
-		var lob *lobby.Lobby
-		var bytes []byte
-
-		lob, tperr := lobby.GetLobbyById(lobbyidstring)
-		if tperr != nil {
-			bytes, _ = tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		tperr = lob.AddPlayer(player, slot)
-		if tperr != nil {
-			bytes, _ = tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		lob.Save()
+		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		// lob.Save()
 		return string(bytes)
 	})
 	so.On("lobbyRemovePlayer", func(jsonstr string) string {
-		js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		// js, _ := simplejson.NewFromReader(strings.NewReader(jsonstr))
 
-		var steamid string
-		var bytes []byte
+		// var steamid string
+		// var bytes []byte
+		//
+		// steamidjson, gotem := js.CheckGet("steamid")
+		// if !gotem {
+		// 	//Get SteamID of current player
+		// 	//TODO: Use websockets session code for getting Player
+		// 	//something like player := session.Values["steamid"]
+		// } else {
+		// 	steamid, _ = steamidjson.String()
+		// }
 
-		steamidjson, gotem := js.CheckGet("steamid")
-		if !gotem {
-			//Get SteamID of current player
-			//TODO: Use websockets session code for getting Player
-			//something like player := session.Values["steamid"]
-		} else {
-			steamid, _ = steamidjson.String()
-		}
+		// player, tperr := models.GetPlayerBySteamId(steamid)
+		//
+		// if tperr != nil {
+		// 	bytes, _ = tperr.ErrorJSON().Encode()
+		// 	return string(bytes)
+		// }
 
-		player, tperr := models.GetPlayerBySteamId(steamid)
-
-		if tperr != nil {
-			bytes, _ = tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		lobbyid, err := player.InLobby()
-
-		if err != nil {
-			bytes, _ = chelpers.BuildFailureJSON("Player not in any Lobby.", 4).Encode()
-			return string(bytes)
-		}
-
-		var lob *lobby.Lobby
-		database.GetLobbiesCollection().FindId(lobbyid).One(&lob)
-		lob.RemovePlayer(player)
-		lob.Save()
-		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		// lobbyid, err := player.InLobby()
+		//
+		// if err != nil {
+		// 	bytes, _ = chelpers.BuildFailureJSON("Player not in any Lobby.", 4).Encode()
+		// 	return string(bytes)
+		// }
+		//
+		// var lob *models.Lobby
+		// database.Database.Find(&lob, lobbyid)
+		// lob.RemovePlayer(player)
+		// lob.Save()
+		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
 

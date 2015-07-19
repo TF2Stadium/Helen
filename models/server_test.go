@@ -1,4 +1,4 @@
-package lobby
+package models
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ var svr *Server
 func TestServerSetup(t *testing.T) {
 	if shouldTest {
 		config.SetupConstants()
-		InitConfigs()
+		InitServerConfigs()
 
 		commId := "76561198067132047" // your commId, so it wont be kicking you out everytime
 

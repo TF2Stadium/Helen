@@ -11,7 +11,8 @@ import (
 	"github.com/TF2Stadium/Server/config"
 	"github.com/TF2Stadium/Server/config/stores"
 	"github.com/TF2Stadium/Server/database"
-	"github.com/TF2Stadium/Server/models/lobby"
+	"github.com/TF2Stadium/Server/database/migrations"
+	"github.com/TF2Stadium/Server/models"
 	"github.com/TF2Stadium/Server/routes"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
@@ -21,8 +22,9 @@ import (
 func main() {
 	config.SetupConstants()
 	database.Init()
+	migrations.Do()
 	stores.SetupStores()
-	lobby.InitConfigs()
+	models.InitServerConfigs()
 
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 	fmt.Println("Starting the server")
