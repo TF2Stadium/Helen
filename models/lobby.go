@@ -2,6 +2,7 @@ package models
 
 import (
 	"log"
+	"time"
 
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/helpers"
@@ -33,9 +34,10 @@ type LobbySlot struct {
 	// Lobby    Lobby
 	LobbyId uint
 	// Player   Player
-	PlayerId uint
-	Slot     int
-	Ready    bool
+	PlayerId  uint
+	Slot      int
+	Ready     bool
+	DeletedAt *time.Time
 }
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
@@ -125,7 +127,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	num := 0
 
 	// It should really be possible to do this query using relations
-	if err := db.DB.Debug().Table("banned_players_lobbies").
+	if err := db.DB.Table("banned_players_lobbies").
 		Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).
 		Count(&num).Error; num > 0 || err != nil {
 		log.Println(err)

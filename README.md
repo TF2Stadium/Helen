@@ -2,7 +2,7 @@
 TF2Stadium Server is the backend server component for the tf2stadium.com project written in Go.
 
 ### Setup
-The project uses MongoDB as a database. Default production account data can be found at `database/setup.txt`
+The project uses postgres as a database. Default development account data can be found at `database/setup.txt`
 
 ### Structure
 The code is divided into multiple packages that follow the usual web application structure:
@@ -19,5 +19,3 @@ The project uses the Pull Request workflow to contribute code. More info on that
 The pull request should be squashed (no more than 1 temporary commit per 100 loc, more info here: http://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit)
 
 Submitted code has to be formatted with `go fmt`.
-
-

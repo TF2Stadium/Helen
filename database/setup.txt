@@ -1,4 +1,4 @@
-Test Local MongoDB Database Setup Tutorial
+Test Local Postgres Database Setup Tutorial
 
 1. get and start a postgres server
 2. run `createdb tf2stadium`
