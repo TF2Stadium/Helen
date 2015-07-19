@@ -163,5 +163,5 @@ func TestUnreadyPlayer(t *testing.T) {
 	lobby.ReadyPlayer(player)
 	lobby.UnreadyPlayer(player)
 	ready, _ := lobby.IsPlayerReady(player)
-	assert.Equal(t, ready, true)
+	assert.Equal(t, ready, false)
 }
