@@ -2,35 +2,16 @@ package models_test
 
 import (
 	"fmt"
-	"log"
-	"strconv"
 	"testing"
 
-	"github.com/TF2Stadium/Server/config"
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/database/migrations"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/stretchr/testify/assert"
 )
 
-func cleanup() {
-	config.SetupConstants()
-	db.Test()
-	fmt.Println("[Test.Database] IsTest? " + strconv.FormatBool(db.IsTest))
-	db.Init()
-
-	db.DB.Exec("DROP TABLE lobbies;")
-	db.DB.Exec("DROP TABLE players;")
-	db.DB.Exec("DROP TABLE lobby_slots;")
-	db.DB.Exec("DROP TABLE banned_players_lobbies;")
-
-	log.Println(db.DB)
-
-	migrations.Do()
-}
-
 func TestLobbyCreation(t *testing.T) {
-	cleanup()
+	migrations.TestCleanup()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
 	lobby.Save()
 
@@ -47,7 +28,7 @@ func TestLobbyCreation(t *testing.T) {
 }
 
 func TestLobbyAdd(t *testing.T) {
-	cleanup()
+	migrations.TestCleanup()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
 	lobby.Save()
 
@@ -100,7 +81,7 @@ func TestLobbyAdd(t *testing.T) {
 }
 
 func TestLobbyRemove(t *testing.T) {
-	cleanup()
+	migrations.TestCleanup()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
 	lobby.Save()
 
@@ -125,7 +106,7 @@ func TestLobbyRemove(t *testing.T) {
 }
 
 func TestLobbyBan(t *testing.T) {
-	cleanup()
+	migrations.TestCleanup()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
 	lobby.Save()
 
@@ -146,7 +127,7 @@ func TestLobbyBan(t *testing.T) {
 }
 
 func TestReadyPlayer(t *testing.T) {
-	cleanup()
+	migrations.TestCleanup()
 	player := models.NewPlayer("testing")
 	player.Save()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
@@ -166,7 +147,7 @@ func TestReadyPlayer(t *testing.T) {
 }
 
 func TestUnreadyPlayer(t *testing.T) {
-	cleanup()
+	migrations.TestCleanup()
 	player := models.NewPlayer("testing")
 	player.Save()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
@@ -178,4 +159,53 @@ func TestUnreadyPlayer(t *testing.T) {
 	ready, err := lobby.IsPlayerReady(player)
 	assert.Equal(t, ready, false)
 	assert.Nil(t, err)
+}
+
+func TestSpectators(t *testing.T) {
+	migrations.TestCleanup()
+	player := models.NewPlayer("testing")
+	player.Save()
+	player2 := models.NewPlayer("testing1")
+	player2.Save()
+
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby.Save()
+
+	err := lobby.AddSpectator(player)
+	assert.Nil(t, err)
+
+	var specs []models.Player
+	db.DB.Model(lobby).Association("Spectators").Find(&specs)
+	assert.Equal(t, 1, len(specs))
+
+	err = lobby.AddSpectator(player2)
+	assert.Nil(t, err)
+
+	specs = nil
+	db.DB.Model(lobby).Association("Spectators").Find(&specs)
+	assert.Equal(t, 2, len(specs))
+
+	err = lobby.RemoveSpectator(player)
+	assert.Nil(t, err)
+
+	specs = nil
+	db.DB.Model(lobby).Association("Spectators").Find(&specs)
+	assert.Equal(t, 1, len(specs))
+
+	// adding the same player again should not increase the count
+	err = lobby.AddSpectator(player2)
+	specs = nil
+	db.DB.Model(lobby).Association("Spectators").Find(&specs)
+	assert.Equal(t, 1, len(specs))
+
+	// players in lobby should not be added as spectators
+	lobby.AddPlayer(player, 10)
+	err = lobby.AddSpectator(player)
+	assert.NotNil(t, err)
+
+	// adding a player should remove them from spectators
+	lobby.AddPlayer(player2, 11)
+	specs = nil
+	db.DB.Model(lobby).Association("Spectators").Find(&specs)
+	assert.Equal(t, 0, len(specs))
 }

@@ -52,6 +52,8 @@ type Lobby struct {
 	Server    *Server   `sql:"-"` // server
 	Whitelist Whitelist //whitelist.tf ID
 
+	Spectators []Player `gorm:"many2many:spectators_players_lobbies"`
+
 	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`
 }
 
@@ -138,12 +140,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		return badSlotError
 	}
 
-	newSlotObj := &LobbySlot{
-		PlayerId: player.ID,
-		LobbyId:  lobby.ID,
-		Slot:     slot,
-	}
-
 	slotFilled := false
 	if _, err := lobby.GetPlayerIdBySlot(slot); err == nil {
 		slotFilled = true
@@ -165,7 +161,14 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	// assign the player to a new slot
 	// try to remove them from the old slot (in case they are switching slots)
 	lobby.RemovePlayer(player)
+	// try to remove them from spectators
+	lobby.RemoveSpectator(player)
 
+	newSlotObj := &LobbySlot{
+		PlayerId: player.ID,
+		LobbyId:  lobby.ID,
+		Slot:     slot,
+	}
 	db.DB.Create(newSlotObj)
 
 	return nil
@@ -222,18 +225,23 @@ func (lobby *Lobby) IsStarted() (bool, *helpers.TPError) {
 }
 
 func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
-	// TODO implement
+	if _, err := lobby.GetPlayerSlot(player); err == nil {
+		return helpers.NewTPError("Player already in lobby", 1)
+	}
+
+	err := db.DB.Model(lobby).Association("Spectators").Append(player).Error
+	if err != nil {
+		return helpers.NewTPError(err.Error(), -1)
+	}
 	return nil
 }
 
 func (lobby *Lobby) RemoveSpectator(player *Player) *helpers.TPError {
-	// TODO implement
+	err := db.DB.Model(lobby).Association("Spectators").Delete(player).Error
+	if err != nil {
+		return helpers.NewTPError(err.Error(), -1)
+	}
 	return nil
-}
-
-func (lobby *Lobby) GetSpectatorObjects() ([]*Player, *helpers.TPError) {
-	// TODO implement
-	return nil, nil
 }
 
 func (lobby *Lobby) IsFull() bool {
