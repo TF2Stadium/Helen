@@ -144,3 +144,38 @@ func TestLobbyBan(t *testing.T) {
 	err = lobby.AddPlayer(player, 5)
 	assert.NotNil(t, err)
 }
+
+func TestReadyPlayer(t *testing.T) {
+	cleanup()
+	player := models.NewPlayer("testing")
+	player.Save()
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby.Save()
+	lobby.AddPlayer(player, 0)
+
+	lobby.ReadyPlayer(player)
+	ready, err := lobby.IsPlayerReady(player)
+	assert.Equal(t, ready, true)
+	assert.Nil(t, err)
+
+	lobby.UnreadyPlayer(player)
+	lobby.ReadyPlayer(player)
+	ready, err = lobby.IsPlayerReady(player)
+	assert.Equal(t, ready, true)
+	assert.Nil(t, err)
+}
+
+func TestUnreadyPlayer(t *testing.T) {
+	cleanup()
+	player := models.NewPlayer("testing")
+	player.Save()
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby.Save()
+	lobby.AddPlayer(player, 0)
+
+	lobby.ReadyPlayer(player)
+	lobby.UnreadyPlayer(player)
+	ready, err := lobby.IsPlayerReady(player)
+	assert.Equal(t, ready, false)
+	assert.Nil(t, err)
+}

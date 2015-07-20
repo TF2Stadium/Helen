@@ -185,18 +185,35 @@ func (lobby *Lobby) KickAndBanPlayer(player *Player) *helpers.TPError {
 }
 
 func (lobby *Lobby) ReadyPlayer(player *Player) *helpers.TPError {
-	// TODO implement
+	slot := &LobbySlot{}
+	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+	if err != nil {
+		return helpers.NewTPError("Player is not in the lobby.", 5)
+	}
+	slot.Ready = true
+	db.DB.Save(slot)
 	return nil
 }
 
 func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
-	// TODO implement
+	slot := &LobbySlot{}
+	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+	if err != nil {
+		return helpers.NewTPError("Player is not in the lobby.", 5)
+	}
+
+	slot.Ready = false
+	db.DB.Save(slot)
 	return nil
 }
 
 func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
-	// TODO implement
-	return false, nil
+	slot := &LobbySlot{}
+	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+	if err != nil {
+		return false, helpers.NewTPError("Player is not in the lobby.", 5)
+	}
+	return slot.Ready, nil
 }
 
 func (lobby *Lobby) IsStarted() (bool, *helpers.TPError) {

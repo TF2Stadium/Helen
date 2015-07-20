@@ -1,8 +1,6 @@
 package models
 
 import (
-	"errors"
-
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/helpers"
 	"github.com/jinzhu/gorm"
@@ -41,13 +39,13 @@ func GetPlayerBySteamId(steamid string) (*Player, *helpers.TPError) {
 	return &player, nil
 }
 
-func (player *Player) GetLobbyId() (uint, error) {
+func (player *Player) GetLobbyId() (uint, *helpers.TPError) {
 	playerSlot := &LobbySlot{}
 	err := db.DB.Where("player_id = ?", player.ID).Find(playerSlot)
 
 	// if the player is in a different lobby, return error
 	if err != nil {
-		return 0, errors.New("Player not in any lobby")
+		return 0, helpers.NewTPError("Player not in any lobby", 1)
 	}
 
 	return playerSlot.LobbyId, nil
