@@ -96,7 +96,6 @@ func SocketInit(so socketio.Socket) {
 			bytes, _ = tperr.ErrorJSON().Encode()
 			return string(bytes)
 		}
-
 		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
@@ -118,7 +117,7 @@ func SocketInit(so socketio.Socket) {
 		} else {
 			steamid, _ = steamidjson.String()
 		}
-
+		ban, _ := js.Get("ban").Bool()
 		player, tperr := models.GetPlayerBySteamId(steamid)
 
 		if tperr != nil {
@@ -135,7 +134,13 @@ func SocketInit(so socketio.Socket) {
 
 		lob := &models.Lobby{}
 		database.DB.Find(lob, lobbyid)
-		lob.RemovePlayer(player)
+
+		if ban {
+			lob.KickAndBanPlayer(player)
+		} else {
+			lob.RemovePlayer(player)
+		}
+
 		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
@@ -211,4 +216,61 @@ func SocketInit(so socketio.Socket) {
 		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
+
+	so.On("addSpectator", func(jsonstr string) string {
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
+		steamid, _ := js.Get("steamid").String()
+		lobbyid, _ := js.Get("id").Uint64()
+		player, tperr := models.GetPlayerBySteamId(steamid)
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		lob, tperr := models.GetLobbyById(uint(lobbyid))
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		tperr = lob.AddSpectator(player)
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		lob.Save()
+		return string(bytes)
+	})
+
+	so.On("removeSpectator", func(jsonstr string) string {
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
+		steamid, _ := js.Get("steamid").String()
+		lobbyid, _ := js.Get("id").Uint64()
+		player, tperr := models.GetPlayerBySteamId(steamid)
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		lob, tperr := models.GetLobbyById(uint(lobbyid))
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		tperr = lob.RemoveSpectator(player)
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+		lob.Save()
+		return string(bytes)
+	})
+
 }

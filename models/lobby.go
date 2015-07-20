@@ -47,7 +47,7 @@ type Lobby struct {
 	State   LobbyState
 	Type    LobbyType
 
-	Slots LobbySlot
+	Slots []LobbySlot
 
 	Server    *Server   `sql:"-"` // server
 	Whitelist Whitelist //whitelist.tf ID
