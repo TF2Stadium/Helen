@@ -138,7 +138,7 @@ func SocketInit(so socketio.Socket) {
 		} else {
 			lob.RemovePlayer(player)
 		}
-		so.Leave(strconv.FormatUInt(uint(lobbyid), 10))
+		so.Leave(strconv.FormatInt(int64(lobbyid), 10))
 		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
