@@ -1,9 +1,8 @@
 package migrations
 
 import (
-	"fmt"
 	"log"
-	"strconv"
+	"os"
 
 	"github.com/TF2Stadium/Server/config"
 	"github.com/TF2Stadium/Server/database"
@@ -19,9 +18,11 @@ func Do() {
 }
 
 func TestCleanup() {
+	if os.Getenv("DEPLOYMENT_ENV") == "" {
+		os.Setenv("DEPLOYMENT_ENV", "test")
+		defer os.Unsetenv("DEPLOYMENT_ENV")
+	}
 	config.SetupConstants()
-	database.Test()
-	fmt.Println("[Test.Database] IsTest? " + strconv.FormatBool(database.IsTest))
 	database.Init()
 
 	database.DB.Exec("DROP TABLE lobbies;")

@@ -17,15 +17,11 @@ type constants struct {
 	AllowedCorsOrigins []string
 
 	// database
-	DbHost         string
-	DbPort         string
-	DbDatabase     string
-	DbTestDatabase string
-	DbUsername     string
-	DbPassword     string
-
-	DbLobbiesCollection string
-	DbPlayersCollection string
+	DbHost     string
+	DbPort     string
+	DbDatabase string
+	DbUsername string
+	DbPassword string
 }
 
 func overrideFromEnv(constant *string, name string) {
@@ -38,10 +34,15 @@ func overrideFromEnv(constant *string, name string) {
 var Constants constants
 
 func SetupConstants() {
-	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
-		setupDevelopmentConstants()
-	} else {
+	Constants = constants{}
+
+	setupDevelopmentConstants()
+	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) == "production" {
 		setupProductionConstants()
+	} else if val == "test" {
+		setupTestConstants()
+	} else if val == "travis_test" {
+		setupTravisTestConstants()
 	}
 
 	overrideFromEnv(&Constants.Port, "PORT")
@@ -52,45 +53,38 @@ func SetupConstants() {
 }
 
 func setupDevelopmentConstants() {
-	Constants = constants{
-		Port:               "8080",
-		Domain:             "http://localhost:8080",
-		OpenIDRealm:        "http://localhost:8080",
-		LoginRedirectPath:  "http://localhost:8080/",
-		CookieStoreSecret:  "dev secret is very secret",
-		SessionName:        "defaultSession",
-		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Server/static",
-		SocketMockUp:       false,
-		AllowedCorsOrigins: []string{"*"},
+	Constants.Port = "8080"
+	Constants.Domain = "http://localhost:8080"
+	Constants.OpenIDRealm = "http://localhost:8080"
+	Constants.LoginRedirectPath = "http://localhost:8080/"
+	Constants.CookieStoreSecret = "dev secret is very secret"
+	Constants.SessionName = "defaultSession"
+	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Server/static"
+	Constants.SocketMockUp = false
+	Constants.AllowedCorsOrigins = []string{"*"}
 
-		DbHost:         "127.0.0.1",
-		DbPort:         "5724",
-		DbDatabase:     "tf2stadium",
-		DbTestDatabase: "TESTtf2stadium",
-		DbUsername:     "tf2stadium",
-		DbPassword:     "dickbutt", // change this
-
-		DbLobbiesCollection: "lobbies", // change this
-		DbPlayersCollection: "players", // change this
-	}
+	Constants.DbHost = "127.0.0.1"
+	Constants.DbPort = "5724"
+	Constants.DbDatabase = "tf2stadium"
+	Constants.DbUsername = "tf2stadium"
+	Constants.DbPassword = "dickbutt" // change this
 }
 
 func setupProductionConstants() {
-	// TODO
-	Constants = constants{
-		Port:               "5555",
-		Domain:             "http://localhost:8080",
-		OpenIDRealm:        "http://localhost:8080",
-		CookieStoreSecret:  "dev secret is very secret",
-		StaticFileLocation: os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Server/static",
-		SocketMockUp:       false,
-		AllowedCorsOrigins: []string{"http://tf2stadium.com", "http://api.tf2stadium.com"},
+	// override production stuff here
+	Constants.Port = "5555"
+}
 
-		DbHost:         "127.0.0.1",
-		DbPort:         "5724",
-		DbDatabase:     "tf2stadium",
-		DbTestDatabase: "TESTtf2stadium",
-		DbUsername:     "tf2stadium",
-		DbPassword:     "dickbutt", // change this
-	}
+func setupTestConstants() {
+	Constants.DbHost = "127.0.0.1"
+	Constants.DbDatabase = "TESTtf2stadium"
+	Constants.DbUsername = "TESTtf2stadium"
+	Constants.DbPassword = "dickbutt"
+}
+
+func setupTravisTestConstants() {
+	Constants.DbHost = "127.0.0.1"
+	Constants.DbDatabase = "tf2stadium"
+	Constants.DbUsername = "postgres"
+	Constants.DbPassword = ""
 }
