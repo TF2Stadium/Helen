@@ -84,7 +84,7 @@ func setupTestConstants() {
 
 func setupTravisTestConstants() {
 	Constants.DbHost = "127.0.0.1"
-	Constants.DbDatabase = "TESTtf2stadium"
+	Constants.DbDatabase = "tf2stadium"
 	Constants.DbUsername = "postgres"
 	Constants.DbPassword = ""
 }
