@@ -1,6 +1,8 @@
 # TF2Stadium
 TF2Stadium Server is the backend server component for the tf2stadium.com project written in Go.
 
+[![Build Status](https://travis-ci.org/TF2Stadium/Server.svg?branch=master)](https://travis-ci.org/TF2Stadium/Server)
+
 ### Setup
 The project uses postgres as a database. Default development account data can be found at `database/setup.txt`
 
