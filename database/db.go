@@ -18,15 +18,21 @@ var DbUrl string
 
 // we'll connect to the database through this function
 func Init() {
-
-	fmt.Println("[DB]: DB name -> [" + getDatabaseName() + "]")
+	fmt.Println("[DB]: DB name -> [" + config.Constants.DbDatabase + "]")
 	fmt.Println("[DB]: DB user -> [" + config.Constants.DbUsername + "]")
 	fmt.Println("[DB]: Connecting to database -> [" + config.Constants.DbDatabase + "]")
 
-	DbUrl = "postgres://" + config.Constants.DbUsername + ":" +
-		config.Constants.DbPassword + "@" +
+	var passwordArg string
+	if config.Constants.DbPassword == "" {
+		passwordArg = ""
+	} else {
+		passwordArg = ":" + config.Constants.DbPassword
+	}
+
+	DbUrl = "postgres://" + config.Constants.DbUsername +
+		passwordArg + "@" +
 		config.Constants.DbHost + "/" +
-		getDatabaseName() + "?sslmode=disable"
+		config.Constants.DbDatabase + "?sslmode=disable"
 
 	var err error
 	DB, err = gorm.Open("postgres", DbUrl)
@@ -36,16 +42,4 @@ func Init() {
 	}
 
 	fmt.Println("[DB]: Connected!")
-}
-
-func Test() {
-	IsTest = true
-}
-
-func getDatabaseName() string {
-	if IsTest {
-		return config.Constants.DbTestDatabase
-	}
-
-	return config.Constants.DbDatabase
 }
