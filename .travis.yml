@@ -1,4 +1,2 @@
 language: go
 
-install:
-    - go get -t github.com/TF2Stadium/Server
