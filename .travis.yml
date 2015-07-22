@@ -1,7 +1,4 @@
 language: go
 
-go:
-    - tip
-
 install:
-    - go get github.com/TF2Stadium/Server
+    - go get -t github.com/TF2Stadium/Server
