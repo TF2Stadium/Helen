@@ -18,9 +18,11 @@ func Do() {
 }
 
 func TestCleanup() {
-	os.Setenv("DEPLOYMENT_ENV", "test")
+	if os.Getenv("DEPLOYMENT_ENV") == "" {
+		os.Setenv("DEPLOYMENT_ENV", "test")
+		defer os.Unsetenv("DEPLOYMENT_ENV")
+	}
 	config.SetupConstants()
-	os.Unsetenv("DEPLOYMENT_ENV")
 	database.Init()
 
 	database.DB.Exec("DROP TABLE lobbies;")

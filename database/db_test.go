@@ -13,9 +13,11 @@ import (
 var steamid = "76561198074578368"
 
 func TestDatabasePing(t *testing.T) {
-	os.Setenv("DEPLOYMENT_ENV", "test")
+	if os.Getenv("DEPLOYMENT_ENV") == "" {
+		os.Setenv("DEPLOYMENT_ENV", "test")
+		defer os.Unsetenv("DEPLOYMENT_ENV")
+	}
 	config.SetupConstants()
-	os.Unsetenv("DEPLOYMENT_ENV")
 
 	fmt.Println("[Test.Database] IsTest? " + strconv.FormatBool(IsTest))
 	Init()
