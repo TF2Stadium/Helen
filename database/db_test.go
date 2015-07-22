@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 
@@ -12,8 +13,10 @@ import (
 var steamid = "76561198074578368"
 
 func TestDatabasePing(t *testing.T) {
+	os.Setenv("DEPLOYMENT_ENV", "test")
 	config.SetupConstants()
-	Test()
+	os.Unsetenv("DEPLOYMENT_ENV")
+
 	fmt.Println("[Test.Database] IsTest? " + strconv.FormatBool(IsTest))
 	Init()
 	assert.Nil(t, DB.DB().Ping())
