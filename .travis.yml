@@ -1,2 +1,5 @@
 language: go
-
+addons:
+    postgresql: "9.3"
+before_script:
+    - psql -c 'create database TESTtf2stadium;' -U postgres
