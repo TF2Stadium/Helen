@@ -50,3 +50,13 @@ func (player *Player) GetLobbyId() (uint, *helpers.TPError) {
 
 	return playerSlot.LobbyId, nil
 }
+
+func (player *Player) IsSpectatingId(lobbyid uint) bool {
+	count := 0
+	err := db.DB.Table("spectators_players_lobbies").Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Count(&count).Error
+	if err != nil {
+		return false
+	}
+	return count != 0
+
+}

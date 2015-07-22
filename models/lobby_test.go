@@ -184,6 +184,7 @@ func TestSpectators(t *testing.T) {
 	specs = nil
 	db.DB.Model(lobby).Association("Spectators").Find(&specs)
 	assert.Equal(t, 2, len(specs))
+	assert.Equal(t, true, specs[0].IsSpectatingId(lobby.ID))
 
 	err = lobby.RemoveSpectator(player)
 	assert.Nil(t, err)
