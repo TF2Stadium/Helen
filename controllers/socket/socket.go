@@ -2,7 +2,9 @@ package socket
 
 import (
 	"log"
+	"strconv"
 	"strings"
+	"time"
 
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Server/database"
@@ -31,12 +33,7 @@ func SocketInit(so socketio.Socket) {
 	})
 
 	log.Println("on connection")
-	so.Join("chat")
-	so.On("chat message", func(msg string) {
-		log.Println("emit:", so.Emit("chat message", msg))
-		so.BroadcastTo("chat", "chat message", msg)
-	})
-
+	so.Join("-1") //room for global chat
 	so.On("lobbyCreate", func(jsonstr string) string {
 		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
 		if err != nil {
@@ -96,6 +93,7 @@ func SocketInit(so socketio.Socket) {
 			bytes, _ = tperr.ErrorJSON().Encode()
 			return string(bytes)
 		}
+		so.Join(strconv.FormatUint(lobbyid, 10))
 		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
@@ -140,19 +138,17 @@ func SocketInit(so socketio.Socket) {
 		} else {
 			lob.RemovePlayer(player)
 		}
-
+		so.Leave(strconv.FormatUInt(uint(lobbyid), 10))
 		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
 
 	so.On("readyPlayer", func(jsonstr string) string {
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
+		//Get SteamID of current player
+		//TODO: Use websockets session code for getting Player
+		//something like player := session.Values["steamid"]
 
-		steamid, _ := js.Get("steamid").String()
+		var steamid string
 		player, tperr := models.GetPlayerBySteamId(steamid)
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
@@ -182,13 +178,10 @@ func SocketInit(so socketio.Socket) {
 	})
 
 	so.On("unreadyPlayer", func(jsonstr string) string {
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
-
-		steamid, _ := js.Get("steamid").String()
+		//Get SteamID of current player
+		//TODO: Use websockets session code for getting Player
+		//something like player := session.Values["steamid"]
+		var steamid string
 		player, tperr := models.GetPlayerBySteamId(steamid)
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
@@ -271,6 +264,46 @@ func SocketInit(so socketio.Socket) {
 		}
 		lob.Save()
 		return string(bytes)
+	})
+
+	so.On("chatSend", func(jsonstr string) string {
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
+		message, _ := js.Get("message").String()
+		room, _ := js.Get("room").Int64()
+		//TODO: Use websockets session code for getting Player
+		//something like session.Values["steamid"]
+		var player *models.Player
+		//Check if player has either joined, or is spectating lobby
+		lobbyId, tperr := player.GetLobbyId()
+		if room != -1 {
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			} else if lobbyId != uint(room) && !player.IsSpectatingId(uint(room)) {
+				bytes, _ := chelpers.BuildFailureJSON("Player is not in the lobby.", 5).Encode()
+				return string(bytes)
+			}
+		}
+		t := time.Now()
+		chatMessage := simplejson.New()
+		chatMessage.Set("timestamp", strconv.Itoa(t.Hour())+strconv.Itoa(t.Minute()))
+		chatMessage.Set("message", message)
+		chatMessage.Set("room", room)
+
+		user := simplejson.New()
+		user.Set("id", player.SteamId)
+		user.Set("name", player.Name)
+
+		chatMessage.Set("user", user)
+		bytes, _ := chatMessage.Encode()
+		so.BroadcastTo(strconv.FormatInt(room, 10), string(bytes))
+
+		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		return string(resp)
 	})
 
 }
