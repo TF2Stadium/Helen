@@ -81,3 +81,8 @@ func GetSessionSocket(socketid string) (*sessions.Session, error) {
 	}
 	return session, nil
 }
+
+func GetSteamId(socketid string) string {
+	session, _ := GetSessionSocket(socketid)
+	return session.Values["steam_id"].(string)
+}
