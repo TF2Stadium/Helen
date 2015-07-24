@@ -35,6 +35,11 @@ func SocketInit(so socketio.Socket) {
 	log.Println("on connection")
 	so.Join("-1") //room for global chat
 	so.On("lobbyCreate", func(jsonstr string) string {
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
 		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
 		if err != nil {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
@@ -67,37 +72,48 @@ func SocketInit(so socketio.Socket) {
 		return string(bytes)
 	})
 	so.On("lobbyJoin", func(jsonstr string) string {
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
 		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+
 		if err != nil {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
 			return string(bytes)
 		}
 
-		//TODO: Use websockets session code for getting Player
-		//something like session.Values["steamid"]
-		var player *models.Player
+		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
 
 		slot, _ := js.Get("slot").Int()
 		lobbyid, _ := js.Get("lobbyid").Uint64()
-		var lob *models.Lobby
-		var bytes []byte
 
 		lob, tperr := models.GetLobbyById(uint(lobbyid))
 		if tperr != nil {
-			bytes, _ = tperr.ErrorJSON().Encode()
+			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
 		}
 
 		tperr = lob.AddPlayer(player, slot)
 		if tperr != nil {
-			bytes, _ = tperr.ErrorJSON().Encode()
+			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
 		}
 		so.Join(strconv.FormatUint(lobbyid, 10))
-		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
 	so.On("lobbyRemovePlayer", func(jsonstr string) string {
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
 		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
 		if err != nil {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
@@ -105,28 +121,27 @@ func SocketInit(so socketio.Socket) {
 		}
 
 		var steamid string
-		var bytes []byte
 
 		steamidjson, gotem := js.CheckGet("steamid")
+
 		if !gotem {
-			//Get SteamID of current player
-			//TODO: Use websockets session code for getting Player
-			//something like player := session.Values["steamid"]
+			steamid = chelpers.GetSteamId(so.Id())
 		} else {
 			steamid, _ = steamidjson.String()
 		}
+
 		ban, _ := js.Get("ban").Bool()
 		player, tperr := models.GetPlayerBySteamId(steamid)
 
 		if tperr != nil {
-			bytes, _ = tperr.ErrorJSON().Encode()
+			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
 		}
 
 		lobbyid, err := player.GetLobbyId()
 
 		if err != nil {
-			bytes, _ = chelpers.BuildFailureJSON("Player not in any Lobby.", 4).Encode()
+			bytes, _ := chelpers.BuildFailureJSON("Player not in any Lobby.", 4).Encode()
 			return string(bytes)
 		}
 
@@ -139,17 +154,17 @@ func SocketInit(so socketio.Socket) {
 			lob.RemovePlayer(player)
 		}
 		so.Leave(strconv.FormatInt(int64(lobbyid), 10))
-		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
 
 	so.On("readyPlayer", func(jsonstr string) string {
-		//Get SteamID of current player
-		//TODO: Use websockets session code for getting Player
-		//something like player := session.Values["steamid"]
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
 
-		var steamid string
-		player, tperr := models.GetPlayerBySteamId(steamid)
+		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
@@ -178,11 +193,17 @@ func SocketInit(so socketio.Socket) {
 	})
 
 	so.On("unreadyPlayer", func(jsonstr string) string {
-		//Get SteamID of current player
-		//TODO: Use websockets session code for getting Player
-		//something like player := session.Values["steamid"]
-		var steamid string
-		player, tperr := models.GetPlayerBySteamId(steamid)
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
+		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
@@ -211,14 +232,18 @@ func SocketInit(so socketio.Socket) {
 	})
 
 	so.On("addSpectator", func(jsonstr string) string {
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
 		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
 		if err != nil {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
 			return string(bytes)
 		}
-		steamid, _ := js.Get("steamid").String()
 		lobbyid, _ := js.Get("id").Uint64()
-		player, tperr := models.GetPlayerBySteamId(steamid)
+		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
@@ -239,14 +264,18 @@ func SocketInit(so socketio.Socket) {
 	})
 
 	so.On("removeSpectator", func(jsonstr string) string {
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
 		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
 		if err != nil {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
 			return string(bytes)
 		}
-		steamid, _ := js.Get("steamid").String()
 		lobbyid, _ := js.Get("id").Uint64()
-		player, tperr := models.GetPlayerBySteamId(steamid)
+		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
@@ -267,6 +296,11 @@ func SocketInit(so socketio.Socket) {
 	})
 
 	so.On("chatSend", func(jsonstr string) string {
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
 		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
 		if err != nil {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
@@ -274,9 +308,12 @@ func SocketInit(so socketio.Socket) {
 		}
 		message, _ := js.Get("message").String()
 		room, _ := js.Get("room").Int64()
-		//TODO: Use websockets session code for getting Player
-		//something like session.Values["steamid"]
-		var player *models.Player
+		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+
 		//Check if player has either joined, or is spectating lobby
 		lobbyId, tperr := player.GetLobbyId()
 		if room != -1 {
