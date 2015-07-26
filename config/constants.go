@@ -14,6 +14,7 @@ type constants struct {
 	StaticFileLocation string
 	SessionName        string
 	SocketMockUp       bool
+	ServerMockUp       bool
 	AllowedCorsOrigins []string
 
 	// database
@@ -61,6 +62,7 @@ func setupDevelopmentConstants() {
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Server/static"
 	Constants.SocketMockUp = false
+	Constants.ServerMockUp = false
 	Constants.AllowedCorsOrigins = []string{"*"}
 
 	Constants.DbHost = "127.0.0.1"
@@ -80,6 +82,8 @@ func setupTestConstants() {
 	Constants.DbDatabase = "TESTtf2stadium"
 	Constants.DbUsername = "TESTtf2stadium"
 	Constants.DbPassword = "dickbutt"
+
+	Constants.ServerMockUp = true
 }
 
 func setupTravisTestConstants() {
@@ -87,4 +91,6 @@ func setupTravisTestConstants() {
 	Constants.DbDatabase = "tf2stadium"
 	Constants.DbUsername = "postgres"
 	Constants.DbPassword = ""
+
+	Constants.ServerMockUp = true
 }

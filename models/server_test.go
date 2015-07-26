@@ -19,13 +19,17 @@ func TestServerSetup(t *testing.T) {
 
 		commId := "76561198067132047" // your commId, so it wont be kicking you out everytime
 
+		info := ServerRecord{
+			Host:         "192.168.1.94:27015",
+			RconPassword: "rconPassword",
+		}
+
 		svr = NewServer()
 		svr.Map = "cp_process_final"
 		svr.Type = LobbyTypeHighlander
 		svr.League = LeagueUgc
-		svr.Address = "192.168.1.94:27015"
-		svr.RconPassword = "rconPassword"
 		svr.LobbyPassword = "12345"
+		svr.Info = info
 
 		svr.AllowPlayer(commId)
 

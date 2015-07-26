@@ -49,7 +49,10 @@ type Lobby struct {
 
 	Slots []LobbySlot
 
-	Server    *Server   `sql:"-"` // server
+	Server       *Server `sql:"-"` // server
+	ServerInfo   ServerRecord
+	ServerInfoID uint
+
 	Whitelist Whitelist //whitelist.tf ID
 
 	Spectators []Player `gorm:"many2many:spectators_players_lobbies"`
@@ -58,13 +61,14 @@ type Lobby struct {
 }
 
 //id should be maintained in the main loop
-func NewLobby(mapName string, lobbyType LobbyType /*server *Server,*/, whitelist int) *Lobby {
+func NewLobby(mapName string, lobbyType LobbyType, serverInfo ServerRecord, whitelist int) *Lobby {
 	lobby := &Lobby{
-		Type:      lobbyType,
-		State:     LobbyStateWaiting,
-		MapName:   mapName,
-		Server:    nil,
-		Whitelist: Whitelist(whitelist), // that's a strange line
+		Type:       lobbyType,
+		State:      LobbyStateWaiting,
+		MapName:    mapName,
+		Server:     nil,
+		Whitelist:  Whitelist(whitelist), // that's a strange line
+		ServerInfo: serverInfo,
 	}
 
 	return lobby
@@ -100,7 +104,7 @@ func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
 	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
 
 	lob := &Lobby{}
-	err := db.DB.First(lob, id).Error
+	err := db.DB.Preload("ServerInfo").First(lob, id).Error
 
 	if err != nil {
 		return nil, nonExistentLobby
@@ -171,11 +175,14 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	}
 	db.DB.Create(newSlotObj)
 
+	lobby.updateServerAllowedPlayers()
+
 	return nil
 }
 
 func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{}).Error
+	lobby.updateServerAllowedPlayers()
 	if err != nil {
 		return helpers.NewTPError(err.Error(), -1)
 	}
@@ -252,4 +259,47 @@ func (lobby *Lobby) IsFull() bool {
 	}
 
 	return count >= 2*typePlayerCount[lobby.Type]
+}
+
+func (lobby *Lobby) AfterSave() error {
+	log.Println("save callback called")
+	s, ok := LobbyServerMap[lobby.ID]
+	if !ok {
+		s := NewServer()
+		s.League = LeagueEtf2l // TODO actually accept this argument
+		s.Map = lobby.MapName
+		s.Type = lobby.Type
+		s.Info = lobby.ServerInfo
+
+		err := s.VerifyInfo()
+
+		if err != nil {
+			return err
+		}
+
+		if s == nil {
+			log.Println("wtf2")
+		}
+
+		LobbyServerMap[lobby.ID] = s
+	}
+
+	lobby.Server = s
+	return nil
+}
+
+func (lobby *Lobby) AfterFind() error {
+
+	log.Println("find callback called")
+	// should still finish Find if the server fails to initialize
+	lobby.AfterSave()
+	return nil
+}
+
+func (lobby *Lobby) updateServerAllowedPlayers() {
+	var steamids []string
+	db.DB.Model(&LobbySlot{}).Joins("left join players on players.id = lobby_slots.player_id").
+		Where("lobby_id = ?", lobby.ID).Pluck("steam_id", &steamids)
+
+	lobby.Server.SetAllowedPlayers(steamids)
 }

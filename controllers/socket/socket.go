@@ -43,8 +43,8 @@ func SocketInit(so socketio.Socket) {
 
 		mapName, _ := js.Get("mapName").String()
 		format, _ := js.Get("format").String()
-		//server, _ := js.Get("server").String()
-		//rconPwd, _ := js.Get("rconpwd").String()
+		server, _ := js.Get("server").String()
+		rconPwd, _ := js.Get("rconpwd").String()
 		whitelist, _ := js.Get("whitelist").Int()
 		//mumble, _ := js.Get("mumbleRequired").Bool()
 
@@ -54,7 +54,8 @@ func SocketInit(so socketio.Socket) {
 		}
 
 		//TODO: Configure server here
-		lob := models.NewLobby(mapName, playermap[format], whitelist)
+		lob := models.NewLobby(mapName, playermap[format],
+			models.ServerRecord{Host: server, RconPassword: rconPwd}, whitelist)
 		err = lob.Save()
 
 		if err != nil {

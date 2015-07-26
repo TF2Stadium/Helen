@@ -1,7 +1,6 @@
 package migrations
 
 import (
-	"log"
 	"os"
 
 	"github.com/TF2Stadium/Server/config"
@@ -13,6 +12,7 @@ func Do() {
 	database.DB.AutoMigrate(&models.Player{})
 	database.DB.AutoMigrate(&models.Lobby{})
 	database.DB.AutoMigrate(&models.LobbySlot{})
+	database.DB.AutoMigrate(&models.ServerRecord{})
 
 	database.DB.Model(&models.LobbySlot{}).AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
 }
@@ -30,8 +30,6 @@ func TestCleanup() {
 	database.DB.Exec("DROP TABLE lobby_slots;")
 	database.DB.Exec("DROP TABLE banned_players_lobbies;")
 	database.DB.Exec("DROP TABLE spectators_players_lobbies;")
-
-	log.Println(database.DB)
 
 	Do()
 }
