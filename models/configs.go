@@ -22,6 +22,11 @@ const (
 	LeagueEtf2l League = "etf2l"
 )
 
+var highlanderSlots = [...]string{"Scout", "Soldier", "Pyro", "Engineer", "Heavy",
+	"Demoman", "Sniper", "Medic", "Spy"}
+var sixesSlots = [...]string{"Scout", "Scout", "Roaming Soldier", "Pocket Soldier",
+	"Demoman", "Medic"}
+
 func (l *League) String() string {
 	return string(*l)
 }
@@ -255,4 +260,11 @@ func LobbyTypeToString(t LobbyType) string {
 	}
 
 	return ""
+}
+
+func SlotTypeToString(slot int, lobbytype LobbyType) string {
+	if lobbytype == LobbyTypeSixes {
+		return sixesSlots[slot%6]
+	}
+	return highlanderSlots[slot%9]
 }
