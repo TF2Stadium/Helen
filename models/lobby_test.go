@@ -12,13 +12,14 @@ import (
 
 func TestLobbyCreation(t *testing.T) {
 	migrations.TestCleanup()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "testip", ""}, 0)
 	lobby.Save()
 
-	lobby2 := &models.Lobby{}
-	db.DB.First(lobby2)
+	lobby2, _ := models.GetLobbyById(lobby.ID)
 
 	assert.Equal(t, lobby.ID, lobby2.ID)
+	assert.Equal(t, lobby.ServerInfo.Host, lobby2.ServerInfo.Host)
+	assert.Equal(t, lobby.ServerInfo.ID, lobby2.ServerInfo.ID)
 
 	lobby.MapName = "cp_granary"
 	lobby.Save()
@@ -29,7 +30,7 @@ func TestLobbyCreation(t *testing.T) {
 
 func TestLobbyAdd(t *testing.T) {
 	migrations.TestCleanup()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
 	lobby.Save()
 
 	var players []*models.Player
@@ -72,7 +73,7 @@ func TestLobbyAdd(t *testing.T) {
 	err = lobby.AddPlayer(players[2], 55)
 	assert.NotNil(t, err)
 
-	lobby2 := models.NewLobby("cp_granary", models.LobbyTypeSixes, 0)
+	lobby2 := models.NewLobby("cp_granary", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
 	lobby2.Save()
 
 	// try to add a player while they're in another lobby
@@ -82,7 +83,7 @@ func TestLobbyAdd(t *testing.T) {
 
 func TestLobbyRemove(t *testing.T) {
 	migrations.TestCleanup()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
 	lobby.Save()
 
 	player := models.NewPlayer("1235")
@@ -107,7 +108,7 @@ func TestLobbyRemove(t *testing.T) {
 
 func TestLobbyBan(t *testing.T) {
 	migrations.TestCleanup()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
 	lobby.Save()
 
 	player := models.NewPlayer("1235")
@@ -130,7 +131,7 @@ func TestReadyPlayer(t *testing.T) {
 	migrations.TestCleanup()
 	player := models.NewPlayer("testing")
 	player.Save()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
 	lobby.Save()
 	lobby.AddPlayer(player, 0)
 
@@ -150,7 +151,7 @@ func TestUnreadyPlayer(t *testing.T) {
 	migrations.TestCleanup()
 	player := models.NewPlayer("testing")
 	player.Save()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
 	lobby.Save()
 	lobby.AddPlayer(player, 0)
 
@@ -168,7 +169,7 @@ func TestSpectators(t *testing.T) {
 	player2 := models.NewPlayer("testing1")
 	player2.Save()
 
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
 	lobby.Save()
 
 	err := lobby.AddSpectator(player)

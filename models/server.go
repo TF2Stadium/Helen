@@ -6,18 +6,26 @@ import (
 	"time"
 
 	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
+	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/TF2Stadium/TF2RconWrapper"
 )
+
+var LobbyServerMap = make(map[uint]*Server)
+
+type ServerRecord struct {
+	ID           uint
+	Host         string
+	RconPassword string
+}
 
 type Server struct {
 	Map  string // lobby map
 	Name string // server name
-	Rcon *TF2RconWrapper.TF2RconConnection
 
 	League League
 	Type   LobbyType // 9v9 6v6 4v4...
 
-	Address string // server ip:port
 	LobbyId uint
 
 	Players        []TF2RconWrapper.Player // current number of players in the server
@@ -27,7 +35,9 @@ type Server struct {
 	Ticker verifyTicker  // timer that will verify()
 
 	//ChatListener  *TF2RconWrapper.RconChatListener
-	RconPassword  string // will store the rcon password specified by the client
+
+	Rcon          *TF2RconWrapper.TF2RconConnection
+	Info          ServerRecord
 	LobbyPassword string // will store the new server password from the lobby
 }
 
@@ -52,23 +62,39 @@ func NewServer() *Server {
 //
 // things that needs to be specified before run this:
 // -> Map
-// -> Mode
 // -> Type
 // -> League
-// -> LobbyId
-// -> Address
-// -> RconPassword
-// -> LobbyPassword
+// -> Info
 //
-func (s *Server) Setup() error {
-	log.Println("[Server.Setup]: Setting up server -> [" + s.Address + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 
-	// connect to rcon
+func (s *Server) VerifyInfo() error {
+	if config.Constants.ServerMockUp {
+		return nil
+	}
+
 	var err error
-	s.Rcon, err = TF2RconWrapper.NewTF2RconConnection(s.Address, s.RconPassword)
+	s.Rcon, err = TF2RconWrapper.NewTF2RconConnection(s.Info.Host, s.Info.RconPassword)
 
 	if err != nil {
-		return err
+		return helpers.NewTPError(err.Error(), -1)
+	}
+	return nil
+}
+
+func (s *Server) Setup() error {
+	if config.Constants.ServerMockUp {
+		return nil
+	}
+	log.Println("[Server.Setup]: Setting up server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
+
+	// connect to rcon if not connected before
+	if s.Rcon == nil {
+		var err error
+		s.Rcon, err = TF2RconWrapper.NewTF2RconConnection(s.Info.Host, s.Info.RconPassword)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	// changing server password
@@ -133,7 +159,10 @@ func (s *Server) Setup() error {
 
 // runs each 10 sec
 func (s *Server) Verify() {
-	log.Println("[Server.Verify]: Verifing server -> [" + s.Address + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
+	if config.Constants.ServerMockUp {
+		return
+	}
+	log.Println("[Server.Verify]: Verifing server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 
 	// check if all players in server are in lobby
 	s.Players = s.Rcon.GetPlayers()
@@ -181,7 +210,11 @@ func (s *Server) IsPlayerInServer(playerCommId string) (bool, error) {
 // TODO: get end event from logs
 // `World triggered "Game_Over"`
 func (s *Server) End() {
-	log.Println("[Server.End]: Ending server -> [" + s.Address + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
+	if config.Constants.ServerMockUp {
+		return
+	}
+
+	log.Println("[Server.End]: Ending server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 	// TODO: upload logs
 
 	s.Rcon.Close()
@@ -214,6 +247,14 @@ func (s *Server) KickAll() error {
 	}
 
 	return nil
+}
+
+func (s *Server) SetAllowedPlayers(commIds []string) {
+	s.AllowedPlayers = make(map[string]bool)
+
+	for _, commId := range commIds {
+		s.AllowedPlayers[commId] = true
+	}
 }
 
 func (s *Server) AllowPlayer(commId string) {
