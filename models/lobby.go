@@ -1,11 +1,13 @@
 package models
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/helpers"
+	"github.com/bitly/go-simplejson"
 	"github.com/jinzhu/gorm"
 )
 
@@ -14,8 +16,8 @@ type Whitelist int
 type LobbyState int
 
 const (
-	LobbyTypeSixes      LobbyType = 0
-	LobbyTypeHighlander LobbyType = 1
+	LobbyTypeSixes      LobbyType = 6
+	LobbyTypeHighlander LobbyType = 9
 )
 
 const (
@@ -43,9 +45,10 @@ type LobbySlot struct {
 //Given Lobby IDs are unique, we'll use them for mumble channel names
 type Lobby struct {
 	gorm.Model
-	MapName string
-	State   LobbyState
-	Type    LobbyType
+	MapName   string
+	State     LobbyState
+	Type      LobbyType
+	CreatedAt *time.Time
 
 	Slots []LobbySlot
 
@@ -244,12 +247,65 @@ func (lobby *Lobby) RemoveSpectator(player *Player) *helpers.TPError {
 	return nil
 }
 
-func (lobby *Lobby) IsFull() bool {
+func (lobby *Lobby) GetPlayerNumber() int {
 	count := 0
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Count(&count).Error
 	if err != nil {
+		return 0
+	}
+	return count
+}
+
+func (lobby *Lobby) IsFull() bool {
+	return lobby.GetPlayerNumber() >= 2*typePlayerCount[lobby.Type]
+}
+
+func (lobby *Lobby) IsSlotFilled(slot int) bool {
+	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Error
+	if err != nil {
 		return false
 	}
+	return true
+}
 
-	return count >= 2*typePlayerCount[lobby.Type]
+func GetLobbyListData() (string, error) {
+	count := 0
+	db.DB.Where("state = ?", LobbyStateWaiting).Count(&count)
+
+	if count == 0 {
+		return "{}", nil
+	}
+
+	lobbyList := make([]*simplejson.Json, count)
+	lobbies := make([]*Lobby, count)
+	err := db.DB.Where("state = ?", LobbyStateWaiting).Find(&lobbies).Error
+
+	if err != nil {
+		return "{}", err
+	}
+
+	for lobbyIndex, lobby := range lobbies {
+		lobbyJs := simplejson.New()
+		lobbyJs.Set("id", lobby.ID)
+		lobbyJs.Set("type", LobbyTypeToString(lobby.Type))
+		lobbyJs.Set("createdAt", lobby.CreatedAt.String())
+		lobbyJs.Set("players", lobby.GetPlayerNumber())
+		classes := make([]*simplejson.Json, int(lobby.Type))
+
+		for i := 0; i <= int(lobby.Type); i++ {
+			slot := simplejson.New()
+			class := simplejson.New()
+
+			slot.Set("red", lobby.IsSlotFilled(i))
+			slot.Set("blu", lobby.IsSlotFilled(i+6))
+
+			class.Set(SlotTypeToString(i, lobby.Type), slot)
+			classes[i] = class
+		}
+
+		lobbyList[lobbyIndex] = lobbyJs
+	}
+
+	bytes, _ := json.Marshal(lobbyList)
+	return string(bytes), nil
 }
