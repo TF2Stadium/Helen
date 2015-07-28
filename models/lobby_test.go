@@ -6,9 +6,14 @@ import (
 
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/database/migrations"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	helpers.InitLogger()
+}
 
 func TestLobbyCreation(t *testing.T) {
 	migrations.TestCleanup()

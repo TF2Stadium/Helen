@@ -2,13 +2,13 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/TF2Stadium/Server/config"
 	"github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
@@ -25,7 +25,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		config.Constants.OpenIDRealm); err == nil {
 		http.Redirect(w, r, url, 303)
 	} else {
-		log.Print(err)
+		helpers.Logger.Debug(err.Error())
 	}
 }
 
@@ -41,7 +41,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	fullURL := config.Constants.Domain + r.URL.String()
 	id, err := openid.Verify(fullURL, discoveryCache, nonceStore)
 	if err != nil {
-		log.Println(err)
+		helpers.Logger.Debug(err.Error())
 		return
 	}
 
@@ -58,12 +58,10 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		player = models.NewPlayer(steamid)
 		database.DB.Create(player)
 	} else if err != nil {
-		log.Println("steamLogin.go:60 ", err)
+		helpers.Logger.Debug("steamLogin.go:60 ", err)
 	}
 
 	session.Values["id"] = fmt.Sprint(player.ID)
-
-	log.Println(session)
 
 	err = session.Save(r, w)
 

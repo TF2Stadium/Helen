@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,6 +12,10 @@ import (
 // make sure you have the server running at the moment
 var shouldTest bool = false
 var svr *Server
+
+func init() {
+	helpers.InitLogger()
+}
 
 func TestServerSetup(t *testing.T) {
 	if shouldTest {

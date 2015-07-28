@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -12,6 +10,7 @@ import (
 	"github.com/TF2Stadium/Server/config/stores"
 	"github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/database/migrations"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/TF2Stadium/Server/routes"
 	"github.com/googollee/go-socket.io"
@@ -21,13 +20,14 @@ import (
 
 func main() {
 	config.SetupConstants()
+	helpers.InitLogger()
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()
 	models.InitServerConfigs()
 
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
-	fmt.Println("Starting the server")
+	helpers.Logger.Debug("Starting the server")
 
 	r := mux.NewRouter()
 
@@ -38,7 +38,7 @@ func main() {
 	// init socket.io server
 	socketServer, err := socketio.NewServer(nil)
 	if err != nil {
-		log.Fatal(err)
+		helpers.Logger.Fatal(err.Error())
 	}
 	routes.SetupSocketRoutes(socketServer)
 	r.Handle("/socket.io/", socketServer)
@@ -54,6 +54,6 @@ func main() {
 	}).Handler(r)
 
 	// start the server
-	log.Println("Serving at localhost:" + config.Constants.Port + "...")
+	helpers.Logger.Debug("Serving at localhost:" + config.Constants.Port + "...")
 	graceful.Run(":"+config.Constants.Port, 10*time.Second, corsHandler)
 }

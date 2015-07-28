@@ -1,13 +1,13 @@
 package socket
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"time"
 
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
@@ -18,7 +18,7 @@ func SocketInit(so socketio.Socket) {
 
 	so.On("disconnection", func() {
 		// chelpers.DeauthenticateSocket(so.Id())
-		log.Println("on disconnect")
+		helpers.Logger.Debug("on disconnect")
 	})
 
 	so.On("authenticationTest", func(data string) string {
@@ -32,7 +32,7 @@ func SocketInit(so socketio.Socket) {
 		return answer
 	})
 
-	log.Println("on connection")
+	helpers.Logger.Debug("on connection")
 	so.Join("-1") //room for global chat
 	so.On("lobbyCreate", func(jsonstr string) string {
 		if !chelpers.IsLoggedInSocket(so.Id()) {
@@ -47,7 +47,7 @@ func SocketInit(so socketio.Socket) {
 		}
 
 		mapName, _ := js.Get("mapName").String()
-		format, _ := js.Get("format").String()
+		lobbytype, _ := js.Get("type").String()
 		server, _ := js.Get("server").String()
 		rconPwd, _ := js.Get("rconpwd").String()
 		whitelist, _ := js.Get("whitelist").Int()
@@ -59,7 +59,9 @@ func SocketInit(so socketio.Socket) {
 		}
 
 		//TODO: Configure server here
-		lob := models.NewLobby(mapName, playermap[format],
+
+		//TODO what if playermap[lobbytype] is nil?
+		lob := models.NewLobby(mapName, playermap[lobbytype],
 			models.ServerRecord{Host: server, RconPassword: rconPwd}, whitelist)
 		err = lob.Save()
 
@@ -91,10 +93,17 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 
-		slot, _ := js.Get("slot").Int()
-		lobbyid, _ := js.Get("lobbyid").Uint64()
-
+		lobbyid, _ := js.Get("id").Uint64()
 		lob, tperr := models.GetLobbyById(uint(lobbyid))
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+
+		classString, _ := js.Get("class").String()
+		teamString, _ := js.Get("team").String()
+
+		slot, tperr := chelpers.GetPlayerSlot(lob.Type, teamString, classString)
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
@@ -159,7 +168,7 @@ func SocketInit(so socketio.Socket) {
 		return string(bytes)
 	})
 
-	so.On("readyPlayer", func(jsonstr string) string {
+	so.On("playerReady", func(jsonstr string) string {
 		if !chelpers.IsLoggedInSocket(so.Id()) {
 			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
 			return string(bytes)
@@ -193,7 +202,7 @@ func SocketInit(so socketio.Socket) {
 		return string(bytes)
 	})
 
-	so.On("unreadyPlayer", func(jsonstr string) string {
+	so.On("playerUnready", func(jsonstr string) string {
 		if !chelpers.IsLoggedInSocket(so.Id()) {
 			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
 			return string(bytes)
@@ -232,7 +241,7 @@ func SocketInit(so socketio.Socket) {
 		return string(bytes)
 	})
 
-	so.On("addSpectator", func(jsonstr string) string {
+	so.On("lobbyJoinSpectator", func(jsonstr string) string {
 		if !chelpers.IsLoggedInSocket(so.Id()) {
 			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
 			return string(bytes)
