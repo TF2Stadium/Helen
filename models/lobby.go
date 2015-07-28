@@ -26,6 +26,12 @@ const (
 	LobbyStateEnded      LobbyState = 2
 )
 
+var stateString = map[LobbyState]string{
+	LobbyStateWaiting:    "Waiting For Players",
+	LobbyStateInProgress: "Lobby in Progress",
+	LobbyStateEnded:      "Lobby Ended",
+}
+
 var typePlayerCount = map[LobbyType]int{
 	LobbyTypeSixes:      6,
 	LobbyTypeHighlander: 9,
@@ -273,48 +279,6 @@ func (lobby *Lobby) IsSlotFilled(slot int) bool {
 		return false
 	}
 	return true
-}
-
-func GetLobbyListData() (string, error) {
-	count := 0
-	db.DB.Where("state = ?", LobbyStateWaiting).Count(&count)
-
-	if count == 0 {
-		return "{}", nil
-	}
-
-	lobbyList := make([]*simplejson.Json, count)
-	lobbies := make([]*Lobby, count)
-	err := db.DB.Where("state = ?", LobbyStateWaiting).Find(&lobbies).Error
-
-	if err != nil {
-		return "{}", err
-	}
-
-	for lobbyIndex, lobby := range lobbies {
-		lobbyJs := simplejson.New()
-		lobbyJs.Set("id", lobby.ID)
-		lobbyJs.Set("type", LobbyTypeToString(lobby.Type))
-		lobbyJs.Set("createdAt", lobby.CreatedAt.String())
-		lobbyJs.Set("players", lobby.GetPlayerNumber())
-		classes := make([]*simplejson.Json, int(lobby.Type))
-
-		for i := 0; i <= int(lobby.Type); i++ {
-			slot := simplejson.New()
-			class := simplejson.New()
-
-			slot.Set("red", lobby.IsSlotFilled(i))
-			slot.Set("blu", lobby.IsSlotFilled(i+6))
-
-			class.Set(SlotTypeToString(i, lobby.Type), slot)
-			classes[i] = class
-		}
-
-		lobbyList[lobbyIndex] = lobbyJs
-	}
-
-	bytes, _ := json.Marshal(lobbyList)
-	return string(bytes), nil
 }
 
 func (lobby *Lobby) AfterSave() error {
