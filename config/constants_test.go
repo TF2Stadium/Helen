@@ -4,8 +4,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	helpers.InitLogger()
+}
 
 func TestEnvVariablesOverrideConfig(t *testing.T) {
 	os.Unsetenv("PORT")

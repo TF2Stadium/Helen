@@ -12,6 +12,10 @@ import (
 
 var steamid = "76561198074578368"
 
+func init() {
+	helpers.InitLogger()
+}
+
 func TestDatabasePing(t *testing.T) {
 	if os.Getenv("DEPLOYMENT_ENV") == "" {
 		os.Setenv("DEPLOYMENT_ENV", "test")

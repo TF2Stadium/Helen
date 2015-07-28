@@ -6,6 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	InitLogger()
+}
+
 func TestNewError(t *testing.T) {
 	err := NewTPError("Hey this is an error", 1)
 

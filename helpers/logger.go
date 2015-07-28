@@ -21,5 +21,7 @@ var format = logging.MustStringFormatter(
 // log.Critical("crit")
 
 func InitLogger() {
-	logging.NewLogBackend(os.Stderr, "", 0)
+	backend := logging.NewLogBackend(os.Stderr, "", 0)
+	backendFormatter := logging.NewBackendFormatter(backend, format)
+	logging.SetBackend(backendFormatter)
 }

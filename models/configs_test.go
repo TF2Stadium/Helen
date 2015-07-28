@@ -4,8 +4,13 @@ import (
 	"testing"
 
 	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	helpers.InitLogger()
+}
 
 func TestInitConfigs(t *testing.T) {
 	config.SetupConstants()

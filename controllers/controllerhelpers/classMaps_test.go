@@ -3,9 +3,14 @@ package controllerhelpers
 import (
 	"testing"
 
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	helpers.InitLogger()
+}
 
 func TestUgcHighlander(t *testing.T) {
 	res, err := GetPlayerSlot(models.LobbyTypeSixes, "red", "scout1")

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	db "github.com/TF2Stadium/Server/database"
@@ -135,7 +136,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	if err := db.DB.Table("banned_players_lobbies").
 		Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).
 		Count(&num).Error; num > 0 || err != nil {
-		helpers.Logger.Debug(err.Error())
+		helpers.Logger.Debug(fmt.Sprint(err))
 		return lobbyBanError
 	}
 
