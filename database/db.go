@@ -36,7 +36,7 @@ func Init() {
 	DB, err = gorm.Open("postgres", DbUrl)
 
 	if err != nil {
-		helpers.Logger.Critical(err.Error())
+		helpers.Logger.Fatal(err.Error())
 	}
 
 	helpers.Logger.Debug("[DB]: Connected!")

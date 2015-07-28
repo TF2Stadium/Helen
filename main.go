@@ -38,7 +38,7 @@ func main() {
 	// init socket.io server
 	socketServer, err := socketio.NewServer(nil)
 	if err != nil {
-		helpers.Logger.Critical(err.Error())
+		helpers.Logger.Fatal(err.Error())
 	}
 	routes.SetupSocketRoutes(socketServer)
 	r.Handle("/socket.io/", socketServer)
