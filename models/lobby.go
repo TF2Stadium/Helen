@@ -1,7 +1,6 @@
 package models
 
 import (
-	"log"
 	"time"
 
 	db "github.com/TF2Stadium/Server/database"
@@ -136,7 +135,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	if err := db.DB.Table("banned_players_lobbies").
 		Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).
 		Count(&num).Error; num > 0 || err != nil {
-		log.Println(err)
+		helpers.Logger.Debug(err.Error())
 		return lobbyBanError
 	}
 
@@ -262,7 +261,7 @@ func (lobby *Lobby) IsFull() bool {
 }
 
 func (lobby *Lobby) AfterSave() error {
-	log.Println("save callback called")
+	helpers.Logger.Debug("save callback called")
 	s, ok := LobbyServerMap[lobby.ID]
 	if !ok {
 		s := NewServer()
@@ -278,7 +277,7 @@ func (lobby *Lobby) AfterSave() error {
 		}
 
 		if s == nil {
-			log.Println("wtf2")
+			helpers.Logger.Debug("wtf2")
 		}
 
 		LobbyServerMap[lobby.ID] = s
@@ -290,7 +289,7 @@ func (lobby *Lobby) AfterSave() error {
 
 func (lobby *Lobby) AfterFind() error {
 
-	log.Println("find callback called")
+	helpers.Logger.Debug("find callback called")
 	// should still finish Find if the server fails to initialize
 	lobby.AfterSave()
 	return nil

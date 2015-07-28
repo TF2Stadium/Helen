@@ -1,13 +1,13 @@
 package socket
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"time"
 
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
@@ -18,7 +18,7 @@ func SocketInit(so socketio.Socket) {
 
 	so.On("disconnection", func() {
 		// chelpers.DeauthenticateSocket(so.Id())
-		log.Println("on disconnect")
+		helpers.Logger.Debug("on disconnect")
 	})
 
 	so.On("authenticationTest", func(data string) string {
@@ -32,7 +32,7 @@ func SocketInit(so socketio.Socket) {
 		return answer
 	})
 
-	log.Println("on connection")
+	helpers.Logger.Debug("on connection")
 	so.Join("-1") //room for global chat
 	so.On("lobbyCreate", func(jsonstr string) string {
 		if !chelpers.IsLoggedInSocket(so.Id()) {

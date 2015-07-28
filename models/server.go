@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
@@ -85,7 +84,7 @@ func (s *Server) Setup() error {
 	if config.Constants.ServerMockUp {
 		return nil
 	}
-	log.Println("[Server.Setup]: Setting up server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
+	helpers.Logger.Debug("[Server.Setup]: Setting up server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 
 	// connect to rcon if not connected before
 	if s.Rcon == nil {
@@ -105,13 +104,13 @@ func (s *Server) Setup() error {
 	}
 
 	// kick players
-	log.Println("[Server.Setup]: Connected to server, getting players...")
+	helpers.Logger.Debug("[Server.Setup]: Connected to server, getting players...")
 	kickErr := s.KickAll()
 
 	if kickErr != nil {
 		return kickErr
 	} else {
-		log.Println("[Server.Setup]: Players kicked, running config!")
+		helpers.Logger.Debug("[Server.Setup]: Players kicked, running config!")
 	}
 
 	// run config
@@ -162,7 +161,7 @@ func (s *Server) Verify() {
 	if config.Constants.ServerMockUp {
 		return
 	}
-	log.Println("[Server.Verify]: Verifing server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
+	helpers.Logger.Debug("[Server.Verify]: Verifing server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 
 	// check if all players in server are in lobby
 	s.Players = s.Rcon.GetPlayers()
@@ -171,19 +170,19 @@ func (s *Server) Verify() {
 			commId, idErr := steamid.SteamIdToCommId(s.Players[i].SteamID)
 
 			if idErr != nil {
-				log.Printf("[Server.Verify]: ERROR -> %s", idErr)
+				helpers.Logger.Debug("[Server.Verify]: ERROR -> %s", idErr)
 			}
 
 			isPlayerAllowed := s.IsPlayerAllowed(commId)
 
 			if isPlayerAllowed == false {
-				log.Println("[Server.Verify]: Kicking player not allowed -> Username [" +
+				helpers.Logger.Debug("[Server.Verify]: Kicking player not allowed -> Username [" +
 					s.Players[i].Username + "] CommID [" + commId + "] SteamID [" + s.Players[i].SteamID + "] ")
 
 				kickErr := s.Rcon.KickPlayer(s.Players[i], "[tf2stadium.com]: You're not in this lobby...")
 
 				if kickErr != nil {
-					log.Printf("[Server.Verify]: ERROR -> %s", kickErr)
+					helpers.Logger.Debug("[Server.Verify]: ERROR -> %s", kickErr)
 				}
 			}
 		}
@@ -214,7 +213,7 @@ func (s *Server) End() {
 		return
 	}
 
-	log.Println("[Server.End]: Ending server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
+	helpers.Logger.Debug("[Server.End]: Ending server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 	// TODO: upload logs
 
 	s.Rcon.Close()
@@ -222,11 +221,11 @@ func (s *Server) End() {
 }
 
 func (s *Server) ExecConfig(config *ServerConfig) error {
-	log.Println("[Server.ExecConfig]: Running config!")
+	helpers.Logger.Debug("[Server.ExecConfig]: Running config!")
 	configErr := s.Rcon.ExecConfig(config.Data)
 
 	if configErr != nil {
-		log.Println("[Server.ExecConfig]: Error while trying to run config!")
+		helpers.Logger.Debug("[Server.ExecConfig]: Error while trying to run config!")
 
 		return configErr
 	}
@@ -235,7 +234,7 @@ func (s *Server) ExecConfig(config *ServerConfig) error {
 }
 
 func (s *Server) KickAll() error {
-	log.Println("[Server.KickAll]: Kicking players...")
+	helpers.Logger.Debug("[Server.KickAll]: Kicking players...")
 	s.Players = s.Rcon.GetPlayers()
 
 	for i := range s.Players {

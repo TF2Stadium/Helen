@@ -1,10 +1,8 @@
 package database
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 )
@@ -18,9 +16,9 @@ var DbUrl string
 
 // we'll connect to the database through this function
 func Init() {
-	fmt.Println("[DB]: DB name -> [" + config.Constants.DbDatabase + "]")
-	fmt.Println("[DB]: DB user -> [" + config.Constants.DbUsername + "]")
-	fmt.Println("[DB]: Connecting to database -> [" + config.Constants.DbDatabase + "]")
+	helpers.Logger.Debug("[DB]: DB name -> [" + config.Constants.DbDatabase + "]")
+	helpers.Logger.Debug("[DB]: DB user -> [" + config.Constants.DbUsername + "]")
+	helpers.Logger.Debug("[DB]: Connecting to database -> [" + config.Constants.DbDatabase + "]")
 
 	var passwordArg string
 	if config.Constants.DbPassword == "" {
@@ -38,8 +36,8 @@ func Init() {
 	DB, err = gorm.Open("postgres", DbUrl)
 
 	if err != nil {
-		log.Fatal(err)
+		helpers.Logger.Critical(err.Error())
 	}
 
-	fmt.Println("[DB]: Connected!")
+	helpers.Logger.Debug("[DB]: Connected!")
 }

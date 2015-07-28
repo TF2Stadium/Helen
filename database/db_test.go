@@ -1,12 +1,12 @@
 package database
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"testing"
 
 	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +19,7 @@ func TestDatabasePing(t *testing.T) {
 	}
 	config.SetupConstants()
 
-	fmt.Println("[Test.Database] IsTest? " + strconv.FormatBool(IsTest))
+	helpers.Logger.Debug("[Test.Database] IsTest? " + strconv.FormatBool(IsTest))
 	Init()
 	assert.Nil(t, DB.DB().Ping())
 }

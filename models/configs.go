@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 
 	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Server/helpers"
 )
 
 const (
@@ -58,15 +58,15 @@ type ServerConfig struct {
 
 func InitServerConfigs() error {
 	// maps
-	log.Println("[Configs.Init] Loading maps configs...")
+	helpers.Logger.Debug("[Configs.Init] Loading maps configs...")
 	mapFile, mapErr := ioutil.ReadFile(config.Constants.StaticFileLocation + ConfigsPath + MapsFile)
 
 	if mapErr == nil {
 		json.Unmarshal(mapFile, &MapsData)
-		log.Println("[Configs.Init] Maps configs loaded!")
+		helpers.Logger.Debug("[Configs.Init] Maps configs loaded!")
 
 	} else {
-		log.Println("[Configs.Init] ERROR while trying to load maps configs!")
+		helpers.Logger.Debug("[Configs.Init] ERROR while trying to load maps configs!")
 		return mapErr
 	}
 
@@ -93,7 +93,7 @@ func (c *ServerConfig) Get() (string, error) {
 			return "", configNameErr
 		}
 
-		log.Println("[Configs.Get]: Map config choosen: " + configName)
+		helpers.Logger.Debug("[Configs.Get]: Map config choosen: " + configName)
 
 		if configName == "" {
 			return "", errors.New("[Configs.Get]: No config name or map specified!")
@@ -105,7 +105,7 @@ func (c *ServerConfig) Get() (string, error) {
 	// get config's name
 	cfgName, nameErr := c.GetName()
 
-	log.Println("[Configs.Get]: Config that will be used: " + cfgName)
+	helpers.Logger.Debug("[Configs.Get]: Config that will be used: " + cfgName)
 
 	if nameErr != nil {
 		return "", nameErr
@@ -134,7 +134,7 @@ func (c *ServerConfig) Get() (string, error) {
 			ConfigsPath + etf2lPreConfigName))
 
 		if etf2lPreErr == nil {
-			log.Println("[Configs.Init] Etf2l's server pre-configs loaded!")
+			helpers.Logger.Debug("[Configs.Init] Etf2l's server pre-configs loaded!")
 		} else {
 			return "", etf2lPreErr
 		}
@@ -154,7 +154,7 @@ func (c *ServerConfig) Get() (string, error) {
 		ConfigsPath + preConfigName))
 
 	if preErr == nil {
-		log.Println("[Configs.Init] Server pre-configs loaded!")
+		helpers.Logger.Debug("[Configs.Init] Server pre-configs loaded!")
 	} else {
 		return "", preErr
 	}
@@ -166,7 +166,7 @@ func (c *ServerConfig) Get() (string, error) {
 		cfgName))
 
 	if cfgErr == nil {
-		log.Println("[Configs.Init] Server configs loaded!")
+		helpers.Logger.Debug("[Configs.Init] Server configs loaded!")
 	} else {
 		return "", cfgErr
 	}
@@ -215,7 +215,7 @@ func (c *ServerConfig) GetName() (string, error) {
 }
 
 func (c *ServerConfig) GetMapConfig(mapName string) (string, error) {
-	log.Println("[Configs.GetMapConfig]: Getting config for map -> [" + mapName + "]")
+	helpers.Logger.Debug("[Configs.GetMapConfig]: Getting config for map -> [" + mapName + "]")
 
 	var mapConfig string
 
