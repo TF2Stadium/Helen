@@ -158,7 +158,7 @@ func (c *ServerConfig) Get() (string, error) {
 	// get config file's data
 	cfgData, cfgErr := ioutil.ReadFile(filepath.Clean(config.Constants.StaticFileLocation +
 		ConfigsPath + "/" +
-		c.League.String() + "/" +
+		string(c.League) + "/" +
 		cfgName))
 
 	if cfgErr == nil {
@@ -205,7 +205,7 @@ func (c *ServerConfig) GetName() (string, error) {
 
 	// build config name
 	// ugc -> 6v6 = ugc_6v_koth.cfg
-	cfgName := c.League.String() + "_" + t + "_" + c.Name + ".cfg"
+	cfgName := string(c.League) + "_" + t + "_" + c.Name + ".cfg"
 
 	return cfgName, nil
 }
