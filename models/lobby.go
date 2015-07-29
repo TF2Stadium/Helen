@@ -1,14 +1,11 @@
 package models
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/helpers"
-	"github.com/bitly/go-simplejson"
 	"github.com/jinzhu/gorm"
 )
 
@@ -33,9 +30,9 @@ var stateString = map[LobbyState]string{
 	LobbyStateEnded:      "Lobby Ended",
 }
 
-var typePlayerCount = map[LobbyType]int{
-	LobbyTypeSixes:      6,
-	LobbyTypeHighlander: 9,
+var FormatMap = map[LobbyType]string{
+	LobbyTypeSixes:      "Sixes",
+	LobbyTypeHighlander: "Highlander",
 }
 
 type LobbySlot struct {
@@ -150,7 +147,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		return lobbyBanError
 	}
 
-	if slot >= 2*typePlayerCount[lobby.Type] || slot < 0 {
+	if slot >= 2*int(lobby.Type) || slot < 0 {
 		return badSlotError
 	}
 
