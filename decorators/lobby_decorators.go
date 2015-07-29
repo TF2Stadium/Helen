@@ -1,6 +1,7 @@
 package decorators
 
 import (
+	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/bitly/go-simplejson"
@@ -26,7 +27,7 @@ func GetLobbyListData() (string, error) {
 	for lobbyIndex, lobby := range lobbies {
 		lobbyJs := simplejson.New()
 		lobbyJs.Set("id", lobby.ID)
-		lobbyJs.Set("type", LobbyTypeToString(lobby.Type))
+		lobbyJs.Set("type", models.FormatMap[lobby.Type])
 		lobbyJs.Set("createdAt", lobby.CreatedAt.String())
 		lobbyJs.Set("players", lobby.GetPlayerNumber())
 		classes := make([]*simplejson.Json, int(lobby.Type))
@@ -38,7 +39,7 @@ func GetLobbyListData() (string, error) {
 			slot.Set("red", lobby.IsSlotFilled(i))
 			slot.Set("blu", lobby.IsSlotFilled(i+6))
 
-			class.Set(SlotTypeToString(i, lobby.Type), slot)
+			class.Set(chelpers.PlayerSlotToString(i, lobby.Type), slot)
 			classes[i] = class
 		}
 
@@ -47,14 +48,4 @@ func GetLobbyListData() (string, error) {
 
 	bytes, _ := json.Marshal(lobbyList)
 	return string(bytes), nil
-}
-
-func (lobby *Lobby) GetLobbyData() (string, error) {
-	lobbyData := simplejson.New()
-	lobbyData.Set("id", lobby.ID)
-	lobbyData.Set("type", LobbyTypeToString(lobby.Type))
-	lobbyData.Set("createdAt", lobby.CreatedAt.String())
-	lobbyData.Set("players", lobby.GetPlayerNumber())
-	lobbyData.Set("whitelist", int(lobby.Whitelist))
-
 }
