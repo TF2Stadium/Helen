@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"time"
 
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/helpers"
@@ -34,10 +33,9 @@ type LobbySlot struct {
 	// Lobby    Lobby
 	LobbyId uint
 	// Player   Player
-	PlayerId  uint
-	Slot      int
-	Ready     bool
-	DeletedAt *time.Time
+	PlayerId uint
+	Slot     int
+	Ready    bool
 }
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
@@ -173,6 +171,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		LobbyId:  lobby.ID,
 		Slot:     slot,
 	}
+
 	db.DB.Create(newSlotObj)
 
 	lobby.updateServerAllowedPlayers()
@@ -233,7 +232,7 @@ func (lobby *Lobby) IsStarted() (bool, *helpers.TPError) {
 
 func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
 	if _, err := lobby.GetPlayerSlot(player); err == nil {
-		return helpers.NewTPError("Player already in lobby", 1)
+		return lobby.RemovePlayer(player)
 	}
 
 	err := db.DB.Model(lobby).Association("Spectators").Append(player).Error
@@ -262,10 +261,10 @@ func (lobby *Lobby) IsFull() bool {
 }
 
 func (lobby *Lobby) AfterSave() error {
-	helpers.Logger.Debug("save callback called")
+	var s *Server
 	s, ok := LobbyServerMap[lobby.ID]
 	if !ok {
-		s := NewServer()
+		s = NewServer()
 		s.League = LeagueEtf2l // TODO actually accept this argument
 		s.Map = lobby.MapName
 		s.Type = lobby.Type
@@ -277,21 +276,23 @@ func (lobby *Lobby) AfterSave() error {
 			return err
 		}
 
-		if s == nil {
-			helpers.Logger.Debug("wtf2")
-		}
-
 		LobbyServerMap[lobby.ID] = s
 	}
 
+	if s == nil {
+		helpers.Logger.Warning("Failed to attach server to lobby ", lobby.ID)
+	}
 	lobby.Server = s
 	return nil
 }
 
 func (lobby *Lobby) AfterFind() error {
+	if (lobby.ServerInfo == ServerRecord{}) {
+		// hasn't been preloaded. Do that here.
+		db.DB.Find(&lobby.ServerInfo, lobby.ServerInfoID)
+	}
 
-	helpers.Logger.Debug("find callback called")
-	// should still finish Find if the server fails to initialize
+	// should still finish Find if the server fails to initialize)
 	lobby.AfterSave()
 	return nil
 }
@@ -299,7 +300,7 @@ func (lobby *Lobby) AfterFind() error {
 func (lobby *Lobby) updateServerAllowedPlayers() {
 	var steamids []string
 	db.DB.Model(&LobbySlot{}).Joins("left join players on players.id = lobby_slots.player_id").
-		Where("lobby_id = ?", lobby.ID).Pluck("steam_id", &steamids)
+		Where("lobby_slots.lobby_id = ?", lobby.ID).Pluck("steam_id", &steamids)
 
 	lobby.Server.SetAllowedPlayers(steamids)
 }

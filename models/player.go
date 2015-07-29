@@ -41,7 +41,7 @@ func GetPlayerBySteamId(steamid string) (*Player, *helpers.TPError) {
 
 func (player *Player) GetLobbyId() (uint, *helpers.TPError) {
 	playerSlot := &LobbySlot{}
-	err := db.DB.Where("player_id = ?", player.ID).Find(playerSlot)
+	err := db.DB.Where("player_id = ?", player.ID).Find(playerSlot).Error
 
 	// if the player is in a different lobby, return error
 	if err != nil {

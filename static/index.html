@@ -3,21 +3,42 @@
 <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
 <script>
+
+var createBox = function(io, messageName, messageFields) {
+    html = "<div style='border: 1px black solid'><h3>"+messageName+"</h3>";
+    messageFields.forEach(function(field) {
+      html += field;
+      var id = messageName + "_" + field;
+      html += " <input type='text' id='"+id+"'> <br/>"
+    });
+
+    html += "<a href='#' id='submit_"+messageName+"'>Submit</a></div>";
+
+    $("#message-tests").append(html);
+
+    $("#submit_"+messageName).click(function() {
+      params = {};
+      messageFields.forEach(function(field) {
+        var val = $("#"+messageName+"_"+field).val();
+        if (field.endsWith("id") || field == "room") {
+          val = parseInt(val);
+        }
+        params[field] = val;
+      });
+      io.emit(messageName, JSON.stringify(params), function(response) {
+        if (response != null) {
+          console.log("Response to "+messageName+":");
+          console.log(response);
+        }
+      })
+    });
+}
+
 var getCookie = function C(k){return(document.cookie.match('(^|; )'+k+'=([^;]*)')||0)[2]}
 
 var io = io();
 
-var sendAuthenticate = function() {
-  var c1 = getCookie("defaultSession")
-  if (c1 != null) {
-    io.emit("authenticate", JSON.stringify({defaultSession: c1}));
-  } else {
-    console.log("no cookie");
-  }
-}
-
 io.on("connect", function(){
-  sendAuthenticate();
   // console.log("Sent authenticate");
 });
 
@@ -25,18 +46,35 @@ io.on("asdf", function() {
   console.log("asdf received");
 })
 
-
 function sendAuthTest() {
   io.emit("authenticationTest", "asdf", function(response){
     alert(response)
   })
 }
+
+io.on("chatReceive", function(s) {
+  console.log("Received chatReceive");
+  console.log(JSON.parse(s));
+});
+
+$(function() {
+  createBox(io, "lobbyCreate", ["mapName", "type", "whitelist", "server", "rconpwd", "mumbleRequired"]);
+  createBox(io, "lobbyJoin", ["id", "team", "class"]);
+  createBox(io, "lobbyJoinSpectator", ["id"]);
+  createBox(io, "lobbyRemovePlayer", ["steamid", "ban"]);
+  createBox(io, "playerReady", []);
+  createBox(io, "playerUnready", []);
+  createBox(io, "chatSend", ["message", "room"]);
+});
+
 </script>
 </head>
 <body>
   <button onclick="sendAuthTest()">Test authentication</button>
   <a href="/startLogin"> Login </a>
   <a href="/logout"> Logout </a>
+
+  <div id="message-tests"></div>
 
 </body>
 </html>

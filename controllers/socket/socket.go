@@ -66,11 +66,12 @@ func SocketInit(so socketio.Socket) {
 		err = lob.Save()
 
 		if err != nil {
-			//TODO: Add stuff here
+			bytes, _ := err.(*helpers.TPError).ErrorJSON().Encode()
+			return string(bytes)
 		}
 
 		lobby_id := simplejson.New()
-		lobby_id.Set("id", string(lob.ID))
+		lobby_id.Set("id", lob.ID)
 		bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
 		return string(bytes)
 	})
@@ -134,6 +135,7 @@ func SocketInit(so socketio.Socket) {
 
 		steamidjson, gotem := js.CheckGet("steamid")
 
+		// TODO check authorisation, currently can kick anyone
 		if !gotem {
 			steamid = chelpers.GetSteamId(so.Id())
 		} else {
@@ -317,7 +319,13 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 		message, _ := js.Get("message").String()
-		room, _ := js.Get("room").Int64()
+		room, err := js.Get("room").Int()
+
+		if err != nil {
+			bytes, _ := helpers.NewTPError("room must be an integer", -1).ErrorJSON().Encode()
+			return string(bytes)
+		}
+
 		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
@@ -326,7 +334,8 @@ func SocketInit(so socketio.Socket) {
 
 		//Check if player has either joined, or is spectating lobby
 		lobbyId, tperr := player.GetLobbyId()
-		if room != -1 {
+		if room > 0 {
+			// if room is a lobby room
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
@@ -334,9 +343,14 @@ func SocketInit(so socketio.Socket) {
 				bytes, _ := chelpers.BuildFailureJSON("Player is not in the lobby.", 5).Encode()
 				return string(bytes)
 			}
+		} else {
+			// else room is the lobby list room
+			room = -1
 		}
+
 		t := time.Now()
 		chatMessage := simplejson.New()
+		// TODO send proper timestamps
 		chatMessage.Set("timestamp", strconv.Itoa(t.Hour())+strconv.Itoa(t.Minute()))
 		chatMessage.Set("message", message)
 		chatMessage.Set("room", room)
@@ -347,7 +361,7 @@ func SocketInit(so socketio.Socket) {
 
 		chatMessage.Set("user", user)
 		bytes, _ := chatMessage.Encode()
-		so.BroadcastTo(strconv.FormatInt(room, 10), string(bytes))
+		so.BroadcastTo(strconv.Itoa(room), "chatReceive", string(bytes))
 
 		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(resp)
