@@ -49,3 +49,10 @@ func GetPlayerSlot(lobbytype models.LobbyType, teamStr string, classStr string) 
 
 	return team*len(classMap) + class, nil
 }
+
+func PlayerSlotToString(lobbytype models.LobbyType, slot int) string {
+	if lobbytype == LobbyTypeSixes {
+		return sixesClassMap[slot%6]
+	}
+	return hlClassMap[slot%6]
+}
