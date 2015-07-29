@@ -22,6 +22,10 @@ const (
 	LeagueEtf2l League = "etf2l"
 )
 
+func (l *League) String() string {
+	return string(*l)
+}
+
 // valid leagues
 var Leagues = [...]League{
 	LeagueUgc,
@@ -158,7 +162,7 @@ func (c *ServerConfig) Get() (string, error) {
 	// get config file's data
 	cfgData, cfgErr := ioutil.ReadFile(filepath.Clean(config.Constants.StaticFileLocation +
 		ConfigsPath + "/" +
-		string(c.League) + "/" +
+		c.League.String() + "/" +
 		cfgName))
 
 	if cfgErr == nil {
@@ -205,7 +209,7 @@ func (c *ServerConfig) GetName() (string, error) {
 
 	// build config name
 	// ugc -> 6v6 = ugc_6v_koth.cfg
-	cfgName := string(c.League) + "_" + t + "_" + c.Name + ".cfg"
+	cfgName := c.League.String() + "_" + t + "_" + c.Name + ".cfg"
 
 	return cfgName, nil
 }

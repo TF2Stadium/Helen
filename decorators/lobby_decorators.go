@@ -1,24 +1,42 @@
 package decorators
 
 import (
+	"encoding/json"
+
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/bitly/go-simplejson"
-	"github.com/jinzhu/gorm"
 )
+
+func getSlotDetails(lobby *models.Lobby, slot int) (string, string, bool) {
+	steamid := ""
+	name := ""
+	ready := false
+
+	if lobby.IsSlotFilled(slot) {
+		var player *models.Player
+		slot, _ := lobby.GetPlayerIdBySlot(slot)
+		db.DB.First(&player, slot)
+
+		steamid = player.SteamId
+		name = player.Name
+		ready, _ = lobby.IsPlayerReady(player)
+	}
+	return steamid, name, ready
+}
 
 func GetLobbyListData() (string, error) {
 	count := 0
-	db.DB.Where("state = ?", LobbyStateWaiting).Count(&count)
+	db.DB.Where("state = ?", models.LobbyStateWaiting).Count(&count)
 
 	if count == 0 {
 		return "{}", nil
 	}
 
 	lobbyList := make([]*simplejson.Json, count)
-	lobbies := make([]*Lobby, count)
-	err := db.DB.Where("state = ?", LobbyStateWaiting).Find(&lobbies).Error
+	lobbies := make([]*models.Lobby, count)
+	err := db.DB.Where("state = ?", models.LobbyStateWaiting).Find(&lobbies).Error
 
 	if err != nil {
 		return "{}", err
@@ -30,19 +48,30 @@ func GetLobbyListData() (string, error) {
 		lobbyJs.Set("type", models.FormatMap[lobby.Type])
 		lobbyJs.Set("createdAt", lobby.CreatedAt.String())
 		lobbyJs.Set("players", lobby.GetPlayerNumber())
-		classes := make([]*simplejson.Json, int(lobby.Type))
+		classes := make([]*simplejson.Json, models.TypePlayerCount[lobby.Type])
+		class := simplejson.New()
 
-		for i := 0; i <= int(lobby.Type); i++ {
-			slot := simplejson.New()
-			class := simplejson.New()
+		for className, slot := range chelpers.FormatClassMap(lobby.Type) {
+			players := simplejson.New()
+			red := simplejson.New()
+			blu := simplejson.New()
 
-			slot.Set("red", lobby.IsSlotFilled(i))
-			slot.Set("blu", lobby.IsSlotFilled(i+6))
+			steamid, name, ready := getSlotDetails(lobby, slot)
+			red.Set("steamid", steamid)
+			red.Set("name", name)
+			red.Set("ready", ready)
 
-			class.Set(chelpers.PlayerSlotToString(i, lobby.Type), slot)
-			classes[i] = class
+			steamid, name, ready = getSlotDetails(lobby, slot+models.TypePlayerCount[lobby.Type])
+			blu.Set("steamid", steamid)
+			blu.Set("name", name)
+			blu.Set("ready", ready)
+
+			players.Set("red", red)
+			players.Set("blu", blu)
+			class.Set(className, players)
+			classes[slot] = class
 		}
-
+		lobbyJs.Set("classes", classes)
 		lobbyList[lobbyIndex] = lobbyJs
 	}
 
