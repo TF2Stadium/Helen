@@ -17,15 +17,26 @@ const (
 	LobbyTypeHighlander LobbyType = 1
 )
 
+var TypePlayerCount = map[LobbyType]int{
+	LobbyTypeSixes:      6,
+	LobbyTypeHighlander: 9,
+}
+
 const (
 	LobbyStateWaiting    LobbyState = 0
 	LobbyStateInProgress LobbyState = 1
 	LobbyStateEnded      LobbyState = 2
 )
 
-var typePlayerCount = map[LobbyType]int{
-	LobbyTypeSixes:      6,
-	LobbyTypeHighlander: 9,
+var stateString = map[LobbyState]string{
+	LobbyStateWaiting:    "Waiting For Players",
+	LobbyStateInProgress: "Lobby in Progress",
+	LobbyStateEnded:      "Lobby Ended",
+}
+
+var FormatMap = map[LobbyType]string{
+	LobbyTypeSixes:      "Sixes",
+	LobbyTypeHighlander: "Highlander",
 }
 
 type LobbySlot struct {
@@ -138,7 +149,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		return lobbyBanError
 	}
 
-	if slot >= 2*typePlayerCount[lobby.Type] || slot < 0 {
+	if slot >= 2*TypePlayerCount[lobby.Type] || slot < 0 {
 		return badSlotError
 	}
 
@@ -250,14 +261,25 @@ func (lobby *Lobby) RemoveSpectator(player *Player) *helpers.TPError {
 	return nil
 }
 
-func (lobby *Lobby) IsFull() bool {
+func (lobby *Lobby) GetPlayerNumber() int {
 	count := 0
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Count(&count).Error
 	if err != nil {
+		return 0
+	}
+	return count
+}
+
+func (lobby *Lobby) IsFull() bool {
+	return lobby.GetPlayerNumber() >= 2*TypePlayerCount[lobby.Type]
+}
+
+func (lobby *Lobby) IsSlotFilled(slot int) bool {
+	_, err := lobby.GetPlayerIdBySlot(slot)
+	if err != nil {
 		return false
 	}
-
-	return count >= 2*typePlayerCount[lobby.Type]
+	return true
 }
 
 func (lobby *Lobby) AfterSave() error {

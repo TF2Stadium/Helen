@@ -49,3 +49,11 @@ func GetPlayerSlot(lobbytype models.LobbyType, teamStr string, classStr string) 
 
 	return team*len(classMap) + class, nil
 }
+
+func FormatClassMap(format models.LobbyType) map[string]int {
+	if format == models.LobbyTypeHighlander {
+		return hlClassMap
+
+	}
+	return sixesClassMap
+}
