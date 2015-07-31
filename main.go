@@ -8,6 +8,7 @@ import (
 
 	"github.com/TF2Stadium/Server/config"
 	"github.com/TF2Stadium/Server/config/stores"
+	"github.com/TF2Stadium/Server/controllers/socket"
 	"github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/database/migrations"
 	"github.com/TF2Stadium/Server/helpers"
@@ -40,6 +41,7 @@ func main() {
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
 	}
+	socket.InitBroadcaster(socketServer)
 	routes.SetupSocketRoutes(socketServer)
 	r.Handle("/socket.io/", socketServer)
 

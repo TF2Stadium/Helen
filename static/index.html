@@ -57,6 +57,11 @@ io.on("chatReceive", function(s) {
   console.log(JSON.parse(s));
 });
 
+io.on("lobbyListData", function(s) {
+  console.log("Received lobbyListData");
+  $("#lobby-list").html(JSON.stringify(JSON.parse(s), null, 2).replace(/(\r)?\n/g, "<br>"));
+});
+
 $(function() {
   createBox(io, "lobbyCreate", ["mapName", "type", "whitelist", "server", "rconpwd", "mumbleRequired"]);
   createBox(io, "lobbyJoin", ["id", "team", "class"]);
@@ -69,12 +74,16 @@ $(function() {
 
 </script>
 </head>
-<body>
+<body style="position: relative">
   <button onclick="sendAuthTest()">Test authentication</button>
   <a href="/startLogin"> Login </a>
   <a href="/logout"> Logout </a>
 
   <div id="message-tests"></div>
+
+  <div id="lobby-list" style="position: absolute; width: 500px; top: 0px;
+  right: 0px; background:white; border: 1px black solid; min-height: 500px;
+  white-space: pre; "></div>
 
 </body>
 </html>

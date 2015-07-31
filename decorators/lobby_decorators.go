@@ -1,8 +1,6 @@
 package decorators
 
 import (
-	"encoding/json"
-
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/models"
@@ -14,45 +12,37 @@ func getSlotDetails(lobby *models.Lobby, slot int) (string, string, bool) {
 	name := ""
 	ready := false
 
-	if lobby.IsSlotFilled(slot) {
-		var player *models.Player
-		slot, _ := lobby.GetPlayerIdBySlot(slot)
-		db.DB.First(&player, slot)
+	playerId, err := lobby.GetPlayerIdBySlot(slot)
+	if err == nil {
+		var player models.Player
+		db.DB.First(&player, playerId)
 
 		steamid = player.SteamId
 		name = player.Name
-		ready, _ = lobby.IsPlayerReady(player)
+		ready, _ = lobby.IsPlayerReady(&player)
 	}
 	return steamid, name, ready
 }
 
-func GetLobbyListData() (string, error) {
-	count := 0
-	db.DB.Where("state = ?", models.LobbyStateWaiting).Count(&count)
+func GetLobbyListData(lobbies []models.Lobby) (string, error) {
 
-	if count == 0 {
+	if len(lobbies) == 0 {
 		return "{}", nil
 	}
 
-	lobbyList := make([]*simplejson.Json, count)
-	lobbies := make([]*models.Lobby, count)
-	err := db.DB.Where("state = ?", models.LobbyStateWaiting).Find(&lobbies).Error
+	var lobbyList []*simplejson.Json
 
-	if err != nil {
-		return "{}", err
-	}
-
-	for lobbyIndex, lobby := range lobbies {
+	for _, lobbySt := range lobbies {
+		lobby := &lobbySt
 		lobbyJs := simplejson.New()
 		lobbyJs.Set("id", lobby.ID)
 		lobbyJs.Set("type", models.FormatMap[lobby.Type])
-		lobbyJs.Set("createdAt", lobby.CreatedAt.String())
+		lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
 		lobbyJs.Set("players", lobby.GetPlayerNumber())
-		classes := make([]*simplejson.Json, models.TypePlayerCount[lobby.Type])
-		class := simplejson.New()
+		classes := simplejson.New()
 
 		for className, slot := range chelpers.FormatClassMap(lobby.Type) {
-			players := simplejson.New()
+			class := simplejson.New()
 			red := simplejson.New()
 			blu := simplejson.New()
 
@@ -66,15 +56,17 @@ func GetLobbyListData() (string, error) {
 			blu.Set("name", name)
 			blu.Set("ready", ready)
 
-			players.Set("red", red)
-			players.Set("blu", blu)
-			class.Set(className, players)
-			classes[slot] = class
+			class.Set("red", red)
+			class.Set("blu", blu)
+			classes.Set(className, class)
 		}
 		lobbyJs.Set("classes", classes)
-		lobbyList[lobbyIndex] = lobbyJs
+		lobbyList = append(lobbyList, lobbyJs)
 	}
 
-	bytes, _ := json.Marshal(lobbyList)
+	listObj := simplejson.New()
+	listObj.Set("lobbies", lobbyList)
+
+	bytes, _ := listObj.MarshalJSON()
 	return string(bytes), nil
 }

@@ -131,15 +131,11 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 
-		var steamid string
-
-		steamidjson, gotem := js.CheckGet("steamid")
+		steamid, err := js.Get("steamid").String()
 
 		// TODO check authorisation, currently can kick anyone
-		if !gotem {
+		if err != nil || steamid == "" {
 			steamid = chelpers.GetSteamId(so.Id())
-		} else {
-			steamid, _ = steamidjson.String()
 		}
 
 		ban, _ := js.Get("ban").Bool()
@@ -150,10 +146,10 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 
-		lobbyid, err := player.GetLobbyId()
+		lobbyid, tperr := player.GetLobbyId()
 
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Player not in any Lobby.", 4).Encode()
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
 		}
 
