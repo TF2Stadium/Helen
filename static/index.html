@@ -2,6 +2,8 @@
 <head>
 <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet"/>
 <script>
 
 var createBox = function(io, messageName, messageFields) {
@@ -55,6 +57,10 @@ function sendAuthTest() {
 io.on("chatReceive", function(s) {
   console.log("Received chatReceive");
   console.log(JSON.parse(s));
+});
+
+io.on("sendNotification", function(s) {
+  toastr.info(s);
 });
 
 io.on("lobbyListData", function(s) {

@@ -23,9 +23,10 @@ var TypePlayerCount = map[LobbyType]int{
 }
 
 const (
-	LobbyStateWaiting    LobbyState = 0
-	LobbyStateInProgress LobbyState = 1
-	LobbyStateEnded      LobbyState = 2
+	LobbyStateInitializing LobbyState = 0
+	LobbyStateWaiting      LobbyState = 1
+	LobbyStateInProgress   LobbyState = 2
+	LobbyStateEnded        LobbyState = 3
 )
 
 var stateString = map[LobbyState]string{
