@@ -24,6 +24,38 @@ func getSlotDetails(lobby *models.Lobby, slot int) (string, string, bool) {
 	return steamid, name, ready
 }
 
+func GetLobbyDataJSON(lobby models.Lobby) *simplejson.Json {
+	lobbyJs := simplejson.New()
+	lobbyJs.Set("id", lobby.ID)
+	lobbyJs.Set("type", models.FormatMap[lobby.Type])
+	lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
+	lobbyJs.Set("players", lobby.GetPlayerNumber())
+	classes := simplejson.New()
+
+	for className, slot := range chelpers.FormatClassMap(lobby.Type) {
+		class := simplejson.New()
+		red := simplejson.New()
+		blu := simplejson.New()
+
+		steamid, name, ready := getSlotDetails(&lobby, slot)
+		red.Set("steamid", steamid)
+		red.Set("name", name)
+		red.Set("ready", ready)
+
+		steamid, name, ready = getSlotDetails(&lobby, slot+models.TypePlayerCount[lobby.Type])
+		blu.Set("steamid", steamid)
+		blu.Set("name", name)
+		blu.Set("ready", ready)
+
+		class.Set("red", red)
+		class.Set("blu", blu)
+		classes.Set(className, class)
+	}
+	lobbyJs.Set("classes", classes)
+
+	return lobbyJs
+}
+
 func GetLobbyListData(lobbies []models.Lobby) (string, error) {
 
 	if len(lobbies) == 0 {
@@ -32,35 +64,8 @@ func GetLobbyListData(lobbies []models.Lobby) (string, error) {
 
 	var lobbyList []*simplejson.Json
 
-	for _, lobbySt := range lobbies {
-		lobby := &lobbySt
-		lobbyJs := simplejson.New()
-		lobbyJs.Set("id", lobby.ID)
-		lobbyJs.Set("type", models.FormatMap[lobby.Type])
-		lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
-		lobbyJs.Set("players", lobby.GetPlayerNumber())
-		classes := simplejson.New()
-
-		for className, slot := range chelpers.FormatClassMap(lobby.Type) {
-			class := simplejson.New()
-			red := simplejson.New()
-			blu := simplejson.New()
-
-			steamid, name, ready := getSlotDetails(lobby, slot)
-			red.Set("steamid", steamid)
-			red.Set("name", name)
-			red.Set("ready", ready)
-
-			steamid, name, ready = getSlotDetails(lobby, slot+models.TypePlayerCount[lobby.Type])
-			blu.Set("steamid", steamid)
-			blu.Set("name", name)
-			blu.Set("ready", ready)
-
-			class.Set("red", red)
-			class.Set("blu", blu)
-			classes.Set(className, class)
-		}
-		lobbyJs.Set("classes", classes)
+	for _, lobby := range lobbies {
+		lobbyJs := GetLobbyDataJSON(lobby)
 		lobbyList = append(lobbyList, lobbyJs)
 	}
 
