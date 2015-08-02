@@ -56,7 +56,10 @@ func broadcaster() {
 			} else {
 				socketServer.BroadcastTo("-1", "lobbyListData", list)
 			}
-			db.DB.Where("state = ?", models.LobbyStateWaiting).Or("role = ?", models.LobbyStateInProgress).Find(&lobbies)
+
+			var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
+			db.DB.Where("state IN (?)", activeStates).
+				Find(&lobbies)
 			for _, lobby := range lobbies {
 				bytes, _ := decorators.GetLobbyDataJSON(lobby).Encode()
 				socketServer.BroadcastTo(strconv.FormatUint(uint64(lobby.ID), 10), string(bytes))
