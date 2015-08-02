@@ -42,6 +42,15 @@ func SocketInit(so socketio.Socket) {
 
 	helpers.Logger.Debug("on connection")
 	so.Join("-1") //room for global chat
+
+	if chelpers.IsLoggedInSocket(so.Id()) {
+		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+		lobbyid, err := player.GetLobbyId()
+		if err != nil {
+			so.Join(strconv.FormatUint(uint64(lobbyid), 10))
+		}
+	}
+
 	so.On("lobbyCreate", func(jsonstr string) string {
 		if !chelpers.IsLoggedInSocket(so.Id()) {
 			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
