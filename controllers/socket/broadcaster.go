@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"strconv"
 	"time"
 
 	db "github.com/TF2Stadium/Server/database"
@@ -54,6 +55,11 @@ func broadcaster() {
 				helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
 			} else {
 				socketServer.BroadcastTo("-1", "lobbyListData", list)
+			}
+			db.DB.Where("state = ?", models.LobbyStateWaiting).Or("role = ?", models.LobbyStateInProgress).Find(&lobbies)
+			for _, lobby := range lobbies {
+				bytes, _ := decorators.GetLobbyDataJSON(lobby).Encode()
+				socketServer.BroadcastTo(strconv.FormatUint(uint64(lobby.ID), 10), string(bytes))
 			}
 
 		case message := <-broadcastMessageChannel:
