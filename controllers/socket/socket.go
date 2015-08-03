@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"html"
 	"strconv"
 	"strings"
 	"time"
@@ -63,11 +64,36 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 
-		mapName, _ := js.Get("mapName").String()
-		lobbytype, _ := js.Get("type").String()
-		server, _ := js.Get("server").String()
-		rconPwd, _ := js.Get("rconpwd").String()
-		whitelist, _ := js.Get("whitelist").Int()
+		mapName, err := js.Get("mapName").String()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("mapName")
+			return string(bytes)
+		}
+
+		lobbytype, err := js.Get("type").String()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("type")
+			return string(bytes)
+		}
+
+		server, err := js.Get("server").String()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("server")
+			return string(bytes)
+		}
+
+		rconPwd, err := js.Get("rconpwd").String()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("rconpwn")
+			return string(bytes)
+		}
+
+		whitelist, err := js.Get("whitelist").Int()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("whitelist")
+			return string(bytes)
+		}
+
 		//mumble, _ := js.Get("mumbleRequired").Bool()
 
 		var playermap = map[string]models.LobbyType{
@@ -111,15 +137,28 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 
-		lobbyid, _ := js.Get("id").Uint64()
+		lobbyid, err := js.Get("id").Uint64()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("id")
+			return string(bytes)
+		}
 		lob, tperr := models.GetLobbyById(uint(lobbyid))
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
 		}
 
-		classString, _ := js.Get("class").String()
-		teamString, _ := js.Get("team").String()
+		classString, err := js.Get("class").String()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("class")
+			return string(bytes)
+		}
+
+		teamString, err := js.Get("team").String()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("team")
+			return string(bytes)
+		}
 
 		slot, tperr := chelpers.GetPlayerSlot(lob.Type, teamString, classString)
 		if tperr != nil {
@@ -149,13 +188,16 @@ func SocketInit(so socketio.Socket) {
 		}
 
 		steamid, err := js.Get("steamid").String()
-
 		// TODO check authorisation, currently can kick anyone
 		if err != nil || steamid == "" {
 			steamid = chelpers.GetSteamId(so.Id())
 		}
 
-		ban, _ := js.Get("ban").Bool()
+		ban, err := js.Get("ban").Bool()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("ban")
+			return string(bytes)
+		}
 		player, tperr := models.GetPlayerBySteamId(steamid)
 
 		if tperr != nil {
@@ -267,7 +309,11 @@ func SocketInit(so socketio.Socket) {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
 			return string(bytes)
 		}
-		lobbyid, _ := js.Get("id").Uint64()
+		lobbyid, err := js.Get("id").Uint64()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("id")
+			return string(bytes)
+		}
 		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
@@ -299,7 +345,11 @@ func SocketInit(so socketio.Socket) {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
 			return string(bytes)
 		}
-		lobbyid, _ := js.Get("id").Uint64()
+		lobbyid, err := js.Get("id").Uint64()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("id")
+			return string(bytes)
+		}
 		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
@@ -331,8 +381,16 @@ func SocketInit(so socketio.Socket) {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
 			return string(bytes)
 		}
-		message, _ := js.Get("message").String()
+		message, err := js.Get("message").String()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("message")
+			return string(bytes)
+		}
 		room, err := js.Get("room").Int()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("room")
+			return string(bytes)
+		}
 
 		if err != nil {
 			bytes, _ := helpers.NewTPError("room must be an integer", -1).ErrorJSON().Encode()
@@ -365,7 +423,7 @@ func SocketInit(so socketio.Socket) {
 		chatMessage := simplejson.New()
 		// TODO send proper timestamps
 		chatMessage.Set("timestamp", strconv.Itoa(t.Hour())+strconv.Itoa(t.Minute()))
-		chatMessage.Set("message", message)
+		chatMessage.Set("message", html.EscapeString(message))
 		chatMessage.Set("room", room)
 
 		user := simplejson.New()
