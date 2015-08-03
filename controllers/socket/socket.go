@@ -66,31 +66,31 @@ func SocketInit(so socketio.Socket) {
 
 		mapName, err := js.Get("mapName").String()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("mapName")
+			bytes, _ := chelpers.BuildMissingArgJSON("mapName").Encode()
 			return string(bytes)
 		}
 
 		lobbytype, err := js.Get("type").String()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("type")
+			bytes, _ := chelpers.BuildMissingArgJSON("type").Encode()
 			return string(bytes)
 		}
 
 		server, err := js.Get("server").String()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("server")
+			bytes, _ := chelpers.BuildMissingArgJSON("server").Encode()
 			return string(bytes)
 		}
 
 		rconPwd, err := js.Get("rconpwd").String()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("rconpwn")
+			bytes, _ := chelpers.BuildMissingArgJSON("rconpwn").Encode()
 			return string(bytes)
 		}
 
 		whitelist, err := js.Get("whitelist").Int()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("whitelist")
+			bytes, _ := chelpers.BuildMissingArgJSON("whitelist").Encode()
 			return string(bytes)
 		}
 
@@ -139,7 +139,7 @@ func SocketInit(so socketio.Socket) {
 
 		lobbyid, err := js.Get("id").Uint64()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("id")
+			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
 			return string(bytes)
 		}
 		lob, tperr := models.GetLobbyById(uint(lobbyid))
@@ -150,13 +150,13 @@ func SocketInit(so socketio.Socket) {
 
 		classString, err := js.Get("class").String()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("class")
+			bytes, _ := chelpers.BuildMissingArgJSON("class").Encode()
 			return string(bytes)
 		}
 
 		teamString, err := js.Get("team").String()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("team")
+			bytes, _ := chelpers.BuildMissingArgJSON("team").Encode()
 			return string(bytes)
 		}
 
@@ -195,7 +195,7 @@ func SocketInit(so socketio.Socket) {
 
 		ban, err := js.Get("ban").Bool()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("ban")
+			bytes, _ := chelpers.BuildMissingArgJSON("ban").Encode()
 			return string(bytes)
 		}
 		player, tperr := models.GetPlayerBySteamId(steamid)
@@ -311,7 +311,7 @@ func SocketInit(so socketio.Socket) {
 		}
 		lobbyid, err := js.Get("id").Uint64()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("id")
+			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
 			return string(bytes)
 		}
 		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -347,7 +347,7 @@ func SocketInit(so socketio.Socket) {
 		}
 		lobbyid, err := js.Get("id").Uint64()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("id")
+			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
 			return string(bytes)
 		}
 		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -383,12 +383,12 @@ func SocketInit(so socketio.Socket) {
 		}
 		message, err := js.Get("message").String()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("message")
+			bytes, _ := chelpers.BuildMissingArgJSON("message").Encode()
 			return string(bytes)
 		}
 		room, err := js.Get("room").Int()
 		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("room")
+			bytes, _ := chelpers.BuildMissingArgJSON("room").Encode()
 			return string(bytes)
 		}
 
