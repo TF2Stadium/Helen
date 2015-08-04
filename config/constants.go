@@ -50,6 +50,7 @@ func SetupConstants() {
 
 	overrideFromEnv(&Constants.Port, "PORT")
 	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET")
+	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY")
 
 	// TODO: database url from env
 	// TODO: database info from env
