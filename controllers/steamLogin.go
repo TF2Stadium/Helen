@@ -52,10 +52,16 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["steam_id"] = steamid
 
 	player := &models.Player{}
+	var playErr error
 	err = database.DB.Where("steam_id = ?", steamid).First(player).Error
 
 	if err == gorm.RecordNotFound {
-		player = models.NewPlayer(steamid)
+		player, playErr = models.NewPlayer(steamid)
+
+		if playErr != nil {
+			helpers.Logger.Debug(playErr.Error())
+		}
+
 		database.DB.Create(player)
 	} else if err != nil {
 		helpers.Logger.Debug("steamLogin.go:60 ", err)
