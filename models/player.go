@@ -1,6 +1,8 @@
 package models
 
 import (
+	"github.com/TF2Stadium/PlayerStatsScraper"
+	"github.com/TF2Stadium/Server/config"
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/helpers"
 	"github.com/jinzhu/gorm"
@@ -9,15 +11,25 @@ import (
 type Player struct {
 	gorm.Model
 	SteamId string `sql:"unique"` // Players steam ID
-	Name    string // Player name
+	Stats   *PlayerStats
+
+	// info from steam api
+	Avatar     string
+	Profileurl string
+	GameHours  int
+	Name       string // Player name
 }
 
-func NewPlayer(steamId string) *Player {
+func NewPlayer(steamId string) (*Player, error) {
 	player := &Player{SteamId: steamId}
+	player.Stats = NewPlayerStats()
 
-	// magically get the player's name, avatar and other stuff from steam
+	err := player.UpdatePlayerInfo()
+	if err != nil {
+		return &Player{}, err
+	}
 
-	return player
+	return player, nil
 }
 
 func (player *Player) Save() error {
@@ -61,4 +73,36 @@ func (player *Player) IsSpectatingId(lobbyid uint) bool {
 	}
 	return count != 0
 
+}
+
+func (player *Player) UpdatePlayerInfo() error {
+	scraper.SetSteamApiKey(config.Constants.SteamDevApiKey)
+	p, playErr := GetPlayerBySteamId(player.SteamId)
+
+	// nil = player not in db
+	if playErr == nil {
+		player = p
+	}
+
+	playerInfo, infoErr := scraper.GetPlayerInfo(player.SteamId)
+	if infoErr != nil {
+		return infoErr
+	}
+
+	// profile state is 1 when the player have a steam community profile
+	if playerInfo.Profilestate == 1 && playerInfo.Visibility == "public" {
+		pHours, hErr := scraper.GetTF2Hours(player.SteamId)
+
+		if hErr != nil {
+			return hErr
+		}
+
+		player.GameHours = pHours
+	}
+
+	player.Profileurl = playerInfo.Profileurl
+	player.Avatar = playerInfo.Avatar
+	player.Name = playerInfo.Name
+
+	return nil
 }

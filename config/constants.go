@@ -23,6 +23,8 @@ type constants struct {
 	DbDatabase string
 	DbUsername string
 	DbPassword string
+
+	SteamDevApiKey string
 }
 
 func overrideFromEnv(constant *string, name string) {
@@ -70,6 +72,8 @@ func setupDevelopmentConstants() {
 	Constants.DbDatabase = "tf2stadium"
 	Constants.DbUsername = "tf2stadium"
 	Constants.DbPassword = "dickbutt" // change this
+
+	Constants.SteamDevApiKey = "your steam dev api key"
 }
 
 func setupProductionConstants() {
