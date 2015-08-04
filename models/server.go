@@ -11,6 +11,7 @@ import (
 )
 
 var LobbyServerMap = make(map[uint]*Server)
+var LobbyServerSettingUp = make(map[uint]time.Time)
 
 type ServerRecord struct {
 	ID           uint
@@ -43,10 +44,11 @@ type Server struct {
 // timer used in verify()
 type verifyTicker struct {
 	Ticker *time.Ticker
-	Quit   chan struct{}
+	Quit   chan bool
 }
 
 func (t *verifyTicker) Close() {
+	t.Quit <- true
 	close(t.Quit)
 }
 
@@ -84,6 +86,7 @@ func (s *Server) Setup() error {
 	if config.Constants.ServerMockUp {
 		return nil
 	}
+
 	helpers.Logger.Debug("[Server.Setup]: Setting up server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 
 	// connect to rcon if not connected before
@@ -140,7 +143,7 @@ func (s *Server) Setup() error {
 
 	// verify's timer
 	s.Ticker.Ticker = time.NewTicker(10 * time.Second)
-	s.Ticker.Quit = make(chan struct{})
+	s.Ticker.Quit = make(chan bool)
 	go func() {
 		for {
 			select {
