@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	db "github.com/TF2Stadium/Server/database"
@@ -156,6 +157,28 @@ func TestReadyPlayer(t *testing.T) {
 	ready, err = lobby.IsPlayerReady(player)
 	assert.Equal(t, ready, true)
 	assert.Nil(t, err)
+}
+
+func TestIsEveryoneReady(t *testing.T) {
+	migrations.TestCleanup()
+	player, playErr := models.NewPlayer("0")
+	assert.Nil(t, playErr)
+
+	player.Save()
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
+	lobby.Save()
+	lobby.AddPlayer(player, 0)
+	lobby.ReadyPlayer(player)
+	assert.Equal(t, lobby.IsEveryoneReady(), false)
+
+	for i := 1; i < 12; i++ {
+		player, playErr = models.NewPlayer(strconv.Itoa(i))
+		assert.Nil(t, playErr)
+		player.Save()
+		lobby.AddPlayer(player, i)
+		lobby.ReadyPlayer(player)
+	}
+	assert.Equal(t, lobby.IsEveryoneReady(), true)
 }
 
 func TestUnreadyPlayer(t *testing.T) {

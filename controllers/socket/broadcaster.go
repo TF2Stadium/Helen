@@ -12,6 +12,7 @@ import (
 )
 
 type broadcastMessage struct {
+	Room    string
 	SteamId string
 	Event   string
 	Content string
@@ -38,7 +39,17 @@ func StopBroadcaster() {
 
 func SendMessage(steamid string, event string, content string) {
 	broadcastMessageChannel <- broadcastMessage{
+		Room:    "",
 		SteamId: steamid,
+		Event:   event,
+		Content: content,
+	}
+}
+
+func SendMessageToRoom(room string, event string, content string) {
+	broadcastMessageChannel <- broadcastMessage{
+		Room:    room,
+		SteamId: "",
 		Event:   event,
 		Content: content,
 	}
@@ -66,14 +77,16 @@ func broadcaster() {
 			}
 
 		case message := <-broadcastMessageChannel:
-			socket, ok := SteamIdSocketMap[message.SteamId]
-			if !ok {
-				helpers.Logger.Warning("Failed to get user's socket: %d", message.SteamId)
-				continue
+			if message.Room == "" {
+				socket, ok := SteamIdSocketMap[message.SteamId]
+				if !ok {
+					helpers.Logger.Warning("Failed to get user's socket: %d", message.SteamId)
+					continue
+				}
+				(*socket).Emit(message.Event, message.Content)
+			} else {
+				socketServer.BroadcastTo(message.Room, message.Event, message.Content)
 			}
-
-			(*socket).Emit(message.Event, message.Content)
-
 		case <-broadcastStopChannel:
 			return
 		}
