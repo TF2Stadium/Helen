@@ -47,7 +47,12 @@ func SocketInit(so socketio.Socket) {
 	so.Join("-1") //room for global chat
 
 	if chelpers.IsLoggedInSocket(so.Id()) {
-		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+		player, err := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+		if err != nil {
+			helpers.Logger.Warning("User has a cookie with but a matching player record doesn't exist: %s",
+				chelpers.GetSteamId(so.Id()))
+			return
+		}
 		lobbyid, err := player.GetLobbyId()
 		if err != nil {
 			so.Join(strconv.FormatUint(uint64(lobbyid), 10))

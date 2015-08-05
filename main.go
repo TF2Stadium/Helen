@@ -20,8 +20,8 @@ import (
 )
 
 func main() {
-	config.SetupConstants()
 	helpers.InitLogger()
+	config.SetupConstants()
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()

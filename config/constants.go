@@ -3,6 +3,8 @@ package config
 import (
 	"os"
 	"strings"
+
+	"github.com/TF2Stadium/Server/helpers"
 )
 
 type constants struct {
@@ -56,6 +58,13 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT")
 	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
 	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
+
+	// conditional assignments
+
+	if Constants.SteamDevApiKey == "your steam dev api key" && !Constants.SteamApiMockUp {
+		helpers.Logger.Warning("Steam api key not provided, setting SteamApiMockUp to true")
+		Constants.SteamApiMockUp = true
+	}
 
 }
 
