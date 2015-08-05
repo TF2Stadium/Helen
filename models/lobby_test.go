@@ -158,6 +158,20 @@ func TestReadyPlayer(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestIsEveryoneReady(t *testing.T) {
+	migrations.TestCleanup()
+	player, playErr := models.NewPlayer("testing")
+	assert.Nil(t, playErr)
+
+	player.Save()
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
+	lobby.Save()
+	lobby.AddPlayer(player, 0)
+
+	lobby.ReadyPlayer(player)
+	assert.Equal(t, lobby.IsEveryoneReady(), false)
+}
+
 func TestUnreadyPlayer(t *testing.T) {
 	migrations.TestCleanup()
 	player, playErr := models.NewPlayer("testing")
