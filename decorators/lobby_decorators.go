@@ -1,6 +1,8 @@
 package decorators
 
 import (
+	"strconv"
+
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/models"
@@ -74,4 +76,24 @@ func GetLobbyListData(lobbies []models.Lobby) (string, error) {
 
 	bytes, _ := listObj.MarshalJSON()
 	return string(bytes), nil
+}
+
+func GetLobbyConnectJSON(lobby *models.Lobby) *simplejson.Json {
+	json := simplejson.New()
+
+	json.Set("id", lobby.ID)
+	json.Set("time", lobby.CreatedAt.Unix())
+	json.Set("password", lobby.Server.LobbyPassword)
+
+	game := simplejson.New()
+	game.Set("host", lobby.Server.Info.Host)
+	json.Set("game", game)
+
+	mumble := simplejson.New()
+	mumble.Set("ip", "we still need to decide on mumble connections")
+	mumble.Set("port", "we still need to decide on mumble connections")
+	mumble.Set("channel", "match"+strconv.FormatUint(uint64(lobby.ID), 10))
+	json.Set("mumble", mumble)
+
+	return json
 }

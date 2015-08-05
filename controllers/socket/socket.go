@@ -8,6 +8,7 @@ import (
 
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/decorators"
 	"github.com/TF2Stadium/Server/helpers"
 	"github.com/TF2Stadium/Server/models"
 	"github.com/bitly/go-simplejson"
@@ -231,7 +232,8 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 
-		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+		steamid := chelpers.GetSteamId(so.Id())
+		player, tperr := models.GetPlayerBySteamId(steamid)
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
@@ -253,6 +255,12 @@ func SocketInit(so socketio.Socket) {
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
 			return string(bytes)
+		}
+
+		if lobby.IsEveryoneReady() {
+			bytes, _ := decorators.GetLobbyConnectJSON(lobby).Encode()
+			SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10), steamid,
+				"lobbyStart", string(bytes))
 		}
 
 		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
