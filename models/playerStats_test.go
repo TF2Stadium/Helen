@@ -1,0 +1,36 @@
+package models_test
+
+import (
+	"testing"
+
+	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Server/database/migrations"
+	"github.com/TF2Stadium/Server/helpers"
+	"github.com/TF2Stadium/Server/models"
+	"github.com/stretchr/testify/assert"
+)
+
+func init() {
+	helpers.InitLogger()
+}
+
+func TestLobbiesPlayed(t *testing.T) {
+	migrations.TestCleanup()
+	stats1 := &models.PlayerStats{}
+
+	stats1.PlayedCountSet(models.LobbyTypeSixes, 5)
+	stats1.PlayedCountSet(models.LobbyTypeHighlander, 8)
+	stats1.PlayedCountIncrease(models.LobbyTypeSixes) // sixes: 5 -> 6
+
+	assert.Equal(t, 6, stats1.PlayedCountGet(models.LobbyTypeSixes))
+	assert.Equal(t, 8, stats1.PlayedCountGet(models.LobbyTypeHighlander))
+	database.DB.Save(stats1)
+
+	// can load the record
+	var stats2 models.PlayerStats
+	err := database.DB.First(&stats2, stats1.ID).Error
+	assert.Nil(t, err)
+
+	assert.Equal(t, 6, stats2.PlayedCountGet(models.LobbyTypeSixes))
+	assert.Equal(t, 8, stats2.PlayedCountGet(models.LobbyTypeHighlander))
+}

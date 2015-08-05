@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"time"
 
 	db "github.com/TF2Stadium/Server/database"
 	"github.com/TF2Stadium/Server/helpers"
@@ -74,7 +75,7 @@ type Lobby struct {
 func NewLobby(mapName string, lobbyType LobbyType, serverInfo ServerRecord, whitelist int) *Lobby {
 	lobby := &Lobby{
 		Type:       lobbyType,
-		State:      LobbyStateWaiting,
+		State:      LobbyStateInitializing,
 		MapName:    mapName,
 		Server:     nil,
 		Whitelist:  Whitelist(whitelist), // that's a strange line
@@ -299,6 +300,34 @@ func (lobby *Lobby) IsSlotFilled(slot int) bool {
 	return true
 }
 
+// deletes the lobby record if initialization fails
+func (lobby *Lobby) TrySettingUp() *helpers.TPError {
+	if _, ok := LobbyServerSettingUp[lobby.ID]; ok {
+		return helpers.NewTPError("Lobby setup already in progress", -1)
+	}
+
+	if lobby.Server == nil {
+		return helpers.NewTPError("Lobby doesn't have a server attached", -1)
+	}
+
+	LobbyServerSettingUp[lobby.ID] = time.Now()
+
+	err := lobby.Server.Setup()
+
+	delete(LobbyServerSettingUp, lobby.ID)
+
+	if err != nil {
+		lobby.State = LobbyStateEnded
+		db.DB.Save(lobby)
+		return helpers.NewTPError(err.Error(), -1)
+	}
+
+	lobby.State = LobbyStateWaiting
+	db.DB.Save(lobby)
+
+	return nil
+}
+
 func (lobby *Lobby) AfterSave() error {
 	var s *Server
 	s, ok := LobbyServerMap[lobby.ID]
@@ -322,6 +351,11 @@ func (lobby *Lobby) AfterSave() error {
 		helpers.Logger.Warning("Failed to attach server to lobby ", lobby.ID)
 	}
 	lobby.Server = s
+	return nil
+}
+
+func (lobby *Lobby) AfterDelete() error {
+	lobby.Server.End()
 	return nil
 }
 

@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"fmt"
 	"html"
 	"strconv"
 	"strings"
@@ -114,11 +115,23 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 
+		// setup server info
+		go func() {
+			err := lob.TrySettingUp()
+			if err != nil {
+				SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", err.Error())
+			} else {
+				// for debug
+				SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", fmt.Sprintf("Lobby %d created successfully", lob.ID))
+			}
+		}()
+
 		lobby_id := simplejson.New()
 		lobby_id.Set("id", lob.ID)
 		bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
 		return string(bytes)
 	})
+
 	so.On("lobbyJoin", func(jsonstr string) string {
 		if !chelpers.IsLoggedInSocket(so.Id()) {
 			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()

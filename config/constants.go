@@ -23,6 +23,9 @@ type constants struct {
 	DbDatabase string
 	DbUsername string
 	DbPassword string
+
+	SteamDevApiKey string
+	SteamApiMockUp bool
 }
 
 func overrideFromEnv(constant *string, name string) {
@@ -48,9 +51,12 @@ func SetupConstants() {
 
 	overrideFromEnv(&Constants.Port, "PORT")
 	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET")
+	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY")
+	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST")
+	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT")
+	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
+	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
 
-	// TODO: database url from env
-	// TODO: database info from env
 }
 
 func setupDevelopmentConstants() {
@@ -70,6 +76,9 @@ func setupDevelopmentConstants() {
 	Constants.DbDatabase = "tf2stadium"
 	Constants.DbUsername = "tf2stadium"
 	Constants.DbPassword = "dickbutt" // change this
+
+	Constants.SteamDevApiKey = "your steam dev api key"
+	Constants.SteamApiMockUp = false
 }
 
 func setupProductionConstants() {
@@ -84,6 +93,7 @@ func setupTestConstants() {
 	Constants.DbPassword = "dickbutt"
 
 	Constants.ServerMockUp = true
+	Constants.SteamApiMockUp = true
 }
 
 func setupTravisTestConstants() {
@@ -93,4 +103,5 @@ func setupTravisTestConstants() {
 	Constants.DbPassword = ""
 
 	Constants.ServerMockUp = true
+	Constants.SteamApiMockUp = true
 }

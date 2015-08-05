@@ -22,7 +22,7 @@ var createBox = function(io, messageName, messageFields) {
       params = {};
       messageFields.forEach(function(field) {
         var val = $("#"+messageName+"_"+field).val();
-        if (field.endsWith("id") || field == "room") {
+        if (field.endsWith("id") || field == "room" || field == "whitelist") {
           val = parseInt(val);
         }
         params[field] = val;

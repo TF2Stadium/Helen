@@ -13,6 +13,7 @@ func Do() {
 	database.DB.AutoMigrate(&models.Lobby{})
 	database.DB.AutoMigrate(&models.LobbySlot{})
 	database.DB.AutoMigrate(&models.ServerRecord{})
+	database.DB.AutoMigrate(&models.PlayerStats{})
 
 	database.DB.Model(&models.LobbySlot{}).AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
 }
