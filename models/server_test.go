@@ -1,6 +1,7 @@
 package models
 
 import (
+	"os"
 	"testing"
 
 	"github.com/TF2Stadium/Server/config"
@@ -10,7 +11,12 @@ import (
 
 // change this if you wanna test the server
 // make sure you have the server running at the moment
-var shouldTest bool = false
+var host = os.Getenv("TEST_TF2_SERVER_HOST")
+var password = os.Getenv("TEST_TF2_SERVER_PASSWORD")
+var shouldTest bool = host != "" && password != ""
+
+var shouldTestLive = false
+
 var svr *Server
 
 func init() {
@@ -18,15 +24,15 @@ func init() {
 }
 
 func TestServerSetup(t *testing.T) {
-	if shouldTest {
+	if shouldTestLive {
 		config.SetupConstants()
 		InitServerConfigs()
 
 		commId := "76561198067132047" // your commId, so it wont be kicking you out everytime
 
 		info := ServerRecord{
-			Host:         "192.168.1.94:27015",
-			RconPassword: "rconPassword",
+			Host:         host,
+			RconPassword: password,
 		}
 
 		svr = NewServer()

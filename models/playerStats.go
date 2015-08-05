@@ -1,68 +1,41 @@
 package models
 
-import (
-	"strconv"
-	"strings"
-)
-
-type LobbiesPlayed struct {
-	Data  string
-	Total map[LobbyType]int
-}
-
-// parse string from Data
-func (lp *LobbiesPlayed) Parse() {
-	list := strings.Split(lp.Data, ",")
-
-	for i, v := range list {
-		lp.Total[LobbyType(i)], _ = strconv.Atoi(v)
-	}
-}
-
-// build string from Total to Data and returns it
-func (lp *LobbiesPlayed) String() string {
-	lp.Data = ""
-
-	// build string "5,2,9..." to lp.Data
-	for i := 0; i < len(lp.Total); i++ {
-		t := strconv.Itoa(lp.Total[LobbyType(i)])
-		lp.Data += (t + ",")
-	}
-
-	ds := len(lp.Data)
-
-	// remove last comma
-	if lp.Data[ds-1:ds] == "," {
-		lp.Data = lp.Data[:ds-1]
-	}
-
-	return lp.Data
-}
-
-func (lp *LobbiesPlayed) Set(lt LobbyType, value int) {
-	lp.Total[lt] = value
-
-	_ = lp.String()
-}
-
-func (lp *LobbiesPlayed) Get(lt LobbyType) int {
-	return lp.Total[lt]
-}
-
-func (lp *LobbiesPlayed) Increase(lt LobbyType) {
-	lp.Total[lt] += 1
-
-	_ = lp.String()
-}
-
 type PlayerStats struct {
-	LobbiesPlayed *LobbiesPlayed
+	ID                    uint
+	PlayedSixesCount      int `sql:"played_sixes_count",default:"0"`
+	PlayedHighlanderCount int `sql:"played_highlander_count",default:"0"`
 }
 
-func NewPlayerStats() *PlayerStats {
-	stats := new(PlayerStats)
-	stats.LobbiesPlayed = new(LobbiesPlayed)
-	stats.LobbiesPlayed.Total = make(map[LobbyType]int)
+func NewPlayerStats() PlayerStats {
+	stats := PlayerStats{}
 
 	return stats
+}
+
+func (ps *PlayerStats) PlayedCountSet(lt LobbyType, value int) {
+	switch lt {
+	case LobbyTypeSixes:
+		ps.PlayedSixesCount = value
+	case LobbyTypeHighlander:
+		ps.PlayedHighlanderCount = value
+	}
+}
+
+func (ps *PlayerStats) PlayedCountGet(lt LobbyType) int {
+	switch lt {
+	case LobbyTypeSixes:
+		return ps.PlayedSixesCount
+	case LobbyTypeHighlander:
+		return ps.PlayedHighlanderCount
+	}
+	return 0
+}
+
+func (ps *PlayerStats) PlayedCountIncrease(lt LobbyType) {
+	switch lt {
+	case LobbyTypeSixes:
+		ps.PlayedSixesCount += 1
+	case LobbyTypeHighlander:
+		ps.PlayedHighlanderCount += 1
+	}
 }

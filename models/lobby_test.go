@@ -178,35 +178,8 @@ func TestUnreadyPlayer(t *testing.T) {
 func TestSpectators(t *testing.T) {
 	migrations.TestCleanup()
 
-	player, playErr := models.NewPlayer("76561197960435530")
+	player, playErr := models.NewPlayer("apple")
 	assert.Nil(t, playErr)
-
-	assert.Equal(t, "http://steamcommunity.com/id/robinwalker/", player.Profileurl)
-	assert.Regexp(t, "(.*)steamcommunity/public/images/avatars/(.*).jpg", player.Avatar)
-
-	rHours := func() bool {
-		if player.GameHours >= 268 {
-			return true
-		}
-
-		return false
-	}
-	assert.Condition(t, rHours, player.GameHours)
-
-	player.Stats.LobbiesPlayed.Set(models.LobbyTypeSixes, 3)
-	player.Stats.LobbiesPlayed.Set(models.LobbyTypeHighlander, 7)
-	player.Stats.LobbiesPlayed.Increase(models.LobbyTypeSixes) // sixes: 3 -> 4
-
-	assert.Equal(t, 4, player.Stats.LobbiesPlayed.Get(models.LobbyTypeSixes))
-	assert.Equal(t, 7, player.Stats.LobbiesPlayed.Get(models.LobbyTypeHighlander))
-	assert.Equal(t, "4,7", player.Stats.LobbiesPlayed.String())
-
-	player.Stats.LobbiesPlayed.Data = "9,3"
-	player.Stats.LobbiesPlayed.Parse()
-
-	assert.Equal(t, 9, player.Stats.LobbiesPlayed.Get(models.LobbyTypeSixes))
-	assert.Equal(t, 3, player.Stats.LobbiesPlayed.Get(models.LobbyTypeHighlander))
-	assert.Equal(t, "9,3", player.Stats.LobbiesPlayed.String())
 
 	player.Save()
 

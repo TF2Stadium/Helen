@@ -11,7 +11,8 @@ import (
 type Player struct {
 	gorm.Model
 	SteamId string `sql:"unique"` // Players steam ID
-	Stats   *PlayerStats
+	Stats   PlayerStats
+	StatsID uint
 
 	// info from steam api
 	Avatar     string
@@ -22,11 +23,16 @@ type Player struct {
 
 func NewPlayer(steamId string) (*Player, error) {
 	player := &Player{SteamId: steamId}
-	player.Stats = NewPlayerStats()
 
-	err := player.UpdatePlayerInfo()
-	if err != nil {
-		return &Player{}, err
+	if !config.Constants.SteamApiMockUp {
+		player.Stats = NewPlayerStats()
+
+		err := player.UpdatePlayerInfo()
+		if err != nil {
+			return &Player{}, err
+		}
+	} else {
+		player.Stats = PlayerStats{}
 	}
 
 	return player, nil
@@ -45,6 +51,15 @@ func (player *Player) Save() error {
 func GetPlayerBySteamId(steamid string) (*Player, *helpers.TPError) {
 	var player = Player{}
 	err := db.DB.Where("steam_id = ?", steamid).First(&player).Error
+	if err != nil {
+		return nil, helpers.NewTPError("Player is not in the database", -1)
+	}
+	return &player, nil
+}
+
+func GetPlayerWithStats(steamid string) (*Player, *helpers.TPError) {
+	var player = Player{}
+	err := db.DB.Where("steam_id = ?", steamid).Preload("Stats").First(&player).Error
 	if err != nil {
 		return nil, helpers.NewTPError("Player is not in the database", -1)
 	}
