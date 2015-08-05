@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
@@ -49,7 +50,6 @@ type verifyTicker struct {
 
 func (t *verifyTicker) Close() {
 	t.Quit <- true
-	close(t.Quit)
 }
 
 func NewServer() *Server {
@@ -79,6 +79,29 @@ func (s *Server) VerifyInfo() error {
 	if err != nil {
 		return helpers.NewTPError(err.Error(), -1)
 	}
+	return nil
+}
+
+func (s *Server) SetupObject() error {
+	// If the ticker is initialized, the verifier is running
+	if s.Ticker.Quit != nil {
+		return nil
+	}
+	s.Ticker.Ticker = time.NewTicker(10 * time.Second)
+	s.Ticker.Quit = make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-s.Ticker.Ticker.C:
+				s.Verify()
+			case <-s.Ticker.Quit:
+				log.Println("Stopping verifier")
+				s.Ticker.Ticker.Stop()
+				return
+			}
+		}
+	}()
+
 	return nil
 }
 
@@ -141,27 +164,12 @@ func (s *Server) Setup() error {
 		return mapErr
 	}
 
-	// verify's timer
-	s.Ticker.Ticker = time.NewTicker(10 * time.Second)
-	s.Ticker.Quit = make(chan bool)
-	go func() {
-		for {
-			select {
-			case <-s.Ticker.Ticker.C:
-				s.Verify()
-			case <-s.Ticker.Quit:
-				s.Ticker.Ticker.Stop()
-				return
-			}
-		}
-	}()
-
 	return nil
 }
 
 // runs each 10 sec
 func (s *Server) Verify() {
-	if config.Constants.ServerMockUp {
+	if config.Constants.ServerMockUp || s.Rcon == nil {
 		return
 	}
 	helpers.Logger.Debug("[Server.Verify]: Verifing server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")

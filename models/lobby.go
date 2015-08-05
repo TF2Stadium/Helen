@@ -69,9 +69,11 @@ type Lobby struct {
 	Spectators []Player `gorm:"many2many:spectators_players_lobbies"`
 
 	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`
+
+	CreatedById uint
+	CreatedBy   Player
 }
 
-//id should be maintained in the main loop
 func NewLobby(mapName string, lobbyType LobbyType, serverInfo ServerRecord, whitelist int) *Lobby {
 	lobby := &Lobby{
 		Type:       lobbyType,
@@ -81,6 +83,8 @@ func NewLobby(mapName string, lobbyType LobbyType, serverInfo ServerRecord, whit
 		Whitelist:  Whitelist(whitelist), // that's a strange line
 		ServerInfo: serverInfo,
 	}
+
+	// Must specify CreatedBy manually if the lobby is created by a player
 
 	return lobby
 }
@@ -284,7 +288,6 @@ func (lobby *Lobby) IsSlotFilled(slot int) bool {
 	return true
 }
 
-// deletes the lobby record if initialization fails
 func (lobby *Lobby) TrySettingUp() *helpers.TPError {
 	if _, ok := LobbyServerSettingUp[lobby.ID]; ok {
 		return helpers.NewTPError("Lobby setup already in progress", -1)
@@ -301,8 +304,7 @@ func (lobby *Lobby) TrySettingUp() *helpers.TPError {
 	delete(LobbyServerSettingUp, lobby.ID)
 
 	if err != nil {
-		lobby.State = LobbyStateEnded
-		db.DB.Save(lobby)
+		lobby.Close()
 		return helpers.NewTPError(err.Error(), -1)
 	}
 
@@ -313,6 +315,10 @@ func (lobby *Lobby) TrySettingUp() *helpers.TPError {
 }
 
 func (lobby *Lobby) AfterSave() error {
+	if lobby.State == LobbyStateEnded {
+		return nil
+	}
+
 	var s *Server
 	s, ok := LobbyServerMap[lobby.ID]
 	if !ok {
@@ -328,6 +334,8 @@ func (lobby *Lobby) AfterSave() error {
 			return err
 		}
 
+		s.SetupObject()
+
 		LobbyServerMap[lobby.ID] = s
 	}
 
@@ -336,6 +344,13 @@ func (lobby *Lobby) AfterSave() error {
 	}
 	lobby.Server = s
 	return nil
+}
+
+func (lobby *Lobby) Close() {
+	lobby.Server.End()
+	lobby.State = LobbyStateEnded
+	delete(LobbyServerSettingUp, lobby.ID)
+	db.DB.Save(lobby)
 }
 
 func (lobby *Lobby) AfterDelete() error {

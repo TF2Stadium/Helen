@@ -59,6 +59,8 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 
+		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
 		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
 		if err != nil {
 			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
@@ -107,6 +109,7 @@ func SocketInit(so socketio.Socket) {
 		//TODO what if playermap[lobbytype] is nil?
 		lob := models.NewLobby(mapName, playermap[lobbytype],
 			models.ServerRecord{Host: server, RconPassword: rconPwd}, whitelist)
+		lob.CreatedBy = *player
 		err = lob.Save()
 
 		if err != nil {
@@ -128,6 +131,48 @@ func SocketInit(so socketio.Socket) {
 		lobby_id := simplejson.New()
 		lobby_id.Set("id", lob.ID)
 		bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
+		return string(bytes)
+	})
+
+	so.On("lobbyClose", func(jsonstr string) string {
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
+
+		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+		lobbyid, err := js.Get("id").Uint64()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
+			return string(bytes)
+		}
+
+		lob, tperr := models.GetLobbyById(uint(lobbyid))
+		if tperr != nil {
+			bytes, _ := tperr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+
+		if player.ID != lob.CreatedById {
+			bytes, _ := chelpers.BuildFailureJSON("Player not authorized to close lobby.", 1).Encode()
+			return string(bytes)
+		}
+
+		if lob.State == models.LobbyStateEnded {
+			bytes, _ := chelpers.BuildFailureJSON("Lobby already closed.", -1).Encode()
+			return string(bytes)
+		}
+
+		lob.Close()
+
+		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	})
 
