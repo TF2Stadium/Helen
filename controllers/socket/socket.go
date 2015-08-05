@@ -79,9 +79,20 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		}
 
-		lobbytype, err := js.Get("type").String()
+		lobbytypestring, err := js.Get("type").String()
 		if err != nil {
 			bytes, _ := chelpers.BuildMissingArgJSON("type").Encode()
+			return string(bytes)
+		}
+
+		var playermap = map[string]models.LobbyType{
+			"sixes":      models.LobbyTypeSixes,
+			"highlander": models.LobbyTypeHighlander,
+		}
+
+		lobbytype, ok := playermap[lobbytypestring]
+		if !ok {
+			bytes, _ := chelpers.BuildFailureJSON("Lobby type invalid.", -1).Encode()
 			return string(bytes)
 		}
 
@@ -104,16 +115,10 @@ func SocketInit(so socketio.Socket) {
 		}
 
 		//mumble, _ := js.Get("mumbleRequired").Bool()
-
-		var playermap = map[string]models.LobbyType{
-			"sixes":      models.LobbyTypeSixes,
-			"highlander": models.LobbyTypeHighlander,
-		}
-
 		//TODO: Configure server here
 
 		//TODO what if playermap[lobbytype] is nil?
-		lob := models.NewLobby(mapName, playermap[lobbytype],
+		lob := models.NewLobby(mapName, lobbytype,
 			models.ServerRecord{Host: server, RconPassword: rconPwd}, whitelist)
 		lob.CreatedBy = *player
 		err = lob.Save()
