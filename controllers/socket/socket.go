@@ -272,7 +272,7 @@ func SocketInit(so socketio.Socket) {
 
 		if lobby.IsEveryoneReady() {
 			bytes, _ := decorators.GetLobbyConnectJSON(lobby).Encode()
-			SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10), steamid,
+			SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
 				"lobbyStart", string(bytes))
 		}
 

@@ -46,10 +46,10 @@ func SendMessage(steamid string, event string, content string) {
 	}
 }
 
-func SendMessageToRoom(room string, steamid string, event string, content string) {
+func SendMessageToRoom(room string, event string, content string) {
 	broadcastMessageChannel <- broadcastMessage{
 		Room:    room,
-		SteamId: steamid,
+		SteamId: "",
 		Event:   event,
 		Content: content,
 	}
@@ -77,15 +77,15 @@ func broadcaster() {
 			}
 
 		case message := <-broadcastMessageChannel:
-			socket, ok := SteamIdSocketMap[message.SteamId]
-			if !ok {
-				helpers.Logger.Warning("Failed to get user's socket: %d", message.SteamId)
-				continue
-			}
 			if message.Room == "" {
+				socket, ok := SteamIdSocketMap[message.SteamId]
+				if !ok {
+					helpers.Logger.Warning("Failed to get user's socket: %d", message.SteamId)
+					continue
+				}
 				(*socket).Emit(message.Event, message.Content)
 			} else {
-				(*socket).BroadcastTo(message.Room, message.Event, message.Content)
+				socketServer.BroadcastTo(message.Room, message.Event, message.Content)
 			}
 		case <-broadcastStopChannel:
 			return
