@@ -242,6 +242,22 @@ func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
 	return slot.Ready, nil
 }
 
+func (lobby *Lobby) IsEveryoneReady() bool {
+	var slots []LobbySlot
+	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
+
+	if len(slots) != TypePlayerCount[lobby.Type]*2 {
+		return false
+	}
+
+	for _, slot := range slots {
+		if !slot.Ready {
+			return false
+		}
+	}
+	return true
+}
+
 func (lobby *Lobby) IsStarted() (bool, *helpers.TPError) {
 	// TODO implement
 	return false, nil
