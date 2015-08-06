@@ -343,6 +343,7 @@ func (lobby *Lobby) AfterSave() error {
 		s.Map = lobby.MapName
 		s.Type = lobby.Type
 		s.Info = lobby.ServerInfo
+		s.LobbyId = lobby.ID
 
 		err := s.VerifyInfo()
 

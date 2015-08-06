@@ -175,7 +175,15 @@ func (s *Server) Verify() {
 	helpers.Logger.Debug("[Server.Verify]: Verifing server -> [" + s.Info.Host + "] from lobby [" + fmt.Sprint(s.LobbyId) + "]")
 
 	// check if all players in server are in lobby
-	s.Players = s.Rcon.GetPlayers()
+	var err error
+	s.Players, err = s.Rcon.GetPlayers()
+
+	for err != nil {
+		time.Sleep(time.Second)
+		helpers.Logger.Warning("Failed to get players in server %s: %s", s.LobbyId, err.Error())
+		s.Players, err = s.Rcon.GetPlayers()
+	}
+
 	for i := range s.Players {
 		if s.Players[i].SteamID != "BOT" {
 			commId, idErr := steamid.SteamIdToCommId(s.Players[i].SteamID)
@@ -246,7 +254,14 @@ func (s *Server) ExecConfig(config *ServerConfig) error {
 
 func (s *Server) KickAll() error {
 	helpers.Logger.Debug("[Server.KickAll]: Kicking players...")
-	s.Players = s.Rcon.GetPlayers()
+	var err error
+	s.Players, err = s.Rcon.GetPlayers()
+
+	for err != nil {
+		time.Sleep(time.Second)
+		helpers.Logger.Warning("Failed to get players in server %s: %s", s.LobbyId, err.Error())
+		s.Players, err = s.Rcon.GetPlayers()
+	}
 
 	for i := range s.Players {
 		kickErr := s.Rcon.KickPlayer(s.Players[i], "[tf2stadium.com]: Setting up lobby...")
