@@ -32,9 +32,13 @@ func GetLobbyDataJSON(lobby models.Lobby) *simplejson.Json {
 	lobbyJs.Set("type", models.FormatMap[lobby.Type])
 	lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
 	lobbyJs.Set("players", lobby.GetPlayerNumber())
+	lobbyJs.Set("map", lobby.MapName)
 	classes := simplejson.New()
 
-	for className, slot := range chelpers.FormatClassMap(lobby.Type) {
+	var classMap = chelpers.FormatClassMap(lobby.Type)
+	lobbyJs.Set("maxPlayers", len(classMap)*2)
+
+	for className, slot := range classMap {
 		class := simplejson.New()
 		red := simplejson.New()
 		blu := simplejson.New()
@@ -54,6 +58,7 @@ func GetLobbyDataJSON(lobby models.Lobby) *simplejson.Json {
 		classes.Set(className, class)
 	}
 	lobbyJs.Set("classes", classes)
+
 
 	return lobbyJs
 }
