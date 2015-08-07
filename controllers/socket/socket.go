@@ -446,6 +446,81 @@ func SocketInit(so socketio.Socket) {
 		return string(bytes)
 	})
 
+	so.On("playerSettingsGet", func(jsonstr string) string {
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
+		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
+
+		key, err := js.Get("key").String()
+		if err != nil {
+			key = "" //just to be sure
+		}
+
+		var settings []models.PlayerSetting
+		var setting models.PlayerSetting
+		if key == "" {
+			settings, err = player.GetSettings()
+		} else {
+			setting, err = player.GetSetting(key)
+			settings = append(settings, setting)
+		}
+
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
+			return string(bytes)
+		}
+
+		result := decorators.GetPlayerSettingsJson(settings)
+		resp, _ := chelpers.BuildSuccessJSON(result).Encode()
+		return string(resp)
+	})
+
+	so.On("playerSettingsSet", func(jsonstr string) string {
+		if !chelpers.IsLoggedInSocket(so.Id()) {
+			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
+		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
+			return string(bytes)
+		}
+
+		key, err := js.Get("key").String()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("key").Encode()
+			return string(bytes)
+		}
+
+		value, err := js.Get("value").String()
+		if err != nil {
+			bytes, _ := chelpers.BuildMissingArgJSON("value").Encode()
+			return string(bytes)
+		}
+
+		err = player.SetSetting(key, value)
+
+		if err != nil {
+			bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
+			return string(bytes)
+		}
+
+		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		return string(resp)
+	})
+
 	so.On("chatSend", func(jsonstr string) string {
 		if !chelpers.IsLoggedInSocket(so.Id()) {
 			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()

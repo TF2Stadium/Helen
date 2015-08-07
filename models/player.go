@@ -8,6 +8,13 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+type PlayerSetting struct {
+	ID       uint
+	Key      string
+	Value    string `sql:"size:65535"`
+	PlayerID uint
+}
+
 type Player struct {
 	gorm.Model
 	SteamId string `sql:"unique"` // Players steam ID
@@ -19,6 +26,8 @@ type Player struct {
 	Profileurl string
 	GameHours  int
 	Name       string // Player name
+
+	Settings []PlayerSetting
 }
 
 func NewPlayer(steamId string) (*Player, error) {
@@ -120,4 +129,31 @@ func (player *Player) UpdatePlayerInfo() error {
 	player.Name = playerInfo.Name
 
 	return nil
+}
+
+func (player *Player) SetSetting(key string, value string) error {
+	setting := PlayerSetting{}
+	err := db.DB.Where("player_id = ? AND key = ?", player.ID, key).First(&setting).Error
+
+	setting.PlayerID = player.ID
+	setting.Key = key
+	setting.Value = value
+
+	err = db.DB.Save(&setting).Error
+
+	return err
+}
+
+func (player *Player) GetSetting(key string) (PlayerSetting, error) {
+	setting := PlayerSetting{}
+	err := db.DB.Where("player_id = ? AND key = ?", player.ID, key).First(&setting).Error
+
+	return setting, err
+}
+
+func (player *Player) GetSettings() ([]PlayerSetting, error) {
+	var settings []PlayerSetting
+	err := db.DB.Where("player_id = ?", player.ID).Find(&settings).Error
+
+	return settings, err
 }

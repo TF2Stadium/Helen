@@ -14,8 +14,10 @@ func Do() {
 	database.DB.AutoMigrate(&models.LobbySlot{})
 	database.DB.AutoMigrate(&models.ServerRecord{})
 	database.DB.AutoMigrate(&models.PlayerStats{})
+	database.DB.AutoMigrate(&models.PlayerSetting{})
 
 	database.DB.Model(&models.LobbySlot{}).AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
+	database.DB.Model(&models.PlayerSetting{}).AddUniqueIndex("idx_player_id_key", "player_id", "key")
 }
 
 func TestCleanup() {
@@ -26,11 +28,8 @@ func TestCleanup() {
 	config.SetupConstants()
 	database.Init()
 
-	database.DB.Exec("DROP TABLE lobbies;")
-	database.DB.Exec("DROP TABLE players;")
-	database.DB.Exec("DROP TABLE lobby_slots;")
-	database.DB.Exec("DROP TABLE banned_players_lobbies;")
-	database.DB.Exec("DROP TABLE spectators_players_lobbies;")
+	database.DB.Exec("DROP SCHEMA public CASCADE;")
+	database.DB.Exec("CREATE SCHEMA public;")
 
 	Do()
 }

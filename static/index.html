@@ -77,6 +77,8 @@ $(function() {
   createBox(io, "playerReady", []);
   createBox(io, "playerUnready", []);
   createBox(io, "chatSend", ["message", "room"]);
+  createBox(io, "playerSettingsSet", ["key", "value"]);
+  createBox(io, "playerSettingsGet", ["key"]);
 });
 
 </script>

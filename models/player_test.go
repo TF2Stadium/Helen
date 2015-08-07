@@ -22,6 +22,7 @@ func TestPlayerInfoFetching(t *testing.T) {
 		return
 	}
 
+	// disable mock mode because we're actually testing it
 	config.Constants.SteamApiMockUp = false
 
 	player, playErr := models.NewPlayer("76561197999073985")
@@ -47,4 +48,34 @@ func TestPlayerInfoFetching(t *testing.T) {
 	assert.Equal(t, 4, player2.Stats.PlayedCountGet(models.LobbyTypeSixes))
 	assert.Equal(t, 7, player2.Stats.PlayedCountGet(models.LobbyTypeHighlander))
 	assert.Equal(t, "http://steamcommunity.com/id/nonagono/", player2.Profileurl)
+}
+
+func TestPlayerSettings(t *testing.T) {
+	migrations.TestCleanup()
+
+	player, _ := models.NewPlayer("76561197999073985")
+
+	settings, err := player.GetSettings()
+
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(settings))
+
+	err = player.SetSetting("foo", "bar")
+	assert.Nil(t, err)
+
+	settings, err = player.GetSettings()
+	assert.Nil(t, err)
+	assert.Equal(t, "foo", settings[0].Key)
+	assert.Equal(t, "bar", settings[0].Value)
+
+	setting, err := player.GetSetting("foo")
+	assert.Nil(t, err)
+	assert.Equal(t, "bar", setting.Value)
+
+	err = player.SetSetting("hello", "world")
+	assert.Nil(t, err)
+
+	settings, err = player.GetSettings()
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(settings))
 }
