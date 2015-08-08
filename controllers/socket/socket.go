@@ -51,197 +51,182 @@ func SocketInit(so socketio.Socket) {
 		}
 	}
 
-	so.On("lobbyCreate", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
-		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	var lobbyCreateParams = map[string]chelpers.Param{
+		"mapName":   chelpers.Param{Type: chelpers.PTypeString},
+		"type":      chelpers.Param{Type: chelpers.PTypeString},
+		"server":    chelpers.Param{Type: chelpers.PTypeString},
+		"rconpwd":   chelpers.Param{Type: chelpers.PTypeString},
+		"whitelist": chelpers.Param{Type: chelpers.PTypeInt},
+		"mumble":    chelpers.Param{Type: chelpers.PTypeBool},
+	}
 
-		mapName, err := js.Get("mapName").String()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("mapName").Encode()
-			return string(bytes)
-		}
+	so.On("lobbyCreate", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(lobbyCreateParams, func(js *simplejson.Json) string {
 
-		lobbytypestring, err := js.Get("type").String()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("type").Encode()
-			return string(bytes)
-		}
+			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
-		var playermap = map[string]models.LobbyType{
-			"sixes":      models.LobbyTypeSixes,
-			"highlander": models.LobbyTypeHighlander,
-		}
+			mapName, _ := js.Get("mapName").String()
+			lobbytypestring, _ := js.Get("type").String()
+			server, _ := js.Get("server").String()
+			rconPwd, _ := js.Get("rconpwd").String()
+			whitelist, err := js.Get("whitelist").Int()
 
-		lobbytype, ok := playermap[lobbytypestring]
-		if !ok {
-			bytes, _ := chelpers.BuildFailureJSON("Lobby type invalid.", -1).Encode()
-			return string(bytes)
-		}
-
-		server, err := js.Get("server").String()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("server").Encode()
-			return string(bytes)
-		}
-
-		rconPwd, err := js.Get("rconpwd").String()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("rconpwn").Encode()
-			return string(bytes)
-		}
-
-		whitelist, err := js.Get("whitelist").Int()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("whitelist").Encode()
-			return string(bytes)
-		}
-
-		//mumble, _ := js.Get("mumbleRequired").Bool()
-		//TODO: Configure server here
-
-		//TODO what if playermap[lobbytype] is nil?
-		lob := models.NewLobby(mapName, lobbytype,
-			models.ServerRecord{Host: server, RconPassword: rconPwd}, whitelist)
-		lob.CreatedBy = *player
-		err = lob.Save()
-
-		if err != nil {
-			bytes, _ := err.(*helpers.TPError).ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		// setup server info
-		go func() {
-			err := lob.TrySettingUp()
-			if err != nil {
-				SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", err.Error())
-			} else {
-				// for debug
-				SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", fmt.Sprintf("Lobby %d created successfully", lob.ID))
+			var playermap = map[string]models.LobbyType{
+				"sixes":      models.LobbyTypeSixes,
+				"highlander": models.LobbyTypeHighlander,
 			}
-		}()
 
-		lobby_id := simplejson.New()
-		lobby_id.Set("id", lob.ID)
-		bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
-		return string(bytes)
-	})))
+			lobbytype, ok := playermap[lobbytypestring]
+			if !ok {
+				bytes, _ := chelpers.BuildFailureJSON("Lobby type invalid.", -1).Encode()
+				return string(bytes)
+			}
 
-	so.On("lobbyClose", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
-		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+			//mumble, _ := js.Get("mumbleRequired").Bool()
+			//TODO: Configure server here
 
-		lobbyid, err := js.Get("id").Uint64()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
+			//TODO what if playermap[lobbytype] is nil?
+			lob := models.NewLobby(mapName, lobbytype,
+				models.ServerRecord{Host: server, RconPassword: rconPwd}, whitelist)
+			lob.CreatedBy = *player
+			err = lob.Save()
+
+			if err != nil {
+				bytes, _ := err.(*helpers.TPError).ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			// setup server info
+			go func() {
+				err := lob.TrySettingUp()
+				if err != nil {
+					SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", err.Error())
+				} else {
+					// for debug
+					SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", fmt.Sprintf("Lobby %d created successfully", lob.ID))
+				}
+			}()
+
+			lobby_id := simplejson.New()
+			lobby_id.Set("id", lob.ID)
+			bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
 			return string(bytes)
-		}
+		})))
 
-		lob, tperr := models.GetLobbyById(uint(lobbyid))
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
+	var lobbyCloseParams = map[string]chelpers.Param{
+		"id": chelpers.Param{Type: chelpers.PTypeInt},
+	}
+
+	so.On("lobbyClose", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(lobbyCloseParams, func(js *simplejson.Json) string {
+			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+			lobbyid, _ := js.Get("id").Uint64()
+
+			lob, tperr := models.GetLobbyById(uint(lobbyid))
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			if player.ID != lob.CreatedById {
+				bytes, _ := chelpers.BuildFailureJSON("Player not authorized to close lobby.", 1).Encode()
+				return string(bytes)
+			}
+
+			if lob.State == models.LobbyStateEnded {
+				bytes, _ := chelpers.BuildFailureJSON("Lobby already closed.", -1).Encode()
+				return string(bytes)
+			}
+
+			lob.Close()
+
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
-		}
+		})))
 
-		if player.ID != lob.CreatedById {
-			bytes, _ := chelpers.BuildFailureJSON("Player not authorized to close lobby.", 1).Encode()
+	var lobbyJoinParams = map[string]chelpers.Param{
+		"id":    chelpers.Param{Type: chelpers.PTypeInt},
+		"class": chelpers.Param{Type: chelpers.PTypeString},
+		"team":  chelpers.Param{Type: chelpers.PTypeString},
+	}
+
+	so.On("lobbyJoin", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(lobbyJoinParams, func(js *simplejson.Json) string {
+			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			lobbyid, _ := js.Get("id").Uint64()
+			classString, _ := js.Get("class").String()
+			teamString, _ := js.Get("team").String()
+
+			lob, tperr := models.GetLobbyById(uint(lobbyid))
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			slot, tperr := chelpers.GetPlayerSlot(lob.Type, teamString, classString)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			tperr = lob.AddPlayer(player, slot)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			so.Join(strconv.FormatUint(lobbyid, 10))
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
-		}
+		})))
 
-		if lob.State == models.LobbyStateEnded {
-			bytes, _ := chelpers.BuildFailureJSON("Lobby already closed.", -1).Encode()
+	var lobbyRemovePlayerParams = map[string]chelpers.Param{
+		"steamid": chelpers.Param{Type: chelpers.PTypeString, Default: ""},
+		"ban":     chelpers.Param{Type: chelpers.PTypeBool, Default: false},
+	}
+
+	so.On("lobbyRemovePlayer", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(lobbyRemovePlayerParams, func(js *simplejson.Json) string {
+			steamid, _ := js.Get("steamid").String()
+			ban, _ := js.Get("ban").Bool()
+
+			// TODO check authorisation, currently can kick anyone
+			if steamid == "" {
+				steamid = chelpers.GetSteamId(so.Id())
+			}
+
+			player, tperr := models.GetPlayerBySteamId(steamid)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			lobbyid, tperr := player.GetLobbyId()
+
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			lob := &models.Lobby{}
+			database.DB.Find(lob, lobbyid)
+
+			if ban {
+				lob.KickAndBanPlayer(player)
+			} else {
+				lob.RemovePlayer(player)
+			}
+			so.Leave(strconv.FormatInt(int64(lobbyid), 10))
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
-		}
-
-		lob.Close()
-
-		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		return string(bytes)
-	})))
-
-	so.On("lobbyJoin", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
-		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		lobbyid, err := js.Get("id").Uint64()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
-			return string(bytes)
-		}
-		lob, tperr := models.GetLobbyById(uint(lobbyid))
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		classString, err := js.Get("class").String()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("class").Encode()
-			return string(bytes)
-		}
-
-		teamString, err := js.Get("team").String()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("team").Encode()
-			return string(bytes)
-		}
-
-		slot, tperr := chelpers.GetPlayerSlot(lob.Type, teamString, classString)
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		tperr = lob.AddPlayer(player, slot)
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-		so.Join(strconv.FormatUint(lobbyid, 10))
-		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		return string(bytes)
-	})))
-
-	so.On("lobbyRemovePlayer", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
-		steamid, err := js.Get("steamid").String()
-		// TODO check authorisation, currently can kick anyone
-		if err != nil || steamid == "" {
-			steamid = chelpers.GetSteamId(so.Id())
-		}
-
-		ban, err := js.Get("ban").Bool()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("ban").Encode()
-			return string(bytes)
-		}
-		player, tperr := models.GetPlayerBySteamId(steamid)
-
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		lobbyid, tperr := player.GetLobbyId()
-
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		lob := &models.Lobby{}
-		database.DB.Find(lob, lobbyid)
-
-		if ban {
-			lob.KickAndBanPlayer(player)
-		} else {
-			lob.RemovePlayer(player)
-		}
-		so.Leave(strconv.FormatInt(int64(lobbyid), 10))
-		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		return string(bytes)
-	})))
+		})))
 
 	so.On("playerReady", chelpers.AuthFilter(so.Id(), func(val string) string {
 		steamid := chelpers.GetSteamId(so.Id())
@@ -313,166 +298,161 @@ func SocketInit(so socketio.Socket) {
 		return string(bytes)
 	}))
 
-	so.On("lobbyJoinSpectator", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
-		lobbyid, err := js.Get("id").Uint64()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
-			return string(bytes)
-		}
-		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-		lob, tperr := models.GetLobbyById(uint(lobbyid))
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		tperr = lob.AddSpectator(player)
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-		lob.Save()
-		return string(bytes)
-	})))
+	var lobbyJoinSpectatorParams = map[string]chelpers.Param{
+		"id": chelpers.Param{Type: chelpers.PTypeInt},
+	}
 
-	so.On("removeSpectator", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
-		lobbyid, err := js.Get("id").Uint64()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
-			return string(bytes)
-		}
-		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-		lob, tperr := models.GetLobbyById(uint(lobbyid))
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		tperr = lob.RemoveSpectator(player)
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-		lob.Save()
-		return string(bytes)
-	})))
+	so.On("lobbyJoinSpectator", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(lobbyJoinSpectatorParams, func(js *simplejson.Json) string {
+			lobbyid, _ := js.Get("id").Uint64()
 
-	so.On("playerSettingsGet", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
-		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-
-		key, err := js.Get("key").String()
-		if err != nil {
-			key = "" //just to be sure
-		}
-
-		var settings []models.PlayerSetting
-		var setting models.PlayerSetting
-		if key == "" {
-			settings, err = player.GetSettings()
-		} else {
-			setting, err = player.GetSetting(key)
-			settings = append(settings, setting)
-		}
-
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
-			return string(bytes)
-		}
-
-		result := decorators.GetPlayerSettingsJson(settings)
-		resp, _ := chelpers.BuildSuccessJSON(result).Encode()
-		return string(resp)
-	})))
-
-	so.On("playerSettingsSet", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
-		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-
-		key, err := js.Get("key").String()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("key").Encode()
-			return string(bytes)
-		}
-
-		value, err := js.Get("value").String()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("value").Encode()
-			return string(bytes)
-		}
-
-		err = player.SetSetting(key, value)
-
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
-			return string(bytes)
-		}
-
-		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		return string(resp)
-	})))
-
-	so.On("chatSend", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
-		message, err := js.Get("message").String()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("message").Encode()
-			return string(bytes)
-		}
-		room, err := js.Get("room").Int()
-		if err != nil {
-			bytes, _ := chelpers.BuildMissingArgJSON("room").Encode()
-			return string(bytes)
-		}
-
-		if err != nil {
-			bytes, _ := helpers.NewTPError("room must be an integer", -1).ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		//Check if player has either joined, or is spectating lobby
-		lobbyId, tperr := player.GetLobbyId()
-		if room > 0 {
-			// if room is a lobby room
+			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
-			} else if lobbyId != uint(room) && !player.IsSpectatingId(uint(room)) {
-				bytes, _ := chelpers.BuildFailureJSON("Player is not in the lobby.", 5).Encode()
+			}
+			lob, tperr := models.GetLobbyById(uint(lobbyid))
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
-		} else {
-			// else room is the lobby list room
-			room = -1
-		}
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+			tperr = lob.AddSpectator(player)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+			lob.Save()
+			return string(bytes)
+		})))
 
-		t := time.Now()
-		chatMessage := simplejson.New()
-		// TODO send proper timestamps
-		chatMessage.Set("timestamp", strconv.Itoa(t.Hour())+strconv.Itoa(t.Minute()))
-		chatMessage.Set("message", html.EscapeString(message))
-		chatMessage.Set("room", room)
+	var removeSpectatorParams = map[string]chelpers.Param{
+		"id": chelpers.Param{Type: chelpers.PTypeInt},
+	}
+	so.On("removeSpectator", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(removeSpectatorParams, func(js *simplejson.Json) string {
+			lobbyid, _ := js.Get("id").Uint64()
 
-		user := simplejson.New()
-		user.Set("id", player.SteamId)
-		user.Set("name", player.Name)
+			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+			lob, tperr := models.GetLobbyById(uint(lobbyid))
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+			tperr = lob.RemoveSpectator(player)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+			lob.Save()
+			return string(bytes)
+		})))
 
-		chatMessage.Set("user", user)
-		bytes, _ := chatMessage.Encode()
-		so.BroadcastTo(strconv.Itoa(room), "chatReceive", string(bytes))
+	var playerSettingsGetParams = map[string]chelpers.Param{
+		"key": chelpers.Param{Type: chelpers.PTypeString, Default: ""},
+	}
 
-		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		return string(resp)
-	})))
+	so.On("playerSettingsGet", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(playerSettingsGetParams, func(js *simplejson.Json) string {
+			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+			key, _ := js.Get("key").String()
+
+			var err error
+			var settings []models.PlayerSetting
+			var setting models.PlayerSetting
+			if key == "" {
+				settings, err = player.GetSettings()
+			} else {
+				setting, err = player.GetSetting(key)
+				settings = append(settings, setting)
+			}
+
+			if err != nil {
+				bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
+				return string(bytes)
+			}
+
+			result := decorators.GetPlayerSettingsJson(settings)
+			resp, _ := chelpers.BuildSuccessJSON(result).Encode()
+			return string(resp)
+		})))
+
+	var playerSettingsSetParams = map[string]chelpers.Param{
+		"key":   chelpers.Param{Type: chelpers.PTypeString},
+		"value": chelpers.Param{Type: chelpers.PTypeString},
+	}
+
+	so.On("playerSettingsSet", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(playerSettingsSetParams, func(js *simplejson.Json) string {
+			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+			key, _ := js.Get("key").String()
+			value, _ := js.Get("value").String()
+
+			err := player.SetSetting(key, value)
+			if err != nil {
+				bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
+				return string(bytes)
+			}
+
+			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+			return string(resp)
+		})))
+
+	var chatSendParams = map[string]chelpers.Param{
+		"message": chelpers.Param{Type: chelpers.PTypeString},
+		"room":    chelpers.Param{Type: chelpers.PTypeInt},
+	}
+
+	so.On("chatSend", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(chatSendParams, func(js *simplejson.Json) string {
+			message, _ := js.Get("message").String()
+			room, _ := js.Get("room").Int()
+
+			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			//Check if player has either joined, or is spectating lobby
+			lobbyId, tperr := player.GetLobbyId()
+			if room > 0 {
+				// if room is a lobby room
+				if tperr != nil {
+					bytes, _ := tperr.ErrorJSON().Encode()
+					return string(bytes)
+				} else if lobbyId != uint(room) && !player.IsSpectatingId(uint(room)) {
+					bytes, _ := chelpers.BuildFailureJSON("Player is not in the lobby.", 5).Encode()
+					return string(bytes)
+				}
+			} else {
+				// else room is the lobby list room
+				room = -1
+			}
+
+			t := time.Now()
+			chatMessage := simplejson.New()
+			// TODO send proper timestamps
+			chatMessage.Set("timestamp", strconv.Itoa(t.Hour())+strconv.Itoa(t.Minute()))
+			chatMessage.Set("message", html.EscapeString(message))
+			chatMessage.Set("room", room)
+
+			user := simplejson.New()
+			user.Set("id", player.SteamId)
+			user.Set("name", player.Name)
+
+			chatMessage.Set("user", user)
+			bytes, _ := chatMessage.Encode()
+			so.BroadcastTo(strconv.Itoa(room), "chatReceive", string(bytes))
+
+			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+			return string(resp)
+		})))
 }

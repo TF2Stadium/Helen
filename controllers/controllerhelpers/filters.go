@@ -3,6 +3,7 @@ package controllerhelpers
 import (
 	"strings"
 
+	"github.com/TF2Stadium/Server/helpers"
 	"github.com/bitly/go-simplejson"
 )
 
@@ -26,4 +27,63 @@ func JsonParamFilter(f func(*simplejson.Json) string) func(string) string {
 
 		return f(js)
 	}
+}
+
+type Param struct {
+	Type    ParamType
+	Default interface{}
+}
+
+type ParamType int
+
+const (
+	PTypeInt    ParamType = iota
+	PTypeString ParamType = iota
+	PTypeBool   ParamType = iota
+	PTypeFloat  ParamType = iota
+)
+
+func JsonVerifiedFilter(p map[string]Param, f func(*simplejson.Json) string) func(string) string {
+	return JsonParamFilter(func(js *simplejson.Json) string {
+		for name, paramtype := range p {
+			switch paramtype.Type {
+			case PTypeInt:
+				_, err := js.Get(name).Int()
+				if err != nil && paramtype.Default == nil {
+					bytes, _ := BuildMissingArgJSON(name).Encode()
+					return string(bytes)
+				} else if err != nil {
+					js.Set(name, paramtype.Default.(int))
+				}
+			case PTypeString:
+				_, err := js.Get(name).String()
+				if err != nil && paramtype.Default == nil {
+					bytes, _ := BuildMissingArgJSON(name).Encode()
+					return string(bytes)
+				} else if err != nil {
+					js.Set(name, paramtype.Default.(string))
+				}
+			case PTypeBool:
+				_, err := js.Get(name).Bool()
+				if err != nil && paramtype.Default == nil {
+					bytes, _ := BuildMissingArgJSON(name).Encode()
+					return string(bytes)
+				} else if err != nil {
+					js.Set(name, paramtype.Default.(bool))
+				}
+			case PTypeFloat:
+				_, err := js.Get(name).Float64()
+				if err != nil && paramtype.Default == nil {
+					bytes, _ := BuildMissingArgJSON(name).Encode()
+					return string(bytes)
+				} else if err != nil {
+					js.Set(name, paramtype.Default.(float64))
+				}
+			default:
+				helpers.Logger.Panicf("Invalid type as parameter type for %s: %d", name, paramtype)
+			}
+		}
+
+		return f(js)
+	})
 }
