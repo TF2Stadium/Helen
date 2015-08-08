@@ -37,9 +37,9 @@ type Server struct {
 
 	//ChatListener  *TF2RconWrapper.RconChatListener
 
-	Rcon          *TF2RconWrapper.TF2RconConnection
-	Info          ServerRecord
-	LobbyPassword string // will store the new server password from the lobby
+	Rcon           *TF2RconWrapper.TF2RconConnection
+	Info           ServerRecord
+	ServerPassword string // will store the new server password from the lobby
 }
 
 // timer used in verify()
@@ -123,7 +123,7 @@ func (s *Server) Setup() error {
 	}
 
 	// changing server password
-	passErr := s.Rcon.ChangeServerPassword(s.LobbyPassword)
+	passErr := s.Rcon.ChangeServerPassword(s.ServerPassword)
 
 	if passErr != nil {
 		return passErr

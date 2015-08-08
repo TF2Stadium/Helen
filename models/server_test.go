@@ -39,7 +39,7 @@ func TestServerSetup(t *testing.T) {
 		svr.Map = "cp_process_final"
 		svr.Type = LobbyTypeHighlander
 		svr.League = LeagueUgc
-		svr.LobbyPassword = "12345"
+		svr.ServerPassword = "12345"
 		svr.Info = info
 
 		svr.AllowPlayer(commId)

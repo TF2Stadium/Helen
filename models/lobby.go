@@ -1,6 +1,8 @@
 package models
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -336,6 +338,9 @@ func (lobby *Lobby) AfterSave() error {
 
 	var s *Server
 	s, ok := LobbyServerMap[lobby.ID]
+	randBytes := make([]byte, 6)
+	rand.Read(randBytes)
+
 	if !ok {
 		s = NewServer()
 		s.League = LeagueEtf2l // TODO actually accept this argument
@@ -343,6 +348,7 @@ func (lobby *Lobby) AfterSave() error {
 		s.Type = lobby.Type
 		s.Info = lobby.ServerInfo
 		s.LobbyId = lobby.ID
+		s.ServerPassword = base64.URLEncoding.EncodeToString(randBytes)
 
 		err := s.VerifyInfo()
 
