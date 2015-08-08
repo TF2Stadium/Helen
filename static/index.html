@@ -24,6 +24,8 @@ var createBox = function(io, messageName, messageFields) {
         var val = $("#"+messageName+"_"+field).val();
         if (field.endsWith("id") || field == "room" || field == "whitelist") {
           val = parseInt(val);
+        } else if (field == "mumbleRequired" || field == "ban") {
+          val = (val == "true")
         }
         params[field] = val;
       });
@@ -73,8 +75,7 @@ $(function() {
   createBox(io, "lobbyClose", ["id"]);
   createBox(io, "lobbyJoin", ["id", "team", "class"]);
   createBox(io, "lobbySpectatorJoin", ["id"]);
-  createBox(io, "lobbySpectatorRemove", ["id"]);
-  createBox(io, "lobbyRemovePlayer", ["steamid", "ban"]);
+  createBox(io, "lobbyRemovePlayer", ["id", "steamid", "ban"]);
   createBox(io, "playerReady", []);
   createBox(io, "playerUnready", []);
   createBox(io, "chatSend", ["message", "room"]);

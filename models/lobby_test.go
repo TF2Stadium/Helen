@@ -129,7 +129,8 @@ func TestLobbyBan(t *testing.T) {
 	assert.Nil(t, err)
 
 	// ban player
-	err = lobby.KickAndBanPlayer(player)
+	err = lobby.RemovePlayer(player)
+	lobby.BanPlayer(player)
 	assert.Nil(t, err)
 
 	// should not be able to add again

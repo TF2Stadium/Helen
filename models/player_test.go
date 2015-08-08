@@ -15,6 +15,27 @@ func init() {
 	helpers.InitLogger()
 }
 
+func TestIsSpectating(t *testing.T) {
+	migrations.TestCleanup()
+
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{}, 1)
+	database.DB.Save(lobby)
+	player, _ := models.NewPlayer("asdf")
+	database.DB.Save(player)
+
+	isSpectating := player.IsSpectatingId(lobby.ID)
+	assert.False(t, isSpectating)
+
+	lobby.AddSpectator(player)
+
+	isSpectating = player.IsSpectatingId(lobby.ID)
+	assert.True(t, isSpectating)
+
+	lobby.RemoveSpectator(player)
+	isSpectating = player.IsSpectatingId(lobby.ID)
+	assert.False(t, isSpectating)
+}
+
 func TestPlayerInfoFetching(t *testing.T) {
 	migrations.TestCleanup()
 

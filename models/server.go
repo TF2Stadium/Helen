@@ -53,7 +53,7 @@ func (t *verifyTicker) Close() {
 }
 
 func NewServer() *Server {
-	s := new(Server)
+	s := &Server{}
 	s.AllowedPlayers = make(map[string]bool)
 
 	return s

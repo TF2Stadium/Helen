@@ -205,9 +205,8 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 	return nil
 }
 
-func (lobby *Lobby) KickAndBanPlayer(player *Player) *helpers.TPError {
+func (lobby *Lobby) BanPlayer(player *Player) {
 	db.DB.Model(lobby).Association("BannedPlayers").Append(player)
-	return lobby.RemovePlayer(player)
 }
 
 func (lobby *Lobby) ReadyPlayer(player *Player) *helpers.TPError {
@@ -355,7 +354,6 @@ func (lobby *Lobby) AfterSave() error {
 
 		LobbyServerMap[lobby.ID] = s
 	}
-
 	if s == nil {
 		helpers.Logger.Warning("Failed to attach server to lobby ", lobby.ID)
 	}
@@ -387,6 +385,10 @@ func (lobby *Lobby) AfterFind() error {
 }
 
 func (lobby *Lobby) updateServerAllowedPlayers() {
+	if lobby.Server == nil {
+		// helpers.Logger.Warning("Trying to update allowed players but the lobby doesn't have a server attached. This is a bug. Fix it.")
+		return
+	}
 	var steamids []string
 	db.DB.Model(&LobbySlot{}).Joins("left join players on players.id = lobby_slots.player_id").
 		Where("lobby_slots.lobby_id = ?", lobby.ID).Pluck("steam_id", &steamids)
