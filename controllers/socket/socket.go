@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html"
 	"strconv"
-	"strings"
 	"time"
 
 	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
@@ -32,16 +31,9 @@ func SocketInit(so socketio.Socket) {
 		helpers.Logger.Debug("on disconnect")
 	})
 
-	so.On("authenticationTest", func(data string) string {
-		var answer string
-		if chelpers.IsLoggedInSocket(so.Id()) {
-			answer = "authenticated"
-		} else {
-			answer = "not authenticated"
-		}
-
-		return answer
-	})
+	so.On("authenticationTest", chelpers.AuthFilter(so.Id(), func(val string) string {
+		return "authenticated"
+	}))
 
 	helpers.Logger.Debug("on connection")
 	so.Join("-1") //room for global chat
@@ -59,19 +51,8 @@ func SocketInit(so socketio.Socket) {
 		}
 	}
 
-	so.On("lobbyCreate", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
+	so.On("lobbyCreate", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
 		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
 
 		mapName, err := js.Get("mapName").String()
 		if err != nil {
@@ -143,20 +124,9 @@ func SocketInit(so socketio.Socket) {
 		lobby_id.Set("id", lob.ID)
 		bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
 		return string(bytes)
-	})
+	})))
 
-	so.On("lobbyClose", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
-
+	so.On("lobbyClose", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
 		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 		lobbyid, err := js.Get("id").Uint64()
@@ -185,20 +155,9 @@ func SocketInit(so socketio.Socket) {
 
 		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
-	})
+	})))
 
-	so.On("lobbyJoin", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
-
+	so.On("lobbyJoin", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
 		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 		if tperr != nil {
@@ -243,19 +202,9 @@ func SocketInit(so socketio.Socket) {
 		so.Join(strconv.FormatUint(lobbyid, 10))
 		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
-	})
-	so.On("lobbyRemovePlayer", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
+	})))
 
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
-
+	so.On("lobbyRemovePlayer", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
 		steamid, err := js.Get("steamid").String()
 		// TODO check authorisation, currently can kick anyone
 		if err != nil || steamid == "" {
@@ -292,14 +241,9 @@ func SocketInit(so socketio.Socket) {
 		so.Leave(strconv.FormatInt(int64(lobbyid), 10))
 		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
-	})
+	})))
 
-	so.On("playerReady", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
+	so.On("playerReady", chelpers.AuthFilter(so.Id(), func(val string) string {
 		steamid := chelpers.GetSteamId(so.Id())
 		player, tperr := models.GetPlayerBySteamId(steamid)
 		if tperr != nil {
@@ -333,14 +277,9 @@ func SocketInit(so socketio.Socket) {
 
 		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
-	})
+	}))
 
-	so.On("playerUnready", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
+	so.On("playerUnready", chelpers.AuthFilter(so.Id(), func(val string) string {
 		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if tperr != nil {
 			bytes, _ := tperr.ErrorJSON().Encode()
@@ -372,19 +311,9 @@ func SocketInit(so socketio.Socket) {
 
 		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
-	})
+	}))
 
-	so.On("lobbyJoinSpectator", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
+	so.On("lobbyJoinSpectator", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
 		lobbyid, err := js.Get("id").Uint64()
 		if err != nil {
 			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
@@ -408,19 +337,9 @@ func SocketInit(so socketio.Socket) {
 		}
 		lob.Save()
 		return string(bytes)
-	})
+	})))
 
-	so.On("removeSpectator", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
+	so.On("removeSpectator", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
 		lobbyid, err := js.Get("id").Uint64()
 		if err != nil {
 			bytes, _ := chelpers.BuildMissingArgJSON("id").Encode()
@@ -444,21 +363,10 @@ func SocketInit(so socketio.Socket) {
 		}
 		lob.Save()
 		return string(bytes)
-	})
+	})))
 
-	so.On("playerSettingsGet", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
+	so.On("playerSettingsGet", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
 		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
 
 		key, err := js.Get("key").String()
 		if err != nil {
@@ -482,21 +390,10 @@ func SocketInit(so socketio.Socket) {
 		result := decorators.GetPlayerSettingsJson(settings)
 		resp, _ := chelpers.BuildSuccessJSON(result).Encode()
 		return string(resp)
-	})
+	})))
 
-	so.On("playerSettingsSet", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
+	so.On("playerSettingsSet", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
 		player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
 
 		key, err := js.Get("key").String()
 		if err != nil {
@@ -519,19 +416,9 @@ func SocketInit(so socketio.Socket) {
 
 		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(resp)
-	})
+	})))
 
-	so.On("chatSend", func(jsonstr string) string {
-		if !chelpers.IsLoggedInSocket(so.Id()) {
-			bytes, _ := chelpers.BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonstr))
-		if err != nil {
-			bytes, _ := chelpers.BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
-		}
+	so.On("chatSend", chelpers.AuthFilter(so.Id(), chelpers.JsonParamFilter(func(js *simplejson.Json) string {
 		message, err := js.Get("message").String()
 		if err != nil {
 			bytes, _ := chelpers.BuildMissingArgJSON("message").Encode()
@@ -587,6 +474,5 @@ func SocketInit(so socketio.Socket) {
 
 		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(resp)
-	})
-
+	})))
 }
