@@ -70,7 +70,7 @@ type Lobby struct {
 
 	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`
 
-	CreatedById uint
+	CreatedByID uint
 	CreatedBy   Player
 }
 

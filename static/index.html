@@ -72,7 +72,8 @@ $(function() {
   createBox(io, "lobbyCreate", ["mapName", "type", "whitelist", "server", "rconpwd", "mumbleRequired"]);
   createBox(io, "lobbyClose", ["id"]);
   createBox(io, "lobbyJoin", ["id", "team", "class"]);
-  createBox(io, "lobbyJoinSpectator", ["id"]);
+  createBox(io, "lobbySpectatorJoin", ["id"]);
+  createBox(io, "lobbySpectatorRemove", ["id"]);
   createBox(io, "lobbyRemovePlayer", ["steamid", "ban"]);
   createBox(io, "playerReady", []);
   createBox(io, "playerUnready", []);

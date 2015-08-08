@@ -129,7 +129,7 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
-			if player.ID != lob.CreatedById {
+			if player.ID != lob.CreatedByID {
 				bytes, _ := chelpers.BuildFailureJSON("Player not authorized to close lobby.", 1).Encode()
 				return string(bytes)
 			}
@@ -302,7 +302,7 @@ func SocketInit(so socketio.Socket) {
 		"id": chelpers.Param{Type: chelpers.PTypeInt},
 	}
 
-	so.On("lobbyJoinSpectator", chelpers.AuthFilter(so.Id(),
+	so.On("lobbySpectatorJoin", chelpers.AuthFilter(so.Id(),
 		chelpers.JsonVerifiedFilter(lobbyJoinSpectatorParams, func(js *simplejson.Json) string {
 			lobbyid, _ := js.Get("id").Uint64()
 
@@ -327,29 +327,46 @@ func SocketInit(so socketio.Socket) {
 		})))
 
 	var removeSpectatorParams = map[string]chelpers.Param{
-		"id": chelpers.Param{Type: chelpers.PTypeInt},
+		"id":      chelpers.Param{Type: chelpers.PTypeInt},
+		"steamid": chelpers.Param{Type: chelpers.PTypeString, Default: ""},
 	}
-	so.On("removeSpectator", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(removeSpectatorParams, func(js *simplejson.Json) string {
-			lobbyid, _ := js.Get("id").Uint64()
 
-			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	so.On("lobbySpectatorRemove", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(removeSpectatorParams, func(js *simplejson.Json) string {
+			self := false
+			lobbyid, _ := js.Get("id").Uint64()
+			steamid, _ := js.Get("steamid").String()
+			if steamid == "" || steamid == chelpers.GetSteamId(so.Id()) {
+				self = true
+				steamid = chelpers.GetSteamId(so.Id())
+			}
+
+			player, tperr := models.GetPlayerBySteamId(steamid)
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
+
 			lob, tperr := models.GetLobbyById(uint(lobbyid))
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
-			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+
+			if !self && lob.CreatedByID != player.ID {
+				// TODO: admin authorization checks
+				bytes, _ := chelpers.BuildFailureJSON("Player not authorized to kick spectators", -1).Encode()
+				return string(bytes)
+			}
+
 			tperr = lob.RemoveSpectator(player)
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
 			lob.Save()
+
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
 		})))
 
