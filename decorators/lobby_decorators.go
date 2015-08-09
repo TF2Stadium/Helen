@@ -59,6 +59,15 @@ func GetLobbyDataJSON(lobby models.Lobby) *simplejson.Json {
 	}
 	lobbyJs.Set("classes", classes)
 
+	var spectators []*simplejson.Json
+	for _, spectator := range lobby.Spectators {
+		specJs := simplejson.New()
+		specJs.Set("name", spectator.Name)
+		specJs.Set("steamid", spectator.SteamId)
+		spectators = append(spectators, specJs)
+	}
+	lobbyJs.Set("spectators", spectators)
+
 	return lobbyJs
 }
 
