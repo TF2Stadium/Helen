@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
-	"github.com/TF2Stadium/Server/decorators"
-	"github.com/TF2Stadium/Server/helpers"
-	"github.com/TF2Stadium/Server/models"
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/decorators"
+	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
 )

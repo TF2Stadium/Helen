@@ -2,9 +2,9 @@ package models
 
 import (
 	"github.com/TF2Stadium/PlayerStatsScraper"
-	"github.com/TF2Stadium/Server/config"
-	db "github.com/TF2Stadium/Server/database"
-	"github.com/TF2Stadium/Server/helpers"
+	"github.com/TF2Stadium/Helen/config"
+	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
 )
 

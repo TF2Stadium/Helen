@@ -3,9 +3,9 @@ package decorators
 import (
 	"strconv"
 
-	chelpers "github.com/TF2Stadium/Server/controllers/controllerhelpers"
-	db "github.com/TF2Stadium/Server/database"
-	"github.com/TF2Stadium/Server/models"
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 )
 

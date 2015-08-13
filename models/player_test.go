@@ -3,11 +3,11 @@ package models_test
 import (
 	"testing"
 
-	"github.com/TF2Stadium/Server/config"
-	"github.com/TF2Stadium/Server/database"
-	"github.com/TF2Stadium/Server/database/migrations"
-	"github.com/TF2Stadium/Server/helpers"
-	"github.com/TF2Stadium/Server/models"
+	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/database/migrations"
+	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
 

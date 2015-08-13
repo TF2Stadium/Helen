@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/TF2Stadium/Server/helpers"
+	"github.com/TF2Stadium/Helen/helpers"
 )
 
 type constants struct {
@@ -75,7 +75,7 @@ func setupDevelopmentConstants() {
 	Constants.LoginRedirectPath = "http://localhost:8080/"
 	Constants.CookieStoreSecret = "dev secret is very secret"
 	Constants.SessionName = "defaultSession"
-	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Server/static"
+	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
 	Constants.SocketMockUp = false
 	Constants.ServerMockUp = false
 	Constants.AllowedCorsOrigins = []string{"*"}

@@ -1,8 +1,8 @@
 package controllerhelpers
 
 import (
-	"github.com/TF2Stadium/Server/helpers"
-	"github.com/TF2Stadium/Server/models"
+	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/models"
 )
 
 var teamMap = map[string]int{"red": 0, "blu": 1}

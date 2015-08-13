@@ -3,8 +3,8 @@ package helpers
 import (
 	"sync"
 
-	"github.com/TF2Stadium/Server/database"
-	"github.com/TF2Stadium/Server/models"
+	"github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/models"
 )
 
 type collAndId struct {
