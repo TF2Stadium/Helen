@@ -1,7 +1,7 @@
 package decorators
 
 import (
-	"github.com/TF2Stadium/Server/models"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 )
 

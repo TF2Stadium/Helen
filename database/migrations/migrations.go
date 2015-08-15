@@ -3,9 +3,9 @@ package migrations
 import (
 	"os"
 
-	"github.com/TF2Stadium/Server/config"
-	"github.com/TF2Stadium/Server/database"
-	"github.com/TF2Stadium/Server/models"
+	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/models"
 )
 
 func Do() {

@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"time"
 
-	db "github.com/TF2Stadium/Server/database"
-	"github.com/TF2Stadium/Server/decorators"
-	"github.com/TF2Stadium/Server/helpers"
-	"github.com/TF2Stadium/Server/models"
+	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/decorators"
+	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/googollee/go-socket.io"
 )
 

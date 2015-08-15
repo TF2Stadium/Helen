@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"github.com/TF2Stadium/Server/config"
-	"github.com/TF2Stadium/Server/controllers"
-	"github.com/TF2Stadium/Server/controllers/socket"
+	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/controllers"
+	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/mux"
 )

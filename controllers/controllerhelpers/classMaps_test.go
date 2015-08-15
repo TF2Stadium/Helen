@@ -3,8 +3,8 @@ package controllerhelpers
 import (
 	"testing"
 
-	"github.com/TF2Stadium/Server/helpers"
-	"github.com/TF2Stadium/Server/models"
+	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
 

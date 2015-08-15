@@ -3,7 +3,7 @@ package controllerhelpers
 import (
 	"strings"
 
-	"github.com/TF2Stadium/Server/helpers"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/bitly/go-simplejson"
 )
 

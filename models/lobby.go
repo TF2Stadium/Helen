@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/TF2Stadium/Server/database"
-	"github.com/TF2Stadium/Server/helpers"
+	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
 )
 

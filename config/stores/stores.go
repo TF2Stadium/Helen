@@ -1,8 +1,8 @@
 package stores
 
 import (
-	"github.com/TF2Stadium/Server/config"
-	"github.com/TF2Stadium/Server/database"
+	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/database"
 	"github.com/antonlindstrom/pgstore"
 	"github.com/gorilla/sessions"
 )
