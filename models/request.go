@@ -1,10 +1,10 @@
 package models
 
 import (
-	"github.com/TF2Stadium/Server/helpers"
+	"github.com/TF2Stadium/Helen/helpers"
 	"sync"
 
-	"github.com/TF2Stadium/Server/config"
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/bitly/go-simplejson"
 	zmq "github.com/pebbe/zmq4"
 )
