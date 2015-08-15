@@ -1,7 +1,8 @@
 package socket
 
 import (
-	"fmt"
+	"crypto/rand"
+	"encoding/base64"
 	"html"
 	"strconv"
 	"time"
@@ -81,30 +82,33 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
+			randBytes := make([]byte, 6)
+			rand.Read(randBytes)
+			serverPwd := base64.URLEncoding.EncodeToString(randBytes)
 			//mumble, _ := js.Get("mumbleRequired").Bool()
 			//TODO: Configure server here
 
 			//TODO what if playermap[lobbytype] is nil?
 			lob := models.NewLobby(mapName, lobbytype,
-				models.ServerRecord{Host: server, RconPassword: rconPwd}, whitelist)
+				models.ServerRecord{Host: server, RconPassword: rconPwd, ServerPassword: serverPwd}, whitelist)
 			lob.CreatedBy = *player
-			err = lob.Save()
-
+			lob.Save()
+			err = lob.SetupServer()
 			if err != nil {
 				bytes, _ := err.(*helpers.TPError).ErrorJSON().Encode()
 				return string(bytes)
 			}
 
 			// setup server info
-			go func() {
-				err := lob.TrySettingUp()
-				if err != nil {
-					SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", err.Error())
-				} else {
-					// for debug
-					SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", fmt.Sprintf("Lobby %d created successfully", lob.ID))
-				}
-			}()
+			// go func() {
+			// 	err := lob.TrySettingUp()
+			// 	if err != nil {
+			// 		SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", err.Error())
+			// 	} else {
+			// 		// for debug
+			// 		SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", fmt.Sprintf("Lobby %d created successfully", lob.ID))
+			// 	}
+			// }()
 
 			lobby_id := simplejson.New()
 			lobby_id.Set("id", lob.ID)
