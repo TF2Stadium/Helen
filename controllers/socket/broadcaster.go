@@ -73,7 +73,7 @@ func broadcaster() {
 				Find(&lobbies)
 			for _, lobby := range lobbies {
 				bytes, _ := decorators.GetLobbyDataJSON(lobby).Encode()
-				socketServer.BroadcastTo(strconv.FormatUint(uint64(lobby.ID), 10), string(bytes))
+				socketServer.BroadcastTo(strconv.FormatUint(uint64(lobby.ID), 10), "lobbyData", string(bytes))
 			}
 
 		case message := <-broadcastMessageChannel:
