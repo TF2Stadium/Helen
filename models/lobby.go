@@ -1,8 +1,6 @@
 package models
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -32,6 +30,8 @@ const (
 	LobbyStateEnded        LobbyState = 3
 )
 
+var LobbyServerSettingUp = make(map[uint]time.Time)
+
 var stateString = map[LobbyState]string{
 	LobbyStateWaiting:    "Waiting For Players",
 	LobbyStateInProgress: "Lobby in Progress",
@@ -53,6 +53,12 @@ type LobbySlot struct {
 	Ready    bool
 }
 
+type ServerRecord struct {
+	Host           string
+	ServerPassword string
+	RconPassword   string
+}
+
 //Given Lobby IDs are unique, we'll use them for mumble channel names
 type Lobby struct {
 	gorm.Model
@@ -62,7 +68,6 @@ type Lobby struct {
 
 	Slots []LobbySlot
 
-	Server       *Server `sql:"-"` // server
 	ServerInfo   ServerRecord
 	ServerInfoID uint
 
@@ -81,7 +86,6 @@ func NewLobby(mapName string, lobbyType LobbyType, serverInfo ServerRecord, whit
 		Type:       lobbyType,
 		State:      LobbyStateInitializing,
 		MapName:    mapName,
-		Server:     nil,
 		Whitelist:  Whitelist(whitelist), // that's a strange line
 		ServerInfo: serverInfo,
 	}
@@ -193,17 +197,17 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 
 	db.DB.Create(newSlotObj)
 
-	lobby.updateServerAllowedPlayers()
+	ReqAddAllowedPlayer(lobby.ID, player.SteamId)
 
 	return nil
 }
 
 func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{}).Error
-	lobby.updateServerAllowedPlayers()
 	if err != nil {
 		return helpers.NewTPError(err.Error(), -1)
 	}
+	ReqDisallowPlayer(lobby.ID, player.SteamId)
 	return nil
 }
 
@@ -259,11 +263,6 @@ func (lobby *Lobby) IsEveryoneReady() bool {
 	return true
 }
 
-func (lobby *Lobby) IsStarted() (bool, *helpers.TPError) {
-	// TODO implement
-	return false, nil
-}
-
 func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
 	if _, err := lobby.GetPlayerSlot(player); err == nil {
 		return lobby.RemovePlayer(player)
@@ -305,78 +304,26 @@ func (lobby *Lobby) IsSlotFilled(slot int) bool {
 	return true
 }
 
-func (lobby *Lobby) TrySettingUp() *helpers.TPError {
-	if _, ok := LobbyServerSettingUp[lobby.ID]; ok {
-		return helpers.NewTPError("Lobby setup already in progress", -1)
-	}
-
-	if lobby.Server == nil {
-		return helpers.NewTPError("Lobby doesn't have a server attached", -1)
-	}
-
-	LobbyServerSettingUp[lobby.ID] = time.Now()
-
-	err := lobby.Server.Setup()
-
-	delete(LobbyServerSettingUp, lobby.ID)
-
-	if err != nil {
-		lobby.Close()
-		return helpers.NewTPError(err.Error(), -1)
-	}
-
-	lobby.State = LobbyStateWaiting
-	db.DB.Save(lobby)
-
-	return nil
-}
-
-func (lobby *Lobby) AfterSave() error {
+func (lobby *Lobby) SetupServer() error {
 	if lobby.State == LobbyStateEnded {
 		return nil
 	}
 
-	var s *Server
-	s, ok := LobbyServerMap[lobby.ID]
-	randBytes := make([]byte, 6)
-	rand.Read(randBytes)
+	json := ReqSetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.MapName)
 
-	if !ok {
-		s = NewServer()
-		s.League = LeagueEtf2l // TODO actually accept this argument
-		s.Map = lobby.MapName
-		s.Type = lobby.Type
-		s.Info = lobby.ServerInfo
-		s.LobbyId = lobby.ID
-		s.ServerPassword = base64.URLEncoding.EncodeToString(randBytes)
-
-		err := s.VerifyInfo()
-
-		if err != nil {
-			return err
-		}
-
-		s.SetupObject()
-
-		LobbyServerMap[lobby.ID] = s
+	if success, _ := json.Get("success").Bool(); !success {
+		err, _ := json.Get("error").String()
+		return helpers.NewTPError(err, 0)
 	}
-	if s == nil {
-		helpers.Logger.Warning("Failed to attach server to lobby ", lobby.ID)
-	}
-	lobby.Server = s
+
 	return nil
 }
 
 func (lobby *Lobby) Close() {
-	lobby.Server.End()
 	lobby.State = LobbyStateEnded
+	ReqEnd(lobby.ID)
 	delete(LobbyServerSettingUp, lobby.ID)
 	db.DB.Save(lobby)
-}
-
-func (lobby *Lobby) AfterDelete() error {
-	lobby.Server.End()
-	return nil
 }
 
 func (lobby *Lobby) AfterFind() error {
@@ -386,18 +333,6 @@ func (lobby *Lobby) AfterFind() error {
 	}
 
 	// should still finish Find if the server fails to initialize)
-	lobby.AfterSave()
+	//	lobby.AfterSave()
 	return nil
-}
-
-func (lobby *Lobby) updateServerAllowedPlayers() {
-	if lobby.Server == nil {
-		// helpers.Logger.Warning("Trying to update allowed players but the lobby doesn't have a server attached. This is a bug. Fix it.")
-		return
-	}
-	var steamids []string
-	db.DB.Model(&LobbySlot{}).Joins("left join players on players.id = lobby_slots.player_id").
-		Where("lobby_slots.lobby_id = ?", lobby.ID).Pluck("steam_id", &steamids)
-
-	lobby.Server.SetAllowedPlayers(steamids)
 }
