@@ -15,7 +15,7 @@ type constants struct {
 	CookieStoreSecret  string
 	StaticFileLocation string
 	SessionName        string
-	PaulingEndpoint    string
+	PaulingPort        string
 	SocketMockUp       bool
 	ServerMockUp       bool
 	AllowedCorsOrigins []string
@@ -60,7 +60,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT")
 	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
 	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
-	overrideFromEnv(&Constants.PaulingEndpoint, "PAULING_ENDPOINT")
+	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT")
 
 	// conditional assignments
 
@@ -79,7 +79,7 @@ func setupDevelopmentConstants() {
 	Constants.CookieStoreSecret = "dev secret is very secret"
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
-	Constants.PaulingEndpoint = "ipc:///tmp/pauling"
+	Constants.PaulingPort = "1234"
 	Constants.SocketMockUp = false
 	Constants.ServerMockUp = false
 	Constants.AllowedCorsOrigins = []string{"*"}

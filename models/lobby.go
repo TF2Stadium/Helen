@@ -2,8 +2,10 @@ package models
 
 import (
 	"fmt"
+	"net/rpc"
 	"time"
 
+	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
@@ -79,6 +81,27 @@ type Lobby struct {
 
 	CreatedByID uint
 	CreatedBy   Player
+}
+
+type Args struct {
+	Id     uint
+	Info   ServerRecord
+	Type   LobbyType
+	Map    string
+	CommId string
+}
+
+var Pauling *rpc.Client
+
+func PaulingConnect() {
+	helpers.Logger.Debug("Connecting to Pauling on port %s", config.Constants.PaulingPort)
+	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
+	if err != nil {
+		helpers.Logger.Fatal(err)
+	}
+
+	Pauling = client
+	helpers.Logger.Debug("Connected!")
 }
 
 func NewLobby(mapName string, lobbyType LobbyType, serverInfo ServerRecord, whitelist int) *Lobby {
@@ -197,8 +220,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 
 	db.DB.Create(newSlotObj)
 
-	ReqAddAllowedPlayer(lobby.ID, player.SteamId)
-
+	Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobby.ID, CommId: player.SteamId}, &Args{})
 	return nil
 }
 
@@ -207,7 +229,7 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 	if err != nil {
 		return helpers.NewTPError(err.Error(), -1)
 	}
-	ReqDisallowPlayer(lobby.ID, player.SteamId)
+	Pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobby.ID, CommId: player.SteamId}, &Args{})
 	return nil
 }
 
@@ -309,19 +331,22 @@ func (lobby *Lobby) SetupServer() error {
 		return nil
 	}
 
-	json := ReqSetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.MapName)
+	args := &Args{
+		Id:   lobby.ID,
+		Info: lobby.ServerInfo,
+		Type: lobby.Type,
+		Map:  lobby.MapName}
 
-	if success, _ := json.Get("success").Bool(); !success {
-		err, _ := json.Get("error").String()
-		return helpers.NewTPError(err, 0)
+	err := Pauling.Call("Pauling.SetupServer", args, &Args{})
+	if err != nil {
+		return helpers.NewTPError(err.Error(), 0)
 	}
-
 	return nil
 }
 
 func (lobby *Lobby) Close() {
 	lobby.State = LobbyStateEnded
-	ReqEnd(lobby.ID)
+	Pauling.Call("Pauling.End", &Args{Id: lobby.ID}, &Args{})
 	delete(LobbyServerSettingUp, lobby.ID)
 	db.DB.Save(lobby)
 }
