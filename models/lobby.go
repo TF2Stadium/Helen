@@ -40,6 +40,11 @@ var stateString = map[LobbyState]string{
 	LobbyStateEnded:      "Lobby Ended",
 }
 
+var FormatMap = map[LobbyType]string{
+	LobbyTypeSixes:      "Sixes",
+	LobbyTypeHighlander: "Highlander",
+}
+
 var ValidLeagues = map[string]bool{
 	"ugc":   true,
 	"etf2l": true,
@@ -53,6 +58,7 @@ type LobbySlot struct {
 	PlayerId uint
 	Slot     int
 	Ready    bool
+	InGame   bool
 }
 
 type ServerRecord struct {
@@ -347,9 +353,11 @@ func (lobby *Lobby) SetupServer() error {
 	return nil
 }
 
-func (lobby *Lobby) Close() {
+func (lobby *Lobby) Close(rpc bool) {
 	lobby.State = LobbyStateEnded
-	Pauling.Call("Pauling.End", &Args{Id: lobby.ID}, &Args{})
+	if rpc {
+		Pauling.Call("Pauling.End", &Args{Id: lobby.ID}, &Args{})
+	}
 	delete(LobbyServerSettingUp, lobby.ID)
 	db.DB.Save(lobby)
 }

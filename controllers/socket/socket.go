@@ -148,7 +148,7 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
-			lob.Close()
+			lob.Close(true)
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
