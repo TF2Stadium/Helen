@@ -402,6 +402,30 @@ func SocketInit(so socketio.Socket) {
 			return string(resp)
 		})))
 
+	var playerProfileParams = map[string]chelpers.Param{
+		"steamid": chelpers.Param{Type: chelpers.PTypeString, Default: ""},
+	}
+
+	so.On("playerProfile", chelpers.AuthFilter(so.Id(),
+		chelpers.JsonVerifiedFilter(playerProfileParams, func(js *simplejson.Json) string {
+			steamid, _ := js.Get("steamid").String()
+
+			if steamid == "" {
+				steamid = chelpers.GetSteamId(so.Id())
+			}
+
+			player, playErr := models.GetPlayerWithStats(steamid)
+
+			if playErr != nil {
+				bytes, _ := chelpers.BuildFailureJSON(playErr.Error(), 0).Encode()
+				return string(bytes)
+			}
+
+			result := decorators.GetPlayerProfileJson(player)
+			resp, _ := chelpers.BuildSuccessJSON(result).Encode()
+			return string(resp)
+		})))
+
 	var chatSendParams = map[string]chelpers.Param{
 		"message": chelpers.Param{Type: chelpers.PTypeString},
 		"room":    chelpers.Param{Type: chelpers.PTypeInt},
