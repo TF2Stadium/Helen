@@ -40,9 +40,9 @@ var stateString = map[LobbyState]string{
 	LobbyStateEnded:      "Lobby Ended",
 }
 
-var FormatMap = map[LobbyType]string{
-	LobbyTypeSixes:      "Sixes",
-	LobbyTypeHighlander: "Highlander",
+var ValidLeagues = map[string]bool{
+	"ugc":   true,
+	"etf2l": true,
 }
 
 type LobbySlot struct {
@@ -67,6 +67,7 @@ type Lobby struct {
 	MapName string
 	State   LobbyState
 	Type    LobbyType
+	League  string
 
 	Slots []LobbySlot
 
@@ -87,6 +88,7 @@ type Args struct {
 	Id     uint
 	Info   ServerRecord
 	Type   LobbyType
+	League string
 	Map    string
 	CommId string
 }
@@ -332,10 +334,11 @@ func (lobby *Lobby) SetupServer() error {
 	}
 
 	args := &Args{
-		Id:   lobby.ID,
-		Info: lobby.ServerInfo,
-		Type: lobby.Type,
-		Map:  lobby.MapName}
+		Id:     lobby.ID,
+		Info:   lobby.ServerInfo,
+		Type:   lobby.Type,
+		League: lobby.League,
+		Map:    lobby.MapName}
 
 	err := Pauling.Call("Pauling.SetupServer", args, &Args{})
 	if err != nil {
@@ -360,4 +363,9 @@ func (lobby *Lobby) AfterFind() error {
 	// should still finish Find if the server fails to initialize)
 	//	lobby.AfterSave()
 	return nil
+}
+
+func IsLeagueValid(league string) bool {
+	_, ok := ValidLeagues[league]
+	return ok
 }

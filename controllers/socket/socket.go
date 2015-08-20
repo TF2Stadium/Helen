@@ -54,6 +54,7 @@ func SocketInit(so socketio.Socket) {
 	var lobbyCreateParams = map[string]chelpers.Param{
 		"mapName":        chelpers.Param{Type: chelpers.PTypeString},
 		"type":           chelpers.Param{Type: chelpers.PTypeString},
+		"league":         chelpers.Param{Type: chelpers.PTypeString},
 		"server":         chelpers.Param{Type: chelpers.PTypeString},
 		"rconpwd":        chelpers.Param{Type: chelpers.PTypeString},
 		"whitelist":      chelpers.Param{Type: chelpers.PTypeInt},
@@ -67,6 +68,7 @@ func SocketInit(so socketio.Socket) {
 
 			mapName, _ := js.Get("mapName").String()
 			lobbytypestring, _ := js.Get("type").String()
+			league, _ := js.Get("league").String()
 			server, _ := js.Get("server").String()
 			rconPwd, _ := js.Get("rconpwd").String()
 			whitelist, err := js.Get("whitelist").Int()
@@ -79,6 +81,10 @@ func SocketInit(so socketio.Socket) {
 			lobbytype, ok := playermap[lobbytypestring]
 			if !ok {
 				bytes, _ := chelpers.BuildFailureJSON("Lobby type invalid.", -1).Encode()
+				return string(bytes)
+			}
+			if !models.IsLeagueValid(league) {
+				bytes, _ := chelpers.BuildFailureJSON("Invalid League Name", -1).Encode()
 				return string(bytes)
 			}
 

@@ -71,7 +71,7 @@ io.on("lobbyListData", function(s) {
 });
 
 $(function() {
-  createBox(io, "lobbyCreate", ["mapName", "type", "whitelist", "server", "rconpwd", "mumbleRequired"]);
+  createBox(io, "lobbyCreate", ["mapName", "type", "league", "whitelist", "server", "rconpwd", "mumbleRequired"]);
   createBox(io, "lobbyClose", ["id"]);
   createBox(io, "lobbyJoin", ["id", "team", "class"]);
   createBox(io, "lobbySpectatorJoin", ["id"]);
