@@ -1,4 +1,4 @@
-package models
+package main
 
 import (
 	"strings"
@@ -6,6 +6,7 @@ import (
 
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 )
 
@@ -22,7 +23,7 @@ func listener() {
 		select {
 		case <-ticker.C:
 			var jsonStr string
-			Pauling.Call("Pauling.GetEvent", &Args{}, &jsonStr)
+			models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &jsonStr)
 			event, _ := simplejson.NewFromReader(strings.NewReader(jsonStr))
 			handleEvent(event)
 		}
@@ -37,10 +38,10 @@ func handleEvent(e *simplejson.Json) {
 
 	switch event {
 	case "playerDisc":
-		slot := &LobbySlot{}
+		slot := &models.LobbySlot{}
 		lobbyid, _ := e.Get("lobbyId").Uint64()
 		steamid, _ := e.Get("commId").String()
-		player, _ := GetPlayerBySteamId(steamid)
+		player, _ := models.GetPlayerBySteamId(steamid)
 
 		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, uint(lobbyid)).First(slot)
 		slot.InGame = false
@@ -51,10 +52,10 @@ func handleEvent(e *simplejson.Json) {
 		 */
 
 	case "playerConn":
-		slot := &LobbySlot{}
+		slot := &models.LobbySlot{}
 		lobbyid, _ := e.Get("lobbyId").Uint64()
 		steamid, _ := e.Get("commId").String()
-		player, _ := GetPlayerBySteamId(steamid)
+		player, _ := models.GetPlayerBySteamId(steamid)
 
 		err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, uint(lobbyid)).First(slot).Error
 		if err == nil { //else, player isn't in the lobby, will be kicked by Pauling
@@ -65,20 +66,20 @@ func handleEvent(e *simplejson.Json) {
 	case "playerRep":
 		lobbyid, _ := e.Get("lobbyId").Uint64()
 		steamid, _ := e.Get("commId").String()
-		player, _ := GetPlayerBySteamId(steamid)
+		player, _ := models.GetPlayerBySteamId(steamid)
 
-		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, uint(lobbyid)).Delete(&LobbySlot{})
+		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, uint(lobbyid)).Delete(&models.LobbySlot{})
 
 	case "discFromServer":
 		lobbyid, _ := e.Get("lobbyId").Uint64()
 
-		lobby, _ := GetLobbyById(uint(lobbyid))
+		lobby, _ := models.GetLobbyById(uint(lobbyid))
 		lobby.Close(false)
 
 	case "matchEnded":
 		lobbyid, _ := e.Get("lobbyId").Uint64()
 
-		lobby, _ := GetLobbyById(uint(lobbyid))
+		lobby, _ := models.GetLobbyById(uint(lobbyid))
 		lobby.Close(false)
 	}
 }
