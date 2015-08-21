@@ -193,7 +193,7 @@ func TestUnreadyPlayer(t *testing.T) {
 	assert.Nil(t, playErr)
 
 	player.Save()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", "", ""}, 0)
 	lobby.Save()
 	lobby.AddPlayer(player, 0)
 
@@ -216,7 +216,7 @@ func TestSpectators(t *testing.T) {
 	assert.Nil(t, playErr2)
 	player2.Save()
 
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{0, "", "", ""}, 0)
 	lobby.Save()
 
 	err := lobby.AddSpectator(player)
