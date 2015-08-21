@@ -229,7 +229,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 
 	db.DB.Create(newSlotObj)
 
-	Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobby.ID, CommId: player.SteamId}, &Args{})
+	if !config.Constants.ServerMockUp {
+		Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobby.ID, CommId: player.SteamId}, &Args{})
+	}
 	return nil
 }
 
@@ -238,11 +240,14 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 	if err != nil {
 		return helpers.NewTPError(err.Error(), -1)
 	}
-	Pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobby.ID, CommId: player.SteamId}, &Args{})
+
 	return nil
 }
 
 func (lobby *Lobby) BanPlayer(player *Player) {
+	if !config.Constants.ServerMockUp {
+		Pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobby.ID, CommId: player.SteamId}, &Args{})
+	}
 	db.DB.Model(lobby).Association("BannedPlayers").Append(player)
 }
 
