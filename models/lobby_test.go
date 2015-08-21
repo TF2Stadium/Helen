@@ -26,11 +26,6 @@ func TestLobbyCreation(t *testing.T) {
 	assert.Equal(t, lobby.ID, lobby2.ID)
 	assert.Equal(t, lobby.ServerInfo.Host, lobby2.ServerInfo.Host)
 	assert.Equal(t, lobby.ServerInfo.ID, lobby2.ServerInfo.ID)
-	//testing password creation
-	assert.Equal(t, len(lobby.ServerInfo.ServerPassword), 8)
-	lobby3 := models.NewLobby("cp_process_final", models.LobbyTypeSixes, models.ServerRecord{0, "testip", "", ""}, 0)
-	lobby3.Save()
-	assert.NotEqual(t, lobby.ServerInfo.ServerPassword, lobby3.ServerInfo.ServerPassword)
 
 	lobby.MapName = "cp_granary"
 	lobby.Save()
