@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	db "github.com/TF2Stadium/Helen/database"
@@ -20,8 +21,9 @@ func listener() {
 	for {
 		select {
 		case <-ticker.C:
-			event := simplejson.New()
-			Pauling.Call("Pauling.GetEvent", &Args{}, &event)
+			var jsonStr string
+			Pauling.Call("Pauling.GetEvent", &Args{}, &jsonStr)
+			event, _ := simplejson.NewFromReader(strings.NewReader(jsonStr))
 			handleEvent(event)
 		}
 	}
