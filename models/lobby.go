@@ -361,6 +361,7 @@ func (lobby *Lobby) SetupServer() error {
 
 func (lobby *Lobby) Close(rpc bool) {
 	lobby.State = LobbyStateEnded
+	db.DB.Delete(&lobby.ServerInfo)
 	if rpc {
 		Pauling.Call("Pauling.End", &Args{Id: lobby.ID}, &Args{})
 	}
