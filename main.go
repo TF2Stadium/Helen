@@ -21,6 +21,7 @@ import (
 
 func main() {
 	helpers.InitLogger()
+	helpers.InitAuthorization()
 	config.SetupConstants()
 	database.Init()
 	migrations.Do()

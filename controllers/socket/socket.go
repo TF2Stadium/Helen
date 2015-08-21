@@ -465,4 +465,6 @@ func SocketInit(so socketio.Socket) {
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(resp)
 		})))
+
+	so.On("AdminChangeRole", ChangeRole(so.Id()))
 }

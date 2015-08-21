@@ -23,6 +23,11 @@ func BuildSuccessJSON(data *simplejson.Json) *simplejson.Json {
 	return j
 }
 
+func BuildEmptySuccessString() string {
+	bytes, _ := BuildSuccessJSON(simplejson.New()).Encode()
+	return string(bytes)
+}
+
 func BuildFailureJSON(message string, code int) *simplejson.Json {
 	e := helpers.NewTPError(message, code)
 	return e.ErrorJSON()

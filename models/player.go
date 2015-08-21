@@ -1,10 +1,11 @@
 package models
 
 import (
-	"github.com/TF2Stadium/PlayerStatsScraper"
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/helpers/authority"
+	"github.com/TF2Stadium/PlayerStatsScraper"
 	"github.com/jinzhu/gorm"
 )
 
@@ -25,7 +26,8 @@ type Player struct {
 	Avatar     string
 	Profileurl string
 	GameHours  int
-	Name       string // Player name
+	Name       string             // Player name
+	Role       authority.AuthRole `sql:"default:0"` // Role is player by default
 
 	Settings []PlayerSetting
 }

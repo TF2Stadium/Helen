@@ -22,7 +22,8 @@ var createBox = function(io, messageName, messageFields) {
       params = {};
       messageFields.forEach(function(field) {
         var val = $("#"+messageName+"_"+field).val();
-        if ((field.toLowerCase() !== "steamid" && field.endsWith("id")) || field == "room" || field == "whitelist") {
+        if ((field.toLowerCase() !== "steamid" && field.endsWith("id")) || field == "room" || field == "whitelist"
+            || field == "role") {
           val = parseInt(val);
         } else if (field == "mumbleRequired" || field == "ban") {
           val = (val == "true")
@@ -82,6 +83,7 @@ $(function() {
   createBox(io, "playerSettingsSet", ["key", "value"]);
   createBox(io, "playerSettingsGet", ["key"]);
   createBox(io, "playerProfile", ["steamid"]);
+  createBox(io, "AdminChangeRole", ["steamid", "role"]);
 });
 
 </script>
