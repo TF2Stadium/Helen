@@ -6,6 +6,7 @@ import (
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/sessions"
 )
@@ -85,4 +86,9 @@ func GetSessionSocket(socketid string) (*sessions.Session, error) {
 func GetSteamId(socketid string) string {
 	session, _ := GetSessionSocket(socketid)
 	return session.Values["steam_id"].(string)
+}
+
+func GetPlayerSocket(socketid string) (*models.Player, error) {
+	steamid := GetSteamId(socketid)
+	return models.GetPlayerBySteamId(steamid)
 }
