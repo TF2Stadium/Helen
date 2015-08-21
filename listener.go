@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/TF2Stadium/Helen/controllers/socket"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -46,10 +49,9 @@ func handleEvent(e *simplejson.Json) {
 		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, uint(lobbyid)).First(slot)
 		slot.InGame = false
 		db.DB.Save(slot)
-		/*TODO:
-		 *Notify lobby channel with SendMessage(), but we can't import chelpers due to a
-		 *import cycle
-		 */
+		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+			"sendNotification", fmt.Sprintf("%s has disconected from the server .",
+				player.Name))
 
 	case "playerConn":
 		slot := &models.LobbySlot{}
@@ -69,17 +71,25 @@ func handleEvent(e *simplejson.Json) {
 		player, _ := models.GetPlayerBySteamId(steamid)
 
 		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, uint(lobbyid)).Delete(&models.LobbySlot{})
+		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+			"sendNotification", fmt.Sprintf("%s has been reported.",
+				player.Name))
 
 	case "discFromServer":
 		lobbyid, _ := e.Get("lobbyId").Uint64()
 
 		lobby, _ := models.GetLobbyById(uint(lobbyid))
 		lobby.Close(false)
+		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+			"sendNotification", "Disconnected from Server.")
 
 	case "matchEnded":
 		lobbyid, _ := e.Get("lobbyId").Uint64()
 
 		lobby, _ := models.GetLobbyById(uint(lobbyid))
 		lobby.Close(false)
+		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+			"sendNotification", "Lobby Ended.")
+
 	}
 }
