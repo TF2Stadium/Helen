@@ -62,6 +62,7 @@ type LobbySlot struct {
 }
 
 type ServerRecord struct {
+	ID             uint
 	Host           string
 	ServerPassword string
 	RconPassword   string
