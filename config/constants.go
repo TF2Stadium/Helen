@@ -58,7 +58,9 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT")
 	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
 	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
-
+	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN")
+	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
+	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
 	// conditional assignments
 
 	if Constants.SteamDevApiKey == "your steam dev api key" && !Constants.SteamApiMockUp {
