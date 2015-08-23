@@ -17,6 +17,16 @@ func NewTPError(str string, code int) *TPError {
 		Code: code}
 }
 
+func NewTPErrorFromError(e error) *TPError {
+	if e == nil {
+		return nil
+	}
+	return &TPError{
+		Str:  e.Error(),
+		Code: 0,
+	}
+}
+
 func (e *TPError) ErrorJSON() *simplejson.Json {
 	j := simplejson.New()
 

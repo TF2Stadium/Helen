@@ -29,6 +29,11 @@ type Player struct {
 	Name       string             // Player name
 	Role       authority.AuthRole `sql:"default:0"` // Role is player by default
 
+	BannedCreateUntil int64 `sql:"default:0"`
+	BannedPlayUntil   int64 `sql:"default:0"`
+	BannedChatUntil   int64 `sql:"default:0"`
+	BannedFullUntil   int64 `sql:"default:0"`
+
 	Settings []PlayerSetting
 }
 
