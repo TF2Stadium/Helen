@@ -9,6 +9,8 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
+	"log"
+	"time"
 )
 
 func init() {
@@ -99,4 +101,56 @@ func TestPlayerSettings(t *testing.T) {
 	settings, err = player.GetSettings()
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(settings))
+}
+
+func TestPlayerBanning(t *testing.T) {
+	migrations.TestCleanup()
+	player, _ := models.NewPlayer("76561197999073985")
+	player.Save()
+
+	assert.False(t, player.IsBanned(models.PlayerBanJoin))
+	assert.False(t, player.IsBanned(models.PlayerBanCreate))
+	assert.False(t, player.IsBanned(models.PlayerBanChat))
+	assert.False(t, player.IsBanned(models.PlayerBanFull))
+
+	past := time.Now().Add(time.Second * -10)
+	player.BanUntil(past, models.PlayerBanJoin)
+	assert.False(t, player.IsBanned(models.PlayerBanJoin))
+
+	future := time.Now().Add(time.Second * 10)
+	player.BanUntil(future, models.PlayerBanJoin)
+	player.BanUntil(future, models.PlayerBanFull)
+
+	player2, _ := models.GetPlayerBySteamId(player.SteamId)
+	assert.False(t, player2.IsBanned(models.PlayerBanCreate))
+	assert.False(t, player2.IsBanned(models.PlayerBanChat))
+	isBannedFull, untilFull := player2.IsBannedWithTime(models.PlayerBanFull)
+	assert.True(t, isBannedFull)
+	assert.True(t, future.Sub(untilFull) < time.Second)
+	assert.True(t, untilFull.Sub(future) < time.Second)
+	log.Println(future.Sub(untilFull))
+
+	isBannedJoin, untilJoin := player2.IsBannedWithTime(models.PlayerBanJoin)
+	assert.True(t, isBannedJoin)
+	assert.True(t, future.Sub(untilJoin) < time.Second)
+	assert.True(t, untilJoin.Sub(future) < time.Second)
+
+	future2 := time.Now().Add(time.Second * 20)
+	player2.BanUntil(future2, models.PlayerBanJoin)
+	isBannedJoin2, untilJoin2 := player2.IsBannedWithTime(models.PlayerBanJoin)
+	assert.True(t, isBannedJoin2)
+	assert.True(t, future2.Sub(untilJoin2) < time.Second)
+	assert.True(t, untilJoin.Sub(future2) < time.Second)
+
+	bans, err := player2.GetActiveBans()
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(bans))
+
+	player2.Unban(models.PlayerBanJoin)
+	player2.Unban(models.PlayerBanFull)
+
+	assert.False(t, player2.IsBanned(models.PlayerBanJoin))
+	assert.False(t, player2.IsBanned(models.PlayerBanCreate))
+	assert.False(t, player2.IsBanned(models.PlayerBanChat))
+	assert.False(t, player2.IsBanned(models.PlayerBanFull))
 }
