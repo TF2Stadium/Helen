@@ -32,5 +32,7 @@ func GetPlayerProfileJson(p *models.Player) *simplejson.Json {
 	j.Set("name", p.Name)
 	j.Set("id", p.ID)
 
+	// TODO ban info
+
 	return j
 }

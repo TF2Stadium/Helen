@@ -10,9 +10,15 @@ const (
 )
 
 var RoleNames = map[authority.AuthRole]string{
-	RolePlayer: "Player",
-	RoleMod:    "Moderator",
-	RoleAdmin:  "Administrator",
+	RolePlayer: "player",
+	RoleMod:    "moderator",
+	RoleAdmin:  "administrator",
+}
+
+var RoleMap = map[string]authority.AuthRole{
+	"player":        RolePlayer,
+	"moderator":     RoleMod,
+	"administrator": RoleAdmin,
 }
 
 const (

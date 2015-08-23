@@ -26,6 +26,7 @@ type PlayerBan struct {
 	PlayerID uint
 	Type     PlayerBanType
 	Until    time.Time
+	Reason   string
 	Active   bool `sql:"default:true"`
 }
 
@@ -203,11 +204,12 @@ func (player *Player) IsBanned(t PlayerBanType) bool {
 	return res
 }
 
-func (player *Player) BanUntil(tim time.Time, t PlayerBanType) error {
+func (player *Player) BanUntil(tim time.Time, t PlayerBanType, reason string) error {
 	ban := PlayerBan{
 		PlayerID: player.ID,
 		Type:     t,
 		Until:    tim,
+		Reason:   reason,
 	}
 
 	return db.DB.Create(&ban).Error

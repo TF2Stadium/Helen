@@ -6,16 +6,10 @@ import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
 )
-
-var changeRoleParams = map[string]chelpers.Param{
-	"steamid": chelpers.Param{Type: chelpers.PTypeString},
-	"role":    chelpers.Param{Type: chelpers.PTypeInt},
-}
 
 type FakeResponseWriter struct{}
 
@@ -27,14 +21,19 @@ func (f FakeResponseWriter) Write(b []byte) (int, error) {
 }
 func (f FakeResponseWriter) WriteHeader(int) {}
 
+var changeRoleParams = map[string]chelpers.Param{
+	"steamid": chelpers.Param{Type: chelpers.PTypeString},
+	"role":    chelpers.Param{Type: chelpers.PTypeString},
+}
+
 func ChangeRole(socket *socketio.Socket) func(string) string {
 	socketid := (*socket).Id()
 	return chelpers.AuthorizationFilter(socketid, helpers.ActionChangeRole,
 		chelpers.JsonVerifiedFilter(changeRoleParams,
 			func(js *simplejson.Json) string {
-				roleInt, _ := js.Get("role").Int()
-				role := authority.AuthRole(roleInt)
-				if !helpers.RoleExists(role) || role == helpers.RoleAdmin {
+				roleString, _ := js.Get("role").String()
+				role, ok := helpers.RoleMap[roleString]
+				if !ok || role == helpers.RoleAdmin {
 					bytes, _ := chelpers.BuildFailureJSON("Invalid role parameter.", 0).Encode()
 					return string(bytes)
 				}
