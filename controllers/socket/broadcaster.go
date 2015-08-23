@@ -25,7 +25,7 @@ var broadcastMessageChannel chan broadcastMessage
 var socketServer *socketio.Server
 
 func InitBroadcaster(server *socketio.Server) {
-	broadcasterTicker = time.NewTicker(time.Millisecond * 500)
+	broadcasterTicker = time.NewTicker(time.Millisecond * 1000)
 	broadcastStopChannel = make(chan bool)
 	broadcastMessageChannel = make(chan broadcastMessage)
 	socketServer = server

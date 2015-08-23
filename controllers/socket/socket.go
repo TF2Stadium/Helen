@@ -460,7 +460,7 @@ func SocketInit(so socketio.Socket) {
 
 			chatMessage.Set("user", user)
 			bytes, _ := chatMessage.Encode()
-			so.BroadcastTo(strconv.Itoa(room), "chatReceive", string(bytes))
+			socketServer.BroadcastTo(strconv.Itoa(room), "chatReceive", string(bytes))
 
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(resp)

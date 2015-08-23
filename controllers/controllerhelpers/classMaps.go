@@ -15,6 +15,8 @@ var sixesClassMap = map[string]int{
 	"medic":   5,
 }
 
+var sixesClassList = []string{"scout1", "scout2", "roamer", "pocket", "demoman", "medic"}
+
 var hlClassMap = map[string]int{
 	"scout":    0,
 	"soldier":  1,
@@ -26,6 +28,8 @@ var hlClassMap = map[string]int{
 	"sniper":   7,
 	"spy":      8,
 }
+
+var hlClassList = []string{"scout", "soldier", "pyro", "demoman", "heavy", "engineer", "medic", "sniper", "spy"}
 
 func GetPlayerSlot(lobbytype models.LobbyType, teamStr string, classStr string) (int, *helpers.TPError) {
 	team, ok := teamMap[teamStr]
@@ -56,4 +60,12 @@ func FormatClassMap(format models.LobbyType) map[string]int {
 
 	}
 	return sixesClassMap
+}
+
+func FormatClassList(format models.LobbyType) []string {
+	if format == models.LobbyTypeHighlander {
+		return hlClassList
+
+	}
+	return sixesClassList
 }
