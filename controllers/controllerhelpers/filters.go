@@ -5,7 +5,6 @@ import (
 
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
-	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 )
 
@@ -33,15 +32,8 @@ func JsonParamFilter(f func(*simplejson.Json) string) func(string) string {
 
 func AuthorizationFilter(socketid string, action authority.AuthAction, f func(string) string) func(string) string {
 	return AuthFilter(socketid, func(data string) string {
-		var steamid = GetSteamId(socketid)
-		player, err := models.GetPlayerBySteamId(steamid)
-		if err != nil {
-			bytes, _ := BuildFailureJSON("Failed to get player object.", 0).Encode()
-			helpers.Logger.Warning("Failed to get player object from steamid %s.", steamid)
-			return string(bytes)
-		}
-
-		can := player.Role.Can(action)
+		var role, _ = GetPlayerRole(socketid)
+		can := role.Can(action)
 		if !can {
 			bytes, _ := BuildFailureJSON("You are not authorized to perform this action.", 0).Encode()
 			return string(bytes)

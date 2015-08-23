@@ -1,5 +1,7 @@
 package authority
 
+import "encoding/gob"
+
 type AuthAction int
 
 type AuthRole int
@@ -59,4 +61,9 @@ func Can(role_int int, action AuthAction) bool {
 
 func Reset() {
 	permissions = make(map[AuthRole]map[AuthAction]bool)
+}
+
+func RegisterTypes() {
+	gob.Register(AuthAction(0))
+	gob.Register(AuthRole(0))
 }

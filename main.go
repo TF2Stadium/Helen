@@ -12,6 +12,7 @@ import (
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes"
 	"github.com/googollee/go-socket.io"
@@ -20,6 +21,7 @@ import (
 )
 
 func main() {
+	authority.RegisterTypes()
 	helpers.InitLogger()
 	helpers.InitAuthorization()
 	config.SetupConstants()

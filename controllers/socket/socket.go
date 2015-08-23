@@ -467,5 +467,5 @@ func SocketInit(so socketio.Socket) {
 			return string(resp)
 		})))
 
-	so.On("AdminChangeRole", ChangeRole(so.Id()))
+	so.On("AdminChangeRole", ChangeRole(&so))
 }

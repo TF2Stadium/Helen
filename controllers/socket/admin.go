@@ -1,12 +1,15 @@
 package socket
 
 import (
+	"net/http"
+
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
+	"github.com/googollee/go-socket.io"
 )
 
 var changeRoleParams = map[string]chelpers.Param{
@@ -14,7 +17,18 @@ var changeRoleParams = map[string]chelpers.Param{
 	"role":    chelpers.Param{Type: chelpers.PTypeInt},
 }
 
-func ChangeRole(socketid string) func(string) string {
+type FakeResponseWriter struct{}
+
+func (f FakeResponseWriter) Header() http.Header {
+	return http.Header{}
+}
+func (f FakeResponseWriter) Write(b []byte) (int, error) {
+	return 0, nil
+}
+func (f FakeResponseWriter) WriteHeader(int) {}
+
+func ChangeRole(socket *socketio.Socket) func(string) string {
+	socketid := (*socket).Id()
 	return chelpers.AuthorizationFilter(socketid, helpers.ActionChangeRole,
 		chelpers.JsonVerifiedFilter(changeRoleParams,
 			func(js *simplejson.Json) string {
@@ -36,8 +50,18 @@ func ChangeRole(socketid string) func(string) string {
 
 				models.LogAdminAction(currPlayer.ID, helpers.ActionChangeRole, otherPlayer.ID)
 
+				// actual change happens
 				otherPlayer.Role = role
 				db.DB.Save(&otherPlayer)
+
+				//rewrite session data. THiS WON'T WRITE A COOKIE SO IT ONLY WORKS WITH
+				// STORES THAT STORE DATA (AND NOT ONLY SESSION ID) IN COOKIES.
+				session, sesserr := chelpers.GetSessionHTTP((*socket).Request())
+				if sesserr == nil {
+					session.Values["role"] = role
+					session.Save((*socket).Request(), FakeResponseWriter{})
+				}
+
 				return chelpers.BuildEmptySuccessString()
 			}))
 }
