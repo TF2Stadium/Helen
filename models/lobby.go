@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"net/rpc"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -89,28 +88,6 @@ type Lobby struct {
 
 	CreatedByID uint
 	CreatedBy   Player
-}
-
-type Args struct {
-	Id     uint
-	Info   ServerRecord
-	Type   LobbyType
-	League string
-	Map    string
-	CommId string
-}
-
-var Pauling *rpc.Client
-
-func PaulingConnect() {
-	helpers.Logger.Debug("Connecting to Pauling on port %s", config.Constants.PaulingPort)
-	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
-	if err != nil {
-		helpers.Logger.Fatal(err)
-	}
-
-	Pauling = client
-	helpers.Logger.Debug("Connected!")
 }
 
 func NewLobby(mapName string, lobbyType LobbyType, serverInfo ServerRecord, whitelist int) *Lobby {
@@ -230,7 +207,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	db.DB.Create(newSlotObj)
 
 	if !config.Constants.ServerMockUp {
-		Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobby.ID, CommId: player.SteamId}, &Args{})
+		Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobby.ID, SteamId: player.SteamId}, &Args{})
 	}
 	return nil
 }
@@ -246,7 +223,7 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 
 func (lobby *Lobby) BanPlayer(player *Player) {
 	if !config.Constants.ServerMockUp {
-		Pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobby.ID, CommId: player.SteamId}, &Args{})
+		Pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobby.ID, SteamId: player.SteamId}, &Args{})
 	}
 	db.DB.Model(lobby).Association("BannedPlayers").Append(player)
 }
