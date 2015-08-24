@@ -3,14 +3,13 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/bitly/go-simplejson"
+	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
 )
 
 var ticker *time.Ticker
@@ -25,28 +24,26 @@ func listener() {
 	for {
 		select {
 		case <-ticker.C:
-			var jsonStr string
-			models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &jsonStr)
-			event, _ := simplejson.NewFromReader(strings.NewReader(jsonStr))
-			handleEvent(event)
+			event := make(map[string]interface{})
+			err := models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &event)
+			if err != nil {
+				handleEvent(event)
+			}
 		}
 	}
 }
 
-func handleEvent(e *simplejson.Json) {
-	event, err := e.Get("event").String()
-	if err != nil { //event queue is empty
-		return
-	}
-
-	switch event {
+func handleEvent(event map[string]interface{}) {
+	switch event["name"] {
 	case "playerDisc":
 		slot := &models.LobbySlot{}
-		lobbyid, _ := e.Get("lobbyId").Uint64()
-		steamid, _ := e.Get("commId").String()
-		player, _ := models.GetPlayerBySteamId(steamid)
+		lobbyid := event["lobbyId"].(uint)
+		commId := event["commId"].(string)
 
-		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, uint(lobbyid)).First(slot)
+		steamId, _ := steamid.CommIdToSteamId(commId)
+		player, _ := models.GetPlayerBySteamId(steamId)
+
+		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
 		slot.InGame = false
 		db.DB.Save(slot)
 		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
@@ -55,41 +52,65 @@ func handleEvent(e *simplejson.Json) {
 
 	case "playerConn":
 		slot := &models.LobbySlot{}
-		lobbyid, _ := e.Get("lobbyId").Uint64()
-		steamid, _ := e.Get("commId").String()
-		player, _ := models.GetPlayerBySteamId(steamid)
+		lobbyid := event["lobbyId"].(uint)
+		commId := event["commId"].(string)
 
-		err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, uint(lobbyid)).First(slot).Error
+		steamId, _ := steamid.CommIdToSteamId(commId)
+		player, _ := models.GetPlayerBySteamId(steamId)
+		err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot).Error
 		if err == nil { //else, player isn't in the lobby, will be kicked by Pauling
 			slot.InGame = true
 			db.DB.Save(slot)
 		}
 
 	case "playerRep":
-		lobbyid, _ := e.Get("lobbyId").Uint64()
-		steamid, _ := e.Get("commId").String()
-		player, _ := models.GetPlayerBySteamId(steamid)
+		lobbyid := event["lobbyId"].(uint)
+		commId := event["commId"].(string)
 
-		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, uint(lobbyid)).Delete(&models.LobbySlot{})
+		steamId, _ := steamid.CommIdToSteamId(commId)
+		player, _ := models.GetPlayerBySteamId(steamId)
+
+		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Delete(&models.LobbySlot{})
 		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", fmt.Sprintf("%s has been reported.",
 				player.Name))
 
 	case "discFromServer":
-		lobbyid, _ := e.Get("lobbyId").Uint64()
+		lobbyid := event["lobbyId"].(uint)
 
-		lobby, _ := models.GetLobbyById(uint(lobbyid))
+		lobby, _ := models.GetLobbyById(lobbyid)
 		lobby.Close(false)
 		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", "Disconnected from Server.")
 
 	case "matchEnded":
-		lobbyid, _ := e.Get("lobbyId").Uint64()
+		lobbyid := event["lobbyId"].(uint)
 
-		lobby, _ := models.GetLobbyById(uint(lobbyid))
+		lobby, _ := models.GetLobbyById(lobbyid)
 		lobby.Close(false)
 		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", "Lobby Ended.")
 
+	case "getServers":
+		var lobbies []*models.Lobby
+		var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
+		db.DB.Where("lobby_state IN (?)", activeStates).Find(&lobbies)
+		for _, lobby := range lobbies {
+			info := models.ServerBootstrap{
+				LobbyId: lobby.ID,
+				Info:    lobby.ServerInfo,
+			}
+			for _, player := range lobby.BannedPlayers {
+				commId, _ := steamid.SteamIdToCommId(player.SteamId)
+				info.BannedPlayers = append(info.BannedPlayers, commId)
+			}
+			for _, slot := range lobby.Slots {
+				var player *models.Player
+				db.DB.Find(player, slot.PlayerId)
+				commId, _ := steamid.SteamIdToCommId(player.SteamId)
+				info.Players = append(info.Players, commId)
+			}
+			models.Pauling.Call("Pauling.SetupVerifier", &info, &struct{}{})
+		}
 	}
 }
