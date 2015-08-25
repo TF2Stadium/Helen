@@ -90,10 +90,11 @@ type Lobby struct {
 	CreatedBy   Player
 }
 
-func NewLobby(mapName string, lobbyType LobbyType, serverInfo ServerRecord, whitelist int) *Lobby {
+func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int) *Lobby {
 	lobby := &Lobby{
 		Type:       lobbyType,
 		State:      LobbyStateInitializing,
+		League:     league,
 		MapName:    mapName,
 		Whitelist:  Whitelist(whitelist), // that's a strange line
 		ServerInfo: serverInfo,

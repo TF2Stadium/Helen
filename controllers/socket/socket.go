@@ -95,7 +95,7 @@ func SocketInit(so socketio.Socket) {
 			//TODO: Configure server here
 
 			//TODO what if playermap[lobbytype] is nil?
-			lob := models.NewLobby(mapName, lobbytype,
+			lob := models.NewLobby(mapName, lobbytype, league,
 				models.ServerRecord{Host: server, RconPassword: rconPwd, ServerPassword: serverPwd}, whitelist)
 			lob.CreatedBy = *player
 			lob.Save()
