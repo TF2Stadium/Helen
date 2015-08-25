@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"net/rpc"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -14,10 +15,7 @@ type ServerBootstrap struct {
 	BannedPlayers []string
 }
 
-type Event struct {
-	Name   string
-	Values map[string]interface{}
-}
+type Event map[string]interface{}
 
 type Args struct {
 	Id      uint
@@ -28,6 +26,7 @@ type Args struct {
 	SteamId string
 }
 
+var EventQueueEmptyError = errors.New("Event queue empty")
 var Pauling *rpc.Client
 
 func PaulingConnect() {

@@ -24,11 +24,12 @@ func listener() {
 	for {
 		select {
 		case <-ticker.C:
-			event := make(map[string]interface{})
+			event := make(models.Event)
 			err := models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &event)
 			if err != nil {
-				handleEvent(event)
+				helpers.Logger.Fatal(err)
 			}
+			handleEvent(event)
 		}
 	}
 }
