@@ -6,6 +6,7 @@ import (
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
+	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/sessions"
@@ -64,7 +65,7 @@ func IsLoggedInSocket(socketid string) bool {
 }
 
 func IsLoggedInHTTP(r *http.Request) bool {
-	session, _ := stores.SessionStore.Get(r, config.Constants.SessionName)
+	session, _ := GetSessionHTTP(r)
 
 	val, ok := session.Values["id"]
 	return ok && val != ""
@@ -91,4 +92,12 @@ func GetSteamId(socketid string) string {
 func GetPlayerSocket(socketid string) (*models.Player, error) {
 	steamid := GetSteamId(socketid)
 	return models.GetPlayerBySteamId(steamid)
+}
+
+func GetPlayerRole(socketid string) (authority.AuthRole, error) {
+	session, err := GetSessionSocket(socketid)
+	if err != nil {
+		return 0, err
+	}
+	return session.Values["role"].(authority.AuthRole), nil
 }

@@ -68,6 +68,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session.Values["id"] = fmt.Sprint(player.ID)
+	session.Values["role"] = player.Role
 
 	err = session.Save(r, w)
 

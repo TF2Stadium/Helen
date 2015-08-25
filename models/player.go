@@ -7,7 +7,30 @@ import (
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/PlayerStatsScraper"
 	"github.com/jinzhu/gorm"
+	"time"
 )
+
+// BANS
+
+type PlayerBanType int
+
+const (
+	PlayerBanJoin   = 0
+	PlayerBanCreate = 1
+	PlayerBanChat   = 2
+	PlayerBanFull   = 3
+)
+
+type PlayerBan struct {
+	gorm.Model
+	PlayerID uint
+	Type     PlayerBanType
+	Until    time.Time
+	Reason   string
+	Active   bool `sql:"default:true"`
+}
+
+// SETTINGS
 
 type PlayerSetting struct {
 	ID       uint
@@ -28,6 +51,11 @@ type Player struct {
 	GameHours  int
 	Name       string             // Player name
 	Role       authority.AuthRole `sql:"default:0"` // Role is player by default
+
+	BannedCreateUntil int64 `sql:"default:0"`
+	BannedPlayUntil   int64 `sql:"default:0"`
+	BannedChatUntil   int64 `sql:"default:0"`
+	BannedFullUntil   int64 `sql:"default:0"`
 
 	Settings []PlayerSetting
 }
@@ -158,4 +186,45 @@ func (player *Player) GetSettings() ([]PlayerSetting, error) {
 	err := db.DB.Where("player_id = ?", player.ID).Find(&settings).Error
 
 	return settings, err
+}
+
+func (player *Player) IsBannedWithTime(t PlayerBanType) (bool, time.Time) {
+	ban := &PlayerBan{}
+	err := db.DB.Where("type = ? AND until > now() AND player_id = ? AND active = TRUE", t, player.ID).
+		Order("until desc").First(ban).Error
+	if err != nil {
+		return false, time.Time{}
+	}
+
+	return true, ban.Until
+}
+
+func (player *Player) IsBanned(t PlayerBanType) bool {
+	res, _ := player.IsBannedWithTime(t)
+	return res
+}
+
+func (player *Player) BanUntil(tim time.Time, t PlayerBanType, reason string) error {
+	ban := PlayerBan{
+		PlayerID: player.ID,
+		Type:     t,
+		Until:    tim,
+		Reason:   reason,
+	}
+
+	return db.DB.Create(&ban).Error
+}
+
+func (player *Player) Unban(t PlayerBanType) error {
+	return db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, t).
+		Update("active", "FALSE").Error
+}
+
+func (player *Player) GetActiveBans() ([]*PlayerBan, error) {
+	var bans []*PlayerBan
+	err := db.DB.Where("player_id = ? AND active = TRUE AND until > now()", player.ID).Find(&bans).Error
+	if err != nil {
+		return nil, err
+	}
+	return bans, nil
 }
