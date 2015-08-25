@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/rpc"
 	"strconv"
 	"time"
 
@@ -26,10 +27,15 @@ func listener() {
 		case <-ticker.C:
 			event := make(models.Event)
 			err := models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &event)
-			if err != nil {
+
+			if err == rpc.ErrShutdown { //Pauling has crashed
+				//TODO
+			} else if err != nil {
 				helpers.Logger.Fatal(err)
 			}
-			handleEvent(event)
+			if _, ok := event["empty"]; ok {
+				handleEvent(event)
+			}
 		}
 	}
 }
