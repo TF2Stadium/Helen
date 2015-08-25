@@ -97,10 +97,10 @@ func GetLobbyConnectJSON(lobby *models.Lobby) *simplejson.Json {
 
 	json.Set("id", lobby.ID)
 	json.Set("time", lobby.CreatedAt.Unix())
-	json.Set("password", lobby.Server.ServerPassword)
+	json.Set("password", lobby.ServerInfo.ServerPassword)
 
 	game := simplejson.New()
-	game.Set("host", lobby.Server.Info.Host)
+	game.Set("host", lobby.ServerInfo.Host)
 	json.Set("game", game)
 
 	mumble := simplejson.New()
