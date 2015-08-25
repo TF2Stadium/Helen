@@ -15,6 +15,7 @@ type constants struct {
 	CookieStoreSecret  string
 	StaticFileLocation string
 	SessionName        string
+	PaulingPort        string
 	SocketMockUp       bool
 	ServerMockUp       bool
 	AllowedCorsOrigins []string
@@ -35,6 +36,7 @@ func overrideFromEnv(constant *string, name string) {
 	if "" != val {
 		*constant = val
 	}
+
 }
 
 var Constants constants
@@ -58,6 +60,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT")
 	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
 	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
+	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT")
 	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN")
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
@@ -78,6 +81,7 @@ func setupDevelopmentConstants() {
 	Constants.CookieStoreSecret = "dev secret is very secret"
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
+	Constants.PaulingPort = "1234"
 	Constants.SocketMockUp = false
 	Constants.ServerMockUp = false
 	Constants.AllowedCorsOrigins = []string{"*"}

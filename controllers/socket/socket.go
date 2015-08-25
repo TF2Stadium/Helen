@@ -1,7 +1,8 @@
 package socket
 
 import (
-	"fmt"
+	"crypto/rand"
+	"encoding/base64"
 	"html"
 	"strconv"
 	"time"
@@ -53,6 +54,7 @@ func SocketInit(so socketio.Socket) {
 	var lobbyCreateParams = map[string]chelpers.Param{
 		"mapName":        chelpers.Param{Type: chelpers.PTypeString},
 		"type":           chelpers.Param{Type: chelpers.PTypeString},
+		"league":         chelpers.Param{Type: chelpers.PTypeString},
 		"server":         chelpers.Param{Type: chelpers.PTypeString},
 		"rconpwd":        chelpers.Param{Type: chelpers.PTypeString},
 		"whitelist":      chelpers.Param{Type: chelpers.PTypeInt},
@@ -66,6 +68,7 @@ func SocketInit(so socketio.Socket) {
 
 			mapName, _ := js.Get("mapName").String()
 			lobbytypestring, _ := js.Get("type").String()
+			league, _ := js.Get("league").String()
 			server, _ := js.Get("server").String()
 			rconPwd, _ := js.Get("rconpwd").String()
 			whitelist, err := js.Get("whitelist").Int()
@@ -80,31 +83,27 @@ func SocketInit(so socketio.Socket) {
 				bytes, _ := chelpers.BuildFailureJSON("Lobby type invalid.", -1).Encode()
 				return string(bytes)
 			}
+			if !models.IsLeagueValid(league) {
+				bytes, _ := chelpers.BuildFailureJSON("Invalid League Name", -1).Encode()
+				return string(bytes)
+			}
 
+			randBytes := make([]byte, 6)
+			rand.Read(randBytes)
+			serverPwd := base64.URLEncoding.EncodeToString(randBytes)
 			//mumble, _ := js.Get("mumbleRequired").Bool()
 			//TODO: Configure server here
 
 			//TODO what if playermap[lobbytype] is nil?
-			lob := models.NewLobby(mapName, lobbytype,
-				models.ServerRecord{Host: server, RconPassword: rconPwd}, whitelist)
+			lob := models.NewLobby(mapName, lobbytype, league,
+				models.ServerRecord{Host: server, RconPassword: rconPwd, ServerPassword: serverPwd}, whitelist)
 			lob.CreatedBy = *player
-			err = lob.Save()
-
+			lob.Save()
+			err = lob.SetupServer()
 			if err != nil {
 				bytes, _ := err.(*helpers.TPError).ErrorJSON().Encode()
 				return string(bytes)
 			}
-
-			// setup server info
-			go func() {
-				err := lob.TrySettingUp()
-				if err != nil {
-					SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", err.Error())
-				} else {
-					// for debug
-					SendMessage(chelpers.GetSteamId(so.Id()), "sendNotification", fmt.Sprintf("Lobby %d created successfully", lob.ID))
-				}
-			}()
 
 			lobby_id := simplejson.New()
 			lobby_id.Set("id", lob.ID)
@@ -138,7 +137,7 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
-			lob.Close()
+			lob.Close(true)
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
