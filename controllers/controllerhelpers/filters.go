@@ -24,11 +24,17 @@ func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
 			return string(bytes)
 		}
 
-		var role, _ = GetPlayerRole(so.Id())
-		can := role.Can(action)
-		if !can {
-			bytes, _ := BuildFailureJSON("You are not authorized to perform this action.", 0).Encode()
-			return string(bytes)
+		if int(action) != 0 {
+			var role, _ = GetPlayerRole(so.Id())
+			can := role.Can(action)
+			if !can {
+				bytes, _ := BuildFailureJSON("You are not authorized to perform this action.", 0).Encode()
+				return string(bytes)
+			}
+		}
+
+		if params == nil {
+			return f(nil)
 		}
 
 		js, err := simplejson.NewFromReader(strings.NewReader(jsonStr))
@@ -55,8 +61,13 @@ func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
 
 			if kind := reflect.ValueOf(value).Kind(); kind != param.Kind {
 				if param.Kind == reflect.Uint {
-					switch kind {
-					case reflect.Uint, reflect.Uint64, reflect.Int:
+					if num, err := js.Get(key).Uint64(); err == nil {
+						paramMap[key] = uint(num)
+						continue
+					}
+				} else if param.Kind == reflect.Int {
+					if num, err := js.Get(key).Int64(); err == nil {
+						paramMap[key] = int64(num)
 						continue
 					}
 				}
