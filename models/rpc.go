@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"net/rpc"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -15,8 +14,6 @@ type ServerBootstrap struct {
 	BannedPlayers []string
 }
 
-type Event map[string]interface{}
-
 type Args struct {
 	Id      uint
 	Info    ServerRecord
@@ -26,8 +23,9 @@ type Args struct {
 	SteamId string
 }
 
-var EventQueueEmptyError = errors.New("Event queue empty")
 var Pauling *rpc.Client
+
+type Event map[string]interface{}
 
 func PaulingConnect() {
 	helpers.Logger.Debug("Connecting to Pauling on port %s", config.Constants.PaulingPort)
@@ -38,4 +36,28 @@ func PaulingConnect() {
 
 	Pauling = client
 	helpers.Logger.Debug("Connected!")
+}
+
+func AllowPlayer(lobbyId uint, steamId string) error {
+	return Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
+}
+
+func DisallowPlayer(lobbyId uint, steamId string) error {
+	return Pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
+}
+
+func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
+	mapName string) error {
+
+	args := &Args{
+		Id:     lobbyId,
+		Info:   info,
+		Type:   lobbyType,
+		League: league,
+		Map:    mapName}
+	return Pauling.Call("Pauling.SetupServer", args, &Args{})
+}
+
+func End(lobbyId uint) {
+	Pauling.Call("Pauling.End", &Args{Id: lobbyId}, &Args{})
 }

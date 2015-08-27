@@ -208,7 +208,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	db.DB.Create(newSlotObj)
 
 	if !config.Constants.ServerMockUp {
-		Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobby.ID, SteamId: player.SteamId}, &Args{})
+		AllowPlayer(lobby.ID, player.SteamId)
 	}
 	return nil
 }
@@ -224,7 +224,7 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 
 func (lobby *Lobby) BanPlayer(player *Player) {
 	if !config.Constants.ServerMockUp {
-		Pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobby.ID, SteamId: player.SteamId}, &Args{})
+		DisallowPlayer(lobby.ID, player.SteamId)
 	}
 	db.DB.Model(lobby).Association("BannedPlayers").Append(player)
 }
@@ -323,14 +323,8 @@ func (lobby *Lobby) SetupServer() error {
 		return nil
 	}
 
-	args := &Args{
-		Id:     lobby.ID,
-		Info:   lobby.ServerInfo,
-		Type:   lobby.Type,
-		League: lobby.League,
-		Map:    lobby.MapName}
+	err := SetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.MapName)
 
-	err := Pauling.Call("Pauling.SetupServer", args, &Args{})
 	if err != nil {
 		return helpers.NewTPError(err.Error(), 0)
 	}
@@ -341,7 +335,7 @@ func (lobby *Lobby) Close(rpc bool) {
 	lobby.State = LobbyStateEnded
 	db.DB.Delete(&lobby.ServerInfo)
 	if rpc {
-		Pauling.Call("Pauling.End", &Args{Id: lobby.ID}, &Args{})
+		End(lobby.ID)
 	}
 	delete(LobbyServerSettingUp, lobby.ID)
 	db.DB.Save(lobby)
