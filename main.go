@@ -28,7 +28,8 @@ func main() {
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()
-	models.InitServerConfigs()
+	models.PaulingConnect()
+	StartListener()
 
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 	helpers.Logger.Debug("Starting the server")

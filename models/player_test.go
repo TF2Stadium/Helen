@@ -20,7 +20,7 @@ func init() {
 func TestIsSpectating(t *testing.T) {
 	migrations.TestCleanup()
 
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, models.ServerRecord{}, 1)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1)
 	database.DB.Save(lobby)
 	player, _ := models.NewPlayer("asdf")
 	database.DB.Save(player)
