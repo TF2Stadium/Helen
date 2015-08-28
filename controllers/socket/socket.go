@@ -57,6 +57,7 @@ func SocketInit(so socketio.Socket) {
 	var lobbyCreateParams = map[string]chelpers.Param{
 		"mapName":        chelpers.Param{Kind: reflect.String},
 		"type":           chelpers.Param{Kind: reflect.String},
+		"league":         chelpers.Param{Kind: reflect.String},
 		"server":         chelpers.Param{Kind: reflect.String},
 		"rconpwd":        chelpers.Param{Kind: reflect.String},
 		"whitelist":      chelpers.Param{Kind: reflect.Uint},
@@ -70,6 +71,7 @@ func SocketInit(so socketio.Socket) {
 
 			mapName := params["mapName"].(string)
 			lobbytypestring := params["type"].(string)
+			league := params["league"].(string)
 			server := params["server"].(string)
 			rconPwd := params["rconpwd"].(string)
 			whitelist := int(params["whitelist"].(uint))
@@ -99,7 +101,7 @@ func SocketInit(so socketio.Socket) {
 				models.ServerRecord{Host: server, RconPassword: rconPwd, ServerPassword: serverPwd}, whitelist)
 			lob.CreatedBy = *player
 			lob.Save()
-			err = lob.SetupServer()
+			err := lob.SetupServer()
 
 			if err != nil {
 				bytes, _ := err.(*helpers.TPError).ErrorJSON().Encode()
