@@ -1,103 +1,80 @@
 package controllerhelpers
 
 import (
+	"reflect"
 	"strings"
 
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/bitly/go-simplejson"
+	"github.com/googollee/go-socket.io"
 )
 
-func AuthFilter(socketid string, f func(string) string) func(string) string {
-	return func(data string) string {
-		if !IsLoggedInSocket(socketid) {
+type Param struct {
+	Kind    reflect.Kind
+	Default interface{}
+	In      []string
+}
+
+func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
+	action authority.AuthAction, f func(map[string]interface{}) string) {
+
+	so.On(event, func(jsonStr string) string {
+		if !IsLoggedInSocket(so.Id()) {
 			bytes, _ := BuildFailureJSON("Player isn't logged in.", -4).Encode()
 			return string(bytes)
 		}
-		return f(data)
-	}
-}
 
-func JsonParamFilter(f func(*simplejson.Json) string) func(string) string {
-	return func(data string) string {
-		js, err := simplejson.NewFromReader(strings.NewReader(data))
+		if int(action) != 0 {
+			var role, _ = GetPlayerRole(so.Id())
+			can := role.Can(action)
+			if !can {
+				bytes, _ := BuildFailureJSON("You are not authorized to perform this action.", 0).Encode()
+				return string(bytes)
+			}
+		}
+
+		if params == nil {
+			return f(nil)
+		}
+
+		js, err := simplejson.NewFromReader(strings.NewReader(jsonStr))
 		if err != nil {
 			bytes, _ := BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
 			return string(bytes)
 		}
 
-		return f(js)
-	}
-}
-
-func AuthorizationFilter(socketid string, action authority.AuthAction, f func(string) string) func(string) string {
-	return AuthFilter(socketid, func(data string) string {
-		var role, _ = GetPlayerRole(socketid)
-		can := role.Can(action)
-		if !can {
-			bytes, _ := BuildFailureJSON("You are not authorized to perform this action.", 0).Encode()
+		paramMap, err := js.Map()
+		if err != nil {
+			bytes, _ := BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
 			return string(bytes)
 		}
 
-		return f(data)
-	})
-}
-
-type Param struct {
-	Type    ParamType
-	Default interface{}
-}
-
-type ParamType int
-
-const (
-	PTypeInt    ParamType = iota
-	PTypeString ParamType = iota
-	PTypeBool   ParamType = iota
-	PTypeFloat  ParamType = iota
-)
-
-func JsonVerifiedFilter(p map[string]Param, f func(*simplejson.Json) string) func(string) string {
-	return JsonParamFilter(func(js *simplejson.Json) string {
-		for name, paramtype := range p {
-			switch paramtype.Type {
-			case PTypeInt:
-				_, err := js.Get(name).Int()
-				if err != nil && paramtype.Default == nil {
-					bytes, _ := BuildMissingArgJSON(name).Encode()
+		for key, param := range params {
+			value, ok := paramMap[key]
+			if !ok {
+				if param.Default == nil {
+					bytes, _ := BuildMissingArgJSON(key).Encode()
 					return string(bytes)
-				} else if err != nil {
-					js.Set(name, paramtype.Default.(int))
 				}
-			case PTypeString:
-				_, err := js.Get(name).String()
-				if err != nil && paramtype.Default == nil {
-					bytes, _ := BuildMissingArgJSON(name).Encode()
-					return string(bytes)
-				} else if err != nil {
-					js.Set(name, paramtype.Default.(string))
+				paramMap[key] = param.Default
+			}
+
+			if kind := reflect.ValueOf(value).Kind(); kind != param.Kind {
+				if param.Kind == reflect.Uint {
+					if num, err := js.Get(key).Uint64(); err == nil {
+						paramMap[key] = uint(num)
+						continue
+					}
+				} else if param.Kind == reflect.Int {
+					if num, err := js.Get(key).Int64(); err == nil {
+						paramMap[key] = int64(num)
+						continue
+					}
 				}
-			case PTypeBool:
-				_, err := js.Get(name).Bool()
-				if err != nil && paramtype.Default == nil {
-					bytes, _ := BuildMissingArgJSON(name).Encode()
-					return string(bytes)
-				} else if err != nil {
-					js.Set(name, paramtype.Default.(bool))
-				}
-			case PTypeFloat:
-				_, err := js.Get(name).Float64()
-				if err != nil && paramtype.Default == nil {
-					bytes, _ := BuildMissingArgJSON(name).Encode()
-					return string(bytes)
-				} else if err != nil {
-					js.Set(name, paramtype.Default.(float64))
-				}
-			default:
-				helpers.Logger.Panicf("Invalid type as parameter type for %s: %d", name, paramtype)
+				bytes, _ := BuildMissingArgJSON(key).Encode()
+				return string(bytes)
 			}
 		}
-
-		return f(js)
+		return f(paramMap)
 	})
 }
