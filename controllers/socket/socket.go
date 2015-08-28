@@ -4,12 +4,14 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"html"
+	"reflect"
 	"strconv"
 	"time"
 
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/decorators"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
@@ -31,9 +33,10 @@ func SocketInit(so socketio.Socket) {
 		helpers.Logger.Debug("on disconnect")
 	})
 
-	so.On("authenticationTest", chelpers.AuthFilter(so.Id(), func(val string) string {
-		return "authenticated"
-	}))
+	chelpers.RegisterEvent(so, "authenticationTest", nil, authority.AuthAction(0),
+		func(_ map[string]interface{}) string {
+			return "authenticated"
+		})
 
 	helpers.Logger.Debug("on connection")
 	so.Join("-1") //room for global chat
@@ -52,26 +55,25 @@ func SocketInit(so socketio.Socket) {
 	}
 
 	var lobbyCreateParams = map[string]chelpers.Param{
-		"mapName":        chelpers.Param{Type: chelpers.PTypeString},
-		"type":           chelpers.Param{Type: chelpers.PTypeString},
-		"league":         chelpers.Param{Type: chelpers.PTypeString},
-		"server":         chelpers.Param{Type: chelpers.PTypeString},
-		"rconpwd":        chelpers.Param{Type: chelpers.PTypeString},
-		"whitelist":      chelpers.Param{Type: chelpers.PTypeInt},
-		"mumbleRequired": chelpers.Param{Type: chelpers.PTypeBool},
+		"mapName":        chelpers.Param{Kind: reflect.String},
+		"type":           chelpers.Param{Kind: reflect.String},
+		"server":         chelpers.Param{Kind: reflect.String},
+		"rconpwd":        chelpers.Param{Kind: reflect.String},
+		"whitelist":      chelpers.Param{Kind: reflect.Uint},
+		"mumbleRequired": chelpers.Param{Kind: reflect.Bool},
 	}
 
-	so.On("lobbyCreate", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(lobbyCreateParams, func(js *simplejson.Json) string {
+	chelpers.RegisterEvent(so, "lobbyCreate", lobbyCreateParams, authority.AuthAction(0),
+		func(params map[string]interface{}) string {
 
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
-			mapName, _ := js.Get("mapName").String()
-			lobbytypestring, _ := js.Get("type").String()
-			league, _ := js.Get("league").String()
-			server, _ := js.Get("server").String()
-			rconPwd, _ := js.Get("rconpwd").String()
-			whitelist, err := js.Get("whitelist").Int()
+			mapName := params["mapName"].(string)
+			lobbytypestring := params["type"].(string)
+			server := params["server"].(string)
+			rconPwd := params["rconpwd"].(string)
+			whitelist := int(params["whitelist"].(uint))
+			//mumble := params["mumbleRequired"].(bool)
 
 			var playermap = map[string]models.LobbyType{
 				"sixes":      models.LobbyTypeSixes,
@@ -91,8 +93,6 @@ func SocketInit(so socketio.Socket) {
 			randBytes := make([]byte, 6)
 			rand.Read(randBytes)
 			serverPwd := base64.URLEncoding.EncodeToString(randBytes)
-			//mumble, _ := js.Get("mumbleRequired").Bool()
-			//TODO: Configure server here
 
 			//TODO what if playermap[lobbytype] is nil?
 			lob := models.NewLobby(mapName, lobbytype, league,
@@ -100,6 +100,7 @@ func SocketInit(so socketio.Socket) {
 			lob.CreatedBy = *player
 			lob.Save()
 			err = lob.SetupServer()
+
 			if err != nil {
 				bytes, _ := err.(*helpers.TPError).ErrorJSON().Encode()
 				return string(bytes)
@@ -109,17 +110,17 @@ func SocketInit(so socketio.Socket) {
 			lobby_id.Set("id", lob.ID)
 			bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
 			return string(bytes)
-		})))
+		})
 
 	var lobbyCloseParams = map[string]chelpers.Param{
-		"id": chelpers.Param{Type: chelpers.PTypeInt},
+		"id": chelpers.Param{Kind: reflect.Uint},
 	}
 
-	so.On("lobbyClose", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(lobbyCloseParams, func(js *simplejson.Json) string {
+	chelpers.RegisterEvent(so, "lobbyClose", lobbyCloseParams, authority.AuthAction(0),
+		func(params map[string]interface{}) string {
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
-			lobbyid, _ := js.Get("id").Uint64()
+			lobbyid := params["id"].(uint)
 
 			lob, tperr := models.GetLobbyById(uint(lobbyid))
 			if tperr != nil {
@@ -141,16 +142,16 @@ func SocketInit(so socketio.Socket) {
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
-		})))
+		})
 
 	var lobbyJoinParams = map[string]chelpers.Param{
-		"id":    chelpers.Param{Type: chelpers.PTypeInt},
-		"class": chelpers.Param{Type: chelpers.PTypeString},
-		"team":  chelpers.Param{Type: chelpers.PTypeString},
+		"id":    chelpers.Param{Kind: reflect.Uint},
+		"class": chelpers.Param{Kind: reflect.String},
+		"team":  chelpers.Param{Kind: reflect.String},
 	}
 
-	so.On("lobbyJoin", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(lobbyJoinParams, func(js *simplejson.Json) string {
+	chelpers.RegisterEvent(so, "lobbyJoin", lobbyJoinParams, authority.AuthAction(0),
+		func(params map[string]interface{}) string {
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 			if tperr != nil {
@@ -158,9 +159,9 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
-			lobbyid, _ := js.Get("id").Uint64()
-			classString, _ := js.Get("class").String()
-			teamString, _ := js.Get("team").String()
+			lobbyid := params["id"].(uint)
+			classString := params["class"].(string)
+			teamString := params["team"].(string)
 
 			lob, tperr := models.GetLobbyById(uint(lobbyid))
 			if tperr != nil {
@@ -180,22 +181,22 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
-			so.Join(strconv.FormatUint(lobbyid, 10))
+			so.Join(strconv.FormatUint(uint64(lobbyid), 10))
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
-		})))
+		})
 
 	var lobbyRemovePlayerParams = map[string]chelpers.Param{
-		"id":      chelpers.Param{Type: chelpers.PTypeInt},
-		"steamid": chelpers.Param{Type: chelpers.PTypeString, Default: ""},
-		"ban":     chelpers.Param{Type: chelpers.PTypeBool, Default: false},
+		"id":      chelpers.Param{Kind: reflect.Uint},
+		"steamid": chelpers.Param{Kind: reflect.String, Default: ""},
+		"ban":     chelpers.Param{Kind: reflect.Bool, Default: false},
 	}
 
-	so.On("lobbyRemovePlayer", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(lobbyRemovePlayerParams, func(js *simplejson.Json) string {
-			steamid, _ := js.Get("steamid").String()
-			ban, _ := js.Get("ban").Bool()
-			lobbyid, _ := js.Get("id").Int()
+	chelpers.RegisterEvent(so, "lobbyRemove", lobbyRemovePlayerParams, authority.AuthAction(0),
+		func(params map[string]interface{}) string {
+			steamid := params["steamid"].(string)
+			ban := params["ban"].(bool)
+			lobbyid := params["id"].(uint)
 			self := false
 
 			// TODO check authorization, currently can kick anyone
@@ -239,85 +240,88 @@ func SocketInit(so socketio.Socket) {
 			so.Leave(strconv.FormatInt(int64(lobbyid), 10))
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
-		})))
+		})
 
-	so.On("playerReady", chelpers.AuthFilter(so.Id(), func(val string) string {
-		steamid := chelpers.GetSteamId(so.Id())
-		player, tperr := models.GetPlayerBySteamId(steamid)
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
+	chelpers.RegisterEvent(so, "playerReady", nil, authority.AuthAction(0),
+		func(_ map[string]interface{}) string {
+			steamid := chelpers.GetSteamId(so.Id())
+			player, tperr := models.GetPlayerBySteamId(steamid)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			lobbyid, tperr := player.GetLobbyId()
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			lobby, tperr := models.GetLobbyById(lobbyid)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			tperr = lobby.ReadyPlayer(player)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			if lobby.IsEveryoneReady() {
+				bytes, _ := decorators.GetLobbyConnectJSON(lobby).Encode()
+				SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
+					"lobbyStart", string(bytes))
+			}
+
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
-		}
+		})
 
-		lobbyid, tperr := player.GetLobbyId()
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
+	chelpers.RegisterEvent(so, "playerUnready", nil, authority.AuthAction(0),
+		func(_ map[string]interface{}) string {
+			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			lobbyid, tperr := player.GetLobbyId()
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			lobby, tperr := models.GetLobbyById(lobbyid)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			tperr = lobby.UnreadyPlayer(player)
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
-		}
-
-		lobby, tperr := models.GetLobbyById(lobbyid)
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		tperr = lobby.ReadyPlayer(player)
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		if lobby.IsEveryoneReady() {
-			bytes, _ := decorators.GetLobbyConnectJSON(lobby).Encode()
-			SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
-				"lobbyStart", string(bytes))
-		}
-
-		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		return string(bytes)
-	}))
-
-	so.On("playerUnready", chelpers.AuthFilter(so.Id(), func(val string) string {
-		player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		lobbyid, tperr := player.GetLobbyId()
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		lobby, tperr := models.GetLobbyById(lobbyid)
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		tperr = lobby.UnreadyPlayer(player)
-		if tperr != nil {
-			bytes, _ := tperr.ErrorJSON().Encode()
-			return string(bytes)
-		}
-
-		bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		return string(bytes)
-	}))
+		})
 
 	var lobbyJoinSpectatorParams = map[string]chelpers.Param{
-		"id": chelpers.Param{Type: chelpers.PTypeInt},
+		"id": chelpers.Param{Kind: reflect.Uint},
 	}
 
-	so.On("lobbySpectatorJoin", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(lobbyJoinSpectatorParams, func(js *simplejson.Json) string {
-			lobbyid, _ := js.Get("id").Uint64()
+	chelpers.RegisterEvent(so, "lobbySpectatorJoin", lobbyJoinSpectatorParams, authority.AuthAction(0),
+		func(params map[string]interface{}) string {
+
+			lobbyid := params["id"].(uint)
 
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 			if tperr != nil {
@@ -337,17 +341,17 @@ func SocketInit(so socketio.Socket) {
 			}
 			lob.Save()
 			return string(bytes)
-		})))
+		})
 
 	var playerSettingsGetParams = map[string]chelpers.Param{
-		"key": chelpers.Param{Type: chelpers.PTypeString, Default: ""},
+		"key": chelpers.Param{Kind: reflect.String, Default: ""},
 	}
 
-	so.On("playerSettingsGet", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(playerSettingsGetParams, func(js *simplejson.Json) string {
+	chelpers.RegisterEvent(so, "playerSettingsGet", playerSettingsGetParams, authority.AuthAction(0),
+		func(params map[string]interface{}) string {
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
-			key, _ := js.Get("key").String()
+			key := params["key"].(string)
 
 			var err error
 			var settings []models.PlayerSetting
@@ -367,19 +371,19 @@ func SocketInit(so socketio.Socket) {
 			result := decorators.GetPlayerSettingsJson(settings)
 			resp, _ := chelpers.BuildSuccessJSON(result).Encode()
 			return string(resp)
-		})))
+		})
 
 	var playerSettingsSetParams = map[string]chelpers.Param{
-		"key":   chelpers.Param{Type: chelpers.PTypeString},
-		"value": chelpers.Param{Type: chelpers.PTypeString},
+		"key":   chelpers.Param{Kind: reflect.String},
+		"value": chelpers.Param{Kind: reflect.String},
 	}
 
-	so.On("playerSettingsSet", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(playerSettingsSetParams, func(js *simplejson.Json) string {
+	chelpers.RegisterEvent(so, "playerSettingsSet", playerSettingsSetParams, authority.AuthAction(0),
+		func(params map[string]interface{}) string {
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
-			key, _ := js.Get("key").String()
-			value, _ := js.Get("value").String()
+			key := params["key"].(string)
+			value := params["value"].(string)
 
 			err := player.SetSetting(key, value)
 			if err != nil {
@@ -389,15 +393,16 @@ func SocketInit(so socketio.Socket) {
 
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(resp)
-		})))
+		})
 
 	var playerProfileParams = map[string]chelpers.Param{
-		"steamid": chelpers.Param{Type: chelpers.PTypeString, Default: ""},
+		"steamid": chelpers.Param{Kind: reflect.String, Default: ""},
 	}
 
-	so.On("playerProfile", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(playerProfileParams, func(js *simplejson.Json) string {
-			steamid, _ := js.Get("steamid").String()
+	chelpers.RegisterEvent(so, "playerProfile", playerProfileParams, authority.AuthAction(0),
+		func(params map[string]interface{}) string {
+
+			steamid := params["steamid"].(string)
 
 			if steamid == "" {
 				steamid = chelpers.GetSteamId(so.Id())
@@ -413,17 +418,17 @@ func SocketInit(so socketio.Socket) {
 			result := decorators.GetPlayerProfileJson(player)
 			resp, _ := chelpers.BuildSuccessJSON(result).Encode()
 			return string(resp)
-		})))
+		})
 
 	var chatSendParams = map[string]chelpers.Param{
-		"message": chelpers.Param{Type: chelpers.PTypeString},
-		"room":    chelpers.Param{Type: chelpers.PTypeInt},
+		"message": chelpers.Param{Kind: reflect.String},
+		"room":    chelpers.Param{Kind: reflect.Int},
 	}
 
-	so.On("chatSend", chelpers.AuthFilter(so.Id(),
-		chelpers.JsonVerifiedFilter(chatSendParams, func(js *simplejson.Json) string {
-			message, _ := js.Get("message").String()
-			room, _ := js.Get("room").Int()
+	chelpers.RegisterEvent(so, "chatSend", chatSendParams, authority.AuthAction(0),
+		func(params map[string]interface{}) string {
+			message := params["message"].(string)
+			room := params["room"].(int)
 
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 			if tperr != nil {
@@ -464,7 +469,15 @@ func SocketInit(so socketio.Socket) {
 
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(resp)
-		})))
+		})
 
-	so.On("AdminChangeRole", ChangeRole(&so))
+	var adminChangeRoleParams = map[string]chelpers.Param{
+		"steamid": chelpers.Param{Kind: reflect.String},
+		"role":    chelpers.Param{Kind: reflect.String},
+	}
+
+	chelpers.RegisterEvent(so, "adminChangeRole", adminChangeRoleParams, helpers.ActionChangeRole,
+		func(params map[string]interface{}) string {
+			return ChangeRole(&so, params["role"].(string), params["steamid"].(string))
+		})
 }
