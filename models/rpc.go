@@ -28,6 +28,9 @@ var Pauling *rpc.Client
 type Event map[string]interface{}
 
 func PaulingConnect() {
+	if config.Constants.ServerMockUp {
+		return
+	}
 	helpers.Logger.Debug("Connecting to Pauling on port %s", config.Constants.PaulingPort)
 	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
 	if err != nil {
@@ -39,15 +42,24 @@ func PaulingConnect() {
 }
 
 func AllowPlayer(lobbyId uint, steamId string) error {
+	if config.Constants.ServerMockUp {
+		return nil
+	}
 	return Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {
+	if config.Constants.ServerMockUp {
+		return nil
+	}
 	return Pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
 }
 
 func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
 	mapName string) error {
+	if config.Constants.ServerMockUp {
+		return nil
+	}
 
 	args := &Args{
 		Id:     lobbyId,
@@ -59,5 +71,8 @@ func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league st
 }
 
 func End(lobbyId uint) {
+	if config.Constants.ServerMockUp {
+		return
+	}
 	Pauling.Call("Pauling.End", &Args{Id: lobbyId}, &Args{})
 }

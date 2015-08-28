@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
@@ -207,9 +206,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 
 	db.DB.Create(newSlotObj)
 
-	if !config.Constants.ServerMockUp {
-		AllowPlayer(lobby.ID, player.SteamId)
-	}
+	AllowPlayer(lobby.ID, player.SteamId)
 	return nil
 }
 
@@ -223,9 +220,7 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 }
 
 func (lobby *Lobby) BanPlayer(player *Player) {
-	if !config.Constants.ServerMockUp {
-		DisallowPlayer(lobby.ID, player.SteamId)
-	}
+	DisallowPlayer(lobby.ID, player.SteamId)
 	db.DB.Model(lobby).Association("BannedPlayers").Append(player)
 }
 
