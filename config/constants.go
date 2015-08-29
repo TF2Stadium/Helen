@@ -99,6 +99,7 @@ func setupDevelopmentConstants() {
 func setupProductionConstants() {
 	// override production stuff here
 	Constants.Port = "5555"
+	Constants.ServerMockUp = false
 	Constants.SocketMockUp = false
 }
 
