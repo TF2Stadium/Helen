@@ -1,11 +1,10 @@
-package decorators
+package models
 
 import (
-	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 )
 
-func GetPlayerSettingsJson(settings []models.PlayerSetting) *simplejson.Json {
+func DecoratePlayerSettingsJson(settings []PlayerSetting) *simplejson.Json {
 	json := simplejson.New()
 
 	for _, obj := range settings {
@@ -15,7 +14,7 @@ func GetPlayerSettingsJson(settings []models.PlayerSetting) *simplejson.Json {
 	return json
 }
 
-func GetPlayerProfileJson(p *models.Player) *simplejson.Json {
+func DecoratePlayerProfileJson(p *Player) *simplejson.Json {
 	j := simplejson.New()
 
 	// stats

@@ -8,7 +8,7 @@ import (
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
-	"github.com/TF2Stadium/Helen/controllers/socket"
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -45,7 +45,8 @@ func main() {
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
 	}
-	socket.InitBroadcaster(socketServer)
+	broadcaster.Init(socketServer)
+	defer broadcaster.Stop()
 	routes.SetupSocketRoutes(socketServer)
 	r.Handle("/socket.io/", socketServer)
 

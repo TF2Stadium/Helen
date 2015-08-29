@@ -83,7 +83,7 @@ func setupDevelopmentConstants() {
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
 	Constants.PaulingPort = "1234"
 	Constants.SocketMockUp = false
-	Constants.ServerMockUp = false
+	Constants.ServerMockUp = true
 	Constants.AllowedCorsOrigins = []string{"*"}
 
 	Constants.DbHost = "127.0.0.1"

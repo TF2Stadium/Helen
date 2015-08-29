@@ -6,7 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/TF2Stadium/Helen/controllers/socket"
+	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -16,6 +17,9 @@ import (
 var ticker *time.Ticker
 
 func StartListener() {
+	if config.Constants.ServerMockUp {
+		return
+	}
 	ticker = time.NewTicker(time.Second * 3)
 	go listener()
 	helpers.Logger.Debug("Listening for events on Pauling")
@@ -53,7 +57,7 @@ func handleEvent(event map[string]interface{}) {
 		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
 		slot.InGame = false
 		db.DB.Save(slot)
-		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", fmt.Sprintf("%s has disconected from the server .",
 				player.Name))
 
@@ -78,7 +82,7 @@ func handleEvent(event map[string]interface{}) {
 		player, _ := models.GetPlayerBySteamId(steamId)
 
 		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Delete(&models.LobbySlot{})
-		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", fmt.Sprintf("%s has been reported.",
 				player.Name))
 
@@ -87,7 +91,7 @@ func handleEvent(event map[string]interface{}) {
 
 		lobby, _ := models.GetLobbyById(lobbyid)
 		lobby.Close(false)
-		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", "Disconnected from Server.")
 
 	case "matchEnded":
@@ -95,7 +99,7 @@ func handleEvent(event map[string]interface{}) {
 
 		lobby, _ := models.GetLobbyById(lobbyid)
 		lobby.Close(false)
-		socket.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", "Lobby Ended.")
 
 	case "getServers":

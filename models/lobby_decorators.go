@@ -1,22 +1,20 @@
-package decorators
+package models
 
 import (
 	"strconv"
 
-	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 )
 
-func getSlotDetails(lobby *models.Lobby, slot int) (string, string, bool) {
+func decorateSlotDetails(lobby *Lobby, slot int) (string, string, bool) {
 	steamid := ""
 	name := ""
 	ready := false
 
 	playerId, err := lobby.GetPlayerIdBySlot(slot)
 	if err == nil {
-		var player models.Player
+		var player Player
 		db.DB.First(&player, playerId)
 
 		steamid = player.SteamId
@@ -26,16 +24,16 @@ func getSlotDetails(lobby *models.Lobby, slot int) (string, string, bool) {
 	return steamid, name, ready
 }
 
-func GetLobbyDataJSON(lobby models.Lobby) *simplejson.Json {
+func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
 	lobbyJs := simplejson.New()
 	lobbyJs.Set("id", lobby.ID)
-	lobbyJs.Set("type", models.FormatMap[lobby.Type])
+	lobbyJs.Set("type", FormatMap[lobby.Type])
 	lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
 	lobbyJs.Set("players", lobby.GetPlayerNumber())
 	lobbyJs.Set("map", lobby.MapName)
 	var classes []*simplejson.Json
 
-	var classList = chelpers.FormatClassList(lobby.Type)
+	var classList = LobbyFormatClassList(lobby.Type)
 	lobbyJs.Set("maxPlayers", len(classList)*2)
 
 	for slot, className := range classList {
@@ -43,12 +41,12 @@ func GetLobbyDataJSON(lobby models.Lobby) *simplejson.Json {
 		red := simplejson.New()
 		blu := simplejson.New()
 
-		steamid, name, ready := getSlotDetails(&lobby, slot)
+		steamid, name, ready := decorateSlotDetails(lobby, slot)
 		red.Set("steamid", steamid)
 		red.Set("name", name)
 		red.Set("ready", ready)
 
-		steamid, name, ready = getSlotDetails(&lobby, slot+models.TypePlayerCount[lobby.Type])
+		steamid, name, ready = decorateSlotDetails(lobby, slot+TypePlayerCount[lobby.Type])
 		blu.Set("steamid", steamid)
 		blu.Set("name", name)
 		blu.Set("ready", ready)
@@ -72,7 +70,7 @@ func GetLobbyDataJSON(lobby models.Lobby) *simplejson.Json {
 	return lobbyJs
 }
 
-func GetLobbyListData(lobbies []models.Lobby) (string, error) {
+func DecorateLobbyListData(lobbies []Lobby) (string, error) {
 
 	if len(lobbies) == 0 {
 		return "{}", nil
@@ -81,7 +79,7 @@ func GetLobbyListData(lobbies []models.Lobby) (string, error) {
 	var lobbyList []*simplejson.Json
 
 	for _, lobby := range lobbies {
-		lobbyJs := GetLobbyDataJSON(lobby)
+		lobbyJs := DecorateLobbyDataJSON(&lobby)
 		lobbyList = append(lobbyList, lobbyJs)
 	}
 
@@ -92,7 +90,7 @@ func GetLobbyListData(lobbies []models.Lobby) (string, error) {
 	return string(bytes), nil
 }
 
-func GetLobbyConnectJSON(lobby *models.Lobby) *simplejson.Json {
+func DecorateLobbyConnectJSON(lobby *Lobby) *simplejson.Json {
 	json := simplejson.New()
 
 	json.Set("id", lobby.ID)

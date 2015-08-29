@@ -1,4 +1,4 @@
-package controllerhelpers
+package models_test
 
 import (
 	"testing"
@@ -13,17 +13,17 @@ func init() {
 }
 
 func TestUgcHighlander(t *testing.T) {
-	res, err := GetPlayerSlot(models.LobbyTypeSixes, "red", "scout1")
+	res, err := models.LobbyGetPlayerSlot(models.LobbyTypeSixes, "red", "scout1")
 	assert.Equal(t, 0, res)
 	assert.Nil(t, err)
 
-	res, err = GetPlayerSlot(models.LobbyTypeHighlander, "blu", "heavy")
+	res, err = models.LobbyGetPlayerSlot(models.LobbyTypeHighlander, "blu", "heavy")
 	assert.Equal(t, 13, res)
 	assert.Nil(t, err)
 
-	res, err = GetPlayerSlot(models.LobbyTypeHighlander, "blu", "garbageman")
+	res, err = models.LobbyGetPlayerSlot(models.LobbyTypeHighlander, "blu", "garbageman")
 	assert.NotNil(t, err)
 
-	res, err = GetPlayerSlot(models.LobbyTypeSixes, "ylw", "demoman")
+	res, err = models.LobbyGetPlayerSlot(models.LobbyTypeSixes, "ylw", "demoman")
 	assert.NotNil(t, err)
 }

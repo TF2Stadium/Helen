@@ -1,13 +1,9 @@
-package socket
+package broadcaster
 
 import (
-	"strconv"
 	"time"
 
-	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/decorators"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
 	"github.com/googollee/go-socket.io"
 )
 
@@ -24,7 +20,7 @@ var broadcastStopChannel chan bool
 var broadcastMessageChannel chan broadcastMessage
 var socketServer *socketio.Server
 
-func InitBroadcaster(server *socketio.Server) {
+func Init(server *socketio.Server) {
 	broadcasterTicker = time.NewTicker(time.Millisecond * 1000)
 	broadcastStopChannel = make(chan bool)
 	broadcastMessageChannel = make(chan broadcastMessage)
@@ -32,7 +28,7 @@ func InitBroadcaster(server *socketio.Server) {
 	go broadcaster()
 }
 
-func StopBroadcaster() {
+func Stop() {
 	broadcasterTicker.Stop()
 	broadcastStopChannel <- true
 }
@@ -58,24 +54,6 @@ func SendMessageToRoom(room string, event string, content string) {
 func broadcaster() {
 	for {
 		select {
-		case <-broadcasterTicker.C:
-			var lobbies []models.Lobby
-			db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
-			list, err := decorators.GetLobbyListData(lobbies)
-			if err != nil {
-				helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
-			} else {
-				socketServer.BroadcastTo("-1", "lobbyListData", list)
-			}
-
-			var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
-			db.DB.Where("state IN (?)", activeStates).
-				Find(&lobbies)
-			for _, lobby := range lobbies {
-				bytes, _ := decorators.GetLobbyDataJSON(lobby).Encode()
-				socketServer.BroadcastTo(strconv.FormatUint(uint64(lobby.ID), 10), "lobbyData", string(bytes))
-			}
-
 		case message := <-broadcastMessageChannel:
 			if message.Room == "" {
 				socket, ok := SteamIdSocketMap[message.SteamId]

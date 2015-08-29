@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
+	"strconv"
 )
 
 type LobbyType int
@@ -207,6 +209,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	db.DB.Create(newSlotObj)
 
 	AllowPlayer(lobby.ID, player.SteamId)
+	lobby.OnChange(true)
 	return nil
 }
 
@@ -216,6 +219,7 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 		return helpers.NewTPError(err.Error(), -1)
 	}
 
+	lobby.OnChange(true)
 	return nil
 }
 
@@ -232,6 +236,7 @@ func (lobby *Lobby) ReadyPlayer(player *Player) *helpers.TPError {
 	}
 	slot.Ready = true
 	db.DB.Save(slot)
+	lobby.OnChange(false)
 	return nil
 }
 
@@ -244,6 +249,7 @@ func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
 
 	slot.Ready = false
 	db.DB.Save(slot)
+	lobby.OnChange(false)
 	return nil
 }
 
@@ -281,6 +287,7 @@ func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
 	if err != nil {
 		return helpers.NewTPError(err.Error(), -1)
 	}
+	lobby.OnChange(false)
 	return nil
 }
 
@@ -289,6 +296,7 @@ func (lobby *Lobby) RemoveSpectator(player *Player) *helpers.TPError {
 	if err != nil {
 		return helpers.NewTPError(err.Error(), -1)
 	}
+	lobby.OnChange(false)
 	return nil
 }
 
@@ -335,18 +343,50 @@ func (lobby *Lobby) Close(rpc bool) {
 	db.DB.Save(lobby)
 }
 
+// GORM callback
 func (lobby *Lobby) AfterFind() error {
 	if (lobby.ServerInfo == ServerRecord{}) {
 		// hasn't been preloaded. Do that here.
 		db.DB.Find(&lobby.ServerInfo, lobby.ServerInfoID)
 	}
 
-	// should still finish Find if the server fails to initialize)
-	//	lobby.AfterSave()
 	return nil
+}
+
+// GORM callback
+func (lobby *Lobby) AfterSave() error {
+	lobby.OnChange(true)
+	return nil
+}
+
+// If base is true, broadcasts the lobby list update
+func (lobby *Lobby) OnChange(base bool) {
+	if lobby.State == LobbyStateWaiting || lobby.State == LobbyStateInProgress {
+		BroadcastLobby(lobby)
+	}
+
+	if lobby.State == LobbyStateWaiting && base {
+		BroadcastLobbyList()
+	}
 }
 
 func IsLeagueValid(league string) bool {
 	_, ok := ValidLeagues[league]
 	return ok
+}
+
+func BroadcastLobby(lobby *Lobby) {
+	bytes, _ := DecorateLobbyDataJSON(lobby).Encode()
+	broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10), "lobbyData", string(bytes))
+}
+
+func BroadcastLobbyList() {
+	var lobbies []Lobby
+	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)
+	list, err := DecorateLobbyListData(lobbies)
+	if err != nil {
+		helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
+	} else {
+		broadcaster.SendMessageToRoom("-1", "lobbyListData", list)
+	}
 }

@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
-	"github.com/TF2Stadium/Helen/decorators"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
@@ -21,14 +21,14 @@ func SocketInit(so socketio.Socket) {
 	chelpers.AuthenticateSocket(so.Id(), so.Request())
 	if chelpers.IsLoggedInSocket(so.Id()) {
 		steamid := chelpers.GetSteamId(so.Id())
-		SteamIdSocketMap[steamid] = &so
+		broadcaster.SteamIdSocketMap[steamid] = &so
 	}
 
 	so.On("disconnection", func() {
 		chelpers.DeauthenticateSocket(so.Id())
 		if chelpers.IsLoggedInSocket(so.Id()) {
 			steamid := chelpers.GetSteamId(so.Id())
-			delete(SteamIdSocketMap, steamid)
+			delete(broadcaster.SteamIdSocketMap, steamid)
 		}
 		helpers.Logger.Debug("on disconnect")
 	})
@@ -108,6 +108,8 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
+			lob.State = models.LobbyStateWaiting
+			lob.Save()
 			lobby_id := simplejson.New()
 			lobby_id.Set("id", lob.ID)
 			bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
@@ -141,6 +143,7 @@ func SocketInit(so socketio.Socket) {
 			}
 
 			lob.Close(true)
+			models.BroadcastLobbyList() // has to be done manually for now
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
@@ -171,7 +174,7 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
-			slot, tperr := chelpers.GetPlayerSlot(lob.Type, teamString, classString)
+			slot, tperr := models.LobbyGetPlayerSlot(lob.Type, teamString, classString)
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
@@ -272,8 +275,8 @@ func SocketInit(so socketio.Socket) {
 			}
 
 			if lobby.IsEveryoneReady() {
-				bytes, _ := decorators.GetLobbyConnectJSON(lobby).Encode()
-				SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
+				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
+				broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
 					"lobbyStart", string(bytes))
 			}
 
@@ -370,7 +373,7 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
-			result := decorators.GetPlayerSettingsJson(settings)
+			result := models.DecoratePlayerSettingsJson(settings)
 			resp, _ := chelpers.BuildSuccessJSON(result).Encode()
 			return string(resp)
 		})
@@ -417,7 +420,7 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
-			result := decorators.GetPlayerProfileJson(player)
+			result := models.DecoratePlayerProfileJson(player)
 			resp, _ := chelpers.BuildSuccessJSON(result).Encode()
 			return string(resp)
 		})
@@ -467,7 +470,7 @@ func SocketInit(so socketio.Socket) {
 
 			chatMessage.Set("user", user)
 			bytes, _ := chatMessage.Encode()
-			socketServer.BroadcastTo(strconv.Itoa(room), "chatReceive", string(bytes))
+			broadcaster.SendMessageToRoom(strconv.Itoa(room), "chatReceive", string(bytes))
 
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(resp)

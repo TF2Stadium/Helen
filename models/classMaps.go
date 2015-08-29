@@ -1,9 +1,6 @@
-package controllerhelpers
+package models
 
-import (
-	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
-)
+import "github.com/TF2Stadium/Helen/helpers"
 
 var teamMap = map[string]int{"red": 0, "blu": 1}
 var sixesClassMap = map[string]int{
@@ -31,7 +28,7 @@ var hlClassMap = map[string]int{
 
 var hlClassList = []string{"scout", "soldier", "pyro", "demoman", "heavy", "engineer", "medic", "sniper", "spy"}
 
-func GetPlayerSlot(lobbytype models.LobbyType, teamStr string, classStr string) (int, *helpers.TPError) {
+func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (int, *helpers.TPError) {
 	team, ok := teamMap[teamStr]
 	if !ok {
 		return -1, helpers.NewTPError("Invalid team", -1)
@@ -39,9 +36,9 @@ func GetPlayerSlot(lobbytype models.LobbyType, teamStr string, classStr string) 
 
 	var classMap map[string]int
 	switch lobbytype {
-	case models.LobbyTypeHighlander:
+	case LobbyTypeHighlander:
 		classMap = hlClassMap
-	case models.LobbyTypeSixes:
+	case LobbyTypeSixes:
 		classMap = sixesClassMap
 	}
 
@@ -54,16 +51,16 @@ func GetPlayerSlot(lobbytype models.LobbyType, teamStr string, classStr string) 
 	return team*len(classMap) + class, nil
 }
 
-func FormatClassMap(format models.LobbyType) map[string]int {
-	if format == models.LobbyTypeHighlander {
+func LobbyFormatClassMap(format LobbyType) map[string]int {
+	if format == LobbyTypeHighlander {
 		return hlClassMap
 
 	}
 	return sixesClassMap
 }
 
-func FormatClassList(format models.LobbyType) []string {
-	if format == models.LobbyTypeHighlander {
+func LobbyFormatClassList(format LobbyType) []string {
+	if format == LobbyTypeHighlander {
 		return hlClassList
 
 	}
