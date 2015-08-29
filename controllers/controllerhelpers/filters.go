@@ -67,7 +67,7 @@ func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
 					}
 				} else if param.Kind == reflect.Int {
 					if num, err := js.Get(key).Int64(); err == nil {
-						paramMap[key] = int64(num)
+						paramMap[key] = int(num)
 						continue
 					}
 				}

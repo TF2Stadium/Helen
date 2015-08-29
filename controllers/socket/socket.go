@@ -187,7 +187,8 @@ func SocketInit(so socketio.Socket) {
 				return string(bytes)
 			}
 
-			so.Join(strconv.FormatUint(uint64(lobbyid), 10))
+			chelpers.AfterLobbyJoin(so, lob, player)
+
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
 		})
@@ -243,7 +244,7 @@ func SocketInit(so socketio.Socket) {
 				lob.BanPlayer(player)
 			}
 
-			so.Leave(strconv.FormatInt(int64(lobbyid), 10))
+			chelpers.AfterLobbyLeave(so, lob, player)
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
 		})
@@ -345,7 +346,8 @@ func SocketInit(so socketio.Socket) {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
-			lob.Save()
+
+			chelpers.AfterLobbyJoin(so, lob, player)
 			return string(bytes)
 		})
 

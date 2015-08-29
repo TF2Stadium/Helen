@@ -380,6 +380,11 @@ func BroadcastLobby(lobby *Lobby) {
 	broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10), "lobbyData", string(bytes))
 }
 
+func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
+	bytes, _ := DecorateLobbyDataJSON(lobby).Encode()
+	broadcaster.SendMessage(steamid, "lobbyData", string(bytes))
+}
+
 func BroadcastLobbyList() {
 	var lobbies []Lobby
 	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)
