@@ -40,6 +40,7 @@ func SocketInit(so socketio.Socket) {
 
 	helpers.Logger.Debug("on connection")
 	so.Join("-1") //room for global chat
+	models.BroadcastLobbyList()
 
 	if chelpers.IsLoggedInSocket(so.Id()) {
 		player, err := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -485,4 +486,11 @@ func SocketInit(so socketio.Socket) {
 		func(params map[string]interface{}) string {
 			return ChangeRole(&so, params["role"].(string), params["steamid"].(string))
 		})
+
+	so.On("RequestLobbyListData", func(s string) string {
+		models.BroadcastLobbyList()
+
+		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		return string(resp)
+	})
 }
