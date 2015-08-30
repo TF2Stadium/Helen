@@ -17,16 +17,11 @@ var BanTypeMap = map[string]models.PlayerBanType{
 
 func AfterLobbyJoin(so socketio.Socket, lobby *models.Lobby, player *models.Player) {
 	so.Join(GetLobbyRoom(lobby.ID))
-
-	// broadcast lobby data to the player specifically
-	models.BroadcastLobbyToUser(lobby, player.SteamId)
 }
 
 func AfterLobbyLeave(so socketio.Socket, lobby *models.Lobby, player *models.Player) {
 	so.Join(GetLobbyRoom(lobby.ID))
 
-	// broadcast lobby data to the player specifically
-	models.BroadcastLobbyToUser(lobby, player.SteamId)
 }
 
 func GetLobbyRoom(lobbyid uint) string {
