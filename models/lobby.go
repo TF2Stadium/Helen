@@ -129,6 +129,8 @@ func (lobby *Lobby) Save() error {
 	} else {
 		err = db.DB.Save(lobby).Error
 	}
+
+	lobby.RealAfterSave()
 	return err
 }
 
@@ -353,10 +355,9 @@ func (lobby *Lobby) AfterFind() error {
 	return nil
 }
 
-// GORM callback
-func (lobby *Lobby) AfterSave() error {
+// manually called. Should be called after the change to lobby actually takes effect.
+func (lobby *Lobby) RealAfterSave() {
 	lobby.OnChange(true)
-	return nil
 }
 
 // If base is true, broadcasts the lobby list update
