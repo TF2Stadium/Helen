@@ -7,21 +7,22 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
-func decorateSlotDetails(lobby *Lobby, slot int) (string, string, bool) {
-	steamid := ""
-	name := ""
-	ready := false
+func decorateSlotDetails(lobby *Lobby, slot int) *simplejson.Json {
+	j := simplejson.New()
+
+	//	j.Set("player")
+	j.Set("ready", false)
 
 	playerId, err := lobby.GetPlayerIdBySlot(slot)
 	if err == nil {
 		var player Player
 		db.DB.First(&player, playerId)
 
-		steamid = player.SteamId
-		name = player.Name
-		ready, _ = lobby.IsPlayerReady(&player)
+		j.Set("player", DecoratePlayerSummaryJson(&player))
+		ready, _ := lobby.IsPlayerReady(&player)
+		j.Set("ready", ready)
 	}
-	return steamid, name, ready
+	return j
 }
 
 func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
@@ -30,7 +31,14 @@ func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
 	lobbyJs.Set("type", FormatMap[lobby.Type])
 	lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
 	lobbyJs.Set("players", lobby.GetPlayerNumber())
+	lobbyJs.Set("whitelistId", lobby.Whitelist)
 	lobbyJs.Set("map", lobby.MapName)
+
+	var leader Player
+	db.DB.First(&leader, lobby.CreatedByID)
+
+	lobbyJs.Set("leader", DecoratePlayerSummaryJson(&leader))
+
 	var classes []*simplejson.Json
 
 	var classList = LobbyFormatClassList(lobby.Type)
@@ -38,21 +46,9 @@ func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
 
 	for slot, className := range classList {
 		class := simplejson.New()
-		red := simplejson.New()
-		blu := simplejson.New()
 
-		steamid, name, ready := decorateSlotDetails(lobby, slot)
-		red.Set("steamid", steamid)
-		red.Set("name", name)
-		red.Set("ready", ready)
-
-		steamid, name, ready = decorateSlotDetails(lobby, slot+TypePlayerCount[lobby.Type])
-		blu.Set("steamid", steamid)
-		blu.Set("name", name)
-		blu.Set("ready", ready)
-
-		class.Set("red", red)
-		class.Set("blu", blu)
+		class.Set("red", decorateSlotDetails(lobby, slot))
+		class.Set("blu", decorateSlotDetails(lobby, slot+TypePlayerCount[lobby.Type]))
 		class.Set("class", className)
 		classes = append(classes, class)
 	}
