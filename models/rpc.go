@@ -70,6 +70,10 @@ func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league st
 	return Pauling.Call("Pauling.SetupServer", args, &Args{})
 }
 
+func VerifyInfo(info ServerRecord) error {
+	return Pauling.Call("Pauling.VerifyInfo", &info, &Args{})
+}
+
 func End(lobbyId uint) {
 	if config.Constants.ServerMockUp {
 		return

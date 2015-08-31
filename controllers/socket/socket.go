@@ -98,11 +98,19 @@ func SocketInit(so socketio.Socket) {
 			serverPwd := base64.URLEncoding.EncodeToString(randBytes)
 
 			//TODO what if playermap[lobbytype] is nil?
-			lob := models.NewLobby(mapName, lobbytype, league,
-				models.ServerRecord{Host: server, RconPassword: rconPwd, ServerPassword: serverPwd}, whitelist)
+			info := models.ServerRecord{
+				Host:           server,
+				RconPassword:   rconPwd,
+				ServerPassword: serverPwd}
+			err := models.VerifyInfo(info)
+			if err != nil {
+				return err.Error()
+			}
+
+			lob := models.NewLobby(mapName, lobbytype, league, info, whitelist)
 			lob.CreatedBy = *player
 			lob.Save()
-			err := lob.SetupServer()
+			err = lob.SetupServer()
 
 			if err != nil {
 				bytes, _ := err.(*helpers.TPError).ErrorJSON().Encode()
