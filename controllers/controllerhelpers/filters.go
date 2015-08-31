@@ -50,7 +50,8 @@ func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
 		}
 
 		for key, param := range params {
-			value, ok := paramMap[key]
+			_, ok := paramMap[key]
+
 			if !ok {
 				if param.Default == nil {
 					bytes, _ := BuildMissingArgJSON(key).Encode()
@@ -59,7 +60,7 @@ func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
 				paramMap[key] = param.Default
 			}
 
-			if kind := reflect.ValueOf(value).Kind(); kind != param.Kind {
+			if kind := reflect.ValueOf(paramMap[key]).Kind(); kind != param.Kind {
 				if param.Kind == reflect.Uint {
 					if num, err := js.Get(key).Uint64(); err == nil {
 						paramMap[key] = uint(num)
@@ -75,6 +76,9 @@ func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
 				return string(bytes)
 			}
 		}
+
+		// TODO check in param.In
+
 		return f(paramMap)
 	})
 }

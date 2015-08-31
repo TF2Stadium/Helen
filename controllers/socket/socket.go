@@ -497,10 +497,11 @@ func SocketInit(so socketio.Socket) {
 			return ChangeRole(&so, params["role"].(string), params["steamid"].(string))
 		})
 
-	so.On("RequestLobbyListData", func(s string) string {
+	so.On("requestLobbyListData", func(s string) string {
 		models.BroadcastLobbyList()
 
 		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(resp)
 	})
+
 }
