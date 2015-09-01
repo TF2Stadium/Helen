@@ -183,11 +183,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		slotFilled = true
 	}
 
-	playerSlot := &LobbySlot{}
-	err := db.DB.Where("player_id = ?", player.ID).Find(playerSlot)
+	currLobbyId, err := player.GetLobbyId()
 
 	// if the player is in a different lobby, return error
-	if err == nil && playerSlot.LobbyId != lobby.ID {
+	if err == nil && currLobbyId != lobby.ID {
 		return alreadyInLobbyError
 	}
 

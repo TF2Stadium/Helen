@@ -126,7 +126,20 @@ func (player *Player) IsSpectatingId(lobbyid uint) bool {
 		return false
 	}
 	return count != 0
+}
 
+func (player *Player) GetSpectatingIds() ([]uint, *helpers.TPError) {
+	var ids []uint
+	err := db.DB.Model(&Lobby{}).
+		Joins("INNER JOIN spectators_players_lobbies l ON l.lobby_id = lobbies.id").
+		Where("l.player_id = ? AND lobbies.state <> ?", player.ID, LobbyStateEnded).
+		Pluck("id", &ids).Error
+
+	if err != nil {
+		return nil, helpers.NewTPError(err.Error(), 1)
+	}
+
+	return ids, nil
 }
 
 func (player *Player) UpdatePlayerInfo() error {

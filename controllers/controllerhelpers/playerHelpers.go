@@ -24,6 +24,25 @@ func AfterLobbyLeave(so socketio.Socket, lobby *models.Lobby, player *models.Pla
 
 }
 
+func AfterConnect(so socketio.Socket) {
+	so.Join("-1") //room for global chat
+	models.BroadcastLobbyList()
+}
+
+func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
+	lobbyIdPlaying, err := player.GetLobbyId()
+	if err == nil {
+		so.Join(GetLobbyRoom(lobbyIdPlaying))
+	}
+
+	lobbyIdsSpectating, err2 := player.GetSpectatingIds()
+	if err2 == nil {
+		for _, id := range lobbyIdsSpectating {
+			so.Join(GetLobbyRoom(id))
+		}
+	}
+}
+
 func GetLobbyRoom(lobbyid uint) string {
 	return strconv.FormatUint(uint64(lobbyid), 10)
 }

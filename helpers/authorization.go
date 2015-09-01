@@ -21,6 +21,7 @@ var RoleMap = map[string]authority.AuthRole{
 	"administrator": RoleAdmin,
 }
 
+// You cant's change the order of these
 const (
 	ActionBanPlayer  authority.AuthAction = iota
 	ActionChangeRole authority.AuthAction = iota

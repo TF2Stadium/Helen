@@ -39,8 +39,7 @@ func SocketInit(so socketio.Socket) {
 		})
 
 	helpers.Logger.Debug("on connection")
-	so.Join("-1") //room for global chat
-	models.BroadcastLobbyList()
+	chelpers.AfterConnect(so)
 
 	if chelpers.IsLoggedInSocket(so.Id()) {
 		player, err := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -49,10 +48,8 @@ func SocketInit(so socketio.Socket) {
 				chelpers.GetSteamId(so.Id()))
 			return
 		}
-		lobbyid, err := player.GetLobbyId()
-		if err != nil {
-			so.Join(strconv.FormatUint(uint64(lobbyid), 10))
-		}
+
+		chelpers.AfterConnectLoggedIn(so, player)
 	}
 
 	lobbyCreateFilters := chelpers.FilterParams{
@@ -231,7 +228,7 @@ func SocketInit(so socketio.Socket) {
 		},
 	}
 
-	chelpers.RegisterEvent(so, "lobbyRemove", lobbyRemovePlayerFilters,
+	chelpers.RegisterEvent(so, "lobbyRemovePlayer", lobbyRemovePlayerFilters,
 		func(params map[string]interface{}) string {
 			steamid := params["steamid"].(string)
 			ban := params["ban"].(bool)

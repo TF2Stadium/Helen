@@ -22,6 +22,10 @@ func TestIsSpectating(t *testing.T) {
 
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1)
 	database.DB.Save(lobby)
+
+	lobby2 := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1)
+	database.DB.Save(lobby2)
+
 	player, _ := models.NewPlayer("asdf")
 	database.DB.Save(player)
 
@@ -32,6 +36,14 @@ func TestIsSpectating(t *testing.T) {
 
 	isSpectating = player.IsSpectatingId(lobby.ID)
 	assert.True(t, isSpectating)
+
+	lobby2.AddSpectator(player)
+	isSpectating2 := player.IsSpectatingId(lobby2.ID)
+	assert.True(t, isSpectating2)
+
+	specIds, specErr := player.GetSpectatingIds()
+	assert.Nil(t, specErr)
+	assert.Equal(t, []uint{lobby.ID, lobby2.ID}, specIds)
 
 	lobby.RemoveSpectator(player)
 	isSpectating = player.IsSpectatingId(lobby.ID)
