@@ -228,7 +228,7 @@ func SocketInit(so socketio.Socket) {
 		},
 	}
 
-	chelpers.RegisterEvent(so, "lobbyRemovePlayer", lobbyRemovePlayerFilters,
+	chelpers.RegisterEvent(so, "lobbyKick", lobbyRemovePlayerFilters,
 		func(params map[string]interface{}) string {
 			steamid := params["steamid"].(string)
 			ban := params["ban"].(bool)

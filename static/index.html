@@ -76,7 +76,7 @@ $(function() {
   createBox(io, "lobbyClose", ["id"]);
   createBox(io, "lobbyJoin", ["id", "team", "class"]);
   createBox(io, "lobbySpectatorJoin", ["id"]);
-  createBox(io, "lobbyRemovePlayer", ["id", "steamid", "ban"]);
+  createBox(io, "lobbyKick", ["id", "steamid", "ban"]);
   createBox(io, "playerReady", []);
   createBox(io, "playerUnready", []);
   createBox(io, "chatSend", ["message", "room"]);
