@@ -33,7 +33,7 @@ func SocketInit(so socketio.Socket) {
 		helpers.Logger.Debug("on disconnect")
 	})
 
-	chelpers.RegisterEvent(so, "authenticationTest", nil, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "authenticationTest", chelpers.FilterParams{},
 		func(_ map[string]interface{}) string {
 			return "authenticated"
 		})
@@ -61,14 +61,15 @@ func SocketInit(so socketio.Socket) {
 
 		Params: map[string]chelpers.Param{
 			"mapName": chelpers.Param{Kind: reflect.String},
+
 			"type": chelpers.Param{
 				Kind: reflect.String,
 				In:   []string{"highlander", "sixes"}},
-
-			"league": chelpers.Param{Kind: reflect.String},
-			"server": chelpers.Param{
+			"league": chelpers.Param{
 				Kind: reflect.String,
 				In:   []string{"etf2l", "ugc"}},
+
+			"server": chelpers.Param{Kind: reflect.String},
 
 			"rconpwd":        chelpers.Param{Kind: reflect.String},
 			"whitelist":      chelpers.Param{Kind: reflect.Uint},
@@ -499,7 +500,7 @@ func SocketInit(so socketio.Socket) {
 
 			//Check if player has either joined, or is spectating lobby
 			lobbyId, tperr := player.GetLobbyId()
-			if room > 0 {
+			if room >= 0 {
 				// if room is a lobby room
 				if tperr != nil {
 					bytes, _ := tperr.ErrorJSON().Encode()
