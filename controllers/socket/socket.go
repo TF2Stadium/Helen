@@ -55,17 +55,28 @@ func SocketInit(so socketio.Socket) {
 		}
 	}
 
-	var lobbyCreateParams = map[string]chelpers.Param{
-		"mapName":        chelpers.Param{Kind: reflect.String},
-		"type":           chelpers.Param{Kind: reflect.String, In: []string{"highlander", "sixes"}},
-		"league":         chelpers.Param{Kind: reflect.String},
-		"server":         chelpers.Param{Kind: reflect.String, In: []string{"etf2l", "ugc"}},
-		"rconpwd":        chelpers.Param{Kind: reflect.String},
-		"whitelist":      chelpers.Param{Kind: reflect.Uint},
-		"mumbleRequired": chelpers.Param{Kind: reflect.Bool},
+	lobbyCreateFilters := chelpers.FilterParams{
+		Action:      authority.AuthAction(0),
+		FilterLogin: true,
+
+		Params: map[string]chelpers.Param{
+			"mapName": chelpers.Param{Kind: reflect.String},
+			"type": chelpers.Param{
+				Kind: reflect.String,
+				In:   []string{"highlander", "sixes"}},
+
+			"league": chelpers.Param{Kind: reflect.String},
+			"server": chelpers.Param{
+				Kind: reflect.String,
+				In:   []string{"etf2l", "ugc"}},
+
+			"rconpwd":        chelpers.Param{Kind: reflect.String},
+			"whitelist":      chelpers.Param{Kind: reflect.Uint},
+			"mumbleRequired": chelpers.Param{Kind: reflect.Bool},
+		},
 	}
 
-	chelpers.RegisterEvent(so, "lobbyCreate", lobbyCreateParams, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "lobbyCreate", lobbyCreateFilters,
 		func(params map[string]interface{}) string {
 
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -125,11 +136,15 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		})
 
-	var lobbyCloseParams = map[string]chelpers.Param{
-		"id": chelpers.Param{Kind: reflect.Uint},
+	lobbyCloseFilters := chelpers.FilterParams{
+		Action:      authority.AuthAction(0),
+		FilterLogin: true,
+		Params: map[string]chelpers.Param{
+			"id": chelpers.Param{Kind: reflect.Uint},
+		},
 	}
 
-	chelpers.RegisterEvent(so, "lobbyClose", lobbyCloseParams, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "lobbyClose", lobbyCloseFilters,
 		func(params map[string]interface{}) string {
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
@@ -158,13 +173,17 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		})
 
-	var lobbyJoinParams = map[string]chelpers.Param{
-		"id":    chelpers.Param{Kind: reflect.Uint},
-		"class": chelpers.Param{Kind: reflect.String},
-		"team":  chelpers.Param{Kind: reflect.String},
+	lobbyJoinFilters := chelpers.FilterParams{
+		Action:      authority.AuthAction(0),
+		FilterLogin: true,
+		Params: map[string]chelpers.Param{
+			"id":    chelpers.Param{Kind: reflect.Uint},
+			"class": chelpers.Param{Kind: reflect.String},
+			"team":  chelpers.Param{Kind: reflect.String},
+		},
 	}
 
-	chelpers.RegisterEvent(so, "lobbyJoin", lobbyJoinParams, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "lobbyJoin", lobbyJoinFilters,
 		func(params map[string]interface{}) string {
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
@@ -201,13 +220,17 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		})
 
-	var lobbyRemovePlayerParams = map[string]chelpers.Param{
-		"id":      chelpers.Param{Kind: reflect.Uint},
-		"steamid": chelpers.Param{Kind: reflect.String, Default: ""},
-		"ban":     chelpers.Param{Kind: reflect.Bool, Default: false},
+	lobbyRemovePlayerFilters := chelpers.FilterParams{
+		Action:      authority.AuthAction(0),
+		FilterLogin: true,
+		Params: map[string]chelpers.Param{
+			"id":      chelpers.Param{Kind: reflect.Uint},
+			"steamid": chelpers.Param{Kind: reflect.String, Default: ""},
+			"ban":     chelpers.Param{Kind: reflect.Bool, Default: false},
+		},
 	}
 
-	chelpers.RegisterEvent(so, "lobbyRemove", lobbyRemovePlayerParams, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "lobbyRemove", lobbyRemovePlayerFilters,
 		func(params map[string]interface{}) string {
 			steamid := params["steamid"].(string)
 			ban := params["ban"].(bool)
@@ -257,7 +280,11 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		})
 
-	chelpers.RegisterEvent(so, "playerReady", nil, authority.AuthAction(0),
+	playerReadyFilter := chelpers.FilterParams{
+		Action:      authority.AuthAction(0),
+		FilterLogin: true,
+	}
+	chelpers.RegisterEvent(so, "playerReady", playerReadyFilter,
 		func(_ map[string]interface{}) string {
 			steamid := chelpers.GetSteamId(so.Id())
 			player, tperr := models.GetPlayerBySteamId(steamid)
@@ -294,7 +321,11 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		})
 
-	chelpers.RegisterEvent(so, "playerUnready", nil, authority.AuthAction(0),
+	playerUnreadyFilter := chelpers.FilterParams{
+		Action:      authority.AuthAction(0),
+		FilterLogin: true,
+	}
+	chelpers.RegisterEvent(so, "playerUnready", playerUnreadyFilter,
 		func(_ map[string]interface{}) string {
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 			if tperr != nil {
@@ -329,11 +360,14 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		})
 
-	var lobbyJoinSpectatorParams = map[string]chelpers.Param{
-		"id": chelpers.Param{Kind: reflect.Uint},
+	lobbySpectatorJoinFilter := chelpers.FilterParams{
+		FilterLogin: true,
+		Params: map[string]chelpers.Param{
+			"id": chelpers.Param{Kind: reflect.Uint},
+		},
 	}
 
-	chelpers.RegisterEvent(so, "lobbySpectatorJoin", lobbyJoinSpectatorParams, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "lobbySpectatorJoin", lobbySpectatorJoinFilter,
 		func(params map[string]interface{}) string {
 
 			lobbyid := params["id"].(uint)
@@ -359,11 +393,13 @@ func SocketInit(so socketio.Socket) {
 			return string(bytes)
 		})
 
-	var playerSettingsGetParams = map[string]chelpers.Param{
-		"key": chelpers.Param{Kind: reflect.String, Default: ""},
+	playerSettingsGetFilter := chelpers.FilterParams{
+		FilterLogin: true,
+		Params: map[string]chelpers.Param{
+			"key": chelpers.Param{Kind: reflect.String, Default: ""},
+		},
 	}
-
-	chelpers.RegisterEvent(so, "playerSettingsGet", playerSettingsGetParams, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "playerSettingsGet", playerSettingsGetFilter,
 		func(params map[string]interface{}) string {
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
@@ -389,12 +425,15 @@ func SocketInit(so socketio.Socket) {
 			return string(resp)
 		})
 
-	var playerSettingsSetParams = map[string]chelpers.Param{
-		"key":   chelpers.Param{Kind: reflect.String},
-		"value": chelpers.Param{Kind: reflect.String},
+	playerSettingsSetFilter := chelpers.FilterParams{
+		FilterLogin: true,
+		Params: map[string]chelpers.Param{
+			"key":   chelpers.Param{Kind: reflect.String},
+			"value": chelpers.Param{Kind: reflect.String},
+		},
 	}
 
-	chelpers.RegisterEvent(so, "playerSettingsSet", playerSettingsSetParams, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "playerSettingsSet", playerSettingsSetFilter,
 		func(params map[string]interface{}) string {
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
@@ -411,11 +450,14 @@ func SocketInit(so socketio.Socket) {
 			return string(resp)
 		})
 
-	var playerProfileParams = map[string]chelpers.Param{
-		"steamid": chelpers.Param{Kind: reflect.String, Default: ""},
+	playerProfileFilter := chelpers.FilterParams{
+		FilterLogin: true,
+		Params: map[string]chelpers.Param{
+			"steamid": chelpers.Param{Kind: reflect.String, Default: ""},
+		},
 	}
 
-	chelpers.RegisterEvent(so, "playerProfile", playerProfileParams, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "playerProfile", playerProfileFilter,
 		func(params map[string]interface{}) string {
 
 			steamid := params["steamid"].(string)
@@ -436,12 +478,15 @@ func SocketInit(so socketio.Socket) {
 			return string(resp)
 		})
 
-	var chatSendParams = map[string]chelpers.Param{
-		"message": chelpers.Param{Kind: reflect.String},
-		"room":    chelpers.Param{Kind: reflect.Int},
+	chatSendFilter := chelpers.FilterParams{
+		FilterLogin: true,
+		Params: map[string]chelpers.Param{
+			"message": chelpers.Param{Kind: reflect.String},
+			"room":    chelpers.Param{Kind: reflect.Int},
+		},
 	}
 
-	chelpers.RegisterEvent(so, "chatSend", chatSendParams, authority.AuthAction(0),
+	chelpers.RegisterEvent(so, "chatSend", chatSendFilter,
 		func(params map[string]interface{}) string {
 			message := params["message"].(string)
 			room := params["room"].(int)
@@ -487,12 +532,15 @@ func SocketInit(so socketio.Socket) {
 			return string(resp)
 		})
 
-	var adminChangeRoleParams = map[string]chelpers.Param{
-		"steamid": chelpers.Param{Kind: reflect.String},
-		"role":    chelpers.Param{Kind: reflect.String},
+	adminChangeRoleFilter := chelpers.FilterParams{
+		Action:      helpers.ActionChangeRole,
+		FilterLogin: true,
+		Params: map[string]chelpers.Param{
+			"steamid": chelpers.Param{Kind: reflect.String},
+			"role":    chelpers.Param{Kind: reflect.String},
+		},
 	}
-
-	chelpers.RegisterEvent(so, "adminChangeRole", adminChangeRoleParams, helpers.ActionChangeRole,
+	chelpers.RegisterEvent(so, "adminChangeRole", adminChangeRoleFilter,
 		func(params map[string]interface{}) string {
 			return ChangeRole(&so, params["role"].(string), params["steamid"].(string))
 		})
