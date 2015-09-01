@@ -57,9 +57,9 @@ func SocketInit(so socketio.Socket) {
 
 	var lobbyCreateParams = map[string]chelpers.Param{
 		"mapName":        chelpers.Param{Kind: reflect.String},
-		"type":           chelpers.Param{Kind: reflect.String},
+		"type":           chelpers.Param{Kind: reflect.String, In: []string{"highlander", "sixes"}},
 		"league":         chelpers.Param{Kind: reflect.String},
-		"server":         chelpers.Param{Kind: reflect.String},
+		"server":         chelpers.Param{Kind: reflect.String, In: []string{"etf2l", "ugc"}},
 		"rconpwd":        chelpers.Param{Kind: reflect.String},
 		"whitelist":      chelpers.Param{Kind: reflect.Uint},
 		"mumbleRequired": chelpers.Param{Kind: reflect.Bool},

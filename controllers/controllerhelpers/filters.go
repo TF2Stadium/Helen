@@ -1,6 +1,7 @@
 package controllerhelpers
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -12,7 +13,7 @@ import (
 type Param struct {
 	Kind    reflect.Kind
 	Default interface{}
-	In      []string
+	In      interface{}
 }
 
 func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
@@ -75,9 +76,36 @@ func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
 				bytes, _ := BuildMissingArgJSON(key).Encode()
 				return string(bytes)
 			}
-		}
 
-		// TODO check in param.In
+			errFormat := `Paramter "%s" not valid`
+
+			if param.In != nil {
+				switch param.Kind {
+				case reflect.String:
+					for _, val := range param.In.([]string) {
+						if paramMap[key] == val {
+							continue
+						}
+					}
+
+				case reflect.Int:
+					for _, val := range param.In.([]int) {
+						if paramMap[key] == val {
+							continue
+						}
+					}
+
+				case reflect.Uint:
+					for _, val := range param.In.([]uint) {
+						if paramMap[key] == val {
+							continue
+						}
+					}
+				}
+				bytes, _ := BuildFailureJSON(fmt.Sprintf(errFormat, key), 0).Encode()
+				return string(bytes)
+			}
+		}
 
 		return f(paramMap)
 	})
