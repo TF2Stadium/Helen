@@ -56,6 +56,7 @@ func RegisterEvent(so socketio.Socket, event string, filters FilterParams, f fun
 			return string(bytes)
 		}
 
+	outer:
 		for key, param := range filters.Params {
 			_, ok := paramMap[key]
 
@@ -90,21 +91,21 @@ func RegisterEvent(so socketio.Socket, event string, filters FilterParams, f fun
 				case reflect.String:
 					for _, val := range param.In.([]string) {
 						if paramMap[key] == val {
-							continue
+							continue outer
 						}
 					}
 
 				case reflect.Int:
 					for _, val := range param.In.([]int) {
 						if paramMap[key] == val {
-							continue
+							continue outer
 						}
 					}
 
 				case reflect.Uint:
 					for _, val := range param.In.([]uint) {
 						if paramMap[key] == val {
-							continue
+							continue outer
 						}
 					}
 				}
