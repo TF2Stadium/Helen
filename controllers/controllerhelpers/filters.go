@@ -16,25 +16,31 @@ type Param struct {
 	In      interface{}
 }
 
-func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
-	action authority.AuthAction, f func(map[string]interface{}) string) {
+type FilterParams struct {
+	Action      authority.AuthAction
+	FilterLogin bool
+	Params      map[string]Param
+}
+
+func RegisterEvent(so socketio.Socket, event string, filters FilterParams, f func(map[string]interface{}) string) {
 
 	so.On(event, func(jsonStr string) string {
-		if !IsLoggedInSocket(so.Id()) {
+		if filters.FilterLogin && !IsLoggedInSocket(so.Id()) {
+
 			bytes, _ := BuildFailureJSON("Player isn't logged in.", -4).Encode()
 			return string(bytes)
 		}
 
-		if int(action) != 0 {
+		if int(filters.Action) != 0 {
 			var role, _ = GetPlayerRole(so.Id())
-			can := role.Can(action)
+			can := role.Can(filters.Action)
 			if !can {
 				bytes, _ := BuildFailureJSON("You are not authorized to perform this action.", 0).Encode()
 				return string(bytes)
 			}
 		}
 
-		if params == nil {
+		if filters.Params == nil {
 			return f(nil)
 		}
 
@@ -50,7 +56,8 @@ func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
 			return string(bytes)
 		}
 
-		for key, param := range params {
+	outer:
+		for key, param := range filters.Params {
 			_, ok := paramMap[key]
 
 			if !ok {
@@ -84,21 +91,21 @@ func RegisterEvent(so socketio.Socket, event string, params map[string]Param,
 				case reflect.String:
 					for _, val := range param.In.([]string) {
 						if paramMap[key] == val {
-							continue
+							continue outer
 						}
 					}
 
 				case reflect.Int:
 					for _, val := range param.In.([]int) {
 						if paramMap[key] == val {
-							continue
+							continue outer
 						}
 					}
 
 				case reflect.Uint:
 					for _, val := range param.In.([]uint) {
 						if paramMap[key] == val {
-							continue
+							continue outer
 						}
 					}
 				}
