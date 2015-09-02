@@ -22,9 +22,9 @@ type FilterParams struct {
 	Params      map[string]Param
 }
 
-func RegisterEvent(so socketio.Socket, event string, filters FilterParams, f func(map[string]interface{}) string) {
+func FilterRequest(so socketio.Socket, filters FilterParams, f func(map[string]interface{}) string) func(string) string {
 
-	so.On(event, func(jsonStr string) string {
+	return func(jsonStr string) string {
 		if filters.FilterLogin && !IsLoggedInSocket(so.Id()) {
 
 			bytes, _ := BuildFailureJSON("Player isn't logged in.", -4).Encode()
@@ -115,5 +115,5 @@ func RegisterEvent(so socketio.Socket, event string, filters FilterParams, f fun
 		}
 
 		return f(paramMap)
-	})
+	}
 }
