@@ -70,6 +70,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["id"] = fmt.Sprint(player.ID)
 	session.Values["role"] = player.Role
 
+	session.Options.Domain = config.Constants.CookieDomain
 	err = session.Save(r, w)
 
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)

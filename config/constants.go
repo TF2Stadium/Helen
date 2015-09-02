@@ -11,6 +11,7 @@ type constants struct {
 	Port               string
 	Domain             string
 	OpenIDRealm        string
+	CookieDomain       string
 	LoginRedirectPath  string
 	CookieStoreSecret  string
 	StaticFileLocation string
@@ -63,6 +64,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT")
 	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN")
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
+	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
 	// conditional assignments
 
@@ -77,6 +79,7 @@ func setupDevelopmentConstants() {
 	Constants.Port = "8080"
 	Constants.Domain = "http://localhost:8080"
 	Constants.OpenIDRealm = "http://localhost:8080"
+	Constants.CookieDomain = ""
 	Constants.LoginRedirectPath = "http://localhost:8080/"
 	Constants.CookieStoreSecret = "dev secret is very secret"
 	Constants.SessionName = "defaultSession"
@@ -99,6 +102,7 @@ func setupDevelopmentConstants() {
 func setupProductionConstants() {
 	// override production stuff here
 	Constants.Port = "5555"
+	Constants.CookieDomain = ".tf2stadium.com"
 	Constants.ServerMockUp = false
 	Constants.SocketMockUp = false
 }
