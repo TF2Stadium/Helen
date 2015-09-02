@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -392,6 +393,6 @@ func BroadcastLobbyList() {
 	if err != nil {
 		helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
 	} else {
-		broadcaster.SendMessageToRoom("-1", "lobbyListData", list)
+		broadcaster.SendMessageToRoom(config.Constants.GlobalChatRoom, "lobbyListData", list)
 	}
 }

@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -45,7 +46,7 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 				}
 			} else {
 				// else room is the lobby list room
-				room = 0
+				room, _ = strconv.Atoi(config.Constants.GlobalChatRoom)
 			}
 
 			t := time.Now()

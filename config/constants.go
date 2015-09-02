@@ -8,6 +8,7 @@ import (
 )
 
 type constants struct {
+	GlobalChatRoom     string
 	Port               string
 	Domain             string
 	OpenIDRealm        string
@@ -76,6 +77,7 @@ func SetupConstants() {
 }
 
 func setupDevelopmentConstants() {
+	Constants.GlobalChatRoom = "0"
 	Constants.Port = "8080"
 	Constants.Domain = "http://localhost:8080"
 	Constants.OpenIDRealm = "http://localhost:8080"

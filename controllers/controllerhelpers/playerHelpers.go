@@ -1,6 +1,7 @@
 package controllerhelpers
 
 import (
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/googollee/go-socket.io"
 	"strconv"
@@ -25,7 +26,7 @@ func AfterLobbyLeave(so socketio.Socket, lobby *models.Lobby, player *models.Pla
 }
 
 func AfterConnect(so socketio.Socket) {
-	so.Join("0") //room for global chat
+	so.Join(config.Constants.GlobalChatRoom) //room for global chat
 	models.BroadcastLobbyList()
 }
 
