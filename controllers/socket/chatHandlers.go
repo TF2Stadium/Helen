@@ -34,7 +34,7 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 
 			//Check if player has either joined, or is spectating lobby
 			lobbyId, tperr := player.GetLobbyId()
-			if room >= 0 {
+			if room > 0 {
 				// if room is a lobby room
 				if tperr != nil {
 					bytes, _ := tperr.ErrorJSON().Encode()
@@ -45,7 +45,7 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 				}
 			} else {
 				// else room is the lobby list room
-				room = -1
+				room = 0
 			}
 
 			t := time.Now()
@@ -61,7 +61,7 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 
 			chatMessage.Set("user", user)
 			bytes, _ := chatMessage.Encode()
-			broadcaster.SendMessageToRoom(strconv.Itoa(room), "chatReceive", string(bytes))
+			broadcaster.SendMessageToRoom(chelpers.GetLobbyRoom(uint(room)), "chatReceive", string(bytes))
 
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(resp)

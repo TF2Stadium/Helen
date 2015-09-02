@@ -25,7 +25,7 @@ func AfterLobbyLeave(so socketio.Socket, lobby *models.Lobby, player *models.Pla
 }
 
 func AfterConnect(so socketio.Socket) {
-	so.Join("-1") //room for global chat
+	so.Join("0") //room for global chat
 	models.BroadcastLobbyList()
 }
 
