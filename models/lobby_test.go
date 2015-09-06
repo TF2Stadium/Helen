@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +17,7 @@ func init() {
 }
 
 func TestLobbyCreation(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "testip", "", ""}, 0)
 	lobby.Save()
 
@@ -35,7 +35,7 @@ func TestLobbyCreation(t *testing.T) {
 }
 
 func TestLobbyAdd(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "", "", ""}, 0)
 	lobby.Save()
 
@@ -90,7 +90,7 @@ func TestLobbyAdd(t *testing.T) {
 }
 
 func TestLobbyRemove(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
 	lobby.Save()
 
@@ -116,7 +116,7 @@ func TestLobbyRemove(t *testing.T) {
 }
 
 func TestLobbyBan(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
 	lobby.Save()
 
@@ -139,7 +139,7 @@ func TestLobbyBan(t *testing.T) {
 }
 
 func TestReadyPlayer(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 	player, playErr := models.NewPlayer("testing")
 	assert.Nil(t, playErr)
 
@@ -161,7 +161,7 @@ func TestReadyPlayer(t *testing.T) {
 }
 
 func TestIsEveryoneReady(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 	player, playErr := models.NewPlayer("0")
 	assert.Nil(t, playErr)
 
@@ -183,7 +183,7 @@ func TestIsEveryoneReady(t *testing.T) {
 }
 
 func TestUnreadyPlayer(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 	player, playErr := models.NewPlayer("testing")
 	assert.Nil(t, playErr)
 
@@ -200,7 +200,7 @@ func TestUnreadyPlayer(t *testing.T) {
 }
 
 func TestSpectators(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 
 	player, playErr := models.NewPlayer("apple")
 	assert.Nil(t, playErr)

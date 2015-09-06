@@ -9,8 +9,10 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/sessions"
+	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"net/http"
+	"testing"
 	"time"
 )
 
@@ -155,8 +157,15 @@ func (f *fakeSocket) BroadcastTo(room, message string, args ...interface{}) erro
 	return nil
 }
 
+type fakeReader struct{}
+
+func (f *fakeReader) Read(p []byte) (n int, err error) {
+	return 0, nil
+}
+
 func (f *fakeSocket) Request() *http.Request {
-	return &http.Request{}
+	r, _ := http.NewRequest("GET", "", &fakeReader{})
+	return r
 }
 
 func (f *fakeSocket) FakeAuthenticate(player *models.Player) *http.Request {
@@ -168,10 +177,26 @@ func (f *fakeSocket) FakeAuthenticate(player *models.Player) *http.Request {
 	}
 
 	session.Values["id"] = fmt.Sprint(player.ID)
-	session.Values["steamid"] = fmt.Sprint(player.SteamId)
+	session.Values["steam_id"] = fmt.Sprint(player.SteamId)
 	session.Values["role"] = player.Role
 
 	broadcaster.SteamIdSocketMap[player.SteamId] = f
 	stores.SocketAuthStore[f.Id()] = session
 	return nil
+}
+
+func SetupFakeSockets() {
+	broadcaster.Init(&FakeSocketServer)
+}
+
+func UnpackSuccessResponse(t *testing.T, r *simplejson.Json) *simplejson.Json {
+	assert.NotNil(t, r)
+	assert.True(t, r.Get("success").MustBool())
+	return r.Get("data")
+}
+
+func UnpackFailureResponse(t *testing.T, r *simplejson.Json) (int, string) {
+	assert.NotNil(t, r)
+	assert.False(t, r.Get("success").MustBool())
+	return r.Get("code").MustInt(), r.Get("message").MustString()
 }

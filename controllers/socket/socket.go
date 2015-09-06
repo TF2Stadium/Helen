@@ -12,7 +12,7 @@ func SocketInit(so socketio.Socket) {
 	chelpers.AuthenticateSocket(so.Id(), so.Request())
 	if chelpers.IsLoggedInSocket(so.Id()) {
 		steamid := chelpers.GetSteamId(so.Id())
-		broadcaster.SteamIdSocketMap[steamid] = &so
+		broadcaster.SteamIdSocketMap[steamid] = so
 	}
 
 	so.On("disconnection", func() {

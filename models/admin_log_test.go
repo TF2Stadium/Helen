@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +15,7 @@ func init() {
 }
 
 func TestLogCreation(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 
 	var obj = models.AdminLogEntry{}
 	count := 5

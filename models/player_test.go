@@ -5,9 +5,9 @@ import (
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/testhelpers"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"time"
@@ -18,7 +18,7 @@ func init() {
 }
 
 func TestIsSpectating(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1)
 	database.DB.Save(lobby)
@@ -51,7 +51,7 @@ func TestIsSpectating(t *testing.T) {
 }
 
 func TestPlayerInfoFetching(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 
 	if config.Constants.SteamDevApiKey == "your steam dev api key" {
 		return
@@ -86,7 +86,7 @@ func TestPlayerInfoFetching(t *testing.T) {
 }
 
 func TestPlayerSettings(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 
 	player, _ := models.NewPlayer("76561197999073985")
 
@@ -116,7 +116,7 @@ func TestPlayerSettings(t *testing.T) {
 }
 
 func TestPlayerBanning(t *testing.T) {
-	migrations.TestCleanup()
+	testhelpers.CleanupDB()
 	player, _ := models.NewPlayer("76561197999073985")
 	player.Save()
 

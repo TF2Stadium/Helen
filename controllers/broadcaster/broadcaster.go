@@ -14,13 +14,17 @@ type broadcastMessage struct {
 	Content string
 }
 
-var SteamIdSocketMap = make(map[string]*socketio.Socket)
+type commonBroadcaster interface {
+	BroadcastTo(string, string, ...interface{})
+}
+
+var SteamIdSocketMap = make(map[string]socketio.Socket)
 var broadcasterTicker *time.Ticker
 var broadcastStopChannel chan bool
 var broadcastMessageChannel chan broadcastMessage
-var socketServer *socketio.Server
+var socketServer commonBroadcaster
 
-func Init(server *socketio.Server) {
+func Init(server commonBroadcaster) {
 	broadcasterTicker = time.NewTicker(time.Millisecond * 1000)
 	broadcastStopChannel = make(chan bool)
 	broadcastMessageChannel = make(chan broadcastMessage)
@@ -61,7 +65,7 @@ func broadcaster() {
 					helpers.Logger.Warning("Failed to get user's socket: %d", message.SteamId)
 					continue
 				}
-				(*socket).Emit(message.Event, message.Content)
+				socket.Emit(message.Event, message.Content)
 			} else {
 				socketServer.BroadcastTo(message.Room, message.Event, message.Content)
 			}
