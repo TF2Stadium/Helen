@@ -18,7 +18,6 @@ func SetupHTTPRoutes(router *mux.Router) {
 }
 
 func SetupSocketRoutes(server *socketio.Server) {
-
 	var socketController func(socketio.Socket)
 
 	if config.Constants.SocketMockUp {

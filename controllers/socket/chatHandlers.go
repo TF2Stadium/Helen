@@ -56,12 +56,9 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 			chatMessage.Set("message", html.EscapeString(message))
 			chatMessage.Set("room", room)
 
-			user := simplejson.New()
-			user.Set("id", player.SteamId)
-			user.Set("name", player.Name)
-
-			chatMessage.Set("user", user)
-			bytes, _ := chatMessage.Encode()
+			chatMessage.Set("player", models.DecoratePlayerSummaryJson(player))
+			bytes,
+				_ := chatMessage.Encode()
 			broadcaster.SendMessageToRoom(chelpers.GetLobbyRoom(uint(room)), "chatReceive", string(bytes))
 
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()

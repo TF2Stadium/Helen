@@ -19,7 +19,7 @@ import (
 // taken from http://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func randSeq(n int) string {
+func RandSeq(n int) string {
 	rand.Seed(time.Now().UTC().UnixNano())
 	b := make([]rune, n)
 	for i := range b {
@@ -60,7 +60,7 @@ type fakeSocket struct {
 
 func NewFakeSocket() *fakeSocket {
 	so := &fakeSocket{
-		id:            randSeq(5),
+		id:            RandSeq(5),
 		receivedQueue: make(chan message, 100),
 		eventHandlers: make(map[string]interface{}),
 		server:        &FakeSocketServer,
@@ -71,12 +71,25 @@ func NewFakeSocket() *fakeSocket {
 }
 
 func (f *fakeSocket) GetNextMessage() (string, *simplejson.Json) {
+	// broadcasts are sent in a different thread so wait a bit to make sure they are received
+	time.Sleep(500 * time.Microsecond)
 	select {
 	case s := <-f.receivedQueue:
 		json, _ := simplejson.NewJson([]byte(s.content))
 		return s.event, json
 	default:
 		return "", nil
+	}
+}
+
+func (f *fakeSocket) GetNextNamedMessage(name string) *simplejson.Json {
+	for {
+		msg, res := f.GetNextMessage()
+		if res == nil {
+			return nil
+		} else if msg == name {
+			return res
+		}
 	}
 }
 
@@ -170,7 +183,7 @@ func (f *fakeSocket) Request() *http.Request {
 
 func (f *fakeSocket) FakeAuthenticate(player *models.Player) *http.Request {
 	session := &sessions.Session{
-		ID:      randSeq(5),
+		ID:      RandSeq(5),
 		Values:  make(map[interface{}]interface{}),
 		Options: nil,
 		IsNew:   false,

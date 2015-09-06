@@ -1,7 +1,6 @@
 package socket
 
 import (
-	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/testhelpers"
 	"testing"
 	//	"github.com/TF2Stadium/Helen/helpers"
@@ -15,8 +14,7 @@ func init() {
 func TestPlayerSettings(t *testing.T) {
 	testhelpers.CleanupDB()
 
-	player, _ := models.NewPlayer("asdf")
-	player.Save()
+	player := testhelpers.CreatePlayer()
 
 	pSocket := testhelpers.NewFakeSocket()
 	pSocket.FakeAuthenticate(player)
