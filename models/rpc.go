@@ -15,12 +15,13 @@ type ServerBootstrap struct {
 }
 
 type Args struct {
-	Id      uint
-	Info    ServerRecord
-	Type    LobbyType
-	League  string
-	Map     string
-	SteamId string
+	Id       uint
+	Info     ServerRecord
+	Type     LobbyType
+	League   string
+	Map      string
+	SteamId  string
+	SteamId2 string
 }
 
 var Pauling *rpc.Client
