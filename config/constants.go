@@ -16,6 +16,7 @@ type constants struct {
 	LoginRedirectPath  string
 	CookieStoreSecret  string
 	StaticFileLocation string
+	ChatLogsDir        string
 	SessionName        string
 	PaulingPort        string
 	SocketMockUp       bool
@@ -56,6 +57,7 @@ func SetupConstants() {
 	}
 
 	overrideFromEnv(&Constants.Port, "PORT")
+	overrideFromEnv(&Constants.ChatLogsDir, "CHAT_LOG_DIR")
 	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET")
 	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY")
 	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST")
