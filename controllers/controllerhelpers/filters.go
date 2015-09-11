@@ -31,6 +31,7 @@ func FilterRequest(so socketio.Socket, filters FilterParams, f func(map[string]i
 			return string(bytes)
 		}
 
+		// Careful: this assumes normal players can do everything (since helpers.RolePlayer==0)
 		if int(filters.Action) != 0 {
 			var role, _ = GetPlayerRole(so.Id())
 			can := role.Can(filters.Action)

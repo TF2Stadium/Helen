@@ -1,11 +1,28 @@
 package testhelpers
 
-import "github.com/TF2Stadium/Helen/models"
+import (
+	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/models"
+)
 
 func CreatePlayer() *models.Player {
 	player, _ := models.NewPlayer(RandSeq(5))
 	player.Save()
 	return player
+}
+
+func CreatePlayerMod() *models.Player {
+	p := CreatePlayer()
+	p.Role = helpers.RoleMod
+	p.Save()
+	return p
+}
+
+func CreatePlayerAdmin() *models.Player {
+	p := CreatePlayer()
+	p.Role = helpers.RoleAdmin
+	p.Save()
+	return p
 }
 
 func CreateLobby() *models.Lobby {

@@ -204,12 +204,13 @@ func SetupFakeSockets() {
 
 func UnpackSuccessResponse(t *testing.T, r *simplejson.Json) *simplejson.Json {
 	assert.NotNil(t, r)
-	assert.True(t, r.Get("success").MustBool())
+	assert.True(t, r.Get("success").MustBool(), fmt.Sprintf(
+		"A request should have been successful but it failed: %s", r.Get("message").MustString()))
 	return r.Get("data")
 }
 
 func UnpackFailureResponse(t *testing.T, r *simplejson.Json) (int, string) {
 	assert.NotNil(t, r)
-	assert.False(t, r.Get("success").MustBool())
+	assert.False(t, r.Get("success").MustBool(), "A request should have failed but was successful")
 	return r.Get("code").MustInt(), r.Get("message").MustString()
 }
