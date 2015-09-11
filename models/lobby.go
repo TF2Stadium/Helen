@@ -30,7 +30,8 @@ const (
 	LobbyStateInitializing LobbyState = 0
 	LobbyStateWaiting      LobbyState = 1
 	LobbyStateInProgress   LobbyState = 2
-	LobbyStateEnded        LobbyState = 3
+	LobbyStateNeedSub      LobbyState = 3
+	LobbyStateEnded        LobbyState = 4
 )
 
 var LobbyServerSettingUp = make(map[uint]time.Time)
