@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+Helen
 
 # Folders
 _obj
