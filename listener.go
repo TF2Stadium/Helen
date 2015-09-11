@@ -74,18 +74,6 @@ func handleEvent(event map[string]interface{}) {
 			db.DB.Save(slot)
 		}
 
-	case "playerRep":
-		lobbyid := event["lobbyId"].(uint)
-		commId := event["commId"].(string)
-
-		steamId, _ := steamid.CommIdToSteamId(commId)
-		player, _ := models.GetPlayerBySteamId(steamId)
-
-		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Delete(&models.LobbySlot{})
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
-			"sendNotification", fmt.Sprintf("%s has been reported.",
-				player.Name))
-
 	case "discFromServer":
 		lobbyid := event["lobbyId"].(uint)
 
