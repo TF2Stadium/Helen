@@ -74,6 +74,18 @@ func handleEvent(event map[string]interface{}) {
 			db.DB.Save(slot)
 		}
 
+	case "playerRep":
+		lobbyid := event["lobbyId"].(uint)
+		commId := event["commId"].(string)
+
+		steamId, _ := steamid.CommIdToSteamId(commId)
+		player, _ := models.GetPlayerBySteamId(steamId)
+
+		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Delete(&models.LobbySlot{})
+		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+			"sendNotification", fmt.Sprintf("%s has been reported.",
+				player.Name))
+
 	case "discFromServer":
 		lobbyid := event["lobbyId"].(uint)
 
@@ -111,19 +123,5 @@ func handleEvent(event map[string]interface{}) {
 			}
 			models.Pauling.Call("Pauling.SetupVerifier", &info, &struct{}{})
 		}
-
-	case "playerSub", "playerRep":
-		lobbyID := event["lobbyid"].(uint)
-		commID := event["commid"].(string)
-
-		lobby, _ := models.GetLobbyById(lobbyID)
-		steamID, _ := steamid.CommIdToSteamId(commID)
-		player, _ := models.GetPlayerBySteamId(steamID)
-
-		lobby.State = models.LobbyStateNeedSub
-		lobby.RemovePlayer(player)
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyID), 10),
-			"sendNotification", fmt.Sprintf("%s has been reported.",
-				player.Name))
 	}
 }
