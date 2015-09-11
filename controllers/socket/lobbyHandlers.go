@@ -130,6 +130,7 @@ func lobbyCloseHandler(so socketio.Socket) func(string) string {
 			}
 
 			lob.Close(true)
+			chelpers.StopLogger(lobbyid)
 			models.BroadcastLobbyList() // has to be done manually for now
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
