@@ -24,7 +24,7 @@ var chatSendFilter = chelpers.FilterParams{
 func chatSendHandler(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, chatSendFilter,
 		func(params map[string]interface{}) string {
-			message := params["message"].(string)
+			message := html.EscapeString(params["message"].(string))
 			room := params["room"].(int)
 
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -53,7 +53,7 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 			chatMessage := simplejson.New()
 			// TODO send proper timestamps
 			chatMessage.Set("timestamp", strconv.Itoa(t.Hour())+strconv.Itoa(t.Minute()))
-			chatMessage.Set("message", html.EscapeString(message))
+			chatMessage.Set("message", message)
 			chatMessage.Set("room", room)
 
 			chatMessage.Set("player", models.DecoratePlayerSummaryJson(player))
@@ -62,6 +62,8 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 			broadcaster.SendMessageToRoom(chelpers.GetLobbyRoom(uint(room)), "chatReceive", string(bytes))
 
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+
+			chelpers.LogChat(uint(room), player.Name, message)
 			return string(resp)
 		})
 }
