@@ -46,10 +46,10 @@ func globalLogFileUpdater() {
 		}
 		if !init {
 			StopLogger(0)
-			init = false
 		}
 		globalLogLock.Unlock()
 		go logListener(roomLogChannel[0], globalLog, 0)
+		init = false
 	}
 }
 
