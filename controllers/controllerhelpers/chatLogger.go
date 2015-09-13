@@ -16,7 +16,6 @@ var roomLogChannel = make(map[uint](chan string))
 
 var globalLog *os.File
 var globalLogLock = &sync.Mutex{}
-var globalLogTicker = time.Tick(time.Hour * 24)
 
 func StartGlobalLogger() {
 	go globalLogFileUpdater()
@@ -25,9 +24,12 @@ func StartGlobalLogger() {
 func globalLogFileUpdater() {
 	init := true
 	var now time.Time
+	ticker := time.NewTicker(time.Duration(24 - time.Now().Hour()))
 	for {
 		if !init {
-			now = <-globalLogTicker
+			now = <-ticker.C
+			ticker.Stop()
+			ticker = time.NewTicker(time.Hour * 24)
 		} else {
 			now = time.Now()
 			roomLogChannel[0] = make(chan string, 18)
