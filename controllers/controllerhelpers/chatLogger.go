@@ -45,7 +45,7 @@ func globalLogFileUpdater() {
 			continue
 		}
 		if !init {
-			roomLogChannel[0] <- ""
+			StopLogger(0)
 			init = false
 		}
 		globalLogLock.Unlock()
