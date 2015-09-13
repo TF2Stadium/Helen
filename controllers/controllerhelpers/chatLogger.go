@@ -55,8 +55,8 @@ func globalLogFileUpdater() {
 
 func logListener(channel <-chan string, file *os.File, room uint) {
 	for {
-		message := <-channel
-		if message == "" {
+		message, open := <-channel
+		if !open {
 			helpers.Logger.Debug("Stopping listener for #%d", room)
 			file.Close()
 			return
@@ -112,13 +112,12 @@ func LogChat(room uint, player string, message string) {
 
 func WriteLobbyInfo(file *os.File, lobby *models.Lobby) {
 	file.Seek(0, os.SEEK_SET)
-	//write lobby info to file
-
+	//TODO: write lobby info to file
 }
 
 func StopLogger(room uint) {
 	mapLock.Lock()
-	roomLogChannel[0] <- ""
+	close(roomLogChannel[room])
 	delete(roomLogChannel, room)
 	mapLock.Unlock()
 }
