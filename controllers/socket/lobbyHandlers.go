@@ -187,7 +187,7 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 				lob.State = models.LobbyStateReadyingUp
 				lob.Save()
 				broadcaster.SendMessageToRoom(
-					strconv.FormatUint(uint64(lob.ID), 10),
+					chelpers.GetLobbyRoom(lob.ID),
 					"lobbyReadyUp", "")
 			}
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
