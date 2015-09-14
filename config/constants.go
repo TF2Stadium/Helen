@@ -16,10 +16,12 @@ type constants struct {
 	LoginRedirectPath  string
 	CookieStoreSecret  string
 	StaticFileLocation string
+	ChatLogsDir        string
 	SessionName        string
 	PaulingPort        string
 	SocketMockUp       bool
 	ServerMockUp       bool
+	ChatLogsEnabled    bool
 	AllowedCorsOrigins []string
 
 	// database
@@ -41,6 +43,16 @@ func overrideFromEnv(constant *string, name string) {
 
 }
 
+func overrideBoolFromEnv(constant *bool, name string) {
+	val := os.Getenv(name)
+	if val != "" {
+		*constant = map[string]bool{
+			"1": true,
+			"0": false,
+		}[val]
+	}
+}
+
 var Constants constants
 
 func SetupConstants() {
@@ -56,6 +68,7 @@ func SetupConstants() {
 	}
 
 	overrideFromEnv(&Constants.Port, "PORT")
+	overrideFromEnv(&Constants.ChatLogsDir, "CHAT_LOG_DIR")
 	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET")
 	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY")
 	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST")
@@ -66,6 +79,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN")
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
 	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
+	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
 	// conditional assignments
 
@@ -87,8 +101,10 @@ func setupDevelopmentConstants() {
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
 	Constants.PaulingPort = "1234"
+	Constants.ChatLogsDir = "."
 	Constants.SocketMockUp = false
 	Constants.ServerMockUp = true
+	Constants.ChatLogsEnabled = false
 	Constants.AllowedCorsOrigins = []string{"*"}
 
 	Constants.DbHost = "127.0.0.1"
@@ -104,8 +120,10 @@ func setupDevelopmentConstants() {
 func setupProductionConstants() {
 	// override production stuff here
 	Constants.Port = "5555"
+	Constants.ChatLogsDir = "."
 	Constants.CookieDomain = ".tf2stadium.com"
 	Constants.ServerMockUp = false
+	Constants.ChatLogsEnabled = true
 	Constants.SocketMockUp = false
 }
 

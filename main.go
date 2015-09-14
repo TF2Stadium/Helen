@@ -9,6 +9,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -30,7 +31,7 @@ func main() {
 	stores.SetupStores()
 	models.PaulingConnect()
 	StartListener()
-
+	go chelpers.StartGlobalLogger()
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 	helpers.Logger.Debug("Starting the server")
 
