@@ -31,7 +31,6 @@ const (
 	LobbyStateWaiting      LobbyState = 1
 	LobbyStateReadyingUp   LobbyState = 2
 	LobbyStateInProgress   LobbyState = 3
-	LobbyStateNeedSub      LobbyState = 4
 	LobbyStateEnded        LobbyState = 5
 )
 
