@@ -4,7 +4,7 @@ TF2Stadium Server is the backend server component for the tf2stadium.com project
 [![Build Status](https://drone.io/github.com/TF2Stadium/Helen/status.png)](https://drone.io/github.com/TF2Stadium/Helen/latest)
 
 ### Setup
-The project uses postgres as a database. Default development account data can be found at `database/setup.txt`
+The project uses postgres as a database. Default development account data can be found at  [database/setup.md](../blob/master/database/setup.md).
 
 ### Structure
 The code is divided into multiple packages that follow the usual web application structure:
