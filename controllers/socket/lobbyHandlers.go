@@ -183,6 +183,13 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 
 			chelpers.AfterLobbyJoin(so, lob, player)
 
+			if lob.IsFull() {
+				lob.State = models.LobbyStateReadyingUp
+				lob.Save()
+				broadcaster.SendMessageToRoom(
+					strconv.FormatUint(uint64(lob.ID), 10),
+					"lobbyReadyUp", "")
+			}
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
 		})
@@ -312,6 +319,11 @@ func playerReadyHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
+			if lobby.State != models.LobbyStateReadyingUp {
+				bytes, _ := helpers.NewTPError("Lobby hasn't been filled up yet.", 4).ErrorJSON().Encode()
+				return string(bytes)
+			}
+
 			tperr = lobby.ReadyPlayer(player)
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
@@ -319,6 +331,8 @@ func playerReadyHandler(so socketio.Socket) func(string) string {
 			}
 
 			if lobby.IsEveryoneReady() {
+				lobby.State = models.LobbyStateInProgress
+				lobby.Save()
 				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
 				broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
 					"lobbyStart", string(bytes))
