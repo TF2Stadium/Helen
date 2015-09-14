@@ -21,6 +21,7 @@ type constants struct {
 	PaulingPort        string
 	SocketMockUp       bool
 	ServerMockUp       bool
+	ChatLogsEnabled    bool
 	AllowedCorsOrigins []string
 
 	// database
@@ -40,6 +41,16 @@ func overrideFromEnv(constant *string, name string) {
 		*constant = val
 	}
 
+}
+
+func overrideBoolFromEnv(constant *bool, name string) {
+	val := os.Getenv(name)
+	if val != "" {
+		*constant = map[string]bool{
+			"1": true,
+			"0": false,
+		}[val]
+	}
 }
 
 var Constants constants
@@ -68,6 +79,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN")
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
 	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
+	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
 	// conditional assignments
 
@@ -92,6 +104,7 @@ func setupDevelopmentConstants() {
 	Constants.ChatLogsDir = "."
 	Constants.SocketMockUp = false
 	Constants.ServerMockUp = true
+	Constants.ChatLogsEnabled = false
 	Constants.AllowedCorsOrigins = []string{"*"}
 
 	Constants.DbHost = "127.0.0.1"
@@ -110,6 +123,7 @@ func setupProductionConstants() {
 	Constants.ChatLogsDir = "."
 	Constants.CookieDomain = ".tf2stadium.com"
 	Constants.ServerMockUp = false
+	Constants.ChatLogsEnabled = true
 	Constants.SocketMockUp = false
 }
 

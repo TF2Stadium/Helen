@@ -18,6 +18,9 @@ var globalLog *os.File
 var globalLogLock = &sync.Mutex{}
 
 func StartGlobalLogger() {
+	if !config.Constants.ChatLogsEnabled {
+		return
+	}
 	go globalLogFileUpdater()
 }
 
@@ -74,6 +77,9 @@ func logListener(channel <-chan string, file *os.File, room uint) {
 }
 
 func LogChat(room uint, player string, message string) {
+	if !config.Constants.ChatLogsEnabled {
+		return
+	}
 	mapLock.Lock()
 	channel, exists := roomLogChannel[room]
 	if !exists {
@@ -113,11 +119,17 @@ func LogChat(room uint, player string, message string) {
 }
 
 func WriteLobbyInfo(file *os.File, lobby *models.Lobby) {
+	if !config.Constants.ChatLogsEnabled {
+		return
+	}
 	file.Seek(0, os.SEEK_SET)
 	//TODO: write lobby info to file
 }
 
 func StopLogger(room uint) {
+	if !config.Constants.ChatLogsEnabled {
+		return
+	}
 	mapLock.Lock()
 	close(roomLogChannel[room])
 	delete(roomLogChannel, room)
