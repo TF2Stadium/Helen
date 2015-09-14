@@ -29,9 +29,10 @@ var TypePlayerCount = map[LobbyType]int{
 const (
 	LobbyStateInitializing LobbyState = 0
 	LobbyStateWaiting      LobbyState = 1
-	LobbyStateInProgress   LobbyState = 2
-	LobbyStateNeedSub      LobbyState = 3
-	LobbyStateEnded        LobbyState = 4
+	LobbyStateReadyingUp   LobbyState = 2
+	LobbyStateInProgress   LobbyState = 3
+	LobbyStateNeedSub      LobbyState = 4
+	LobbyStateEnded        LobbyState = 5
 )
 
 var LobbyServerSettingUp = make(map[uint]time.Time)
