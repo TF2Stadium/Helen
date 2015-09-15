@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -70,4 +71,8 @@ func SocketInit(so socketio.Socket) {
 
 	so.On("requestLobbyListData", requestLobbyListDataHandler(so))
 
+	//Debugging handlers
+	if config.Constants.ServerMockUp {
+		so.On("debugLobbyFill", debugLobbyFillHandler(so))
+	}
 }

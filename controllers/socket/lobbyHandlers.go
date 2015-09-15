@@ -393,3 +393,51 @@ func requestLobbyListDataHandler(_ socketio.Socket) func(string) string {
 		return string(resp)
 	}
 }
+
+var debugLobbyFillFilter = chelpers.FilterParams{
+	FilterLogin: true,
+	Params: map[string]chelpers.Param{
+		"id": chelpers.Param{Kind: reflect.Uint},
+	},
+}
+
+func debugLobbyFillHandler(so socketio.Socket) func(string) string {
+	return chelpers.FilterRequest(so, debugLobbyFillFilter,
+		func(param map[string]interface{}) string {
+			id := param["id"].(uint)
+			lobby, _ := models.GetLobbyById(id)
+			var players []*models.Player
+			userSteamid := chelpers.GetSteamId(so.Id())
+			p, _ := models.GetPlayerBySteamId(userSteamid)
+			players = append(players, p)
+
+			for i := 1; i < models.TypePlayerCount[lobby.Type]*2; i++ {
+				randBytes := make([]byte, 6)
+				rand.Read(randBytes)
+				steamid := "DEBUG" + base64.URLEncoding.EncodeToString(randBytes)
+
+				player, _ := models.NewPlayer(steamid)
+				player.Debug = true
+				player.Save()
+				players = append(players, player)
+				lobby.AddPlayer(player, i)
+			}
+
+			lobby.State = models.LobbyStateReadyingUp
+			lobby.Save()
+			broadcaster.SendMessageToRoom(chelpers.GetLobbyRoom(lobby.ID), "lobbyReadyUp", "")
+
+			for _, p := range players {
+				lobby.ReadyPlayer(p)
+			}
+			lobby.State = models.LobbyStateInProgress
+			lobby.Save()
+
+			bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
+			broadcaster.SendMessageToRoom(chelpers.GetLobbyRoom(lobby.ID),
+				"lobbyStart", string(bytes))
+			bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+			return string(bytes)
+
+		})
+}
