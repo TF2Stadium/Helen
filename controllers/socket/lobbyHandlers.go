@@ -3,6 +3,9 @@ package socket
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"reflect"
+	"strconv"
+
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -10,8 +13,6 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
-	"reflect"
-	"strconv"
 )
 
 var lobbyCreateFilters = chelpers.FilterParams{

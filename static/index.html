@@ -71,10 +71,20 @@ io.on("lobbyListData", function(s) {
   $("#lobby-list").html(JSON.stringify(JSON.parse(s), null, 2).replace(/(\r)?\n/g, "<br>"));
 });
 
+io.on("lobbyReadyUp", function(s) {
+  console.log("Received lobbyReadyUp");
+});
+
+io.on("lobbyStart", function(s) {
+  console.log("Received lobbyStart");
+  console.log(JSON.parse(s));
+});
+
 $(function() {
   createBox(io, "lobbyCreate", ["mapName", "type", "league", "whitelist", "server", "rconpwd", "mumbleRequired"]);
   createBox(io, "lobbyClose", ["id"]);
   createBox(io, "lobbyJoin", ["id", "team", "class"]);
+  createBox(io, "debugLobbyFill", ["id"]);
   createBox(io, "lobbySpectatorJoin", ["id"]);
   createBox(io, "lobbyKick", ["id", "steamid", "ban"]);
   createBox(io, "playerReady", []);
