@@ -41,6 +41,7 @@ type PlayerSetting struct {
 
 type Player struct {
 	gorm.Model
+	Debug   bool   //true if player is a dummy one.
 	SteamId string `sql:"unique"` // Players steam ID
 	Stats   PlayerStats
 	StatsID uint
