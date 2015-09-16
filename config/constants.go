@@ -1,11 +1,14 @@
 package config
 
 import (
+	"flag"
+	"github.com/bitly/go-simplejson"
 	"os"
-	"strings"
 
 	"github.com/TF2Stadium/Helen/helpers"
 )
+
+var jsonConfig *simplejson.Json
 
 type constants struct {
 	GlobalChatRoom     string
@@ -35,52 +38,66 @@ type constants struct {
 	SteamApiMockUp bool
 }
 
-func overrideFromEnv(constant *string, name string) {
-	val := os.Getenv(name)
+func overrideStringFromConfig(constant *string, name string) {
+	val, _ := jsonConfig.Get(name).String()
 	if "" != val {
 		*constant = val
 	}
 
 }
 
-func overrideBoolFromEnv(constant *bool, name string) {
-	val := os.Getenv(name)
-	if val != "" {
-		*constant = map[string]bool{
-			"1": true,
-			"0": false,
-		}[val]
+func overrideBoolFromConfig(constant *bool, name string) {
+	val, err := jsonConfig.Get(name).Bool()
+	if err == nil {
+		*constant = val
 	}
 }
 
 var Constants constants
 
 func SetupConstants() {
+	fileName := flag.String("config", "config.json", "Configuration file")
+	deploy := flag.String("deploy", "development", "Deployment mode")
+	configFile, pathErr := os.Open(*fileName)
+	if pathErr != nil {
+		helpers.Logger.Warning("No config file found. Using %s defaults.", *deploy)
+	}
+
+	var err error
+	jsonConfig, err = simplejson.NewFromReader(configFile)
+	if err != nil && pathErr == nil {
+		helpers.Logger.Fatal(err.Error())
+	}
+
 	Constants = constants{}
 
 	setupDevelopmentConstants()
-	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) == "production" {
+	switch *deploy {
+	case "production":
 		setupProductionConstants()
-	} else if val == "test" {
+	case "test":
 		setupTestConstants()
-	} else if val == "travis_test" {
+	case "travis_test":
 		setupTravisTestConstants()
 	}
 
-	overrideFromEnv(&Constants.Port, "PORT")
-	overrideFromEnv(&Constants.ChatLogsDir, "CHAT_LOG_DIR")
-	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET")
-	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY")
-	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST")
-	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT")
-	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
-	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
-	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT")
-	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN")
-	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
-	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
-	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
-	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
+	if err == nil {
+		overrideStringFromConfig(&Constants.Port, "port")
+		overrideStringFromConfig(&Constants.ChatLogsDir, "chatLogsDir")
+		overrideStringFromConfig(&Constants.CookieStoreSecret, "cookieStoreSecret")
+		overrideStringFromConfig(&Constants.SteamDevApiKey, "steamAPIKey")
+		overrideStringFromConfig(&Constants.DbHost, "dbHost")
+		overrideStringFromConfig(&Constants.DbPort, "dbPort")
+		overrideStringFromConfig(&Constants.DbUsername, "dbUsername")
+		overrideStringFromConfig(&Constants.DbPassword, "dbPassword")
+		overrideStringFromConfig(&Constants.PaulingPort, "paulingPort")
+		overrideStringFromConfig(&Constants.Domain, "serverDomain")
+		overrideStringFromConfig(&Constants.OpenIDRealm, "serverOpenIDRealm")
+		overrideStringFromConfig(&Constants.CookieDomain, "serverCookieDomain")
+		overrideBoolFromConfig(&Constants.ChatLogsEnabled, "chatLogs")
+		overrideStringFromConfig(&Constants.LoginRedirectPath, "serverRedirectPath")
+	}
+
 	// conditional assignments
 
 	if Constants.SteamDevApiKey == "your steam dev api key" && !Constants.SteamApiMockUp {

@@ -27,7 +27,7 @@ func StartGlobalLogger() {
 func globalLogFileUpdater() {
 	init := true
 	var now time.Time
-	ticker := time.NewTicker(time.Duration(24 - time.Now().Hour()))
+	ticker := time.NewTicker(time.Hour * time.Duration(24-time.Now().Hour()))
 	for {
 		if !init {
 			now = <-ticker.C
