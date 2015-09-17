@@ -99,6 +99,34 @@ func lobbyCreateHandler(so socketio.Socket) func(string) string {
 		})
 }
 
+var verfiyServerFilters = chelpers.FilterParams{
+	Action:      authority.AuthAction(0),
+	FilterLogin: true,
+	Params: map[string]chelpers.Param{
+		"server":  {Kind: reflect.String},
+		"rconpwd": {Kind: reflect.String},
+	},
+}
+
+func verifyServerHandler(so socketio.Socket) func(string) string {
+	return chelpers.FilterRequest(so, verfiyServerFilters,
+		func(params map[string]interface{}) string {
+			info := models.ServerRecord{
+				Host:         params["server"].(string),
+				RconPassword: params["rconpwd"].(string),
+			}
+			err := models.VerifyInfo(info)
+			if err != nil {
+				bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+				return string(bytes)
+			}
+
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+			return string(bytes)
+
+		})
+}
+
 var lobbyCloseFilters = chelpers.FilterParams{
 	Action:      authority.AuthAction(0),
 	FilterLogin: true,
