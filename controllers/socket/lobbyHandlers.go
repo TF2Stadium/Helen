@@ -260,6 +260,7 @@ func lobbySpectatorJoinHandler(so socketio.Socket) func(string) string {
 			}
 
 			chelpers.AfterLobbyJoin(so, lob, player)
+			models.BroadcastLobbyToUser(lob, player.SteamId)
 			return string(bytes)
 		})
 }
