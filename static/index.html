@@ -75,6 +75,11 @@ io.on("lobbyListData", function(s) {
   $("#lobby-list").html(JSON.stringify(JSON.parse(s), null, 2).replace(/(\r)?\n/g, "<br>"));
 });
 
+io.on("lobbyData", function(s) {
+  console.log("Received lobbyData");
+  console.log(JSON.parse(s));
+});
+
 io.on("lobbyReadyUp", function(s) {
   console.log("Received lobbyReadyUp");
 });
