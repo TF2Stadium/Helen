@@ -223,6 +223,7 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 					chelpers.GetLobbyRoom(lob.ID),
 					"lobbyReadyUp", "")
 			}
+			models.BroadcastLobbyToUser(lob, player.SteamId)
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
 		})
