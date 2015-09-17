@@ -46,7 +46,7 @@ func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 	if err2 == nil {
 		for _, id := range lobbyIdsSpectating {
 			so.Join(GetLobbyRoom(id))
-			lobby, _ := models.GetLobbyById(lobbyIdPlaying)
+			lobby, _ := models.GetLobbyById(id)
 			models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
 		}
 	}
