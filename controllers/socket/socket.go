@@ -47,7 +47,7 @@ func SocketInit(so socketio.Socket) {
 	// LOBBY CREATE
 	so.On("lobbyCreate", lobbyCreateHandler(so))
 
-	so.On("verifyServer", verifyServerHandler(so))
+	so.On("verifyServer", serverVerifyHandler(so))
 
 	so.On("lobbyClose", lobbyCloseHandler(so))
 

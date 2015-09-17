@@ -99,7 +99,7 @@ func lobbyCreateHandler(so socketio.Socket) func(string) string {
 		})
 }
 
-var verfiyServerFilters = chelpers.FilterParams{
+var serverVerifyFilters = chelpers.FilterParams{
 	Action:      authority.AuthAction(0),
 	FilterLogin: true,
 	Params: map[string]chelpers.Param{
@@ -108,8 +108,8 @@ var verfiyServerFilters = chelpers.FilterParams{
 	},
 }
 
-func verifyServerHandler(so socketio.Socket) func(string) string {
-	return chelpers.FilterRequest(so, verfiyServerFilters,
+func serverVerifyHandler(so socketio.Socket) func(string) string {
+	return chelpers.FilterRequest(so, serverVerifyFilters,
 		func(params map[string]interface{}) string {
 			info := models.ServerRecord{
 				Host:         params["server"].(string),
