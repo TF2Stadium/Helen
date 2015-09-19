@@ -9,16 +9,14 @@ import (
 	"github.com/TF2Stadium/Helen/controllers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/googollee/go-socket.io"
-	"github.com/gorilla/mux"
+	"net/http"
 )
 
-func SetupHTTPRoutes(router *mux.Router) {
-	router.HandleFunc("/", controllers.MainHandler)
-	router.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
-	router.HandleFunc("/startLogin", controllers.LoginHandler)
-	router.HandleFunc("/logout", controllers.LogoutHandler)
-	router.HandleFunc("/{param}", controllers.ExampleHandler)
-
+func SetupHTTPRoutes() {
+	http.HandleFunc("/", controllers.MainHandler)
+	http.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
+	http.HandleFunc("/startLogin", controllers.LoginHandler)
+	http.HandleFunc("/logout", controllers.LogoutHandler)
 }
 
 func SetupSocketRoutes(server *socketio.Server) {
