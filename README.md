@@ -1,5 +1,6 @@
-# TF2Stadium
-TF2Stadium Server is the backend server component for the tf2stadium.com project written in Go.
+Helen
+=====
+Helen is the backend server component for the tf2stadium.com project written in Go.
 
 [![Build Status](https://drone.io/github.com/TF2Stadium/Helen/status.png)](https://drone.io/github.com/TF2Stadium/Helen/latest)
 
@@ -11,13 +12,18 @@ The code is divided into multiple packages that follow the usual web application
 * models go in `models`
 * controllers go in `controllers`
 * routes go in `routes/routes.go`
-* TODO views currently go to static, until work on frontend code starts
+* helpers go in `helpers`
 
-### Contribution guidelines
-The project uses the Pull Request workflow to contribute code. More info on that here: https://help.github.com/articles/using-pull-requests/.
+### Contributing
+1. Fork this repository - http://github.com/TF2Stadium/Helen/fork
+2. Create your feature branch - `git checkout -b my-new-feature`
+3. Commit your changes - `git commit`
+4. Push - `git push origin my-new-feature`
+5. Create a Pull Request.
 
-**Each pull request must pass all existing tests (go test ./...) and include new appropriate tests.**
+**Before creating a Pull Request:**
 
-The pull request should be squashed (no more than 1 temporary commit per 100 loc, more info here: http://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit)
-
-Submitted code has to be formatted with `go fmt`.
+1. Ensure the code matches the Go style guidelines mentioned [Here](https://github.com/golang/go/wiki/CodeReviewComments). Code can be formatted with the `go fmt` tool.
+2. Ensure existing tests pass (with `go test ./...`), or are updated appropriately.
+3. For new features, you should add new tests.
+4. The pull request should be squashed (no more than 1 temporary commit per 100 loc, more info [here](http://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit))
