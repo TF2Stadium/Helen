@@ -72,6 +72,7 @@ func broadcaster() {
 				socket.Emit(message.Event, message.Content)
 			} else {
 				socketServer.BroadcastTo(message.Room, message.Event, message.Content)
+				helpers.Logger.Debug("Sent out a message: %s", message.Content)
 			}
 		case <-broadcastStopChannel:
 			return

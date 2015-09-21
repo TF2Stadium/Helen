@@ -27,5 +27,10 @@ var format = logging.MustStringFormatter(
 func InitLogger() {
 	backend := logging.NewLogBackend(os.Stderr, "", 0)
 	backendFormatter := logging.NewBackendFormatter(backend, format)
-	logging.SetBackend(backendFormatter)
+
+	fi, _ := os.Create("helen_dev.log")
+	fileBackend := logging.NewLogBackend(fi, "", 0)
+	fileBackendFormatter := logging.NewBackendFormatter(fileBackend, format)
+
+	logging.SetBackend(backendFormatter, fileBackendFormatter)
 }

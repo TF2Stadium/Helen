@@ -8,6 +8,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
@@ -36,6 +37,8 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
+
+			helpers.Logger.Debug("received chat message: %s %s", message, player.Name)
 
 			//Check if player has either joined, or is spectating lobby
 			lobbyId, tperr := player.GetLobbyId()
