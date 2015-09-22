@@ -5,6 +5,7 @@
 package models
 
 import (
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/bitly/go-simplejson"
 )
 
@@ -16,6 +17,11 @@ func DecoratePlayerSettingsJson(settings []PlayerSetting) *simplejson.Json {
 	}
 
 	return json
+}
+
+func decoratePlayerTags(p *Player) []string {
+	tags := []string{helpers.RoleNames[p.Role]}
+	return tags
 }
 
 func DecoratePlayerProfileJson(p *Player) *simplejson.Json {
@@ -50,6 +56,8 @@ func DecoratePlayerSummaryJson(p *Player) *simplejson.Json {
 	j.Set("lobbiesPlayed", p.Stats.PlayedHighlanderCount+p.Stats.PlayedSixesCount)
 	j.Set("steamid", p.SteamId)
 	j.Set("name", p.Name)
+	j.Set("tags", decoratePlayerTags(p))
+	j.Set("role", helpers.RoleNames[p.Role])
 
 	return j
 }
