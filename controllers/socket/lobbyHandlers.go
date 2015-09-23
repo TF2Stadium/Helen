@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -219,6 +220,14 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 			if lob.IsFull() {
 				lob.State = models.LobbyStateReadyingUp
 				lob.Save()
+				go func() {
+					tick := time.After(time.Second * 30)
+					select {
+					case <-tick:
+						lob.State = models.LobbyStateWaiting
+						lob.Save()
+					}
+				}()
 				broadcaster.SendMessageToRoom(
 					chelpers.GetLobbyRoom(lob.ID),
 					"lobbyReadyUp", "")
