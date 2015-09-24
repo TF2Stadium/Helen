@@ -222,10 +222,13 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 				lob.Save()
 				go func() {
 					tick := time.After(time.Second * 30)
-					select {
-					case <-tick:
-						lob.State = models.LobbyStateWaiting
-						lob.Save()
+					for {
+						select {
+						case <-tick:
+							lob.State = models.LobbyStateWaiting
+							lob.Save()
+							return
+						}
 					}
 				}()
 				broadcaster.SendMessageToRoom(
