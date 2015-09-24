@@ -223,9 +223,12 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 				go func() {
 					tick := time.After(time.Second * 30)
 					<-tick
-					lob.State = models.LobbyStateWaiting
-					lob.Save()
-
+					if lob.State != models.LobbyStateInProgress {
+						lob.RemoveUnreadyPlayers()
+						lob.UnreadyAllPlayers()
+						lob.State = models.LobbyStateWaiting
+						lob.Save()
+					}
 				}()
 				broadcaster.SendMessageToRoom(
 					chelpers.GetLobbyRoom(lob.ID),
