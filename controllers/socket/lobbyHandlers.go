@@ -163,7 +163,9 @@ func lobbyCloseHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
+			helpers.LockRecord(lob.ID, lob)
 			lob.Close(true)
+			helpers.UnlockRecord(lob.ID, lob)
 			chelpers.StopLogger(lobbyid)
 			models.BroadcastLobbyList() // has to be done manually for now
 
@@ -209,7 +211,10 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
+			helpers.LockRecord(lob.ID, lob)
 			tperr = lob.AddPlayer(player, slot)
+			helpers.UnlockRecord(lob.ID, lob)
+
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
@@ -218,14 +223,19 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 			chelpers.AfterLobbyJoin(so, lob, player)
 
 			if lob.IsFull() {
+				helpers.LockRecord(lob.ID, lob)
 				lob.State = models.LobbyStateReadyingUp
 				lob.Save()
+				helpers.UnlockRecord(lob.ID, lob)
+
 				go func() {
 					tick := time.After(time.Second * 30)
 					select {
 					case <-tick:
+						helpers.LockRecord(lob.ID, lob)
 						lob.State = models.LobbyStateWaiting
 						lob.Save()
+						helpers.UnlockRecord(lob.ID, lob)
 					}
 				}()
 				broadcaster.SendMessageToRoom(
@@ -262,7 +272,11 @@ func lobbySpectatorJoinHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+
+			helpers.LockRecord(lob.ID, lob)
 			tperr = lob.AddSpectator(player)
+			helpers.UnlockRecord(lob.ID, lob)
+
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
@@ -317,6 +331,9 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 			}
 
 			_, err := lob.GetPlayerSlot(player)
+			helpers.LockRecord(lob.ID, lob)
+			defer helpers.UnlockRecord(lob.ID, lob)
+
 			if err == nil {
 				lob.RemovePlayer(player)
 			} else if player.IsSpectatingId(lob.ID) {
@@ -368,15 +385,20 @@ func playerReadyHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
+			helpers.LockRecord(lobby.ID, lobby)
 			tperr = lobby.ReadyPlayer(player)
+			helpers.UnlockRecord(lobby.ID, lobby)
+
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
 
 			if lobby.IsEveryoneReady() {
+				helpers.LockRecord(lobby.ID, lobby)
 				lobby.State = models.LobbyStateInProgress
 				lobby.Save()
+				helpers.UnlockRecord(lobby.ID, lobby)
 				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
 				broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
 					"lobbyStart", string(bytes))
@@ -418,7 +440,10 @@ func playerUnreadyHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
+			helpers.LockRecord(lobby.ID, lobby)
 			tperr = lobby.UnreadyPlayer(player)
+			helpers.UnlockRecord(lobby.ID, lobby)
+
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
