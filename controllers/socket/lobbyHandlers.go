@@ -230,9 +230,18 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 
 				go func() {
 					tick := time.After(time.Second * 30)
-					select {
-					case <-tick:
-						helpers.LockRecord(lob.ID, lob)
+					<-tick
+					if lob.State != models.LobbyStateInProgress {
+						err := lob.RemoveUnreadyPlayers()
+						if err != nil {
+							helpers.Logger.Critical(err.Error())
+						}
+
+						lob.UnreadyAllPlayers()
+						if err != nil {
+							helpers.Logger.Critical(err.Error())
+						}
+
 						lob.State = models.LobbyStateWaiting
 						lob.Save()
 						helpers.UnlockRecord(lob.ID, lob)
