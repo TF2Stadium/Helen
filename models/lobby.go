@@ -260,17 +260,10 @@ func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
 	return nil
 }
 
-func (lobby *Lobby) RemoveUnreadyPlayers() {
-	var slots []*LobbySlot
-	db.DB.Where("lobby_id = ?", lobby.ID).Find(slots)
-
-	for _, slot := range slots {
-		if !slot.Ready {
-			db.DB.Where("player_id = ? AND lobby_id = ?", slot.ID, lobby.ID).Delete(&LobbySlot{})
-		}
-	}
-
+func (lobby *Lobby) RemoveUnreadyPlayers() error {
+	err := db.DB.Where("lobby_id = ? AND ready = ?", lobby.ID, false).Delete(&LobbySlot{}).Error
 	lobby.OnChange(true)
+	return err
 }
 
 func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
@@ -282,15 +275,10 @@ func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
 	return slot.Ready, nil
 }
 
-func (lobby *Lobby) UnreadyAllPlayers() {
-	var slots []*LobbySlot
-	db.DB.Where("lobby_id = ?", lobby.ID).Find(slots)
-
-	for _, slot := range slots {
-		slot.Ready = false
-		db.DB.Save(slot)
-	}
+func (lobby *Lobby) UnreadyAllPlayers() error {
+	err := db.DB.Model(&LobbySlot{}).Where("lobby_id = ?", lobby.ID).Update("ready", false).Error
 	lobby.OnChange(false)
+	return err
 }
 
 func (lobby *Lobby) IsEveryoneReady() bool {
