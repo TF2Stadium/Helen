@@ -20,7 +20,8 @@ func LockRecord(id uint, recType interface{}) {
 	key := record{id, reflect.TypeOf(recType)}
 	mutex, e := mutexStore[key]
 	if !e {
-		mutexStore[key] = &sync.Mutex{}
+		mutex = &sync.Mutex{}
+		mutexStore[key] = mutex
 	}
 
 	mutex.Lock()
