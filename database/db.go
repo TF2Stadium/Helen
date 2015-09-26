@@ -9,6 +9,7 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
+	"sync"
 )
 
 // we'll use Test() to set this
@@ -16,10 +17,19 @@ import (
 var IsTest bool = false
 
 var DB gorm.DB
+var dbMutex sync.Mutex
+var initialized = false
 var DbUrl string
 
 // we'll connect to the database through this function
 func Init() {
+	dbMutex.Lock()
+	defer dbMutex.Unlock()
+
+	if initialized {
+		return
+	}
+
 	helpers.Logger.Debug("[DB]: DB name -> [" + config.Constants.DbDatabase + "]")
 	helpers.Logger.Debug("[DB]: DB user -> [" + config.Constants.DbUsername + "]")
 	helpers.Logger.Debug("[DB]: Connecting to database -> [" + config.Constants.DbDatabase + "]")
@@ -38,10 +48,13 @@ func Init() {
 
 	var err error
 	DB, err = gorm.Open("postgres", DbUrl)
-
+	//	DB, err := gorm.Open("sqlite3", "/tmp/gorm.db")
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
 	}
 
+	DB.SetLogger(helpers.FakeLogger{})
+
 	helpers.Logger.Debug("[DB]: Connected!")
+	initialized = true
 }

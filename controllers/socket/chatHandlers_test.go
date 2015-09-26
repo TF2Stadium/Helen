@@ -10,11 +10,19 @@ import (
 	//	"github.com/TF2Stadium/Helen/helpers"
 	//	"github.com/stretchr/testify/assert"
 	"fmt"
+	"github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/stretchr/testify/assert"
+	"os"
 )
 
-func init() {
+func TestMain(m *testing.M) {
 	testhelpers.SetupFakeSockets()
+	helpers.InitAuthorization()
+	database.Init()
+	res := m.Run()
+	database.DB.Close()
+	os.Exit(res)
 }
 
 func TestChatSend(t *testing.T) {

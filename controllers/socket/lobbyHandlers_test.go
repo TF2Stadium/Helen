@@ -5,18 +5,12 @@
 package socket
 
 import (
-	"github.com/TF2Stadium/Helen/testhelpers"
-	"testing"
-	//	"github.com/TF2Stadium/Helen/helpers"
-	//	"github.com/stretchr/testify/assert"
 	"fmt"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/testhelpers"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
-
-func init() {
-	testhelpers.SetupFakeSockets()
-}
 
 func TestNotAuthedLobbyData(t *testing.T) {
 	testhelpers.CleanupDB()

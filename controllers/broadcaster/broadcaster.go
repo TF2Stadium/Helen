@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/googollee/go-socket.io"
 )
 
 type broadcastMessage struct {
@@ -22,7 +21,6 @@ type commonBroadcaster interface {
 	BroadcastTo(string, string, ...interface{})
 }
 
-var SteamIdSocketMap = make(map[string]socketio.Socket)
 var broadcasterTicker *time.Ticker
 var broadcastStopChannel chan bool
 var broadcastMessageChannel chan broadcastMessage
@@ -64,7 +62,7 @@ func broadcaster() {
 		select {
 		case message := <-broadcastMessageChannel:
 			if message.Room == "" {
-				socket, ok := SteamIdSocketMap[message.SteamId]
+				socket, ok := GetAssociatedSocket(message.SteamId)
 				if !ok {
 					helpers.Logger.Warning("Failed to get user's socket: %d", message.SteamId)
 					continue
@@ -72,7 +70,9 @@ func broadcaster() {
 				socket.Emit(message.Event, message.Content)
 			} else {
 				socketServer.BroadcastTo(message.Room, message.Event, message.Content)
-				helpers.Logger.Debug("Sent out a message: %s", message.Content)
+				if message.Event == "chatReceive" {
+					helpers.Logger.Debug("Sent out a chat message: %s", message.Content)
+				}
 			}
 		case <-broadcastStopChannel:
 			return

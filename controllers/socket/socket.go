@@ -17,14 +17,14 @@ func SocketInit(so socketio.Socket) {
 	chelpers.AuthenticateSocket(so.Id(), so.Request())
 	if chelpers.IsLoggedInSocket(so.Id()) {
 		steamid := chelpers.GetSteamId(so.Id())
-		broadcaster.SteamIdSocketMap[steamid] = so
+		broadcaster.AssociateSocket(steamid, so)
 	}
 
 	so.On("disconnection", func() {
 		chelpers.DeauthenticateSocket(so.Id())
 		if chelpers.IsLoggedInSocket(so.Id()) {
 			steamid := chelpers.GetSteamId(so.Id())
-			delete(broadcaster.SteamIdSocketMap, steamid)
+			broadcaster.DisassociateSocket(steamid)
 		}
 		helpers.Logger.Debug("on disconnect")
 	})

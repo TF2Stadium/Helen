@@ -7,10 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init() {
-	testhelpers.SetupFakeSockets()
-}
-
 func TestPlayerSettings(t *testing.T) {
 	testhelpers.CleanupDB()
 
