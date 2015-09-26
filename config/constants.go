@@ -5,10 +5,9 @@
 package config
 
 import (
+	"github.com/TF2Stadium/Helen/helpers"
 	"os"
 	"strings"
-
-	"github.com/TF2Stadium/Helen/helpers"
 )
 
 type constants struct {
@@ -84,6 +83,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
 	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
 	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
+	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_ENABLE")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
 	// conditional assignments
 
