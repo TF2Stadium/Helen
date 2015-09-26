@@ -9,14 +9,23 @@ import (
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/antonlindstrom/pgstore"
 	"github.com/gorilla/sessions"
+	"sync"
 )
 
+var sessionStoreMutex sync.Mutex
+
 // var CookieStore = sessions.NewCookieStore([]byte(Constants.SessionName))
-var SessionStore sessions.Store
+var SessionStore *pgstore.PGStore
 
 var SocketAuthStore = make(map[string]*sessions.Session)
 
 func SetupStores() {
-	SessionStore = pgstore.NewPGStore(database.DbUrl, []byte(config.Constants.SessionName))
-	SessionStore.(*pgstore.PGStore).Options.HttpOnly = true
+	if SessionStore == nil {
+		sessionStoreMutex.Lock()
+		if SessionStore == nil {
+			SessionStore = pgstore.NewPGStore(database.DbUrl, []byte(config.Constants.SessionName))
+			SessionStore.Options.HttpOnly = true
+		}
+		sessionStoreMutex.Unlock()
+	}
 }

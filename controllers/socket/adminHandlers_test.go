@@ -15,11 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init() {
-	testhelpers.SetupFakeSockets()
-	helpers.InitAuthorization()
-}
-
 func TestChangeRole(t *testing.T) {
 	testhelpers.CleanupDB()
 

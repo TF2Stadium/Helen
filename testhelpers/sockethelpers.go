@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 )
@@ -33,11 +34,14 @@ func RandSeq(n int) string {
 }
 
 type fakeSocketServer struct {
+	sync.Mutex
 	sockets []*fakeSocket
 	rooms   map[string]map[string]socketio.Socket
 }
 
 func (f *fakeSocketServer) BroadcastTo(room string, message string, args ...interface{}) {
+	f.Lock()
+	defer f.Unlock()
 	for _, rooms := range f.rooms {
 		socket, ok := rooms[room]
 		if !ok {
@@ -48,7 +52,7 @@ func (f *fakeSocketServer) BroadcastTo(room string, message string, args ...inte
 	return
 }
 
-var FakeSocketServer = fakeSocketServer{nil, make(map[string]map[string]socketio.Socket)}
+var FakeSocketServer = fakeSocketServer{sockets: nil, rooms: make(map[string]map[string]socketio.Socket)}
 
 type message struct {
 	event   string
@@ -63,6 +67,8 @@ type fakeSocket struct {
 }
 
 func NewFakeSocket() *fakeSocket {
+	FakeSocketServer.Lock()
+	defer FakeSocketServer.Unlock()
 	so := &fakeSocket{
 		id:            RandSeq(5),
 		receivedQueue: make(chan message, 100),
@@ -119,6 +125,8 @@ func (f *fakeSocket) SimRequest(event string, args string) (*simplejson.Json, er
 }
 
 func (f *fakeSocket) Join(room string) error {
+	f.server.Lock()
+	defer f.server.Unlock()
 	arr, ok := f.server.rooms[f.Id()]
 	if !ok {
 		arr = make(map[string]socketio.Socket)
@@ -129,6 +137,8 @@ func (f *fakeSocket) Join(room string) error {
 }
 
 func (f *fakeSocket) Leave(room string) error {
+	f.server.Lock()
+	defer f.server.Unlock()
 	arr, ok := f.server.rooms[f.Id()]
 	if ok {
 		delete(arr, room)
@@ -137,6 +147,8 @@ func (f *fakeSocket) Leave(room string) error {
 }
 
 func (f *fakeSocket) Rooms() []string {
+	f.server.Lock()
+	defer f.server.Unlock()
 	var rooms []string
 	arr, ok := f.server.rooms[f.Id()]
 	if !ok {
@@ -197,7 +209,7 @@ func (f *fakeSocket) FakeAuthenticate(player *models.Player) *http.Request {
 	session.Values["steam_id"] = fmt.Sprint(player.SteamId)
 	session.Values["role"] = player.Role
 
-	broadcaster.SteamIdSocketMap[player.SteamId] = f
+	broadcaster.AssociateSocket(player.SteamId, f)
 	stores.SocketAuthStore[f.Id()] = session
 	return nil
 }

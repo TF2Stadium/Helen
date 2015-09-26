@@ -7,8 +7,15 @@ package helpers
 import (
 	"os"
 
+	"fmt"
 	"github.com/op/go-logging"
 )
+
+type FakeLogger struct{}
+
+func (f FakeLogger) Print(v ...interface{}) {
+	Logger.Warning(fmt.Sprint(v))
+}
 
 var Logger = logging.MustGetLogger("main")
 
@@ -28,9 +35,5 @@ func InitLogger() {
 	backend := logging.NewLogBackend(os.Stderr, "", 0)
 	backendFormatter := logging.NewBackendFormatter(backend, format)
 
-	fi, _ := os.Create("helen_dev.log")
-	fileBackend := logging.NewLogBackend(fi, "", 0)
-	fileBackendFormatter := logging.NewBackendFormatter(fileBackend, format)
-
-	logging.SetBackend(backendFormatter, fileBackendFormatter)
+	logging.SetBackend(backendFormatter)
 }
