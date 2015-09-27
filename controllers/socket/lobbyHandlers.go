@@ -221,15 +221,21 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 
 			chelpers.AfterLobbyJoin(so, lob, player)
 
+			var unlocked bool
 			if lob.IsFull() {
 				lob.State = models.LobbyStateReadyingUp
 				lob.Save()
+				helpers.UnlockRecord(lob.ID, lob)
+				unlocked = true
 				go lob.ReadyUpTimeoutCheck()
 				broadcaster.SendMessageToRoom(
 					chelpers.GetLobbyRoom(lob.ID),
 					"lobbyReadyUp", "")
 			}
 
+			if !unlocked {
+				helpers.UnlockRecord(lob.ID, lob)
+			}
 			models.BroadcastLobbyToUser(lob, player.SteamId)
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)

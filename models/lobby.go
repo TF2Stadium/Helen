@@ -285,6 +285,8 @@ func (lobby *Lobby) ReadyUpTimeoutCheck() {
 	tick := time.After(time.Second * 30)
 	<-tick
 	if lobby.State != LobbyStateInProgress {
+		helpers.LockRecord(lobby.ID, lobby)
+		defer helpers.UnlockRecord(lobby.ID, lobby)
 		err := lobby.RemoveUnreadyPlayers()
 		if err != nil {
 			helpers.Logger.Critical(err.Error())
