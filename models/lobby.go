@@ -260,6 +260,12 @@ func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
 	return nil
 }
 
+func (lobby *Lobby) RemoveUnreadyPlayers() error {
+	err := db.DB.Where("lobby_id = ? AND ready = ?", lobby.ID, false).Delete(&LobbySlot{}).Error
+	lobby.OnChange(true)
+	return err
+}
+
 func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
 	slot := &LobbySlot{}
 	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
@@ -267,6 +273,33 @@ func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
 		return false, helpers.NewTPError("Player is not in the lobby.", 5)
 	}
 	return slot.Ready, nil
+}
+
+func (lobby *Lobby) UnreadyAllPlayers() error {
+	err := db.DB.Model(&LobbySlot{}).Where("lobby_id = ?", lobby.ID).Update("ready", false).Error
+	lobby.OnChange(false)
+	return err
+}
+
+func (lobby *Lobby) ReadyUpTimeoutCheck() {
+	tick := time.After(time.Second * 30)
+	<-tick
+	if lobby.State != LobbyStateInProgress {
+		helpers.LockRecord(lobby.ID, lobby)
+		defer helpers.UnlockRecord(lobby.ID, lobby)
+		err := lobby.RemoveUnreadyPlayers()
+		if err != nil {
+			helpers.Logger.Critical(err.Error())
+		}
+
+		lobby.UnreadyAllPlayers()
+		if err != nil {
+			helpers.Logger.Critical(err.Error())
+		}
+
+		lobby.State = LobbyStateWaiting
+		lobby.Save()
+	}
 }
 
 func (lobby *Lobby) IsEveryoneReady() bool {
@@ -348,6 +381,7 @@ func (lobby *Lobby) Close(rpc bool) {
 	}
 	delete(LobbyServerSettingUp, lobby.ID)
 	db.DB.Save(lobby)
+	helpers.RemoveRecord(lobby.ID, lobby)
 }
 
 // GORM callback
