@@ -281,6 +281,25 @@ func (lobby *Lobby) UnreadyAllPlayers() error {
 	return err
 }
 
+func (lobby *Lobby) ReadyUpTimeoutCheck() {
+	tick := time.After(time.Second * 30)
+	<-tick
+	if lobby.State != LobbyStateInProgress {
+		err := lobby.RemoveUnreadyPlayers()
+		if err != nil {
+			helpers.Logger.Critical(err.Error())
+		}
+
+		lobby.UnreadyAllPlayers()
+		if err != nil {
+			helpers.Logger.Critical(err.Error())
+		}
+
+		lobby.State = LobbyStateWaiting
+		lobby.Save()
+	}
+}
+
 func (lobby *Lobby) IsEveryoneReady() bool {
 	var slots []LobbySlot
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)

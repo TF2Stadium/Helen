@@ -9,7 +9,6 @@ import (
 	"encoding/base64"
 	"reflect"
 	"strconv"
-	"time"
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -212,8 +211,8 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 			}
 
 			helpers.LockRecord(lob.ID, lob)
+			defer helpers.UnlockRecord(lob.ID, lob)
 			tperr = lob.AddPlayer(player, slot)
-			helpers.UnlockRecord(lob.ID, lob)
 
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
@@ -223,34 +222,14 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 			chelpers.AfterLobbyJoin(so, lob, player)
 
 			if lob.IsFull() {
-				helpers.LockRecord(lob.ID, lob)
 				lob.State = models.LobbyStateReadyingUp
 				lob.Save()
-				helpers.UnlockRecord(lob.ID, lob)
-
-				go func() {
-					tick := time.After(time.Second * 30)
-					<-tick
-					if lob.State != models.LobbyStateInProgress {
-						err := lob.RemoveUnreadyPlayers()
-						if err != nil {
-							helpers.Logger.Critical(err.Error())
-						}
-
-						lob.UnreadyAllPlayers()
-						if err != nil {
-							helpers.Logger.Critical(err.Error())
-						}
-
-						lob.State = models.LobbyStateWaiting
-						lob.Save()
-						helpers.UnlockRecord(lob.ID, lob)
-					}
-				}()
+				go lob.ReadyUpTimeoutCheck()
 				broadcaster.SendMessageToRoom(
 					chelpers.GetLobbyRoom(lob.ID),
 					"lobbyReadyUp", "")
 			}
+
 			models.BroadcastLobbyToUser(lob, player.SteamId)
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
@@ -396,7 +375,7 @@ func playerReadyHandler(so socketio.Socket) func(string) string {
 
 			helpers.LockRecord(lobby.ID, lobby)
 			tperr = lobby.ReadyPlayer(player)
-			helpers.UnlockRecord(lobby.ID, lobby)
+			defer helpers.UnlockRecord(lobby.ID, lobby)
 
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
@@ -404,10 +383,8 @@ func playerReadyHandler(so socketio.Socket) func(string) string {
 			}
 
 			if lobby.IsEveryoneReady() {
-				helpers.LockRecord(lobby.ID, lobby)
 				lobby.State = models.LobbyStateInProgress
 				lobby.Save()
-				helpers.UnlockRecord(lobby.ID, lobby)
 				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
 				broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
 					"lobbyStart", string(bytes))
