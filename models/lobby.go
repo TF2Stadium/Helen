@@ -381,6 +381,7 @@ func (lobby *Lobby) Close(rpc bool) {
 	}
 	delete(LobbyServerSettingUp, lobby.ID)
 	db.DB.Save(lobby)
+	helpers.RemoveRecord(lobby.ID, lobby)
 }
 
 // GORM callback
