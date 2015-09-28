@@ -259,3 +259,44 @@ func TestSpectators(t *testing.T) {
 	db.DB.Model(lobby).Association("Spectators").Find(&specs)
 	assert.Equal(t, 0, len(specs))
 }
+
+func TestUnreadyAllPlayers(t *testing.T) {
+	testhelpers.CleanupDB()
+
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby.Save()
+
+	for i := 0; i < 12; i++ {
+		player, playErr := models.NewPlayer(strconv.Itoa(i))
+		assert.Nil(t, playErr)
+		player.Save()
+		lobby.AddPlayer(player, i)
+		lobby.ReadyPlayer(player)
+	}
+
+	err := lobby.UnreadyAllPlayers()
+	assert.Nil(t, err)
+	ready := lobby.IsEveryoneReady()
+	assert.Equal(t, ready, false)
+}
+
+func TestRemoveUnreadyPlayers(t *testing.T) {
+	testhelpers.CleanupDB()
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby.Save()
+
+	for i := 0; i < 12; i++ {
+		player, playErr := models.NewPlayer(strconv.Itoa(i))
+		assert.Nil(t, playErr)
+		player.Save()
+		lobby.AddPlayer(player, i)
+	}
+
+	err := lobby.RemoveUnreadyPlayers()
+	assert.Nil(t, err)
+
+	for i := 0; i < 12; i++ {
+		_, err := lobby.GetPlayerIdBySlot(i)
+		assert.NotNil(t, err)
+	}
+}

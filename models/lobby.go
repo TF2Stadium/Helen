@@ -276,7 +276,12 @@ func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
 }
 
 func (lobby *Lobby) UnreadyAllPlayers() error {
-	err := db.DB.Model(&LobbySlot{}).Where("lobby_id = ?", lobby.ID).Update("ready", false).Error
+	var slots []LobbySlot
+	err := db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots).Error
+	for _, slot := range slots {
+		slot.Ready = false
+		db.DB.Save(slot)
+	}
 	lobby.OnChange(false)
 	return err
 }
