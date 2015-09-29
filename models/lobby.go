@@ -286,9 +286,13 @@ func (lobby *Lobby) UnreadyAllPlayers() error {
 	return err
 }
 
-func (lobby *Lobby) ReadyUpTimeoutCheck() {
+func ReadyUpTimeoutCheck(lobbyID uint) {
 	tick := time.After(time.Second * 30)
 	<-tick
+
+	lobby := &Lobby{}
+	db.DB.First(lobby, lobbyID)
+
 	if lobby.State != LobbyStateInProgress {
 		helpers.LockRecord(lobby.ID, lobby)
 		defer helpers.UnlockRecord(lobby.ID, lobby)
