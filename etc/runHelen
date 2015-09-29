@@ -1,0 +1,4 @@
+#!/bin/sh
+
+source /etc/Helen.conf
+/usr/bin/Helen
