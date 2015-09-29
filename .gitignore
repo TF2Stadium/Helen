@@ -25,6 +25,7 @@ _testmain.go
 *.prof
 *.out
 *.coverprofile
+*.log
 
 .DS_Store
 
