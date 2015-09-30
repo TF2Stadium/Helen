@@ -224,7 +224,7 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 			if lob.IsFull() {
 				lob.State = models.LobbyStateReadyingUp
 				lob.Save()
-				go models.ReadyUpTimeoutCheck(lob.ID)
+				lob.ReadyUpTimeoutCheck()
 				broadcaster.SendMessageToRoom(
 					chelpers.GetLobbyRoom(lob.ID),
 					"lobbyReadyUp", "")
