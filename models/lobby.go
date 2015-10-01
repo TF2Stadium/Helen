@@ -289,14 +289,11 @@ func (lobby *Lobby) UnreadyAllPlayers() error {
 }
 
 func ReadyTimeoutListener() {
-	helpers.Logger.Debug("hi")
 	for {
 		select {
 		case id := <-readyUpLobbyID:
-			helpers.Logger.Debug("got")
 			tick := time.After(time.Second * 30)
 			<-tick
-			helpers.Logger.Debug("em")
 
 			lobby := &Lobby{}
 			db.DB.First(lobby, id)
