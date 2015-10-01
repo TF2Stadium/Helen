@@ -3,6 +3,7 @@ Helen
 Helen is the backend server component for the tf2stadium.com project written in Go.
 
 [![Build Status](https://drone.io/github.com/TF2Stadium/Helen/status.png)](https://drone.io/github.com/TF2Stadium/Helen/latest)
+[![Go Report Card](https://img.shields.io/badge/Go%20Report%20Card-score-blue.svg?style=flat-square)](http://goreportcard.com/report/TF2Stadium/Helen)
 
 ### Setup
 The project uses postgres as a database. Default development account data can be found at  [database/setup.md](../master/database/setup.md).
