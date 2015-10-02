@@ -42,17 +42,18 @@ func overrideFromEnv(constant *string, name string) {
 	val := os.Getenv(name)
 	if "" != val {
 		*constant = val
+		helpers.Logger.Debug("%s set to %s", name, *constant)
 	}
-
 }
 
 func overrideBoolFromEnv(constant *bool, name string) {
 	val := os.Getenv(name)
 	if val != "" {
 		*constant = map[string]bool{
-			"1": true,
-			"0": false,
+			"true":  true,
+			"false": false,
 		}[val]
+		helpers.Logger.Debug("%s set to %t", name, *constant)
 	}
 }
 
@@ -83,7 +84,8 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
 	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
 	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
-	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_ENABLE")
+	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_DISABLE")
+	helpers.Logger.Debug("%t", Constants.ServerMockUp)
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
 	overrideFromEnv(&Constants.StaticFileLocation, "STATIC_FILE")
 	// conditional assignments
