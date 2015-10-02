@@ -12,12 +12,13 @@ import (
 	"sync"
 )
 
-var sessionStoreMutex sync.Mutex
+var sessionStoreMutex = &sync.Mutex{}
+var authStoreMutex = &sync.Mutex{}
 
 // var CookieStore = sessions.NewCookieStore([]byte(Constants.SessionName))
 var SessionStore *pgstore.PGStore
 
-var SocketAuthStore = make(map[string]*sessions.Session)
+var socketAuthStore = make(map[string]*sessions.Session)
 
 func SetupStores() {
 	if SessionStore == nil {
@@ -28,4 +29,23 @@ func SetupStores() {
 		}
 		sessionStoreMutex.Unlock()
 	}
+}
+
+func SetStore(socketid string, session *sessions.Session) {
+	authStoreMutex.Lock()
+	socketAuthStore[socketid] = session
+	authStoreMutex.Unlock()
+}
+
+func RemoveStore(socketid string) {
+	authStoreMutex.Lock()
+	delete(socketAuthStore, socketid)
+	authStoreMutex.Unlock()
+}
+
+func GetStore(socketid string) (session *sessions.Session, ok bool) {
+	authStoreMutex.Lock()
+	session, ok = socketAuthStore[socketid]
+	authStoreMutex.Unlock()
+	return
 }
