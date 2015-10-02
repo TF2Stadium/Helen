@@ -336,6 +336,7 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 			}
 
 			chelpers.AfterLobbyLeave(so, lob, player)
+			so.Emit("lobbyData", "{}")
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
 		})
