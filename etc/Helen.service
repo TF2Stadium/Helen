@@ -5,7 +5,8 @@ Requires=Pauling.service
 Requires=postgresql.service
 
 [Service]
-ExecStart=/usr/bin/runHelen
+ExecStart=/usr/bin/Helen
+EnvironmentFile=/etc/Helen.conf
 
 [Install]
 WantedBy=multi-user.target
