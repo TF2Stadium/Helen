@@ -81,5 +81,6 @@ func SocketInit(so socketio.Socket) {
 	if config.Constants.ServerMockUp {
 		so.On("debugLobbyFill", debugLobbyFillHandler(so))
 		so.On("debugLobbyReady", debugLobbyReadyHandler(so))
+		so.On("debugGetAllLobbies", debugRequestAllLobbiesHandler(so))
 	}
 }

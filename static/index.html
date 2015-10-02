@@ -73,6 +73,7 @@ io.on("sendNotification", function(s) {
 io.on("lobbyListData", function(s) {
   console.log("Received lobbyListData");
   $("#lobby-list").html(JSON.stringify(JSON.parse(s), null, 2).replace(/(\r)?\n/g, "<br>"));
+  console.log(JSON.parse(s));
 });
 
 io.on("lobbyData", function(s) {
@@ -106,7 +107,7 @@ $(function() {
   createBox(io, "playerProfile", ["steamid"]);
   createBox(io, "adminChangeRole", ["steamid", "role"]);
   createBox(io, "requestLobbyListData", []);
-
+  createBox(io, "debugGetAllLobbies", [])
 });
 
 </script>
