@@ -12,6 +12,7 @@ import (
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
@@ -441,9 +442,16 @@ func playerUnreadyHandler(so socketio.Socket) func(string) string {
 		})
 }
 
-func requestLobbyListDataHandler(_ socketio.Socket) func(string) string {
+func requestLobbyListDataHandler(so socketio.Socket) func(string) string {
 	return func(s string) string {
-		models.BroadcastLobbyList()
+		var lobbies []models.Lobby
+		db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
+		list, err := models.DecorateLobbyListData(lobbies)
+		if err != nil {
+			helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
+		} else {
+			so.Emit("lobbyListData", list)
+		}
 
 		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(resp)
