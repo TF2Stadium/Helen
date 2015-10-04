@@ -62,7 +62,7 @@ func broadcaster() {
 		select {
 		case message := <-broadcastMessageChannel:
 			if message.Room == "" {
-				socket, ok := GetAssociatedSocket(message.SteamId)
+				socket, ok := GetSocket(message.SteamId)
 				if !ok {
 					helpers.Logger.Warning("Failed to get user's socket: %d", message.SteamId)
 					continue

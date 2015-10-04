@@ -52,7 +52,7 @@ func AuthenticateSocket(socketid string, r *http.Request) error {
 	s, _ := GetSessionHTTP(r)
 
 	if _, ok := s.Values["id"]; ok {
-		stores.SocketAuthStore[socketid] = s
+		stores.SetSocketSession(socketid, s)
 		return nil
 	}
 
@@ -60,11 +60,11 @@ func AuthenticateSocket(socketid string, r *http.Request) error {
 }
 
 func DeauthenticateSocket(socketid string) {
-	delete(stores.SocketAuthStore, socketid)
+	stores.RemoveSocketSession(socketid)
 }
 
 func IsLoggedInSocket(socketid string) bool {
-	_, ok := stores.SocketAuthStore[socketid]
+	_, ok := stores.GetStore(socketid)
 	return ok
 }
 
@@ -80,7 +80,7 @@ func GetSessionHTTP(r *http.Request) (*sessions.Session, error) {
 }
 
 func GetSessionSocket(socketid string) (*sessions.Session, error) {
-	session, ok := stores.SocketAuthStore[socketid]
+	session, ok := stores.GetStore(socketid)
 
 	if !ok {
 		return nil, errors.New("No session associated with the socket")
