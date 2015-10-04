@@ -52,7 +52,7 @@ func AuthenticateSocket(socketid string, r *http.Request) error {
 	s, _ := GetSessionHTTP(r)
 
 	if _, ok := s.Values["id"]; ok {
-		stores.SetStore(socketid, s)
+		stores.SetSocketSession(socketid, s)
 		return nil
 	}
 
@@ -60,7 +60,7 @@ func AuthenticateSocket(socketid string, r *http.Request) error {
 }
 
 func DeauthenticateSocket(socketid string) {
-	stores.RemoveStore(socketid)
+	stores.RemoveSocketSession(socketid)
 }
 
 func IsLoggedInSocket(socketid string) bool {

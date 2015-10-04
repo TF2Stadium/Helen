@@ -31,13 +31,13 @@ func SetupStores() {
 	}
 }
 
-func SetStore(socketid string, session *sessions.Session) {
+func SetSocketSession(socketid string, session *sessions.Session) {
 	authStoreMutex.Lock()
 	socketAuthStore[socketid] = session
 	authStoreMutex.Unlock()
 }
 
-func RemoveStore(socketid string) {
+func RemoveSocketSession(socketid string) {
 	authStoreMutex.Lock()
 	delete(socketAuthStore, socketid)
 	authStoreMutex.Unlock()
