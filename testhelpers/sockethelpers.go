@@ -210,7 +210,7 @@ func (f *fakeSocket) FakeAuthenticate(player *models.Player) *http.Request {
 	session.Values["role"] = player.Role
 
 	broadcaster.SetSocket(player.SteamId, f)
-	stores.SetStore(f.Id(), session)
+	stores.SetSocketSession(f.Id(), session)
 	return nil
 }
 
