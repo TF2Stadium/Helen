@@ -390,6 +390,7 @@ func playerReadyHandler(so socketio.Socket) func(string) string {
 				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
 				broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
 					"lobbyStart", string(bytes))
+				models.BroadcastLobbyList()
 			}
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
