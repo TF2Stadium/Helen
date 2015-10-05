@@ -421,7 +421,8 @@ func (lobby *Lobby) RealAfterSave() {
 
 // If base is true, broadcasts the lobby list update
 func (lobby *Lobby) OnChange(base bool) {
-	if lobby.State == LobbyStateWaiting || lobby.State == LobbyStateInProgress {
+	if lobby.State == LobbyStateWaiting || lobby.State == LobbyStateInProgress ||
+		lobby.State == LobbyStateReadyingUp {
 		BroadcastLobby(lobby)
 	}
 
