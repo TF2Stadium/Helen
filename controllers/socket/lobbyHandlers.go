@@ -229,6 +229,7 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 				broadcaster.SendMessageToRoom(
 					chelpers.GetLobbyRoom(lob.ID),
 					"lobbyReadyUp", "")
+				models.BroadcastLobbyList()
 			}
 
 			models.BroadcastLobbyToUser(lob, player.SteamId)
