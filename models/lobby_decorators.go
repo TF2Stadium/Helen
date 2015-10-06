@@ -36,6 +36,7 @@ func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
 	lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
 	lobbyJs.Set("players", lobby.GetPlayerNumber())
 	lobbyJs.Set("whitelistId", lobby.Whitelist)
+	lobbyJs.Set("state", lobby.State)
 	lobbyJs.Set("map", lobby.MapName)
 
 	var leader Player

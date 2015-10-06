@@ -12,6 +12,7 @@ import (
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
@@ -224,10 +225,11 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 			if lob.IsFull() {
 				lob.State = models.LobbyStateReadyingUp
 				lob.Save()
-				go models.ReadyUpTimeoutCheck(lob.ID)
+				lob.ReadyUpTimeoutCheck()
 				broadcaster.SendMessageToRoom(
 					chelpers.GetLobbyRoom(lob.ID),
 					"lobbyReadyUp", "")
+				models.BroadcastLobbyList()
 			}
 
 			models.BroadcastLobbyToUser(lob, player.SteamId)
@@ -336,6 +338,7 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 			}
 
 			chelpers.AfterLobbyLeave(so, lob, player)
+			so.Emit("lobbyData", "{}")
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
 		})
@@ -388,6 +391,7 @@ func playerReadyHandler(so socketio.Socket) func(string) string {
 				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
 				broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
 					"lobbyStart", string(bytes))
+				models.BroadcastLobbyList()
 			}
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
@@ -440,9 +444,16 @@ func playerUnreadyHandler(so socketio.Socket) func(string) string {
 		})
 }
 
-func requestLobbyListDataHandler(_ socketio.Socket) func(string) string {
+func requestLobbyListDataHandler(so socketio.Socket) func(string) string {
 	return func(s string) string {
-		models.BroadcastLobbyList()
+		var lobbies []models.Lobby
+		db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
+		list, err := models.DecorateLobbyListData(lobbies)
+		if err != nil {
+			helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
+		} else {
+			so.Emit("lobbyListData", list)
+		}
 
 		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(resp)

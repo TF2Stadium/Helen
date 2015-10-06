@@ -56,6 +56,8 @@ var ValidLeagues = map[string]bool{
 	"etf2l": true,
 }
 
+var readyUpLobbyID = make(chan uint)
+
 type LobbySlot struct {
 	ID uint
 	// Lobby    Lobby
@@ -286,29 +288,38 @@ func (lobby *Lobby) UnreadyAllPlayers() error {
 	return err
 }
 
-func ReadyUpTimeoutCheck(lobbyID uint) {
-	tick := time.After(time.Second * 30)
-	<-tick
+func ReadyTimeoutListener() {
+	for {
+		select {
+		case id := <-readyUpLobbyID:
+			tick := time.After(time.Second * 30)
+			<-tick
 
-	lobby := &Lobby{}
-	db.DB.First(lobby, lobbyID)
+			lobby := &Lobby{}
+			db.DB.First(lobby, id)
 
-	if lobby.State != LobbyStateInProgress {
-		helpers.LockRecord(lobby.ID, lobby)
-		defer helpers.UnlockRecord(lobby.ID, lobby)
-		err := lobby.RemoveUnreadyPlayers()
-		if err != nil {
-			helpers.Logger.Critical(err.Error())
+			if lobby.State != LobbyStateInProgress {
+				helpers.LockRecord(lobby.ID, lobby)
+				defer helpers.UnlockRecord(lobby.ID, lobby)
+				err := lobby.RemoveUnreadyPlayers()
+				if err != nil {
+					helpers.Logger.Critical(err.Error())
+				}
+
+				lobby.UnreadyAllPlayers()
+				if err != nil {
+					helpers.Logger.Critical(err.Error())
+				}
+
+				lobby.State = LobbyStateWaiting
+				lobby.Save()
+			}
 		}
-
-		lobby.UnreadyAllPlayers()
-		if err != nil {
-			helpers.Logger.Critical(err.Error())
-		}
-
-		lobby.State = LobbyStateWaiting
-		lobby.Save()
 	}
+}
+
+func (lobby *Lobby) ReadyUpTimeoutCheck() {
+	readyUpLobbyID <- lobby.ID
 }
 
 func (lobby *Lobby) IsEveryoneReady() bool {
@@ -410,7 +421,8 @@ func (lobby *Lobby) RealAfterSave() {
 
 // If base is true, broadcasts the lobby list update
 func (lobby *Lobby) OnChange(base bool) {
-	if lobby.State == LobbyStateWaiting || lobby.State == LobbyStateInProgress {
+	if lobby.State == LobbyStateWaiting || lobby.State == LobbyStateInProgress ||
+		lobby.State == LobbyStateReadyingUp {
 		BroadcastLobby(lobby)
 	}
 
