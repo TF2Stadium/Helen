@@ -37,7 +37,7 @@ func SocketInit(so socketio.Socket) {
 	helpers.Logger.Debug("on connection")
 	chelpers.AfterConnect(so)
 
-	if chelpers.IsLoggedInSocket(so.Id()) {
+	if chelpers.IsLoggedInSocket(so.Id()) && !config.Constants.FakeAuthEnabled {
 		player, err := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if err != nil {
 			helpers.Logger.Warning("User has a cookie with but a matching player record doesn't exist: %s",
@@ -82,5 +82,6 @@ func SocketInit(so socketio.Socket) {
 		so.On("debugLobbyFill", debugLobbyFillHandler(so))
 		so.On("debugLobbyReady", debugLobbyReadyHandler(so))
 		so.On("debugGetAllLobbies", debugRequestAllLobbiesHandler(so))
+		so.On("debugNewPlayer", debugNewPlayer(so))
 	}
 }

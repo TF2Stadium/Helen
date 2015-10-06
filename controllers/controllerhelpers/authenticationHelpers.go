@@ -7,6 +7,7 @@ package controllerhelpers
 import (
 	"errors"
 	"net/http"
+	"sync"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
@@ -15,6 +16,9 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/sessions"
 )
+
+var fakeSteamIDStore = make(map[string]string)
+var storeLock = new(sync.Mutex)
 
 func buildFakeSocketRequest(cookiesObj *simplejson.Json) *http.Request {
 	cookies, err := cookiesObj.Map()
@@ -64,6 +68,9 @@ func DeauthenticateSocket(socketid string) {
 }
 
 func IsLoggedInSocket(socketid string) bool {
+	if config.Constants.FakeAuthEnabled {
+		return true
+	}
 	_, ok := stores.GetStore(socketid)
 	return ok
 }
@@ -89,8 +96,21 @@ func GetSessionSocket(socketid string) (*sessions.Session, error) {
 }
 
 func GetSteamId(socketid string) string {
+	if config.Constants.FakeAuthEnabled {
+		storeLock.Lock()
+		defer storeLock.Unlock()
+		return fakeSteamIDStore[socketid]
+	}
+
 	session, _ := GetSessionSocket(socketid)
 	return session.Values["steam_id"].(string)
+}
+
+func NewFakePlayer(socketid string) {
+	storeLock.Lock()
+	defer storeLock.Unlock()
+	id := "FAKE" + socketid
+	fakeSteamIDStore[socketid] = id
 }
 
 func GetPlayerSocket(socketid string) (*models.Player, error) {

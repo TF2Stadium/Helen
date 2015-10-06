@@ -95,3 +95,16 @@ func debugRequestAllLobbiesHandler(so socketio.Socket) func(string) string {
 		return string(resp)
 	}
 }
+
+func debugNewPlayer(so socketio.Socket) func(string) string {
+	return func(_ string) string {
+		id := "FAKE" + so.Id()
+		chelpers.NewFakePlayer(so.Id())
+		broadcaster.SetSocket(id, so)
+		p, _ := models.NewPlayer(id)
+		p.Save()
+
+		resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+		return string(resp)
+	}
+}
