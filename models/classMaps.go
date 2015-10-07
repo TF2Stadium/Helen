@@ -30,6 +30,12 @@ var hlClassMap = map[string]int{
 	"spy":      8,
 }
 
+var debugClassMap = map[string]int{
+	"scout": 0,
+}
+
+var debugClassList = []string{"scout1"}
+
 var hlClassList = []string{"scout", "soldier", "pyro", "demoman", "heavy", "engineer", "medic", "sniper", "spy"}
 
 func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (int, *helpers.TPError) {
@@ -44,6 +50,8 @@ func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (i
 		classMap = hlClassMap
 	case LobbyTypeSixes:
 		classMap = sixesClassMap
+	case LobbyTypeDebug:
+		classMap = debugClassMap
 	}
 
 	class, ok := classMap[classStr]
@@ -56,17 +64,23 @@ func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (i
 }
 
 func LobbyFormatClassMap(format LobbyType) map[string]int {
-	if format == LobbyTypeHighlander {
+	switch format {
+	case LobbyTypeHighlander:
 		return hlClassMap
-
+	case LobbyTypeSixes:
+		return sixesClassMap
+	default:
+		return debugClassMap
 	}
-	return sixesClassMap
 }
 
 func LobbyFormatClassList(format LobbyType) []string {
-	if format == LobbyTypeHighlander {
+	switch format {
+	case LobbyTypeHighlander:
 		return hlClassList
-
+	case LobbyTypeSixes:
+		return sixesClassList
+	default:
+		return debugClassList
 	}
-	return sixesClassList
 }

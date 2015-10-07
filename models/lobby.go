@@ -23,9 +23,11 @@ type LobbyState int
 const (
 	LobbyTypeSixes      LobbyType = 0
 	LobbyTypeHighlander LobbyType = 1
+	LobbyTypeDebug      LobbyType = 2
 )
 
 var TypePlayerCount = map[LobbyType]int{
+	LobbyTypeDebug:      1,
 	LobbyTypeSixes:      6,
 	LobbyTypeHighlander: 9,
 }
@@ -47,13 +49,9 @@ var stateString = map[LobbyState]string{
 }
 
 var FormatMap = map[LobbyType]string{
+	LobbyTypeDebug:      "Debug",
 	LobbyTypeSixes:      "Sixes",
 	LobbyTypeHighlander: "Highlander",
-}
-
-var ValidLeagues = map[string]bool{
-	"ugc":   true,
-	"etf2l": true,
 }
 
 var readyUpLobbyID = make(chan uint)
@@ -429,11 +427,6 @@ func (lobby *Lobby) OnChange(base bool) {
 	if lobby.State == LobbyStateWaiting && base {
 		BroadcastLobbyList()
 	}
-}
-
-func IsLeagueValid(league string) bool {
-	_, ok := ValidLeagues[league]
-	return ok
 }
 
 func BroadcastLobby(lobby *Lobby) {
