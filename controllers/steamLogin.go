@@ -33,6 +33,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func MockLoginHandler(w http.ResponseWriter, r *http.Request) {
+	steamid := r.URL.Path[strings.Index(r.URL.Path, "Login/")+6:]
+	setSession(w, r, steamid)
+	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
+}
+
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := controllerhelpers.GetSessionHTTP(r)
 	session.Options = &sessions.Options{MaxAge: -1}
@@ -41,24 +47,14 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", 303)
 }
 
-func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	fullURL := config.Constants.Domain + r.URL.String()
-	id, err := openid.Verify(fullURL, discoveryCache, nonceStore)
-	if err != nil {
-		helpers.Logger.Debug(err.Error())
-		return
-	}
-
-	parts := strings.Split(id, "/")
-	steamid := parts[len(parts)-1]
-
+func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 	session, _ := controllerhelpers.GetSessionHTTP(r)
 	session.Values["steam_id"] = steamid
 
 	player := &models.Player{}
-	var playErr error
-	err = database.DB.Where("steam_id = ?", steamid).First(player).Error
+	err := database.DB.Where("steam_id = ?", steamid).First(player).Error
 
+	var playErr error
 	if err == gorm.RecordNotFound {
 		player, playErr = models.NewPlayer(steamid)
 
@@ -76,6 +72,18 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	session.Options.Domain = config.Constants.CookieDomain
 	err = session.Save(r, w)
+}
 
+func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	fullURL := config.Constants.Domain + r.URL.String()
+	id, err := openid.Verify(fullURL, discoveryCache, nonceStore)
+	if err != nil {
+		helpers.Logger.Debug(err.Error())
+		return
+	}
+
+	parts := strings.Split(id, "/")
+	steamid := parts[len(parts)-1]
+	setSession(w, r, steamid)
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }

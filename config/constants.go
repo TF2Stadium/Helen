@@ -25,6 +25,7 @@ type constants struct {
 	SocketMockUp       bool
 	ServerMockUp       bool
 	ChatLogsEnabled    bool
+	MockupAuth         bool
 	AllowedCorsOrigins []string
 
 	// database
@@ -50,8 +51,8 @@ func overrideBoolFromEnv(constant *bool, name string) {
 	val := os.Getenv(name)
 	if val != "" {
 		*constant = map[string]bool{
-			"1": true,
-			"0": false,
+			"true":  true,
+			"false": false,
 		}[val]
 	}
 }
@@ -84,6 +85,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
 	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
 	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_ENABLE")
+	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
 	// conditional assignments
 
