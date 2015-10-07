@@ -18,7 +18,7 @@ func SetupHTTPRoutes() {
 	http.HandleFunc("/startLogin", controllers.LoginHandler)
 	http.HandleFunc("/logout", controllers.LogoutHandler)
 	if config.Constants.MockupAuth {
-		http.HandleFunc("/startFakeLogin/", controllers.MockLoginHandler)
+		http.HandleFunc("/startMockLogin/", controllers.MockLoginHandler)
 	}
 }
 
