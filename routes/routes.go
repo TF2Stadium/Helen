@@ -17,6 +17,9 @@ func SetupHTTPRoutes() {
 	http.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
 	http.HandleFunc("/startLogin", controllers.LoginHandler)
 	http.HandleFunc("/logout", controllers.LogoutHandler)
+	if config.Constants.MockupAuth {
+		http.HandleFunc("/startMockLogin/", controllers.MockLoginHandler)
+	}
 }
 
 func SetupSocketRoutes(server *socketio.Server) {
