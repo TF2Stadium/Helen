@@ -34,8 +34,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func MockLoginHandler(w http.ResponseWriter, r *http.Request) {
-	steamid := r.URL.Path[strings.Index(r.URL.Path, "Login/")+2:]
+	steamid := r.URL.Path[strings.Index(r.URL.Path, "Login/")+6:]
 	setSession(w, r, steamid)
+	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +72,6 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 
 	session.Options.Domain = config.Constants.CookieDomain
 	err = session.Save(r, w)
-
 }
 
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
