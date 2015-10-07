@@ -29,7 +29,7 @@ var lobbyCreateFilters = chelpers.FilterParams{
 
 		"type": chelpers.Param{
 			Kind: reflect.String,
-			In:   []string{"highlander", "sixes"}},
+			In:   []string{"highlander", "sixes", "debug"}},
 		"league": chelpers.Param{
 			Kind: reflect.String,
 			In:   []string{"etf2l", "ugc"}},
@@ -57,19 +57,12 @@ func lobbyCreateHandler(so socketio.Socket) func(string) string {
 			//mumble := params["mumbleRequired"].(bool)
 
 			var playermap = map[string]models.LobbyType{
+				"debug":      models.LobbyTypeDebug,
 				"sixes":      models.LobbyTypeSixes,
 				"highlander": models.LobbyTypeHighlander,
 			}
 
-			lobbytype, ok := playermap[lobbytypestring]
-			if !ok {
-				bytes, _ := chelpers.BuildFailureJSON("Lobby type invalid.", -1).Encode()
-				return string(bytes)
-			}
-			if !models.IsLeagueValid(league) {
-				bytes, _ := chelpers.BuildFailureJSON("Invalid League Name", -1).Encode()
-				return string(bytes)
-			}
+			lobbytype, _ := playermap[lobbytypestring]
 
 			randBytes := make([]byte, 6)
 			rand.Read(randBytes)
