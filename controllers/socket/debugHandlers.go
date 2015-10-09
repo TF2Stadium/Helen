@@ -32,7 +32,7 @@ func debugLobbyFillHandler(so socketio.Socket) func(string) string {
 			lobby, _ := models.GetLobbyById(id)
 			var players []*models.Player
 
-			for i := 1; i < models.TypePlayerCount[lobby.Type]*2; i++ {
+			for i := 1; i < int(lobby.Type)*2; i++ {
 				steamid := "DEBUG" + strconv.FormatUint(uint64(time.Now().Unix()), 10) + strconv.Itoa(i)
 
 				player, _ := models.NewPlayer(steamid)

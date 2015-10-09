@@ -21,16 +21,10 @@ type Whitelist int
 type LobbyState int
 
 const (
-	LobbyTypeSixes      LobbyType = 0
-	LobbyTypeHighlander LobbyType = 1
-	LobbyTypeDebug      LobbyType = 2
+	LobbyTypeSixes      LobbyType = 6
+	LobbyTypeHighlander LobbyType = 9
+	LobbyTypeDebug      LobbyType = 1
 )
-
-var TypePlayerCount = map[LobbyType]int{
-	LobbyTypeDebug:      1,
-	LobbyTypeSixes:      6,
-	LobbyTypeHighlander: 9,
-}
 
 const (
 	LobbyStateInitializing LobbyState = 0
@@ -180,7 +174,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		return lobbyBanError
 	}
 
-	if slot >= 2*TypePlayerCount[lobby.Type] || slot < 0 {
+	if slot >= int(lobby.Type) || slot < 0 {
 		return badSlotError
 	}
 
@@ -324,7 +318,7 @@ func (lobby *Lobby) IsEveryoneReady() bool {
 	var slots []LobbySlot
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
 
-	if len(slots) != TypePlayerCount[lobby.Type]*2 {
+	if len(slots) != int(lobby.Type)*2 {
 		return false
 	}
 
@@ -368,7 +362,7 @@ func (lobby *Lobby) GetPlayerNumber() int {
 }
 
 func (lobby *Lobby) IsFull() bool {
-	return lobby.GetPlayerNumber() >= 2*TypePlayerCount[lobby.Type]
+	return lobby.GetPlayerNumber() >= 2*int(lobby.Type)
 }
 
 func (lobby *Lobby) IsSlotFilled(slot int) bool {
