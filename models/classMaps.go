@@ -34,7 +34,7 @@ var debugClassMap = map[string]int{
 	"scout": 0,
 }
 
-var debugClassList = []string{"scout1"}
+var debugClassList = []string{"scout"}
 
 var hlClassList = []string{"scout", "soldier", "pyro", "demoman", "heavy", "engineer", "medic", "sniper", "spy"}
 
