@@ -46,7 +46,7 @@ func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
 
 	var classes []*simplejson.Json
 
-	var classList = LobbyFormatClassList(lobby.Type)
+	var classList = TypeClassList[lobby.Type]
 	lobbyJs.Set("maxPlayers", len(classList)*2)
 
 	for slot, className := range classList {
