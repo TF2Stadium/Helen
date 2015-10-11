@@ -82,5 +82,6 @@ func SocketInit(so socketio.Socket) {
 		so.On("debugLobbyFill", debugLobbyFillHandler(so))
 		so.On("debugLobbyReady", debugLobbyReadyHandler(so))
 		so.On("debugGetAllLobbies", debugRequestAllLobbiesHandler(so))
+		so.On("debugRequestLobbyStart", debugRequestLobbyStart(so))
 	}
 }

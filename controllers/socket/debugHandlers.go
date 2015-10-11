@@ -95,3 +95,23 @@ func debugRequestAllLobbiesHandler(so socketio.Socket) func(string) string {
 		return string(resp)
 	}
 }
+
+var debugRequestLobbyStartFilter = chelpers.FilterParams{
+	FilterLogin: true,
+	Params: map[string]chelpers.Param{
+		"id": chelpers.Param{Kind: reflect.Uint},
+	},
+}
+
+func debugRequestLobbyStart(so socketio.Socket) func(string) string {
+	return chelpers.FilterRequest(so, debugRequestLobbyStartFilter,
+		func(params map[string]interface{}) string {
+			lobby, _ := models.GetLobbyById(params["id"].(uint))
+			bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
+			broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
+				"lobbyStart", string(bytes))
+
+			bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+			return string(bytes)
+		})
+}
