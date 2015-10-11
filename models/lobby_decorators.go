@@ -46,14 +46,14 @@ func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
 
 	var classes []*simplejson.Json
 
-	var classList = LobbyFormatClassList(lobby.Type)
+	var classList = TypeClassList[lobby.Type]
 	lobbyJs.Set("maxPlayers", len(classList)*2)
 
 	for slot, className := range classList {
 		class := simplejson.New()
 
 		class.Set("red", decorateSlotDetails(lobby, slot))
-		class.Set("blu", decorateSlotDetails(lobby, slot+TypePlayerCount[lobby.Type]))
+		class.Set("blu", decorateSlotDetails(lobby, slot+int(lobby.Type)))
 		class.Set("class", className)
 		classes = append(classes, class)
 	}
