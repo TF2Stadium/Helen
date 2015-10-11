@@ -174,7 +174,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		return lobbyBanError
 	}
 
-	if slot >= int(lobby.Type) || slot < 0 {
+	if slot >= 2*int(lobby.Type) || slot < 0 {
 		return badSlotError
 	}
 
