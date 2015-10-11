@@ -55,7 +55,7 @@ func main() {
 	// init static FileServer
 	// TODO be careful to set this to correct location when deploying
 	http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, r.URL.Path[1:])
+		http.ServeFile(w, r, config.Constants.StaticFileLocation)
 	})
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   config.Constants.AllowedCorsOrigins,

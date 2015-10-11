@@ -1,0 +1,12 @@
+[Unit]
+Description=TF2Stadium Backend
+After=Pauling.service
+Requires=Pauling.service
+Requires=postgresql.service
+
+[Service]
+ExecStart=/usr/bin/Helen
+EnvironmentFile=/etc/Helen.conf
+
+[Install]
+WantedBy=multi-user.target

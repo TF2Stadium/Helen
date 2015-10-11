@@ -43,8 +43,8 @@ func overrideFromEnv(constant *string, name string) {
 	val := os.Getenv(name)
 	if "" != val {
 		*constant = val
+		helpers.Logger.Debug("%s set to %s", name, *constant)
 	}
-
 }
 
 func overrideBoolFromEnv(constant *bool, name string) {
@@ -54,6 +54,7 @@ func overrideBoolFromEnv(constant *bool, name string) {
 			"true":  true,
 			"false": false,
 		}[val]
+		helpers.Logger.Debug("%s set to %t", name, *constant)
 	}
 }
 
@@ -87,6 +88,7 @@ func SetupConstants() {
 	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_ENABLE")
 	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
+	overrideFromEnv(&Constants.StaticFileLocation, "STATIC_FILE")
 	// conditional assignments
 
 	if Constants.SteamDevApiKey == "your steam dev api key" && !Constants.SteamApiMockUp {
@@ -105,7 +107,7 @@ func setupDevelopmentConstants() {
 	Constants.LoginRedirectPath = "http://localhost:8080/"
 	Constants.CookieStoreSecret = "dev secret is very secret"
 	Constants.SessionName = "defaultSession"
-	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
+	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static/index.html"
 	Constants.PaulingPort = "1234"
 	Constants.ChatLogsDir = "."
 	Constants.SocketMockUp = false
