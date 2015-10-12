@@ -260,6 +260,15 @@ func (lobby *Lobby) RemoveUnreadyPlayers() error {
 	return err
 }
 
+func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
+	slot := &LobbySlot{}
+	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+	if err != nil {
+		return false, err
+	}
+	return slot.InGame, nil
+}
+
 func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
 	slot := &LobbySlot{}
 	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error

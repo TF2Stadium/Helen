@@ -25,6 +25,8 @@ func decorateSlotDetails(lobby *Lobby, slot int) *simplejson.Json {
 		j.Set("player", DecoratePlayerSummaryJson(&player))
 		ready, _ := lobby.IsPlayerReady(&player)
 		j.Set("ready", ready)
+		ingame, _ := lobby.IsPlayerInGame(&player)
+		j.Set("inGame", ingame)
 	}
 	return j
 }
