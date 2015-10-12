@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -56,6 +57,12 @@ func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 		so.Join(GetLobbyRoom(lobbyIdPlaying))
 		lobby, _ := models.GetLobbyById(lobbyIdPlaying)
 		models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
+		slot := models.LobbySlot{}
+		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+		if err == nil && lobby.State == models.LobbyStateInProgress && !slot.InGame {
+			bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
+			broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
+		}
 	}
 
 	lobbyIdsSpectating, err2 := player.GetSpectatingIds()
