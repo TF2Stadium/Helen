@@ -59,8 +59,10 @@ func handleEvent(event map[string]interface{}) {
 		player, _ := models.GetPlayerBySteamId(steamId)
 
 		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
+		helpers.LockRecord(slot.ID, slot)
 		slot.InGame = false
 		db.DB.Save(slot)
+		helpers.UnlockRecord(slot.ID, slot)
 		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", fmt.Sprintf("%s has disconected from the server .",
 				player.Name))
@@ -74,8 +76,10 @@ func handleEvent(event map[string]interface{}) {
 		player, _ := models.GetPlayerBySteamId(steamId)
 		err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot).Error
 		if err == nil { //else, player isn't in the lobby, will be kicked by Pauling
+			helpers.LockRecord(slot.ID, slot)
 			slot.InGame = true
 			db.DB.Save(slot)
+			helpers.UnlockRecord(slot.ID, slot)
 		}
 
 	case "playerRep":
@@ -94,7 +98,9 @@ func handleEvent(event map[string]interface{}) {
 		lobbyid := event["lobbyId"].(uint)
 
 		lobby, _ := models.GetLobbyById(lobbyid)
+		helpers.LockRecord(lobby.ID, lobby)
 		lobby.Close(false)
+		helpers.UnlockRecord(lobby.ID, lobby)
 		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", "Disconnected from Server.")
 
@@ -102,7 +108,9 @@ func handleEvent(event map[string]interface{}) {
 		lobbyid := event["lobbyId"].(uint)
 
 		lobby, _ := models.GetLobbyById(lobbyid)
+		helpers.LockRecord(lobby.ID, lobby)
 		lobby.Close(false)
+		helpers.UnlockRecord(lobby.ID, lobby)
 		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", "Lobby Ended.")
 
