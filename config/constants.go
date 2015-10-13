@@ -5,9 +5,10 @@
 package config
 
 import (
-	"github.com/TF2Stadium/Helen/helpers"
 	"os"
 	"strings"
+
+	"github.com/TF2Stadium/Helen/helpers"
 )
 
 type constants struct {
@@ -43,6 +44,7 @@ func overrideFromEnv(constant *string, name string) {
 	val := os.Getenv(name)
 	if "" != val {
 		*constant = val
+		helpers.Logger.Debug("%s = %s", name, *constant)
 	}
 
 }
@@ -54,6 +56,7 @@ func overrideBoolFromEnv(constant *bool, name string) {
 			"true":  true,
 			"false": false,
 		}[val]
+		helpers.Logger.Debug("%s = %t", name, *constant)
 	}
 }
 
@@ -84,7 +87,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
 	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
 	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
-	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_ENABLE")
+	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_DISABLE")
 	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
 	// conditional assignments
@@ -106,7 +109,7 @@ func setupDevelopmentConstants() {
 	Constants.CookieStoreSecret = "dev secret is very secret"
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
-	Constants.PaulingPort = "1234"
+	Constants.PaulingPort = "8001"
 	Constants.ChatLogsDir = "."
 	Constants.SocketMockUp = false
 	Constants.ServerMockUp = true
