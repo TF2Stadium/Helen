@@ -221,7 +221,7 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 				lob.ReadyUpTimeoutCheck()
 				broadcaster.SendMessageToRoom(
 					chelpers.GetLobbyRoom(lob.ID),
-					"lobbyReadyUp", "")
+					"lobbyReadyUp", `{\"timeout\":30}`)
 				models.BroadcastLobbyList()
 			}
 

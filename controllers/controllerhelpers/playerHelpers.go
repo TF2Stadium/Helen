@@ -12,6 +12,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
 )
 
@@ -59,9 +60,16 @@ func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 		models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
 		slot := models.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
-		if err == nil && lobby.State == models.LobbyStateInProgress && !slot.InGame {
-			bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
-			broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
+		if err == nil {
+			if lobby.State == models.LobbyStateInProgress && !slot.InGame {
+				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
+				broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
+			} else if lobby.State == models.LobbyStateReadyingUp && !slot.Ready {
+				left := simplejson.New()
+				left.Set("timeout", lobby.ReadyUpTimeLeft())
+				bytes, _ := left.Encode()
+				broadcaster.SendMessage(player.SteamId, "lobbyReadyUp", string(bytes))
+			}
 		}
 	}
 
