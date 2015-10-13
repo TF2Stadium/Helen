@@ -24,7 +24,7 @@ func StartListener() {
 	if config.Constants.ServerMockUp {
 		return
 	}
-	ticker = time.NewTicker(time.Second * 3)
+	ticker = time.NewTicker(time.Millisecond * 500)
 	go listener()
 	helpers.Logger.Debug("Listening for events on Pauling")
 }
@@ -41,7 +41,7 @@ func listener() {
 			} else if err != nil {
 				helpers.Logger.Fatal(err)
 			}
-			if _, ok := event["empty"]; ok {
+			if _, empty := event["empty"]; !empty {
 				handleEvent(event)
 			}
 		}
@@ -117,7 +117,7 @@ func handleEvent(event map[string]interface{}) {
 	case "getServers":
 		var lobbies []*models.Lobby
 		var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
-		db.DB.Where("lobby_state IN (?)", activeStates).Find(&lobbies)
+		db.DB.Model(&models.Lobby{}).Where("state IN (?)", activeStates).Find(&lobbies)
 		for _, lobby := range lobbies {
 			info := models.ServerBootstrap{
 				LobbyId: lobby.ID,

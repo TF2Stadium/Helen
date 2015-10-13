@@ -318,7 +318,7 @@ func ReadyTimeoutListener() {
 				lobby.State = LobbyStateWaiting
 				lobby.Save()
 			}
-		}
+		}()
 	}
 }
 
