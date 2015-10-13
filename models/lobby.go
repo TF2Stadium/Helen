@@ -88,7 +88,6 @@ type Lobby struct {
 	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`
 
 	CreatedByID uint
-	CreatedBy   Player
 }
 
 func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int) *Lobby {

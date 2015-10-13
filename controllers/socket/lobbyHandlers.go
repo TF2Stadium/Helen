@@ -79,7 +79,7 @@ func lobbyCreateHandler(so socketio.Socket) func(string) string {
 			}
 
 			lob := models.NewLobby(mapName, lobbytype, league, info, whitelist)
-			lob.CreatedBy = *player
+			lob.CreatedByID = player.ID
 			lob.Save()
 			err = lob.SetupServer()
 
