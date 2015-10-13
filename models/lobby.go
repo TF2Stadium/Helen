@@ -88,6 +88,8 @@ type Lobby struct {
 	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`
 
 	CreatedByID uint
+
+	readyUpTimestamp int64 //Stores the timestamp at which the ready up timeout started
 }
 
 func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int) *Lobby {
@@ -320,6 +322,13 @@ func ReadyTimeoutListener() {
 
 func (lobby *Lobby) ReadyUpTimeoutCheck() {
 	readyUpLobbyID <- lobby.ID
+}
+
+func (lobby *Lobby) ReadyUpTimeLeft() int {
+	if lobby.State == LobbyStateReadyingUp {
+		return int(time.Now().Unix() - lobby.readyUpTimestamp)
+	}
+	return 0
 }
 
 func (lobby *Lobby) IsEveryoneReady() bool {
