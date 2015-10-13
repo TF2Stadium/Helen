@@ -58,7 +58,7 @@ func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 		so.Join(GetLobbyRoom(lobbyIdPlaying))
 		lobby, _ := models.GetLobbyById(lobbyIdPlaying)
 		models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
-		slot := models.LobbySlot{}
+		slot := &models.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
 		if err == nil {
 			if lobby.State == models.LobbyStateInProgress && !slot.InGame {
