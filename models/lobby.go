@@ -292,13 +292,15 @@ func (lobby *Lobby) UnreadyAllPlayers() error {
 
 func ReadyTimeoutListener() {
 	for {
-		select {
-		case id := <-readyUpLobbyID:
+		id := <-readyUpLobbyID
+		go func() {
 			tick := time.After(time.Second * 30)
-			<-tick
-
 			lobby := &Lobby{}
 			db.DB.First(lobby, id)
+			helpers.LockRecord(lobby.ID, lobby)
+			lobby.readyUpTimestamp = time.Now().Unix()
+			helpers.UnlockRecord(lobby.ID, lobby)
+			<-tick
 
 			if lobby.State != LobbyStateInProgress {
 				helpers.LockRecord(lobby.ID, lobby)
