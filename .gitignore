@@ -32,3 +32,6 @@ _testmain.go
 .idea
 
 runTestsWithKeys.sh
+
+# Emacs backup files
+\#*
