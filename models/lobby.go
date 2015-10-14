@@ -296,11 +296,11 @@ func ReadyTimeoutListener() {
 		go func() {
 			tick := time.After(time.Second * 30)
 			lobby := &Lobby{}
-			db.DB.First(lobby, id)
 			helpers.LockRecord(lobby.ID, lobby)
 			lobby.readyUpTimestamp = time.Now().Unix()
 			helpers.UnlockRecord(lobby.ID, lobby)
 			<-tick
+			db.DB.First(lobby, id)
 
 			if lobby.State != LobbyStateInProgress {
 				helpers.LockRecord(lobby.ID, lobby)
