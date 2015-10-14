@@ -66,6 +66,21 @@ func handleEvent(event map[string]interface{}) {
 		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
 			"sendNotification", fmt.Sprintf("%s has disconected from the server .",
 				player.Name))
+		go func() {
+			t := time.After(time.Minute * 2)
+			<-t
+			lobby, _ := models.GetLobbyById(lobbyid)
+			slot := &models.LobbySlot{}
+			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
+			if !slot.InGame {
+				helpers.LockRecord(lobby.ID, lobby)
+				defer helpers.UnlockRecord(lobby.ID, lobby)
+				lobby.RemovePlayer(player)
+				broadcaster.SendMessage(player.SteamId, "sendNotification",
+					"You have been removed from the lobby.")
+			}
+
+		}()
 
 	case "playerConn":
 		slot := &models.LobbySlot{}
