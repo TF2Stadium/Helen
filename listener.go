@@ -20,16 +20,45 @@ import (
 
 var ticker *time.Ticker
 
+const (
+	playerDisc = iota
+	playerConn
+	playerRep
+	playerSub
+	discFromServer
+	matchEnded
+	getServers
+)
+
+type eventChan (chan map[string]interface{})
+
 func StartListener() {
 	if config.Constants.ServerMockUp {
 		return
 	}
 	ticker = time.NewTicker(time.Millisecond * 500)
-	go listener()
+
+	var channels [](eventChan)
+	for i := 0; i <= 6; i++ {
+		channels = append(channels, make(eventChan))
+	}
+
+	go eventHandler(channels)
+	go listener(channels)
 	helpers.Logger.Debug("Listening for events on Pauling")
 }
 
-func listener() {
+func listener(channels []eventChan) {
+	eventMap := map[string]int{
+		"playerDisc":     playerDisc,
+		"playerConn":     playerConn,
+		"playerRep":      playerRep,
+		"playerSub":      playerSub,
+		"discFromServer": discFromServer,
+		"matchEnded":     matchEnded,
+		"getServers":     getServers,
+	}
+
 	for {
 		select {
 		case <-ticker.C:
@@ -42,113 +71,115 @@ func listener() {
 				helpers.Logger.Fatal(err)
 			}
 			if _, empty := event["empty"]; !empty {
-				handleEvent(event)
+				name := event["name"].(string)
+				channels[eventMap[name]] <- event
 			}
 		}
 	}
 }
 
-func handleEvent(event map[string]interface{}) {
-	switch event["name"] {
-	case "playerDisc":
-		slot := &models.LobbySlot{}
-		lobbyid := event["lobbyId"].(uint)
-		commId := event["commId"].(string)
-
-		steamId, _ := steamid.CommIdToSteamId(commId)
-		player, _ := models.GetPlayerBySteamId(steamId)
-
-		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
-		helpers.LockRecord(slot.ID, slot)
-		slot.InGame = false
-		db.DB.Save(slot)
-		helpers.UnlockRecord(slot.ID, slot)
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
-			"sendNotification", fmt.Sprintf("%s has disconected from the server .",
-				player.Name))
-		go func() {
-			t := time.After(time.Minute * 2)
-			<-t
-			lobby, _ := models.GetLobbyById(lobbyid)
+func eventHandler(channels []eventChan) {
+	for {
+		select {
+		case event := <-channels[playerDisc]:
 			slot := &models.LobbySlot{}
+			lobbyid := event["lobbyId"].(uint)
+			commId := event["commId"].(string)
+
+			steamId, _ := steamid.CommIdToSteamId(commId)
+			player, _ := models.GetPlayerBySteamId(steamId)
+
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
-			if !slot.InGame {
-				helpers.LockRecord(lobby.ID, lobby)
-				defer helpers.UnlockRecord(lobby.ID, lobby)
-				lobby.RemovePlayer(player)
-				broadcaster.SendMessage(player.SteamId, "sendNotification",
-					"You have been removed from the lobby.")
-			}
-
-		}()
-
-	case "playerConn":
-		slot := &models.LobbySlot{}
-		lobbyid := event["lobbyId"].(uint)
-		commId := event["commId"].(string)
-
-		steamId, _ := steamid.CommIdToSteamId(commId)
-		player, _ := models.GetPlayerBySteamId(steamId)
-		err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot).Error
-		if err == nil { //else, player isn't in the lobby, will be kicked by Pauling
 			helpers.LockRecord(slot.ID, slot)
-			slot.InGame = true
+			slot.InGame = false
 			db.DB.Save(slot)
 			helpers.UnlockRecord(slot.ID, slot)
-		}
+			broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+				"sendNotification", fmt.Sprintf("%s has disconected from the server .",
+					player.Name))
+			go func() {
+				<-time.After(time.Minute * 2)
+				lobby, _ := models.GetLobbyById(lobbyid)
+				slot := &models.LobbySlot{}
+				db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
+				if !slot.InGame {
+					helpers.LockRecord(lobby.ID, lobby)
+					defer helpers.UnlockRecord(lobby.ID, lobby)
+					lobby.RemovePlayer(player)
+					broadcaster.SendMessage(player.SteamId, "sendNotification",
+						"You have been removed from the lobby.")
+				}
 
-	case "playerRep":
-		lobbyid := event["lobbyId"].(uint)
-		commId := event["commId"].(string)
+			}()
 
-		steamId, _ := steamid.CommIdToSteamId(commId)
-		player, _ := models.GetPlayerBySteamId(steamId)
+		case event := <-channels[playerConn]:
+			slot := &models.LobbySlot{}
+			lobbyid := event["lobbyId"].(uint)
+			commId := event["commId"].(string)
 
-		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Delete(&models.LobbySlot{})
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
-			"sendNotification", fmt.Sprintf("%s has been reported.",
-				player.Name))
-
-	case "discFromServer":
-		lobbyid := event["lobbyId"].(uint)
-
-		lobby, _ := models.GetLobbyById(lobbyid)
-		helpers.LockRecord(lobby.ID, lobby)
-		lobby.Close(false)
-		helpers.UnlockRecord(lobby.ID, lobby)
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
-			"sendNotification", "Disconnected from Server.")
-
-	case "matchEnded":
-		lobbyid := event["lobbyId"].(uint)
-
-		lobby, _ := models.GetLobbyById(lobbyid)
-		helpers.LockRecord(lobby.ID, lobby)
-		lobby.Close(false)
-		helpers.UnlockRecord(lobby.ID, lobby)
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
-			"sendNotification", "Lobby Ended.")
-
-	case "getServers":
-		var lobbies []*models.Lobby
-		var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
-		db.DB.Model(&models.Lobby{}).Where("state IN (?)", activeStates).Find(&lobbies)
-		for _, lobby := range lobbies {
-			info := models.ServerBootstrap{
-				LobbyId: lobby.ID,
-				Info:    lobby.ServerInfo,
+			steamId, _ := steamid.CommIdToSteamId(commId)
+			player, _ := models.GetPlayerBySteamId(steamId)
+			err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot).Error
+			if err == nil { //else, player isn't in the lobby, will be kicked by Pauling
+				helpers.LockRecord(slot.ID, slot)
+				slot.InGame = true
+				db.DB.Save(slot)
+				helpers.UnlockRecord(slot.ID, slot)
 			}
-			for _, player := range lobby.BannedPlayers {
-				commId, _ := steamid.SteamIdToCommId(player.SteamId)
-				info.BannedPlayers = append(info.BannedPlayers, commId)
+
+		case event := <-channels[playerRep]:
+			lobbyid := event["lobbyId"].(uint)
+			commId := event["commId"].(string)
+
+			steamId, _ := steamid.CommIdToSteamId(commId)
+			player, _ := models.GetPlayerBySteamId(steamId)
+
+			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Delete(&models.LobbySlot{})
+			broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+				"sendNotification", fmt.Sprintf("%s has been reported.",
+					player.Name))
+
+		case event := <-channels[discFromServer]:
+			lobbyid := event["lobbyId"].(uint)
+
+			lobby, _ := models.GetLobbyById(lobbyid)
+			helpers.LockRecord(lobby.ID, lobby)
+			lobby.Close(false)
+			helpers.UnlockRecord(lobby.ID, lobby)
+			broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+				"sendNotification", "Disconnected from Server.")
+
+		case event := <-channels[matchEnded]:
+			lobbyid := event["lobbyId"].(uint)
+
+			lobby, _ := models.GetLobbyById(lobbyid)
+			helpers.LockRecord(lobby.ID, lobby)
+			lobby.Close(false)
+			helpers.UnlockRecord(lobby.ID, lobby)
+			broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+				"sendNotification", "Lobby Ended.")
+
+		case <-channels[getServers]:
+			var lobbies []*models.Lobby
+			var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
+			db.DB.Model(&models.Lobby{}).Where("state IN (?)", activeStates).Find(&lobbies)
+			for _, lobby := range lobbies {
+				info := models.ServerBootstrap{
+					LobbyId: lobby.ID,
+					Info:    lobby.ServerInfo,
+				}
+				for _, player := range lobby.BannedPlayers {
+					commId, _ := steamid.SteamIdToCommId(player.SteamId)
+					info.BannedPlayers = append(info.BannedPlayers, commId)
+				}
+				for _, slot := range lobby.Slots {
+					var player *models.Player
+					db.DB.Find(player, slot.PlayerId)
+					commId, _ := steamid.SteamIdToCommId(player.SteamId)
+					info.Players = append(info.Players, commId)
+				}
+				models.Pauling.Call("Pauling.SetupVerifier", &info, &struct{}{})
 			}
-			for _, slot := range lobby.Slots {
-				var player *models.Player
-				db.DB.Find(player, slot.PlayerId)
-				commId, _ := steamid.SteamIdToCommId(player.SteamId)
-				info.Players = append(info.Players, commId)
-			}
-			models.Pauling.Call("Pauling.SetupVerifier", &info, &struct{}{})
 		}
 	}
 }
