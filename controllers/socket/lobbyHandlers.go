@@ -288,11 +288,9 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 			steamid := params["steamid"].(string)
 			ban := params["ban"].(bool)
 			lobbyid := params["id"].(uint)
-			self := false
 
 			// TODO check authorization, currently can kick anyone
 			if steamid == "" || steamid == chelpers.GetSteamId(so.Id()) {
-				self = true
 				steamid = chelpers.GetSteamId(so.Id())
 			}
 
@@ -308,7 +306,7 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
-			if !self && lob.CreatedByID != player.ID {
+			if lob.CreatedByID != player.ID {
 				// TODO proper authorization checks
 				bytes, _ := chelpers.BuildFailureJSON("Not authorized to remove players", 1).Encode()
 				return string(bytes)
