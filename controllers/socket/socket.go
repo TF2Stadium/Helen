@@ -46,6 +46,9 @@ func SocketInit(so socketio.Socket) {
 		}
 
 		chelpers.AfterConnectLoggedIn(so, player)
+	} else {
+		so.Emit("playerSettings", "{}")
+		so.Emit("playerProfile", "{}")
 	}
 
 	// LOBBY CREATE
@@ -84,4 +87,6 @@ func SocketInit(so socketio.Socket) {
 		so.On("debugGetAllLobbies", debugRequestAllLobbiesHandler(so))
 		so.On("debugRequestLobbyStart", debugRequestLobbyStart(so))
 	}
+
+	so.Emit("socketInitialized", "")
 }

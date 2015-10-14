@@ -91,6 +91,19 @@ io.on("lobbyStart", function(s) {
   console.log(JSON.parse(s));
 });
 
+io.on("playerSettings", function(s) {
+  console.log("Received playerSettings")
+  console.log(JSON.parse(s))
+})
+
+io.on("playerProfile", function(s) {
+  console.log("Received playerProfile")
+  console.log(JSON.parse(s))
+})
+
+io.on("socketInitialized", function(s){
+  console.log("Socket Initialized")
+})
 $(function() {
   createBox(io, "lobbyCreate", ["mapName", "type", "league", "whitelist", "server", "rconpwd", "mumbleRequired"]);
   createBox(io, "serverVerify", ["server", "rconpwd"]);

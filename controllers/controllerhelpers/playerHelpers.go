@@ -81,6 +81,20 @@ func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 			models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
 		}
 	}
+
+	settings, err3 := player.GetSettings()
+	if err3 == nil {
+		json := models.DecoratePlayerSettingsJson(settings)
+		bytes, _ := json.Encode()
+		broadcaster.SendMessage(player.SteamId, "playerSettings", string(bytes))
+	}
+
+	profilePlayer, err4 := models.GetPlayerWithStats(player.SteamId)
+	if err4 == nil {
+		json := models.DecoratePlayerProfileJson(profilePlayer)
+		bytes, _ := json.Encode()
+		broadcaster.SendMessage(player.SteamId, "playerProfile", string(bytes))
+	}
 }
 
 func GetLobbyRoom(lobbyid uint) string {
