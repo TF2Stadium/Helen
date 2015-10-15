@@ -56,10 +56,9 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 				room, _ = strconv.Atoi(config.Constants.GlobalChatRoom)
 			}
 
-			t := time.Now()
 			chatMessage := simplejson.New()
 			// TODO send proper timestamps
-			chatMessage.Set("timestamp", strconv.Itoa(t.Hour())+strconv.Itoa(t.Minute()))
+			chatMessage.Set("timestamp", time.Now().Unix())
 			chatMessage.Set("message", message)
 			chatMessage.Set("room", room)
 
