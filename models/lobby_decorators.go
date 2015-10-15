@@ -42,7 +42,7 @@ func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
 	lobbyJs.Set("map", lobby.MapName)
 
 	var leader Player
-	db.DB.First(&leader, lobby.CreatedByID)
+	db.DB.Where("steam_id = ?", lobby.CreatedBySteamID).First(&leader)
 
 	lobbyJs.Set("leader", DecoratePlayerSummaryJson(&leader))
 

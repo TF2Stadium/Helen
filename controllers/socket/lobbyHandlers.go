@@ -7,6 +7,7 @@ package socket
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"reflect"
 	"strconv"
 
@@ -79,7 +80,7 @@ func lobbyCreateHandler(so socketio.Socket) func(string) string {
 			}
 
 			lob := models.NewLobby(mapName, lobbytype, league, info, whitelist)
-			lob.CreatedByID = player.ID
+			lob.CreatedBySteamID = player.SteamId
 			lob.Save()
 			err = lob.SetupServer()
 
@@ -146,7 +147,7 @@ func lobbyCloseHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
-			if player.ID != lob.CreatedByID {
+			if player.SteamId != lob.CreatedBySteamID {
 				bytes, _ := chelpers.BuildFailureJSON("Player not authorized to close lobby.", 1).Encode()
 				return string(bytes)
 			}
@@ -288,12 +289,16 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 			steamid := params["steamid"].(string)
 			ban := params["ban"].(bool)
 			lobbyid := params["id"].(uint)
+			var self bool
 
+			selfSteamid := chelpers.GetSteamId(so.Id())
 			// TODO check authorization, currently can kick anyone
-			if steamid == "" || steamid == chelpers.GetSteamId(so.Id()) {
-				steamid = chelpers.GetSteamId(so.Id())
+			if steamid == "" {
+				self = true
+				steamid = selfSteamid
 			}
 
+			//player to kick
 			player, tperr := models.GetPlayerBySteamId(steamid)
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
@@ -306,9 +311,10 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
-			if lob.CreatedByID != player.ID {
+			if !self && selfSteamid != lob.CreatedBySteamID {
 				// TODO proper authorization checks
-				bytes, _ := chelpers.BuildFailureJSON("Not authorized to remove players", 1).Encode()
+				bytes, _ := chelpers.BuildFailureJSON(
+					"Not authorized to remove players", 1).Encode()
 				return string(bytes)
 			}
 
@@ -331,6 +337,11 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 
 			chelpers.AfterLobbyLeave(so, lob, player)
 			so.Emit("lobbyData", "{}")
+			if !self {
+				broadcaster.SendMessage(steamid, "sendNotification",
+					fmt.Sprintf("You have been removed from Lobby #%d", lobbyid))
+
+			}
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
 		})

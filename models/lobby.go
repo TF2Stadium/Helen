@@ -87,7 +87,7 @@ type Lobby struct {
 
 	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`
 
-	CreatedByID uint
+	CreatedBySteamID string
 
 	readyUpTimestamp int64 //Stores the timestamp at which the ready up timeout started
 }
