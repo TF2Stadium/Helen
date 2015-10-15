@@ -5,6 +5,10 @@
 package socket
 
 import (
+	"reflect"
+	"strconv"
+	"time"
+
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -12,10 +16,6 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
-	"html"
-	"reflect"
-	"strconv"
-	"time"
 )
 
 var chatSendFilter = chelpers.FilterParams{
@@ -29,7 +29,7 @@ var chatSendFilter = chelpers.FilterParams{
 func chatSendHandler(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, chatSendFilter,
 		func(params map[string]interface{}) string {
-			message := html.EscapeString(params["message"].(string))
+			message := params["message"].(string)
 			room := params["room"].(int)
 
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
