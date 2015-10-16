@@ -50,6 +50,7 @@ func AfterConnect(so socketio.Socket) {
 	}
 
 	so.Emit("lobbyListData", list)
+	BroadcastScrollback(so)
 }
 
 func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {

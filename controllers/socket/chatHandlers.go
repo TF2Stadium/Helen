@@ -70,6 +70,7 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 
 			chelpers.LogChat(uint(room), player.Name, message)
+			chelpers.AddScrollbackMessage(string(bytes))
 			return string(resp)
 		})
 }
