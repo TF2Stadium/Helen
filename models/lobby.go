@@ -159,7 +159,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	lobbyBanError := helpers.NewTPError("The player has been banned from this lobby.", 4)
 	badSlotError := helpers.NewTPError("This slot does not exist.", 3)
 	filledError := helpers.NewTPError("This slot has been filled.", 2)
-	alreadyInLobbyError := helpers.NewTPError("Player is already in a lobby", 1)
 
 	if player.ID == 0 {
 		return helpers.NewTPError("Player not in the database", -1)
@@ -186,9 +185,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 
 	currLobbyId, err := player.GetLobbyId()
 
-	// if the player is in a different lobby, return error
+	// if the player is in a different lobby, remove them from that lobby
 	if err == nil && currLobbyId != lobby.ID {
-		return alreadyInLobbyError
+		curLobby, _ := GetLobbyById(currLobbyId)
+		curLobby.RemovePlayer(player)
 	}
 
 	// if the slot is occupied, return error
@@ -198,7 +198,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 
 	// assign the player to a new slot
 	// try to remove them from the old slot (in case they are switching slots)
-	lobby.RemovePlayer(player)
+	if err == nil && currLobbyId == lobby.ID {
+		lobby.RemovePlayer(player)
+	}
 	// try to remove them from spectators
 	lobby.RemoveSpectator(player)
 
