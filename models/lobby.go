@@ -352,10 +352,6 @@ func (lobby *Lobby) IsEveryoneReady() bool {
 }
 
 func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
-	if _, err := lobby.GetPlayerSlot(player); err == nil {
-		return lobby.RemovePlayer(player)
-	}
-
 	err := db.DB.Model(lobby).Association("Spectators").Append(player).Error
 	if err != nil {
 		return helpers.NewTPError(err.Error(), -1)
