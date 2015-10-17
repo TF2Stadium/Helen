@@ -5,6 +5,7 @@
 package controllerhelpers
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -26,11 +27,21 @@ var BanTypeMap = map[string]models.PlayerBanType{
 }
 
 func AfterLobbyJoin(so socketio.Socket, lobby *models.Lobby, player *models.Player) {
-	so.Join(GetLobbyRoom(lobby.ID))
+	so.Join(fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+	so.Join(fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
 }
 
 func AfterLobbyLeave(so socketio.Socket, lobby *models.Lobby, player *models.Player) {
-	so.Leave(GetLobbyRoom(lobby.ID))
+	so.Leave(fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
+	so.Leave(fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+}
+
+func AfterLobbySpec(so socketio.Socket, lobby *models.Lobby) {
+	so.Join(fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+}
+
+func AfterLobbySpecLeave(so socketio.Socket, lobby *models.Lobby) {
+	so.Leave(fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 }
 
 func AfterConnect(so socketio.Socket) {

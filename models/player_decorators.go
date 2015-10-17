@@ -49,7 +49,6 @@ func DecoratePlayerProfileJson(p *Player) *simplejson.Json {
 func DecoratePlayerSummaryJson(p *Player) *simplejson.Json {
 	j := simplejson.New()
 
-	j.Set("id", p.ID)
 	j.Set("avatar", p.Avatar)
 	j.Set("gameHours", p.GameHours)
 	j.Set("profileUrl", p.Profileurl)

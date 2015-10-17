@@ -5,6 +5,7 @@
 package socket
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"time"
@@ -44,7 +45,8 @@ func debugLobbyFillHandler(so socketio.Socket) func(string) string {
 
 			lobby.State = models.LobbyStateReadyingUp
 			lobby.Save()
-			broadcaster.SendMessageToRoom(chelpers.GetLobbyRoom(lobby.ID), "lobbyReadyUp", "")
+			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobby.ID))
+			broadcaster.SendMessageToRoom(room, "lobbyReadyUp", "")
 			lobby.ReadyUpTimeoutCheck()
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
@@ -108,7 +110,8 @@ func debugRequestLobbyStart(so socketio.Socket) func(string) string {
 		func(params map[string]interface{}) string {
 			lobby, _ := models.GetLobbyById(params["id"].(uint))
 			bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
-			broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
+			room := fmt.Sprintf("%s_private", chelpers.GetLobbyRoom(lobby.ID))
+			broadcaster.SendMessageToRoom(room,
 				"lobbyStart", string(bytes))
 
 			bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()

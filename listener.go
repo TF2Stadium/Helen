@@ -7,11 +7,11 @@ package main
 import (
 	"fmt"
 	"net/rpc"
-	"strconv"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -63,7 +63,8 @@ func handleEvent(event map[string]interface{}) {
 		slot.InGame = false
 		db.DB.Save(slot)
 		helpers.UnlockRecord(slot.ID, slot)
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+		room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
+		broadcaster.SendMessageToRoom(room,
 			"sendNotification", fmt.Sprintf("%s has disconected from the server .",
 				player.Name))
 		go func() {
@@ -105,7 +106,8 @@ func handleEvent(event map[string]interface{}) {
 		player, _ := models.GetPlayerBySteamId(steamId)
 
 		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Delete(&models.LobbySlot{})
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+		room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
+		broadcaster.SendMessageToRoom(room,
 			"sendNotification", fmt.Sprintf("%s has been reported.",
 				player.Name))
 
@@ -116,7 +118,8 @@ func handleEvent(event map[string]interface{}) {
 		helpers.LockRecord(lobby.ID, lobby)
 		lobby.Close(false)
 		helpers.UnlockRecord(lobby.ID, lobby)
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+		room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
+		broadcaster.SendMessageToRoom(room,
 			"sendNotification", "Disconnected from Server.")
 
 	case "matchEnded":
@@ -126,7 +129,8 @@ func handleEvent(event map[string]interface{}) {
 		helpers.LockRecord(lobby.ID, lobby)
 		lobby.Close(false)
 		helpers.UnlockRecord(lobby.ID, lobby)
-		broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobbyid), 10),
+		room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
+		broadcaster.SendMessageToRoom(room,
 			"sendNotification", "Lobby Ended.")
 
 	case "getServers":

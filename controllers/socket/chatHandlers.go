@@ -5,6 +5,7 @@
 package socket
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"time"
@@ -63,9 +64,10 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 			chatMessage.Set("room", room)
 
 			chatMessage.Set("player", models.DecoratePlayerSummaryJson(player))
-			bytes,
-				_ := chatMessage.Encode()
-			broadcaster.SendMessageToRoom(chelpers.GetLobbyRoom(uint(room)), "chatReceive", string(bytes))
+			bytes, _ := chatMessage.Encode()
+			broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public",
+				chelpers.GetLobbyRoom(uint(room))),
+				"chatReceive", string(bytes))
 
 			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 

@@ -444,7 +444,10 @@ func (lobby *Lobby) OnChange(base bool) {
 
 func BroadcastLobby(lobby *Lobby) {
 	bytes, _ := DecorateLobbyDataJSON(lobby).Encode()
-	broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10), "lobbyData", string(bytes))
+	room := strconv.FormatUint(uint64(lobby.ID), 10)
+
+	broadcaster.SendMessageToRoom(room, "lobbyData", string(bytes))
+	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public", room), "lobbyData", string(bytes))
 }
 
 func BroadcastLobbyToUser(lobby *Lobby, steamid string) {

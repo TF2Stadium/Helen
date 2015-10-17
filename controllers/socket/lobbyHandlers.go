@@ -9,7 +9,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -220,10 +219,10 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 				lob.State = models.LobbyStateReadyingUp
 				lob.Save()
 				lob.ReadyUpTimeoutCheck()
-
-				broadcaster.SendMessageToRoom(
-					chelpers.GetLobbyRoom(lob.ID),
-					"lobbyReadyUp", `{"timeout":30}`)
+				room := fmt.Sprintf("%s_private",
+					chelpers.GetLobbyRoom(lob.ID))
+				broadcaster.SendMessageToRoom(room, "lobbyReadyUp",
+					`{"timeout":30}`)
 				models.BroadcastLobbyList()
 			}
 
@@ -267,7 +266,7 @@ func lobbySpectatorJoinHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
-			chelpers.AfterLobbyJoin(so, lob, player)
+			chelpers.AfterLobbySpec(so, lob)
 			models.BroadcastLobbyToUser(lob, player.SteamId)
 			return string(bytes)
 		})
@@ -322,9 +321,11 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 			helpers.LockRecord(lob.ID, lob)
 			defer helpers.UnlockRecord(lob.ID, lob)
 
+			var spec bool
 			if err == nil {
 				lob.RemovePlayer(player)
 			} else if player.IsSpectatingId(lob.ID) {
+				spec = true
 				lob.RemoveSpectator(player)
 			} else {
 				bytes, _ := chelpers.BuildFailureJSON("Player neither playing nor spectating", 2).Encode()
@@ -335,7 +336,12 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 				lob.BanPlayer(player)
 			}
 
-			chelpers.AfterLobbyLeave(so, lob, player)
+			if !spec {
+				chelpers.AfterLobbyLeave(so, lob, player)
+			} else {
+				chelpers.AfterLobbySpecLeave(so, lob)
+			}
+
 			so.Emit("lobbyData", "{}")
 			if !self {
 				broadcaster.SendMessage(steamid, "sendNotification",
@@ -392,7 +398,9 @@ func playerReadyHandler(so socketio.Socket) func(string) string {
 				lobby.State = models.LobbyStateInProgress
 				lobby.Save()
 				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
-				broadcaster.SendMessageToRoom(strconv.FormatUint(uint64(lobby.ID), 10),
+				room := fmt.Sprintf("%s_private",
+					chelpers.GetLobbyRoom(lobby.ID))
+				broadcaster.SendMessageToRoom(room,
 					"lobbyStart", string(bytes))
 				models.BroadcastLobbyList()
 			}
