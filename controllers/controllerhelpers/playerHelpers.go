@@ -27,6 +27,7 @@ var BanTypeMap = map[string]models.PlayerBanType{
 
 func AfterLobbyJoin(so socketio.Socket, lobby *models.Lobby, player *models.Player) {
 	so.Join(GetLobbyRoom(lobby.ID))
+	BroadcastScrollback(so, lobby.ID)
 }
 
 func AfterLobbyLeave(so socketio.Socket, lobby *models.Lobby, player *models.Player) {
@@ -50,7 +51,7 @@ func AfterConnect(so socketio.Socket) {
 	}
 
 	so.Emit("lobbyListData", list)
-	BroadcastScrollback(so)
+	BroadcastScrollback(so, 0)
 }
 
 func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {

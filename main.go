@@ -36,7 +36,6 @@ func main() {
 	go models.ReadyTimeoutListener()
 	StartListener()
 	chelpers.StartGlobalLogger()
-	chelpers.InitChatScrollback()
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 	helpers.Logger.Debug("Starting the server")
 

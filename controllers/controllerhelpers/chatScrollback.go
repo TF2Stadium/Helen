@@ -13,30 +13,40 @@ type chatRing struct {
 	*sync.Mutex
 }
 
-var chatScrollback *chatRing
+var chatScrollback = make(map[uint]*chatRing)
 
-func InitChatScrollback() {
+func initChatScrollback(room uint) *chatRing {
 	r := ring.New(20)
-	chatScrollback = &chatRing{r, r, new(sync.Mutex)}
+	return &chatRing{r, r, new(sync.Mutex)}
 }
 
-func AddScrollbackMessage(message string) {
-	chatScrollback.Lock()
-	defer chatScrollback.Unlock()
+func AddScrollbackMessage(room uint, message string) {
+	if _, ok := chatScrollback[room]; !ok {
+		chatScrollback[room] = initChatScrollback(room)
+	}
+	c := chatScrollback[room]
 
-	if chatScrollback.curr.Value != nil {
-		chatScrollback.first = chatScrollback.first.Next()
+	c.Lock()
+	defer c.Unlock()
+
+	if c.curr.Value != nil {
+		c.first = c.first.Next()
 	}
 
-	chatScrollback.curr.Value = message
-	chatScrollback.curr = chatScrollback.curr.Next()
+	c.curr.Value = message
+	c.curr = c.curr.Next()
 }
 
-func BroadcastScrollback(so socketio.Socket) {
-	chatScrollback.Lock()
-	defer chatScrollback.Unlock()
+func BroadcastScrollback(so socketio.Socket, room uint) {
+	c, ok := chatScrollback[room]
+	if !ok {
+		return
+	}
 
-	curr := chatScrollback.first
+	c.Lock()
+	defer c.Unlock()
+
+	curr := c.first
 	if curr.Value == nil {
 		return
 	}
