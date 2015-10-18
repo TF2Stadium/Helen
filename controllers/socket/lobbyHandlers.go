@@ -342,12 +342,14 @@ func lobbyKickHandler(so socketio.Socket) func(string) string {
 				chelpers.AfterLobbySpecLeave(so, lob)
 			}
 
-			so.Emit("lobbyData", "{}")
 			if !self {
 				broadcaster.SendMessage(steamid, "sendNotification",
 					fmt.Sprintf("You have been removed from Lobby #%d", lobbyid))
 
+			} else {
+				so.Emit("lobbyData", "{}")
 			}
+
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
 		})
