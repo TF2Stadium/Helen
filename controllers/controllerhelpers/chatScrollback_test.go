@@ -8,7 +8,7 @@ import (
 )
 
 func TestAddScrollbackMessage(t *testing.T) {
-	InitChatScrollback(0)
+	initChatScrollback(0)
 
 	messages := make([]string, 20)
 	for i, _ := range messages {
