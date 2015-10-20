@@ -47,7 +47,7 @@ func AfterLobbySpecLeave(so socketio.Socket, lobby *models.Lobby) {
 }
 
 func AfterConnect(so socketio.Socket) {
-	so.Join(config.Constants.GlobalChatRoom) //room for global chat
+	so.Join(fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom)) //room for global chat
 
 	var lobbies []models.Lobby
 	err := db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies).Error
