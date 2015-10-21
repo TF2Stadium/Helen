@@ -460,6 +460,6 @@ func BroadcastLobbyList() {
 	if err != nil {
 		helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
 	} else {
-		broadcaster.SendMessageToRoom(config.Constants.GlobalChatRoom, "lobbyListData", list)
+		broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom), "lobbyListData", list)
 	}
 }
