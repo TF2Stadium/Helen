@@ -41,14 +41,11 @@ func chatSendHandler(so socketio.Socket) func(string) string {
 
 			helpers.Logger.Debug("received chat message: %s %s", message, player.Name)
 
+			spec := player.IsSpectatingId(uint(room))
 			//Check if player has either joined, or is spectating lobby
 			lobbyId, tperr := player.GetLobbyId()
 			if room > 0 {
-				// if room is a lobby room
-				if tperr != nil {
-					bytes, _ := tperr.ErrorJSON().Encode()
-					return string(bytes)
-				} else if lobbyId != uint(room) && !player.IsSpectatingId(uint(room)) {
+				if tperr != nil && !spec && lobbyId != uint(room) {
 					bytes, _ := chelpers.BuildFailureJSON("Player is not in the lobby.", 5).Encode()
 					return string(bytes)
 				}

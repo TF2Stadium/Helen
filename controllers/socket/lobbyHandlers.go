@@ -198,6 +198,12 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
+			//Check if player is in the same lobby
+			var sameLobby bool
+			if id, err := player.GetLobbyId(); err == nil && id == lobbyid {
+				sameLobby = true
+			}
+
 			slot, tperr := models.LobbyGetPlayerSlot(lob.Type, teamString, classString)
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()
@@ -213,7 +219,9 @@ func lobbyJoinHandler(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
-			chelpers.AfterLobbyJoin(so, lob, player)
+			if !sameLobby {
+				chelpers.AfterLobbyJoin(so, lob, player)
+			}
 
 			if lob.IsFull() {
 				lob.State = models.LobbyStateReadyingUp
@@ -250,16 +258,23 @@ func lobbySpectatorJoinHandler(so socketio.Socket) func(string) string {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
-			lob, tperr := models.GetLobbyById(uint(lobbyid))
-			if tperr != nil {
-				bytes, _ := tperr.ErrorJSON().Encode()
-				return string(bytes)
-			}
-			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 
-			helpers.LockRecord(lob.ID, lob)
-			tperr = lob.AddSpectator(player)
-			helpers.UnlockRecord(lob.ID, lob)
+			var lob *models.Lobby
+
+			if id, _ := player.GetLobbyId(); id != lobbyid {
+				lob, tperr = models.GetLobbyById(uint(lobbyid))
+
+				if tperr != nil {
+					bytes, _ := tperr.ErrorJSON().Encode()
+					return string(bytes)
+				}
+
+				helpers.LockRecord(lob.ID, lob)
+				tperr = lob.AddSpectator(player)
+				helpers.UnlockRecord(lob.ID, lob)
+			}
+
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 
 			if tperr != nil {
 				bytes, _ := tperr.ErrorJSON().Encode()

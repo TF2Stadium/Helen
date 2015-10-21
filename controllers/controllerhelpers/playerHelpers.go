@@ -27,9 +27,7 @@ var BanTypeMap = map[string]models.PlayerBanType{
 }
 
 func AfterLobbyJoin(so socketio.Socket, lobby *models.Lobby, player *models.Player) {
-	so.Join(fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 	so.Join(fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
-	so.Join(GetLobbyRoom(lobby.ID))
 	BroadcastScrollback(so, lobby.ID)
 }
 
@@ -69,7 +67,7 @@ func AfterConnect(so socketio.Socket) {
 func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 	lobbyIdPlaying, err := player.GetLobbyId()
 	if err == nil {
-		so.Join(GetLobbyRoom(lobbyIdPlaying))
+		so.Join(fmt.Sprintf("%s_private", GetLobbyRoom(lobbyIdPlaying)))
 		lobby, _ := models.GetLobbyById(lobbyIdPlaying)
 		models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
 		slot := &models.LobbySlot{}
