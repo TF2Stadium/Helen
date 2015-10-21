@@ -260,15 +260,14 @@ func lobbySpectatorJoinHandler(so socketio.Socket) func(string) string {
 			}
 
 			var lob *models.Lobby
+			lob, tperr = models.GetLobbyById(uint(lobbyid))
+
+			if tperr != nil {
+				bytes, _ := tperr.ErrorJSON().Encode()
+				return string(bytes)
+			}
 
 			if id, _ := player.GetLobbyId(); id != lobbyid {
-				lob, tperr = models.GetLobbyById(uint(lobbyid))
-
-				if tperr != nil {
-					bytes, _ := tperr.ErrorJSON().Encode()
-					return string(bytes)
-				}
-
 				helpers.LockRecord(lob.ID, lob)
 				tperr = lob.AddSpectator(player)
 				helpers.UnlockRecord(lob.ID, lob)
