@@ -246,13 +246,6 @@ func TestSpectators(t *testing.T) {
 	db.DB.Model(lobby).Association("Spectators").Find(&specs)
 	assert.Equal(t, 1, len(specs))
 
-	// players in lobby should be removed from it if added as spectator
-	lobby.AddPlayer(player, 10)
-	err = lobby.AddSpectator(player)
-	assert.Nil(t, err)
-	_, terr := lobby.GetPlayerSlot(player)
-	assert.NotNil(t, terr)
-
 	// adding a player should remove them from spectators
 	lobby.AddPlayer(player2, 11)
 	specs = nil
