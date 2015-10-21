@@ -11,14 +11,12 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
-func decorateSlotDetails(lobby *Lobby, slot int) *simplejson.Json {
+func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) *simplejson.Json {
 	j := simplejson.New()
 
-	//	j.Set("player")
-	j.Set("ready", false)
-
 	playerId, err := lobby.GetPlayerIdBySlot(slot)
-	if err == nil {
+	j.Set("filled", err == nil)
+	if err == nil && includeDetails {
 		var player Player
 		db.DB.First(&player, playerId)
 
@@ -28,23 +26,16 @@ func decorateSlotDetails(lobby *Lobby, slot int) *simplejson.Json {
 		ingame, _ := lobby.IsPlayerInGame(&player)
 		j.Set("inGame", ingame)
 	}
+
 	return j
 }
 
-func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
+func DecorateLobbyDataJSON(lobby *Lobby, includeDetails bool) *simplejson.Json {
 	lobbyJs := simplejson.New()
 	lobbyJs.Set("id", lobby.ID)
 	lobbyJs.Set("type", FormatMap[lobby.Type])
-	lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
 	lobbyJs.Set("players", lobby.GetPlayerNumber())
-	lobbyJs.Set("whitelistId", lobby.Whitelist)
-	lobbyJs.Set("state", lobby.State)
 	lobbyJs.Set("map", lobby.MapName)
-
-	var leader Player
-	db.DB.Where("steam_id = ?", lobby.CreatedBySteamID).First(&leader)
-
-	lobbyJs.Set("leader", DecoratePlayerSummaryJson(&leader))
 
 	var classes []*simplejson.Json
 
@@ -54,12 +45,23 @@ func DecorateLobbyDataJSON(lobby *Lobby) *simplejson.Json {
 	for slot, className := range classList {
 		class := simplejson.New()
 
-		class.Set("red", decorateSlotDetails(lobby, slot))
-		class.Set("blu", decorateSlotDetails(lobby, slot+int(lobby.Type)))
+		class.Set("red", decorateSlotDetails(lobby, slot, includeDetails))
+		class.Set("blu", decorateSlotDetails(lobby, slot+int(lobby.Type), includeDetails))		
 		class.Set("class", className)
 		classes = append(classes, class)
 	}
 	lobbyJs.Set("classes", classes)
+
+	if !includeDetails {
+		return lobbyJs
+	}
+
+	var leader Player
+	db.DB.Where("steam_id = ?", lobby.CreatedBySteamID).First(&leader)
+	lobbyJs.Set("leader", DecoratePlayerSummaryJson(&leader))
+	lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
+	lobbyJs.Set("state", lobby.State)
+	lobbyJs.Set("whitelistId", lobby.Whitelist)
 
 	var spectators []*simplejson.Json
 	for _, spectator := range lobby.Spectators {
@@ -82,7 +84,7 @@ func DecorateLobbyListData(lobbies []Lobby) (string, error) {
 	var lobbyList []*simplejson.Json
 
 	for _, lobby := range lobbies {
-		lobbyJs := DecorateLobbyDataJSON(&lobby)
+		lobbyJs := DecorateLobbyDataJSON(&lobby, false)
 		lobbyList = append(lobbyList, lobbyJs)
 	}
 

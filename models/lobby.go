@@ -441,7 +441,7 @@ func (lobby *Lobby) OnChange(base bool) {
 }
 
 func BroadcastLobby(lobby *Lobby) {
-	bytes, _ := DecorateLobbyDataJSON(lobby).Encode()
+	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
 	room := strconv.FormatUint(uint64(lobby.ID), 10)
 
 	broadcaster.SendMessageToRoom(room, "lobbyData", string(bytes))
@@ -449,7 +449,7 @@ func BroadcastLobby(lobby *Lobby) {
 }
 
 func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
-	bytes, _ := DecorateLobbyDataJSON(lobby).Encode()
+	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
 	broadcaster.SendMessage(steamid, "lobbyData", string(bytes))
 }
 
