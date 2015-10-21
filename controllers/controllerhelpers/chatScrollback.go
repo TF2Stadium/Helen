@@ -38,6 +38,9 @@ func AddScrollbackMessage(room uint, message string) {
 }
 
 func BroadcastScrollback(so socketio.Socket, room uint) {
+
+	so.Emit("chatHistoryClear", "{}")
+	
 	c, ok := chatScrollback[room]
 	if !ok {
 		return
