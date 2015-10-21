@@ -38,6 +38,7 @@ func AfterLobbyLeave(so socketio.Socket, lobby *models.Lobby, player *models.Pla
 
 func AfterLobbySpec(so socketio.Socket, lobby *models.Lobby) {
 	so.Join(fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+	BroadcastScrollback(so, lobby.ID)
 }
 
 func AfterLobbySpecLeave(so socketio.Socket, lobby *models.Lobby) {
