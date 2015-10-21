@@ -69,6 +69,7 @@ func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 	if err == nil {
 		so.Join(fmt.Sprintf("%s_private", GetLobbyRoom(lobbyIdPlaying)))
 		so.Join(fmt.Sprintf("%s_public", GetLobbyRoom(lobbyIdPlaying)))
+		BroadcastScrollback(so, lobbyIdPlaying)
 		lobby, _ := models.GetLobbyById(lobbyIdPlaying)
 		models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
 		slot := &models.LobbySlot{}
