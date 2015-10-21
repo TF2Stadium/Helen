@@ -67,8 +67,9 @@ func AfterConnect(so socketio.Socket) {
 func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 	lobbyIdPlaying, err := player.GetLobbyId()
 	if err == nil {
-		so.Join(fmt.Sprintf("%s_private", GetLobbyRoom(lobbyIdPlaying)))
 		lobby, _ := models.GetLobbyById(lobbyIdPlaying)
+		AfterLobbyJoin(so, lobby, player)
+		AfterLobbySpec(so, lobby)
 		models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
 		slot := &models.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
@@ -85,28 +86,20 @@ func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 		}
 	}
 
-	lobbyIdsSpectating, err2 := player.GetSpectatingIds()
+	settings, err2 := player.GetSettings()
 	if err2 == nil {
-		for _, id := range lobbyIdsSpectating {
-			so.Join(GetLobbyRoom(id))
-			lobby, _ := models.GetLobbyById(id)
-			models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
-		}
-	}
-
-	settings, err3 := player.GetSettings()
-	if err3 == nil {
 		json := models.DecoratePlayerSettingsJson(settings)
 		bytes, _ := json.Encode()
 		broadcaster.SendMessage(player.SteamId, "playerSettings", string(bytes))
 	}
 
-	profilePlayer, err4 := models.GetPlayerWithStats(player.SteamId)
-	if err4 == nil {
+	profilePlayer, err3 := models.GetPlayerWithStats(player.SteamId)
+	if err3 == nil {
 		json := models.DecoratePlayerProfileJson(profilePlayer)
 		bytes, _ := json.Encode()
 		broadcaster.SendMessage(player.SteamId, "playerProfile", string(bytes))
 	}
+
 }
 
 func GetLobbyRoom(lobbyid uint) string {
