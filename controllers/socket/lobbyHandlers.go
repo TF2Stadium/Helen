@@ -286,6 +286,32 @@ func lobbySpectatorJoinHandler(so socketio.Socket) func(string) string {
 		})
 }
 
+var lobbyNoLoginSpectatorJoinFilters = chelpers.FilterParams{
+	Params: map[string]chelpers.Param{
+		"id": chelpers.Param{Kind: reflect.Uint},
+	},
+}
+
+func lobbyNoLoginSpectatorJoinHandler(so socketio.Socket) func(string) string {
+	return chelpers.FilterRequest(so, lobbyNoLoginSpectatorJoinFilters,
+		func(params map[string]interface{}) string {
+			id := params["id"].(uint)
+
+			lobby, err := models.GetLobbyById(id)
+			if err != nil {
+				bytes, _ := err.ErrorJSON().Encode()
+				return string(bytes)
+			}
+
+			chelpers.AfterLobbySpec(so, lobby)
+			bytes, _ := models.DecorateLobbyDataJSON(lobby, true).Encode()
+			so.Emit("lobbyData", string(bytes))
+
+			bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+			return string(bytes)
+		})
+}
+
 var lobbyKickFilters = chelpers.FilterParams{
 	Action:      authority.AuthAction(0),
 	FilterLogin: true,

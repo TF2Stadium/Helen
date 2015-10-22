@@ -37,7 +37,8 @@ func SocketInit(so socketio.Socket) {
 	helpers.Logger.Debug("on connection")
 	chelpers.AfterConnect(so)
 
-	if chelpers.IsLoggedInSocket(so.Id()) {
+	loggedIn := chelpers.IsLoggedInSocket(so.Id())
+	if loggedIn {
 		player, err := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if err != nil {
 			helpers.Logger.Warning("User has a cookie with but a matching player record doesn't exist: %s",
@@ -60,8 +61,11 @@ func SocketInit(so socketio.Socket) {
 
 	so.On("lobbyJoin", lobbyJoinHandler(so))
 
-	so.On("lobbySpectatorJoin", lobbySpectatorJoinHandler(so))
-
+	if loggedIn {
+		so.On("lobbySpectatorJoin", lobbySpectatorJoinHandler(so))
+	} else {
+		so.On("lobbySpectatorJoin", lobbyNoLoginSpectatorJoinHandler(so))
+	}
 	so.On("lobbyKick", lobbyKickHandler(so))
 
 	so.On("playerReady", playerReadyHandler(so))
