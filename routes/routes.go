@@ -5,11 +5,12 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/googollee/go-socket.io"
-	"net/http"
 )
 
 func SetupHTTPRoutes() {
@@ -23,13 +24,5 @@ func SetupHTTPRoutes() {
 }
 
 func SetupSocketRoutes(server *socketio.Server) {
-	var socketController func(socketio.Socket)
-
-	if config.Constants.SocketMockUp {
-		socketController = socket.SocketMockUpInit
-	} else {
-		socketController = socket.SocketInit
-	}
-
-	server.On("connection", socketController)
+	server.On("connection", socket.SocketInit)
 }

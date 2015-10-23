@@ -23,7 +23,6 @@ type constants struct {
 	ChatLogsDir        string
 	SessionName        string
 	PaulingPort        string
-	SocketMockUp       bool
 	ServerMockUp       bool
 	ChatLogsEnabled    bool
 	MockupAuth         bool
@@ -111,7 +110,6 @@ func setupDevelopmentConstants() {
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
 	Constants.PaulingPort = "8001"
 	Constants.ChatLogsDir = "."
-	Constants.SocketMockUp = false
 	Constants.ServerMockUp = true
 	Constants.ChatLogsEnabled = false
 	Constants.AllowedCorsOrigins = []string{"*"}
@@ -133,7 +131,6 @@ func setupProductionConstants() {
 	Constants.CookieDomain = ".tf2stadium.com"
 	Constants.ServerMockUp = false
 	Constants.ChatLogsEnabled = true
-	Constants.SocketMockUp = false
 }
 
 func setupTestConstants() {
