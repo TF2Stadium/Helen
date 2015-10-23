@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package socket
+package handler
 
 import (
 	"crypto/rand"
@@ -42,7 +42,7 @@ var lobbyCreateFilters = chelpers.FilterParams{
 	},
 }
 
-func lobbyCreateHandler(so socketio.Socket) func(string) string {
+func LobbyCreate(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, lobbyCreateFilters,
 		func(params map[string]interface{}) string {
 
@@ -106,7 +106,7 @@ var serverVerifyFilters = chelpers.FilterParams{
 	},
 }
 
-func serverVerifyHandler(so socketio.Socket) func(string) string {
+func ServerVerify(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, serverVerifyFilters,
 		func(params map[string]interface{}) string {
 			info := models.ServerRecord{
@@ -133,7 +133,7 @@ var lobbyCloseFilters = chelpers.FilterParams{
 	},
 }
 
-func lobbyCloseHandler(so socketio.Socket) func(string) string {
+func LobbyClose(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, lobbyCloseFilters,
 		func(params map[string]interface{}) string {
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -178,7 +178,7 @@ var lobbyJoinFilters = chelpers.FilterParams{
 	},
 }
 
-func lobbyJoinHandler(so socketio.Socket) func(string) string {
+func LobbyJoin(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, lobbyJoinFilters,
 		func(params map[string]interface{}) string {
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -247,7 +247,7 @@ var lobbySpectatorJoinFilters = chelpers.FilterParams{
 	},
 }
 
-func lobbySpectatorJoinHandler(so socketio.Socket) func(string) string {
+func LobbySpectatorJoin(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, lobbySpectatorJoinFilters,
 		func(params map[string]interface{}) string {
 
@@ -292,7 +292,7 @@ var lobbyNoLoginSpectatorJoinFilters = chelpers.FilterParams{
 	},
 }
 
-func lobbyNoLoginSpectatorJoinHandler(so socketio.Socket) func(string) string {
+func LobbyNoLoginSpectatorJoin(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, lobbyNoLoginSpectatorJoinFilters,
 		func(params map[string]interface{}) string {
 			id := params["id"].(uint)
@@ -322,7 +322,7 @@ var lobbyKickFilters = chelpers.FilterParams{
 	},
 }
 
-func lobbyKickHandler(so socketio.Socket) func(string) string {
+func LobbyKick(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, lobbyKickFilters,
 		func(params map[string]interface{}) string {
 			steamid := params["steamid"].(string)
@@ -398,7 +398,7 @@ var playerReadyFilter = chelpers.FilterParams{
 	FilterLogin: true,
 }
 
-func playerReadyHandler(so socketio.Socket) func(string) string {
+func PlayerReady(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, playerReadyFilter,
 		func(_ map[string]interface{}) string {
 			steamid := chelpers.GetSteamId(so.Id())
@@ -455,7 +455,7 @@ var playerUnreadyFilter = chelpers.FilterParams{
 	FilterLogin: true,
 }
 
-func playerUnreadyHandler(so socketio.Socket) func(string) string {
+func PlayerUnready(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, playerUnreadyFilter,
 		func(_ map[string]interface{}) string {
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -495,7 +495,7 @@ func playerUnreadyHandler(so socketio.Socket) func(string) string {
 		})
 }
 
-func requestLobbyListDataHandler(so socketio.Socket) func(string) string {
+func RequestLobbyListData(so socketio.Socket) func(string) string {
 	return func(s string) string {
 		var lobbies []models.Lobby
 		db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)

@@ -1,4 +1,4 @@
-package socket
+package handler
 
 import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -15,7 +15,7 @@ var playerSettingsGetFilter = chelpers.FilterParams{
 	},
 }
 
-func playerSettingsGetHandler(so socketio.Socket) func(string) string {
+func PlayerSettingsGet(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, playerSettingsGetFilter,
 		func(params map[string]interface{}) string {
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -51,7 +51,7 @@ var playerSettingsSetFilter = chelpers.FilterParams{
 	},
 }
 
-func playerSettingsSetHandler(so socketio.Socket) func(string) string {
+func PlayerSettingsSet(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, playerSettingsSetFilter,
 		func(params map[string]interface{}) string {
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -77,7 +77,7 @@ var playerProfileFilter = chelpers.FilterParams{
 	},
 }
 
-func playerProfileHandler(so socketio.Socket) func(string) string {
+func PlayerProfile(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, playerProfileFilter,
 		func(params map[string]interface{}) string {
 

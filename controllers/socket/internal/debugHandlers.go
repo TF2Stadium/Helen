@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package socket
+package handler
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ var debugLobbyFillFilter = chelpers.FilterParams{
 	},
 }
 
-func debugLobbyFillHandler(so socketio.Socket) func(string) string {
+func DebugLobbyFill(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, debugLobbyFillFilter,
 		func(param map[string]interface{}) string {
 			id := param["id"].(uint)
@@ -61,7 +61,7 @@ var debugLobbyReadyFilter = chelpers.FilterParams{
 	},
 }
 
-func debugLobbyReadyHandler(so socketio.Socket) func(string) string {
+func DebugLobbyReady(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, debugLobbyReadyFilter,
 		func(param map[string]interface{}) string {
 			id := param["id"].(uint)
@@ -81,7 +81,7 @@ func debugLobbyReadyHandler(so socketio.Socket) func(string) string {
 		})
 }
 
-func debugRequestAllLobbiesHandler(so socketio.Socket) func(string) string {
+func DebugRequestAllLobbies(so socketio.Socket) func(string) string {
 	return func(_ string) string {
 		var lobbies []models.Lobby
 		db.DB.Where("state <> ?", models.LobbyStateEnded).Find(&lobbies)
@@ -105,7 +105,7 @@ var debugRequestLobbyStartFilter = chelpers.FilterParams{
 	},
 }
 
-func debugRequestLobbyStart(so socketio.Socket) func(string) string {
+func DebugRequestLobbyStart(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, debugRequestLobbyStartFilter,
 		func(params map[string]interface{}) string {
 			lobby, _ := models.GetLobbyById(params["id"].(uint))

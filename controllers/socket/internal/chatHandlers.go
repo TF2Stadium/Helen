@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package socket
+package handler
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ var chatSendFilter = chelpers.FilterParams{
 	},
 }
 
-func chatSendHandler(so socketio.Socket) func(string) string {
+func ChatSend(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, chatSendFilter,
 		func(params map[string]interface{}) string {
 			message := params["message"].(string)

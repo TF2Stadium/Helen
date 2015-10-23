@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package socket
+package handler
 
 import (
 	"net/http"
@@ -39,7 +39,7 @@ var adminChangeRoleFilter = chelpers.FilterParams{
 //return ChangeRole(&so, params["role"].(string), params["steamid"].(string))
 //})
 
-func adminChangeRoleHandler(so socketio.Socket) func(string) string {
+func AdminChangeRole(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, adminChangeRoleFilter,
 
 		func(params map[string]interface{}) string {

@@ -8,6 +8,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/controllers/socket/internal"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/googollee/go-socket.io"
@@ -53,43 +54,43 @@ func SocketInit(so socketio.Socket) {
 	}
 
 	// LOBBY CREATE
-	so.On("lobbyCreate", lobbyCreateHandler(so))
+	so.On("lobbyCreate", handler.LobbyCreate(so))
 
-	so.On("serverVerify", serverVerifyHandler(so))
+	so.On("serverVerify", handler.ServerVerify(so))
 
-	so.On("lobbyClose", lobbyCloseHandler(so))
+	so.On("lobbyClose", handler.LobbyClose(so))
 
-	so.On("lobbyJoin", lobbyJoinHandler(so))
+	so.On("lobbyJoin", handler.LobbyJoin(so))
 
 	if loggedIn {
-		so.On("lobbySpectatorJoin", lobbySpectatorJoinHandler(so))
+		so.On("lobbySpectatorJoin", handler.LobbySpectatorJoin(so))
 	} else {
-		so.On("lobbySpectatorJoin", lobbyNoLoginSpectatorJoinHandler(so))
+		so.On("lobbySpectatorJoin", handler.LobbyNoLoginSpectatorJoin(so))
 	}
-	so.On("lobbyKick", lobbyKickHandler(so))
+	so.On("lobbyKick", handler.LobbyKick(so))
 
-	so.On("playerReady", playerReadyHandler(so))
+	so.On("playerReady", handler.PlayerReady(so))
 
-	so.On("playerUnready", playerUnreadyHandler(so))
+	so.On("playerUnready", handler.PlayerUnready(so))
 
-	so.On("playerSettingsGet", playerSettingsGetHandler(so))
+	so.On("playerSettingsGet", handler.PlayerSettingsGet(so))
 
-	so.On("playerSettingsSet", playerSettingsSetHandler(so))
+	so.On("playerSettingsSet", handler.PlayerSettingsSet(so))
 
-	so.On("playerProfile", playerProfileHandler(so))
+	so.On("playerProfile", handler.PlayerProfile(so))
 
-	so.On("chatSend", chatSendHandler(so))
+	so.On("chatSend", handler.ChatSend(so))
 
-	so.On("adminChangeRole", adminChangeRoleHandler(so))
+	so.On("adminChangeRole", handler.AdminChangeRole(so))
 
-	so.On("requestLobbyListData", requestLobbyListDataHandler(so))
+	so.On("requestLobbyListData", handler.RequestLobbyListData(so))
 
 	//Debugging handlers
 	if config.Constants.ServerMockUp {
-		so.On("debugLobbyFill", debugLobbyFillHandler(so))
-		so.On("debugLobbyReady", debugLobbyReadyHandler(so))
-		so.On("debugGetAllLobbies", debugRequestAllLobbiesHandler(so))
-		so.On("debugRequestLobbyStart", debugRequestLobbyStart(so))
+		so.On("debugLobbyFill", handler.DebugLobbyFill(so))
+		so.On("debugLobbyReady", handler.DebugLobbyReady(so))
+		so.On("debugGetAllLobbies", handler.DebugRequestAllLobbies(so))
+		so.On("debugRequestLobbyStart", handler.DebugRequestLobbyStart(so))
 	}
 
 	so.Emit("socketInitialized", "")
