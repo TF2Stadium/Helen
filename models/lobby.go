@@ -17,7 +17,6 @@ import (
 )
 
 type LobbyType int
-type Whitelist int
 type LobbyState int
 
 const (
@@ -81,7 +80,7 @@ type Lobby struct {
 	ServerInfo   ServerRecord
 	ServerInfoID uint
 
-	Whitelist Whitelist //whitelist.tf ID
+	Whitelist int //whitelist.tf ID
 
 	Spectators []Player `gorm:"many2many:spectators_players_lobbies"`
 
@@ -98,7 +97,7 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 		State:      LobbyStateInitializing,
 		League:     league,
 		MapName:    mapName,
-		Whitelist:  Whitelist(whitelist), // that's a strange line
+		Whitelist:  whitelist, // that's a strange line
 		ServerInfo: serverInfo,
 	}
 
@@ -395,7 +394,7 @@ func (lobby *Lobby) SetupServer() error {
 		return nil
 	}
 
-	err := SetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.MapName)
+	err := SetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.Whitelist, lobby.MapName)
 	if err != nil {
 		return helpers.NewTPError(err.Error(), 0)
 	}

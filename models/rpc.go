@@ -19,13 +19,14 @@ type ServerBootstrap struct {
 }
 
 type Args struct {
-	Id       uint
-	Info     ServerRecord
-	Type     LobbyType
-	League   string
-	Map      string
-	SteamId  string
-	SteamId2 string
+	Id        uint
+	Info      ServerRecord
+	Type      LobbyType
+	League    string
+	Whitelist int
+	Map       string
+	SteamId   string
+	SteamId2  string
 }
 
 var Pauling *rpc.Client
@@ -61,17 +62,18 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 }
 
 func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
-	mapName string) error {
+	whitelist int, mapName string) error {
 	if config.Constants.ServerMockUp {
 		return nil
 	}
 
 	args := &Args{
-		Id:     lobbyId,
-		Info:   info,
-		Type:   lobbyType,
-		League: league,
-		Map:    mapName}
+		Id:        lobbyId,
+		Info:      info,
+		Type:      lobbyType,
+		League:    league,
+		Whitelist: whitelist,
+		Map:       mapName}
 	return Pauling.Call("Pauling.SetupServer", args, &Args{})
 }
 
