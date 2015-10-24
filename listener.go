@@ -15,7 +15,6 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
 )
 
 var ticker *time.Ticker
@@ -53,9 +52,8 @@ func handleEvent(event map[string]interface{}) {
 	case "playerDisc":
 		slot := &models.LobbySlot{}
 		lobbyid := event["lobbyId"].(uint)
-		commId := event["commId"].(string)
+		steamId := event["steamId"].(string)
 
-		steamId, _ := steamid.CommIdToSteamId(commId)
 		player, _ := models.GetPlayerBySteamId(steamId)
 
 		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
@@ -86,9 +84,8 @@ func handleEvent(event map[string]interface{}) {
 	case "playerConn":
 		slot := &models.LobbySlot{}
 		lobbyid := event["lobbyId"].(uint)
-		commId := event["commId"].(string)
+		steamId := event["steamId"].(string)
 
-		steamId, _ := steamid.CommIdToSteamId(commId)
 		player, _ := models.GetPlayerBySteamId(steamId)
 		err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot).Error
 		if err == nil { //else, player isn't in the lobby, will be kicked by Pauling
@@ -100,9 +97,8 @@ func handleEvent(event map[string]interface{}) {
 
 	case "playerRep":
 		lobbyid := event["lobbyId"].(uint)
-		commId := event["commId"].(string)
+		steamId := event["steamId"].(string)
 
-		steamId, _ := steamid.CommIdToSteamId(commId)
 		player, _ := models.GetPlayerBySteamId(steamId)
 
 		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Delete(&models.LobbySlot{})
@@ -143,14 +139,12 @@ func handleEvent(event map[string]interface{}) {
 				Info:    lobby.ServerInfo,
 			}
 			for _, player := range lobby.BannedPlayers {
-				commId, _ := steamid.SteamIdToCommId(player.SteamId)
-				info.BannedPlayers = append(info.BannedPlayers, commId)
+				info.BannedPlayers = append(info.BannedPlayers, player.SteamId)
 			}
 			for _, slot := range lobby.Slots {
 				var player *models.Player
 				db.DB.Find(player, slot.PlayerId)
-				commId, _ := steamid.SteamIdToCommId(player.SteamId)
-				info.Players = append(info.Players, commId)
+				info.Players = append(info.Players, player.SteamId)
 			}
 			models.Pauling.Call("Pauling.SetupVerifier", &info, &struct{}{})
 		}
