@@ -146,7 +146,7 @@ func LobbyClose(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
-			if player.SteamId != lob.CreatedBySteamID {
+			if player.SteamId != lob.CreatedBySteamID && player.Role != helpers.RoleAdmin {
 				bytes, _ := chelpers.BuildFailureJSON("Player not authorized to close lobby.", 1).Encode()
 				return string(bytes)
 			}
