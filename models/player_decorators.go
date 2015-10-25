@@ -40,6 +40,7 @@ func DecoratePlayerProfileJson(p *Player) *simplejson.Json {
 	j.Set("stats", s)
 	j.Set("name", p.Name)
 	j.Set("id", p.ID)
+	j.Set("role", helpers.RoleNames[p.Role])
 
 	// TODO ban info
 
