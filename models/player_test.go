@@ -24,10 +24,10 @@ func init() {
 func TestIsSpectating(t *testing.T) {
 	testhelpers.CleanupDB()
 
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1, false)
 	database.DB.Save(lobby)
 
-	lobby2 := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1)
+	lobby2 := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1, false)
 	database.DB.Save(lobby2)
 
 	player, _ := models.NewPlayer("asdf")

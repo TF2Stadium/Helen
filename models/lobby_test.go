@@ -22,7 +22,7 @@ func init() {
 
 func TestLobbyCreation(t *testing.T) {
 	testhelpers.CleanupDB()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "testip", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "testip", "", ""}, 0, false)
 	lobby.Save()
 
 	lobby2, _ := models.GetLobbyById(lobby.ID)
@@ -40,7 +40,7 @@ func TestLobbyCreation(t *testing.T) {
 
 func TestLobbyAdd(t *testing.T) {
 	testhelpers.CleanupDB()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby.Save()
 
 	var players []*models.Player
@@ -85,7 +85,7 @@ func TestLobbyAdd(t *testing.T) {
 	err = lobby.AddPlayer(players[2], 55)
 	assert.NotNil(t, err)
 
-	lobby2 := models.NewLobby("cp_granary", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby2 := models.NewLobby("cp_granary", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby2.Save()
 
 	// try to add a player while they're in another lobby
@@ -95,7 +95,7 @@ func TestLobbyAdd(t *testing.T) {
 
 func TestLobbyRemove(t *testing.T) {
 	testhelpers.CleanupDB()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby.Save()
 
 	player, playErr := models.NewPlayer("1235")
@@ -121,7 +121,7 @@ func TestLobbyRemove(t *testing.T) {
 
 func TestLobbyBan(t *testing.T) {
 	testhelpers.CleanupDB()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby.Save()
 
 	player, playErr := models.NewPlayer("1235")
@@ -148,7 +148,7 @@ func TestReadyPlayer(t *testing.T) {
 	assert.Nil(t, playErr)
 
 	player.Save()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby.Save()
 	lobby.AddPlayer(player, 0)
 
@@ -170,7 +170,7 @@ func TestIsEveryoneReady(t *testing.T) {
 	assert.Nil(t, playErr)
 
 	player.Save()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby.Save()
 	lobby.AddPlayer(player, 0)
 	lobby.ReadyPlayer(player)
@@ -192,7 +192,7 @@ func TestUnreadyPlayer(t *testing.T) {
 	assert.Nil(t, playErr)
 
 	player.Save()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby.Save()
 	lobby.AddPlayer(player, 0)
 
@@ -215,7 +215,7 @@ func TestSpectators(t *testing.T) {
 	assert.Nil(t, playErr2)
 	player2.Save()
 
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby.Save()
 
 	err := lobby.AddSpectator(player)
@@ -256,7 +256,7 @@ func TestSpectators(t *testing.T) {
 func TestUnreadyAllPlayers(t *testing.T) {
 	testhelpers.CleanupDB()
 
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby.Save()
 
 	for i := 0; i < 12; i++ {
@@ -275,7 +275,7 @@ func TestUnreadyAllPlayers(t *testing.T) {
 
 func TestRemoveUnreadyPlayers(t *testing.T) {
 	testhelpers.CleanupDB()
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0)
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
 	lobby.Save()
 
 	for i := 0; i < 12; i++ {
