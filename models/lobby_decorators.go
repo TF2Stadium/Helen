@@ -36,6 +36,8 @@ func DecorateLobbyDataJSON(lobby *Lobby, includeDetails bool) *simplejson.Json {
 	lobbyJs.Set("type", FormatMap[lobby.Type])
 	lobbyJs.Set("players", lobby.GetPlayerNumber())
 	lobbyJs.Set("map", lobby.MapName)
+	lobbyJs.Set("league", lobby.League)
+	lobbyJs.Set("mumbleRequired", lobby.Mumble)
 
 	var classes []*simplejson.Json
 
@@ -46,7 +48,7 @@ func DecorateLobbyDataJSON(lobby *Lobby, includeDetails bool) *simplejson.Json {
 		class := simplejson.New()
 
 		class.Set("red", decorateSlotDetails(lobby, slot, includeDetails))
-		class.Set("blu", decorateSlotDetails(lobby, slot+int(lobby.Type), includeDetails))		
+		class.Set("blu", decorateSlotDetails(lobby, slot+int(lobby.Type), includeDetails))
 		class.Set("class", className)
 		classes = append(classes, class)
 	}

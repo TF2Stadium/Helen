@@ -74,6 +74,7 @@ type Lobby struct {
 	State   LobbyState
 	Type    LobbyType
 	League  string
+	Mumble  bool
 
 	Slots []LobbySlot
 
@@ -91,13 +92,14 @@ type Lobby struct {
 	readyUpTimestamp int64 //Stores the timestamp at which the ready up timeout started
 }
 
-func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int) *Lobby {
+func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int, mumble bool) *Lobby {
 	lobby := &Lobby{
 		Type:       lobbyType,
 		State:      LobbyStateInitializing,
 		League:     league,
 		MapName:    mapName,
 		Whitelist:  whitelist, // that's a strange line
+		Mumble:     mumble,
 		ServerInfo: serverInfo,
 	}
 

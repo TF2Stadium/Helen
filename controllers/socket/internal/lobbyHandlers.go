@@ -54,7 +54,7 @@ func LobbyCreate(so socketio.Socket) func(string) string {
 			server := params["server"].(string)
 			rconPwd := params["rconpwd"].(string)
 			whitelist := int(params["whitelist"].(uint))
-			//mumble := params["mumbleRequired"].(bool)
+			mumble := params["mumbleRequired"].(bool)
 
 			var playermap = map[string]models.LobbyType{
 				"debug":      models.LobbyTypeDebug,
@@ -78,7 +78,7 @@ func LobbyCreate(so socketio.Socket) func(string) string {
 				return err.Error()
 			}
 
-			lob := models.NewLobby(mapName, lobbytype, league, info, whitelist)
+			lob := models.NewLobby(mapName, lobbytype, league, info, whitelist, mumble)
 			lob.CreatedBySteamID = player.SteamId
 			lob.Save()
 			err = lob.SetupServer()
