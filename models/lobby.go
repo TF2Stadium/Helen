@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"time"
 
+	"strconv"
+
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
-	"strconv"
 )
 
 type LobbyType int
@@ -442,6 +443,7 @@ func (lobby *Lobby) OnChange(base bool) {
 }
 
 func BroadcastLobby(lobby *Lobby) {
+	db.DB.Preload("Spectators").First(&lobby, lobby.ID)
 	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
 	room := strconv.FormatUint(uint64(lobby.ID), 10)
 
@@ -450,6 +452,7 @@ func BroadcastLobby(lobby *Lobby) {
 }
 
 func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
+	db.DB.Preload("Spectators").First(&lobby, lobby.ID)
 	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
 	broadcaster.SendMessage(steamid, "lobbyData", string(bytes))
 }
