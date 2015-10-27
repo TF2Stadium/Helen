@@ -74,7 +74,7 @@ func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
 		slot := &models.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
 		if err == nil {
-			if lobby.State == models.LobbyStateInProgress && !slot.InGame {
+			if lobby.State == models.LobbyStateInProgress && !models.IsPlayerInServer(player.SteamId) {
 				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
 				broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
 			} else if lobby.State == models.LobbyStateReadyingUp && !slot.Ready {

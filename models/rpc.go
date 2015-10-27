@@ -85,6 +85,17 @@ func VerifyInfo(info ServerRecord) error {
 	return Pauling.Call("Pauling.VerifyInfo", &info, &Args{})
 }
 
+func IsPlayerInServer(steamid string) (reply bool) {
+	if config.Constants.ServerMockUp {
+		return false
+	}
+
+	args := &Args{SteamId: steamid}
+	Pauling.Call("Pauling.IsPlayerInServer", &args, &reply)
+
+	return
+}
+
 func End(lobbyId uint) {
 	if config.Constants.ServerMockUp {
 		return
