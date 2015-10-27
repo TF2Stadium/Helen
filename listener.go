@@ -123,6 +123,7 @@ func handleEvent(event map[string]interface{}) {
 
 		lobby, _ := models.GetLobbyById(lobbyid)
 		helpers.LockRecord(lobby.ID, lobby)
+		lobby.UpdateStats()
 		lobby.Close(false)
 		helpers.UnlockRecord(lobby.ID, lobby)
 		room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))

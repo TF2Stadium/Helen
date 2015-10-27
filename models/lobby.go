@@ -416,6 +416,17 @@ func (lobby *Lobby) Close(rpc bool) {
 	helpers.RemoveRecord(lobby.ID, lobby)
 }
 
+func (lobby *Lobby) UpdateStats() {
+	var slots []LobbySlot
+	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
+
+	for _, slot := range slots {
+		var player *Player
+		db.DB.Preload("Stats").First(slot.ID, player)
+		player.Stats.PlayedCountIncrease(lobby.Type)
+	}
+}
+
 // GORM callback
 func (lobby *Lobby) AfterFind() error {
 	if (lobby.ServerInfo == ServerRecord{}) {
