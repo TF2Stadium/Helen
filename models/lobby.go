@@ -225,6 +225,7 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 		return helpers.NewTPError(err.Error(), -1)
 	}
 
+	DisallowPlayer(lobby.ID, player.SteamId)
 	lobby.OnChange(true)
 	return nil
 }
