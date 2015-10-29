@@ -481,6 +481,11 @@ func PlayerNotReady(so socketio.Socket) func(string) string {
 				return string(bytes)
 			}
 
+			if lobby.State != models.LobbyStateReadyingUp {
+				bytes, _ := helpers.NewTPError("Lobby hasn't been filled up yet.", 4).ErrorJSON().Encode()
+				return string(bytes)
+			}
+
 			helpers.LockRecord(lobby.ID, lobby)
 			tperr = lobby.UnreadyPlayer(player)
 			lobby.RemovePlayer(player)
