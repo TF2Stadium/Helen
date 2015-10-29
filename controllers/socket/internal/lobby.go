@@ -455,7 +455,7 @@ var playerUnreadyFilter = chelpers.FilterParams{
 	FilterLogin: true,
 }
 
-func PlayerUnready(so socketio.Socket) func(string) string {
+func PlayerNotReady(so socketio.Socket) func(string) string {
 	return chelpers.FilterRequest(so, playerUnreadyFilter,
 		func(_ map[string]interface{}) string {
 			player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -483,6 +483,7 @@ func PlayerUnready(so socketio.Socket) func(string) string {
 
 			helpers.LockRecord(lobby.ID, lobby)
 			tperr = lobby.UnreadyPlayer(player)
+			lobby.RemovePlayer(player)
 			helpers.UnlockRecord(lobby.ID, lobby)
 
 			if tperr != nil {
