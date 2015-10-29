@@ -309,28 +309,24 @@ func ReadyTimeoutListener() {
 			lobby.readyUpTimestamp = time.Now().Unix() + 30
 			lobby.Save()
 			helpers.UnlockRecord(lobby.ID, lobby)
+			<-tick
+			db.DB.First(lobby, id)
 
-			select {
-			case <-tick:
-				db.DB.First(lobby, id)
-
-				if lobby.State != LobbyStateInProgress {
-					helpers.LockRecord(lobby.ID, lobby)
-					defer helpers.UnlockRecord(lobby.ID, lobby)
-					err := lobby.RemoveUnreadyPlayers()
-					if err != nil {
-						helpers.Logger.Critical(err.Error())
-					}
-
-					lobby.UnreadyAllPlayers()
-					if err != nil {
-						helpers.Logger.Critical(err.Error())
-					}
-
-					lobby.State = LobbyStateWaiting
-					lobby.Save()
+			if lobby.State != LobbyStateInProgress {
+				helpers.LockRecord(lobby.ID, lobby)
+				defer helpers.UnlockRecord(lobby.ID, lobby)
+				err := lobby.RemoveUnreadyPlayers()
+				if err != nil {
+					helpers.Logger.Critical(err.Error())
 				}
-				case <-
+
+				lobby.UnreadyAllPlayers()
+				if err != nil {
+					helpers.Logger.Critical(err.Error())
+				}
+
+				lobby.State = LobbyStateWaiting
+				lobby.Save()
 			}
 		}()
 	}
