@@ -6,9 +6,8 @@ package models
 
 import (
 	"fmt"
-	"time"
-
 	"strconv"
+	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -58,6 +57,7 @@ type LobbySlot struct {
 	PlayerId uint
 	Slot     int
 	Ready    bool
+	NeedSub  bool
 	InGame   bool
 }
 
@@ -180,28 +180,32 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		return badSlotError
 	}
 
-	slotFilled := false
-	if _, err := lobby.GetPlayerIdBySlot(slot); err == nil {
-		slotFilled = true
+	_, err := lobby.GetPlayerIdBySlot(slot)
+	//slot is occupied
+	if err == nil {
+		curSlot := &LobbySlot{}
+		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).First(curSlot)
+
+		if !curSlot.NeedSub {
+			return filledError
+		}
+
+		//Substituting player
+		var prevPlayer *Player
+		db.DB.Where("player_id = ?", curSlot.PlayerId).First(prevPlayer)
+		lobby.RemovePlayer(prevPlayer)
 	}
 
-	currLobbyId, err := player.GetLobbyId()
-
-	// if the player is in a different lobby, remove them from that lobby
-	if err == nil && currLobbyId != lobby.ID {
-		curLobby, _ := GetLobbyById(currLobbyId)
-		curLobby.RemovePlayer(player)
-	}
-
-	// if the slot is occupied, return error
-	if slotFilled {
-		return filledError
-	}
-
-	// assign the player to a new slot
-	// try to remove them from the old slot (in case they are switching slots)
-	if err == nil && currLobbyId == lobby.ID {
-		lobby.RemovePlayer(player)
+	if currLobbyId, err := player.GetLobbyId(); err == nil {
+		if currLobbyId != lobby.ID {
+			// if the player is in a different lobby, remove them from that lobby
+			curLobby, _ := GetLobbyById(currLobbyId)
+			curLobby.RemovePlayer(player)
+		} else {
+			// assign the player to a new slot
+			// try to remove them from the old slot (in case they are switching slots)
+			lobby.RemovePlayer(player)
+		}
 	}
 	// try to remove them from spectators
 	lobby.RemoveSpectator(player)

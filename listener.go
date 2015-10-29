@@ -101,7 +101,10 @@ func handleEvent(event map[string]interface{}) {
 
 		player, _ := models.GetPlayerBySteamId(steamId)
 
-		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Delete(&models.LobbySlot{})
+		var slot *models.LobbySlot
+		db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Find(slot)
+		slot.NeedSub = true
+		db.DB.Save(slot)
 		room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 		broadcaster.SendMessageToRoom(room,
 			"sendNotification", fmt.Sprintf("%s has been reported.",
