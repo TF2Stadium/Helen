@@ -90,7 +90,7 @@ type Lobby struct {
 
 	CreatedBySteamID string
 
-	readyUpTimestamp int64 //Stores the timestamp at which the ready up timeout started
+	ReadyUpTimestamp int64 //Stores the timestamp at which the ready up timeout started
 }
 
 func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int, mumble bool) *Lobby {
@@ -334,7 +334,7 @@ func ReadyTimeoutListener() {
 
 func (lobby *Lobby) ReadyUpTimeoutCheck() {
 	helpers.LockRecord(lobby.ID, lobby)
-	lobby.readyUpTimestamp = time.Now().Unix() + 30
+	lobby.ReadyUpTimestamp = time.Now().Unix() + 30
 	lobby.Save()
 	helpers.UnlockRecord(lobby.ID, lobby)
 
@@ -342,7 +342,7 @@ func (lobby *Lobby) ReadyUpTimeoutCheck() {
 }
 
 func (lobby *Lobby) ReadyUpTimeLeft() int64 {
-	return int64(lobby.readyUpTimestamp - time.Now().Unix())
+	return int64(lobby.ReadyUpTimestamp - time.Now().Unix())
 }
 
 func (lobby *Lobby) IsEveryoneReady() bool {
