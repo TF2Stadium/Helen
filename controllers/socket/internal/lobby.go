@@ -32,7 +32,7 @@ var lobbyCreateFilters = chelpers.FilterParams{
 			In:   []string{"highlander", "sixes", "debug"}},
 		"league": chelpers.Param{
 			Kind: reflect.String,
-			In:   []string{"etf2l", "ugc", "esea"}},
+			In:   []string{"etf2l", "ugc", "esea", "asiafortress", "ozfortress"}},
 
 		"server": chelpers.Param{Kind: reflect.String},
 
