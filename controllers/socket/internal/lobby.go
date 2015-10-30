@@ -32,7 +32,7 @@ var lobbyCreateFilters = chelpers.FilterParams{
 			In:   []string{"highlander", "sixes", "debug"}},
 		"league": chelpers.Param{
 			Kind: reflect.String,
-			In:   []string{"etf2l", "ugc"}},
+			In:   []string{"etf2l", "ugc", "esea"}},
 
 		"server": chelpers.Param{Kind: reflect.String},
 
@@ -495,6 +495,8 @@ func PlayerNotReady(so socketio.Socket) func(string) string {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
+
+			lobby.UnreadyAllPlayers()
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
