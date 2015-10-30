@@ -71,9 +71,7 @@ func SocketInit(so socketio.Socket) {
 
 	so.On("playerReady", handler.PlayerReady(so))
 
-	so.On("playerNotReady", handler.PlayerUnready(so))
-
-	so.On("playerUnready", handler.PlayerUnready(so))
+	so.On("playerNotReady", handler.PlayerNotReady(so))
 
 	so.On("playerSettingsGet", handler.PlayerSettingsGet(so))
 
