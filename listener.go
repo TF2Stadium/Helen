@@ -30,21 +30,22 @@ func StartListener() {
 
 func listener() {
 	for {
-		select {
-		case <-ticker.C:
-			event := make(models.Event)
-			err := models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &event)
 
-			if err == rpc.ErrShutdown { //Pauling has crashed
-				//TODO
-			} else if err != nil {
-				helpers.Logger.Fatal(err)
-			}
-			if _, empty := event["empty"]; !empty {
-				handleEvent(event)
-			}
+		<-ticker.C
+
+		event := make(models.Event)
+		err := models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &event)
+
+		if err == rpc.ErrShutdown { //Pauling has crashed
+			//TODO
+		} else if err != nil {
+			helpers.Logger.Fatal(err)
+		}
+		if _, empty := event["empty"]; !empty {
+			go handleEvent(event)
 		}
 	}
+
 }
 
 func handleEvent(event map[string]interface{}) {
