@@ -299,40 +299,45 @@ func (lobby *Lobby) UnreadyAllPlayers() error {
 	return err
 }
 
+func (lobby *Lobby) ReadyUpFailure() {
+	helpers.LockRecord(lobby.ID, lobby)
+	defer helpers.UnlockRecord(lobby.ID, lobby)
+	err := lobby.RemoveUnreadyPlayers()
+	if err != nil {
+		helpers.Logger.Critical(err.Error())
+	}
+
+	lobby.UnreadyAllPlayers()
+	if err != nil {
+		helpers.Logger.Critical(err.Error())
+	}
+
+	lobby.State = LobbyStateWaiting
+	lobby.Save()
+}
+
 func ReadyTimeoutListener() {
 	for {
 		id := <-readyUpLobbyID
-		go func() {
-			tick := time.After(time.Second * 30)
-			lobby := &Lobby{}
-			helpers.LockRecord(lobby.ID, lobby)
-			lobby.readyUpTimestamp = time.Now().Unix() + 30
-			lobby.Save()
-			helpers.UnlockRecord(lobby.ID, lobby)
+		tick := time.After(time.Second * 30)
+
+		go func(tick <-chan time.Time) {
 			<-tick
-			db.DB.First(lobby, id)
 
-			if lobby.State != LobbyStateInProgress {
-				helpers.LockRecord(lobby.ID, lobby)
-				defer helpers.UnlockRecord(lobby.ID, lobby)
-				err := lobby.RemoveUnreadyPlayers()
-				if err != nil {
-					helpers.Logger.Critical(err.Error())
-				}
-
-				lobby.UnreadyAllPlayers()
-				if err != nil {
-					helpers.Logger.Critical(err.Error())
-				}
-
-				lobby.State = LobbyStateWaiting
-				lobby.Save()
+			lobby, err := GetLobbyById(id)
+			if err != nil && lobby.State != LobbyStateInProgress {
+				lobby.ReadyUpFailure()
 			}
-		}()
+		}(tick)
 	}
 }
 
 func (lobby *Lobby) ReadyUpTimeoutCheck() {
+	helpers.LockRecord(lobby.ID, lobby)
+	lobby.readyUpTimestamp = time.Now().Unix() + 30
+	lobby.Save()
+	helpers.UnlockRecord(lobby.ID, lobby)
+
 	readyUpLobbyID <- lobby.ID
 }
 
