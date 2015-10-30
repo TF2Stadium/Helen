@@ -426,6 +426,7 @@ func (lobby *Lobby) UpdateStats() {
 		var player *Player
 		db.DB.Preload("Stats").First(slot.ID, player)
 		player.Stats.PlayedCountIncrease(lobby.Type)
+		player.Save()
 	}
 }
 
