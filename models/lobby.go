@@ -304,7 +304,7 @@ func ReadyTimeoutListener() {
 		id := <-readyUpLobbyID
 		go func() {
 			tick := time.After(time.Second * 30)
-			lobby := &Lobby{}
+			lobby, _ := GetLobbyById(id)
 			helpers.LockRecord(lobby.ID, lobby)
 			lobby.ReadyUpTimestamp = time.Now().Unix() + 30
 			lobby.Save()
