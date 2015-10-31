@@ -366,7 +366,7 @@ func LobbyKick(so socketio.Socket) func(string) string {
 				lob.RemovePlayer(player)
 			} else if player.IsSpectatingId(lob.ID) {
 				spec = true
-				lob.RemoveSpectator(player)
+				lob.RemoveSpectator(player, true)
 			} else {
 				bytes, _ := chelpers.BuildFailureJSON("Player neither playing nor spectating", 2).Encode()
 				return string(bytes)

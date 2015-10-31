@@ -208,7 +208,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		}
 	}
 	// try to remove them from spectators
-	lobby.RemoveSpectator(player)
+	lobby.RemoveSpectator(player, false)
 
 	newSlotObj := &LobbySlot{
 		PlayerId: player.ID,
@@ -365,12 +365,14 @@ func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
 	return nil
 }
 
-func (lobby *Lobby) RemoveSpectator(player *Player) *helpers.TPError {
+func (lobby *Lobby) RemoveSpectator(player *Player, broadcast bool) *helpers.TPError {
 	err := db.DB.Model(lobby).Association("Spectators").Delete(player).Error
 	if err != nil {
 		return helpers.NewTPError(err.Error(), -1)
 	}
-	lobby.OnChange(false)
+	if broadcast {
+		lobby.OnChange(false)
+	}
 	return nil
 }
 
