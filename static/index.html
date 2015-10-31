@@ -105,7 +105,7 @@ io.on("socketInitialized", function(s){
   console.log("Socket Initialized")
 })
 $(function() {
-  createBox(io, "lobbyCreate", ["mapName", "type", "league", "whitelist", "server", "rconpwd", "mumbleRequired"]);
+  createBox(io, "lobbyCreate", ["map", "type", "league", "whitelistID", "server", "rconpwd", "mumbleRequired"]);
   createBox(io, "serverVerify", ["server", "rconpwd"]);
   createBox(io, "lobbyClose", ["id"]);
   createBox(io, "lobbyJoin", ["id", "team", "class"]);
