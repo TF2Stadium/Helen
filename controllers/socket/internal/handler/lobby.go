@@ -25,7 +25,7 @@ var lobbyCreateFilters = chelpers.FilterParams{
 	FilterLogin: true,
 
 	Params: map[string]chelpers.Param{
-		"mapName": chelpers.Param{Kind: reflect.String},
+		"map": chelpers.Param{Kind: reflect.String},
 
 		"type": chelpers.Param{
 			Kind: reflect.String,
@@ -37,7 +37,7 @@ var lobbyCreateFilters = chelpers.FilterParams{
 		"server": chelpers.Param{Kind: reflect.String},
 
 		"rconpwd":        chelpers.Param{Kind: reflect.String},
-		"whitelist":      chelpers.Param{Kind: reflect.Uint},
+		"whitelistID":    chelpers.Param{Kind: reflect.Uint},
 		"mumbleRequired": chelpers.Param{Kind: reflect.Bool},
 	},
 }
