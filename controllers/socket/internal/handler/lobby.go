@@ -48,12 +48,12 @@ func LobbyCreate(so socketio.Socket) func(string) string {
 
 			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
-			mapName := params["mapName"].(string)
+			mapName := params["map"].(string)
 			lobbytypestring := params["type"].(string)
 			league := params["league"].(string)
 			server := params["server"].(string)
 			rconPwd := params["rconpwd"].(string)
-			whitelist := int(params["whitelist"].(uint))
+			whitelist := int(params["whitelistID"].(uint))
 			mumble := params["mumbleRequired"].(bool)
 
 			var playermap = map[string]models.LobbyType{
