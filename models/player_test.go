@@ -49,7 +49,7 @@ func TestIsSpectating(t *testing.T) {
 	assert.Nil(t, specErr)
 	assert.Equal(t, []uint{lobby.ID, lobby2.ID}, specIds)
 
-	lobby.RemoveSpectator(player)
+	lobby.RemoveSpectator(player, false)
 	isSpectating = player.IsSpectatingId(lobby.ID)
 	assert.False(t, isSpectating)
 }

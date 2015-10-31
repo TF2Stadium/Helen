@@ -233,7 +233,7 @@ func TestSpectators(t *testing.T) {
 	assert.Equal(t, 2, len(specs))
 	assert.Equal(t, true, specs[0].IsSpectatingId(lobby.ID))
 
-	err = lobby.RemoveSpectator(player)
+	err = lobby.RemoveSpectator(player, false)
 	assert.Nil(t, err)
 
 	specs = nil
