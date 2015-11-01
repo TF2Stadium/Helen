@@ -80,6 +80,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY")
 	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST")
 	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT")
+	overrideFromEnv(&Constants.DbDatabase, "DATABASE_NAME")
 	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
 	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
 	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT")

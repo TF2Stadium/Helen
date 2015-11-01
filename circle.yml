@@ -1,17 +1,19 @@
 machine:
   services:
     - postgresql
+  environment:
+    IMPORT_PATH: "github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+    DATABASE_NAME: circle_test
+    DATABASE_USER: ubuntu
+    DATABASE_PASSWORD:
 dependencies:
   override:
     - go get github.com/stretchr/testify/assert
 test:
   override:
-    - rm -rf ~/.go_workspace/src/github.com/TF2Stadium/Helen
-    - mv ../Helen ~/.go_workspace/src/github.com/TF2Stadium/Helen
-    - cd ~/.go_workspace/src/github.com/TF2Stadium/Helen
+    - mkdir -p "$GOPATH/src/$IMPORT_PATH"
+    - rsync -azC --delete ./ "$GOPATH/src/$IMPORT_PATH/"
     - go get
-    - psql -c "CREATE ROLE TESTtf2stadium WITH PASSWORD 'dickbutt';"
-    - createdb TESTtf2stadium
     - go test ./...
 deployment:
   dev:
