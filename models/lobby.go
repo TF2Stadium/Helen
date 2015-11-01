@@ -430,6 +430,7 @@ func (lobby *Lobby) UpdateStats() {
 		player.Stats.PlayedCountIncrease(lobby.Type)
 		player.Save()
 	}
+	lobby.OnChange(false)
 }
 
 func (lobby *Lobby) setInGameStatus(player *Player, inGame bool) error {
