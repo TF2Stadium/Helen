@@ -7,10 +7,10 @@ dependencies:
 test:
   override:
     - rm -rf ~/.go_workspace/src/github.com/TF2Stadium/Helen
-    - mv Helen ~/.go_workspace/src/github.com/TF2Stadium/Helen
+    - mv ../Helen ~/.go_workspace/src/github.com/TF2Stadium/Helen
     - cd ~/.go_workspace/src/github.com/TF2Stadium/Helen
     - go get
-    - psql -c "CREATE USER TESTtf2stadium WITH PASSWORD 'dickbutt';"
+    - psql -c "CREATE ROLE TESTtf2stadium WITH PASSWORD 'dickbutt';"
     - createdb TESTtf2stadium
     - go test ./...
 deployment:
