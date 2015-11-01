@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -88,6 +87,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if config.Constants.SteamIDWhitelist != "" && !controllerhelpers.WhitelistSteamID[steamid] {
 		//Use a more user-friendly message later
 		fmt.Fprintf(w, "Player isn't in the Alpha Whitelist.")
+		return
 	}
 	setSession(w, r, steamid)
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
