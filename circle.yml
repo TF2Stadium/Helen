@@ -19,7 +19,7 @@ test:
     - go test ./...
 deployment:
   dev:
-    branch: circleci
+    branch: dev
     commands:
       - mkdir binaries
       - go build -o binaries/helen-dev *.go
