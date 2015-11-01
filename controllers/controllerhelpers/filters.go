@@ -6,9 +6,12 @@ package controllerhelpers
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"strings"
 
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/bitly/go-simplejson"
 	"github.com/googollee/go-socket.io"
@@ -26,12 +29,36 @@ type FilterParams struct {
 	Params      map[string]Param
 }
 
+var WhitelistSteamIDs []string
+
+func InitSteamIDWhitelist(filename string) {
+	absName, _ := filepath.Abs(filename)
+	data, _ := ioutil.ReadFile(absName)
+	WhitelistSteamIDs = strings.Split(string(data), "\n")
+
+	for _, id := range WhitelistSteamIDs {
+		helpers.Logger.Debug("Whitelisting SteamID %s", id)
+	}
+}
+
 func FilterRequest(so socketio.Socket, filters FilterParams, f func(map[string]interface{}) string) func(string) string {
 
 	return func(jsonStr string) string {
 		if filters.FilterLogin && !IsLoggedInSocket(so.Id()) {
-
 			bytes, _ := BuildFailureJSON("Player isn't logged in.", -4).Encode()
+			return string(bytes)
+		}
+
+		var allow bool
+		steamid := GetSteamId(so.Id())
+		for _, id := range WhitelistSteamIDs {
+			if id == steamid {
+				allow = true
+				break
+			}
+		}
+		if !allow {
+			bytes, _ := BuildFailureJSON("Player isn't in the Whitelist.", -4).Encode()
 			return string(bytes)
 		}
 

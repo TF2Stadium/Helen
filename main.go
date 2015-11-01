@@ -36,6 +36,9 @@ func main() {
 	go models.ReadyTimeoutListener()
 	StartListener()
 	chelpers.StartGlobalLogger()
+	if config.Constants.SteamIDWhitelist != "" {
+		chelpers.InitSteamIDWhitelist(config.Constants.SteamIDWhitelist)
+	}
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 	helpers.Logger.Debug("Starting the server")
 

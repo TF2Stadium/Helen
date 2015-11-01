@@ -26,6 +26,7 @@ type constants struct {
 	ServerMockUp       bool
 	ChatLogsEnabled    bool
 	MockupAuth         bool
+	SteamIDWhitelist   string
 	AllowedCorsOrigins []string
 
 	// database
@@ -89,6 +90,8 @@ func SetupConstants() {
 	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_DISABLE")
 	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
+	overrideFromEnv(&Constants.SteamIDWhitelist, "STEAMID_WHITELIST")
+
 	// conditional assignments
 
 	if Constants.SteamDevApiKey == "your steam dev api key" && !Constants.SteamApiMockUp {
