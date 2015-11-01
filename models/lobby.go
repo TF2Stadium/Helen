@@ -432,6 +432,28 @@ func (lobby *Lobby) UpdateStats() {
 	}
 }
 
+func (lobby *Lobby) setInGameStatus(player *Player, inGame bool) error {
+	var slot *LobbySlot
+	err := db.DB.Where("player_id = ? AND lobby_id = ? ").First(slot).Error
+	if err != nil {
+		return err
+	}
+
+	slot.InGame = true
+	db.DB.Save(slot)
+	lobby.OnChange(false)
+
+	return nil
+}
+
+func (lobby *Lobby) SetInGame(player *Player) error {
+	return lobby.setInGameStatus(player, true)
+}
+
+func (lobby *Lobby) SetNotInGame(player *Player) error {
+	return lobby.setInGameStatus(player, false)
+}
+
 // GORM callback
 func (lobby *Lobby) AfterFind() error {
 	if (lobby.ServerInfo == ServerRecord{}) {
