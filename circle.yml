@@ -11,9 +11,9 @@ dependencies:
     - go get github.com/stretchr/testify/assert
 test:
   override:
-    - mkdir -p "$GOPATH/src/$IMPORT_PATH"
-    - rsync -azC --delete ./ "$GOPATH/src/$IMPORT_PATH/"
-    - cd "$GOPATH/src/$IMPORT_PATH"
+    - mkdir -p "~/.go_workspace/src/$IMPORT_PATH"
+    - rsync -azC --delete ./ "~/.go_workspace/src/$IMPORT_PATH/"
+    - cd "~/.go_workspace/src/$IMPORT_PATH"
     - go get
     - go test ./...
 deployment:
