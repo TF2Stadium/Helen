@@ -11,7 +11,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/bitly/go-simplejson"
@@ -51,12 +50,12 @@ func FilterRequest(so socketio.Socket, filters FilterParams, f func(map[string]i
 			return string(bytes)
 		}
 
-		steamid := GetSteamId(so.Id())
+		// steamid := GetSteamId(so.Id())
 
-		if config.Constants.SteamIDWhitelist != "" && !WhitelistSteamID[steamid] {
-			bytes, _ := BuildFailureJSON("Player isn't in the Whitelist.", -4).Encode()
-			return string(bytes)
-		}
+		// if config.Constants.SteamIDWhitelist != "" && !WhitelistSteamID[steamid] {
+		// 	bytes, _ := BuildFailureJSON("Player isn't in the Whitelist.", -4).Encode()
+		// 	return string(bytes)
+		// }
 
 		// Careful: this assumes normal players can do everything (since helpers.RolePlayer==0)
 		if int(filters.Action) != 0 {
@@ -112,7 +111,7 @@ func FilterRequest(so socketio.Socket, filters FilterParams, f func(map[string]i
 				return string(bytes)
 			}
 
-			errFormat := `Paramter "%s" not valid`
+			errFormat := `Paramter "%s" not valid, or of invalid type.`
 
 			if param.In != nil {
 				switch param.Kind {
