@@ -1,0 +1,27 @@
+machine:
+  services:
+    - postgresql
+  environment:
+    IMPORT_PATH: "github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+    DATABASE_NAME: "circle_test"
+    DATABASE_USERNAME: "ubuntu"
+    DATABASE_PASSWORD: ""
+    GOBIN: $GOPATH/bin
+dependencies:
+  override:
+    - go get github.com/stretchr/testify/assert
+test:
+  override:
+    - mkdir -p ~/.go_workspace/src/$IMPORT_PATH
+    - rsync -azC --delete ./ ~/.go_workspace/src/$IMPORT_PATH/
+    - cd ~/.go_workspace/src/$IMPORT_PATH
+    - go get
+    - go test ./...
+deployment:
+  dev:
+    branch: dev
+    commands:
+      - mkdir binaries
+      - go build -o binaries/helen-dev *.go
+      - rsync -rl -e "ssh -p $SSH_PORT" binaries/helen-dev $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_DEV
+      - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_DEV
