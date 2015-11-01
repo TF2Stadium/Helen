@@ -3,9 +3,9 @@ machine:
     - postgresql
   environment:
     IMPORT_PATH: "github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
-    DATABASE_NAME: circle_test
-    DATABASE_USER: ubuntu
-    DATABASE_PASSWORD:
+    DATABASE_NAME: "circle_test"
+    DATABASE_USER: "ubuntu"
+    DATABASE_PASSWORD: ""
 dependencies:
   override:
     - go get github.com/stretchr/testify/assert
@@ -13,6 +13,7 @@ test:
   override:
     - mkdir -p "$GOPATH/src/$IMPORT_PATH"
     - rsync -azC --delete ./ "$GOPATH/src/$IMPORT_PATH/"
+    - cd "$GOPATH/src/$IMPORT_PATH"
     - go get
     - go test ./...
 deployment:
