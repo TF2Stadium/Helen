@@ -17,6 +17,10 @@ import (
 var roomFile = make(map[uint]*os.File)
 
 func CheckLogger() {
+	if !config.Constants.ChatLogsEnabled {
+		return
+	}
+
 	path, err := filepath.Abs(config.Constants.ChatLogsDir)
 	if err != nil {
 		helpers.Logger.Fatalf("%s", err.Error())
