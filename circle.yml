@@ -6,6 +6,7 @@ machine:
     DATABASE_NAME: "circle_test"
     DATABASE_USERNAME: "ubuntu"
     DATABASE_PASSWORD: ""
+    GOBIN: $GOPATH/bin
 dependencies:
   override:
     - go get github.com/stretchr/testify/assert
@@ -22,5 +23,5 @@ deployment:
     commands:
       - mkdir binaries
       - go build -o binaries/helen-dev *.go
-      - rsync -rl -e "ssh -p $SSH_PORT" dist/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_DEV
+      - rsync -rl -e "ssh -p $SSH_PORT" binaries/helen-dev $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_DEV
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_DEV
