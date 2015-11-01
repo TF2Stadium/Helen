@@ -159,7 +159,6 @@ func LobbyClose(so socketio.Socket) func(string) string {
 			helpers.LockRecord(lob.ID, lob)
 			lob.Close(true)
 			helpers.UnlockRecord(lob.ID, lob)
-			chelpers.StopLogger(lobbyid)
 			models.BroadcastLobbyList() // has to be done manually for now
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()

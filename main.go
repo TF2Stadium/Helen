@@ -35,7 +35,7 @@ func main() {
 	models.PaulingConnect()
 	go models.ReadyTimeoutListener()
 	StartListener()
-	chelpers.StartGlobalLogger()
+	chelpers.CheckLogger()
 	if config.Constants.SteamIDWhitelist != "" {
 		chelpers.InitSteamIDWhitelist(config.Constants.SteamIDWhitelist)
 	}

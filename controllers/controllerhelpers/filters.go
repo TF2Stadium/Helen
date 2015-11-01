@@ -51,6 +51,10 @@ func FilterRequest(so socketio.Socket, filters FilterParams, f func(map[string]i
 
 		var allow bool
 		steamid := GetSteamId(so.Id())
+		if len(WhitelistSteamIDs) == 0 {
+			allow = true
+		}
+
 		for _, id := range WhitelistSteamIDs {
 			if id == steamid {
 				allow = true
