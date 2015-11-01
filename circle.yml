@@ -6,8 +6,11 @@ dependencies:
     - go get github.com/stretchr/testify/assert
 test:
   override:
+    - rm -rf ~/.go_workspace/src/github.com/TF2Stadium/Helen
+    - mv Helen ~/.go_workspace/src/github.com/TF2Stadium/Helen
+    - cd ~/.go_workspace/src/github.com/TF2Stadium/Helen
     - go get
-    - createuser -sPw TESTtf2stadium
+    - psql -c "CREATE USER TESTtf2stadium WITH PASSWORD 'dickbutt';"
     - createdb TESTtf2stadium
     - go test ./...
 deployment:
