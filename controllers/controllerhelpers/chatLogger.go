@@ -23,6 +23,7 @@ func CheckLogger() {
 	}
 
 	os.Mkdir(path, 0666)
+	helpers.Logger.Debug("Logging chat at directory %s", path)
 }
 
 func LogChat(room uint, name string, steamid string, message string) {
@@ -43,7 +44,6 @@ func LogChat(room uint, name string, steamid string, message string) {
 		helpers.Logger.Fatalf("%s", err.Error())
 	}
 
-	helpers.Logger.Debug("%s: %s", name, message)
 	file.Seek(0, 2)
 	fmt.Fprintf(file, "%s<%s>: %s\n", name, steamid, message)
 	file.Close()
