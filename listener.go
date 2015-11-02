@@ -132,7 +132,7 @@ func eventListener() {
 
 			lobby, _ := models.GetLobbyById(lobbyid)
 
-			helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ServerInfo.Host)
+			helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
 			helpers.LockRecord(lobby.ID, lobby)
 			lobby.Close(false)
