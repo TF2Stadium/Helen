@@ -149,11 +149,10 @@ func (player *Player) GetSpectatingIds() ([]uint, *helpers.TPError) {
 
 func (player *Player) UpdatePlayerInfo() error {
 	scraper.SetSteamApiKey(config.Constants.SteamDevApiKey)
-	p, playErr := GetPlayerBySteamId(player.SteamId)
+	p, _ := GetPlayerBySteamId(player.SteamId)
 
-	// nil = player not in db
-	if playErr == nil {
-		player = p
+	if p != nil {
+		*player = *p
 	}
 
 	playerInfo, infoErr := scraper.GetPlayerInfo(player.SteamId)
