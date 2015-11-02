@@ -44,7 +44,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	session.Options = &sessions.Options{MaxAge: -1}
 	session.Save(r, w)
 
-	http.Redirect(w, r, "/", 303)
+	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
 func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
