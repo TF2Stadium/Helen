@@ -91,6 +91,7 @@ func SocketInit(so socketio.Socket) {
 		so.On("debugLobbyReady", handler.DebugLobbyReady(so))
 		so.On("debugGetAllLobbies", handler.DebugRequestAllLobbies(so))
 		so.On("debugRequestLobbyStart", handler.DebugRequestLobbyStart(so))
+		so.On("debugUpdateStatsFilter", handler.DebugUpdateStatsFilter(so))
 	}
 
 	so.Emit("socketInitialized", "")

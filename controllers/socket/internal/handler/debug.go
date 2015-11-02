@@ -118,3 +118,25 @@ func DebugRequestLobbyStart(so socketio.Socket) func(string) string {
 			return string(bytes)
 		})
 }
+
+var debugUpdateStatsFilter = chelpers.FilterParams{
+	FilterLogin: true,
+	Params: map[string]chelpers.Param{
+		"id": chelpers.Param{Kind: reflect.Uint},
+	},
+}
+
+func DebugUpdateStatsFilter(so socketio.Socket) func(string) string {
+	return chelpers.FilterRequest(so, debugUpdateStatsFilter,
+		func(params map[string]interface{}) string {
+			lobby, err := models.GetLobbyById(params["id"].(uint))
+			if err != nil {
+				bytes, _ := err.ErrorJSON().Encode()
+				return string(bytes)
+			}
+			lobby.UpdateStats()
+
+			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+			return string(bytes)
+		})
+}
