@@ -5,6 +5,8 @@
 package socket
 
 import (
+	"encoding/json"
+
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -12,7 +14,42 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/googollee/go-socket.io"
+	"github.com/vibhavp/wsevent"
 )
+
+func onDisconnect(id string) {
+	chelpers.DeauthenticateSocket(id)
+	if chelpers.IsLoggedInSocket(id) {
+		steamid := chelpers.GetSteamId(id)
+		broadcaster.RemoveSocket(steamid)
+	}
+	helpers.Logger.Debug("Disconnected from Socket")
+}
+
+func getEvent(data string) string {
+	var js struct {
+		Request string
+	}
+	json.Unmarshal([]byte(data), &js)
+	return js.Request
+}
+
+func ServerInit(server *wsevent.Server) {
+	server.OnDisconnect = onDisconnect
+	server.Extractor = getEvent
+
+	server.On("authenticationTest", func(so *wsevent.Client, data string) {
+		reqerr := chelpers.FilterRequest(so, 0, true)
+
+		if reqerr != nil {
+			bytes, _ := reqerr.ErrorJSON().Encode()
+			return string(bytes)
+		}
+
+		return "authenticated"
+	})
+
+}
 
 func SocketInit(so socketio.Socket) {
 	chelpers.AuthenticateSocket(so.Id(), so.Request())
@@ -62,11 +99,7 @@ func SocketInit(so socketio.Socket) {
 
 	so.On("lobbyJoin", handler.LobbyJoin(so))
 
-	if loggedIn {
-		so.On("lobbySpectatorJoin", handler.LobbySpectatorJoin(so))
-	} else {
-		so.On("lobbySpectatorJoin", handler.LobbyNoLoginSpectatorJoin(so))
-	}
+	so.On("lobbySpectatorJoin", handler.LobbySpectatorJoin(so))
 	so.On("lobbyKick", handler.LobbyKick(so))
 
 	so.On("playerReady", handler.PlayerReady(so))

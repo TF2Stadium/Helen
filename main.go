@@ -22,6 +22,7 @@ import (
 	"github.com/TF2Stadium/Helen/routes"
 	"github.com/googollee/go-socket.io"
 	"github.com/rs/cors"
+	"github.com/vibhavp/wsevent"
 )
 
 func main() {
@@ -46,10 +47,8 @@ func main() {
 	routes.SetupHTTPRoutes()
 
 	// init socket.io server
-	socketServer, err := socketio.NewServer(nil)
-	if err != nil {
-		helpers.Logger.Fatal(err.Error())
-	}
+	socketServer := wsevent.NewServer()
+
 	broadcaster.Init(socketServer)
 	defer broadcaster.Stop()
 	routes.SetupSocketRoutes(socketServer)
