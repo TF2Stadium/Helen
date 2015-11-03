@@ -494,8 +494,14 @@ func PlayerNotReady(so socketio.Socket) func(string) string {
 				bytes, _ := tperr.ErrorJSON().Encode()
 				return string(bytes)
 			}
-
-			lobby.UnreadyAllPlayers()
+			helpers.LockRecord(lobby.ID, lobby)
+			if lobby.State == models.LobbyStateReadyingUp {
+				lobby.UnreadyAllPlayers()
+			}
+			lobby.State = models.LobbyStateInProgress
+			lobby.Save()
+			models.TimeoutStopMap[lobby.ID] <- true
+			helpers.UnlockRecord(lobby.ID, lobby)
 
 			bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 			return string(bytes)
