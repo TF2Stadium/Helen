@@ -14,13 +14,13 @@ import (
 	"github.com/TF2Stadium/Helen/config/stores"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes"
-	"github.com/googollee/go-socket.io"
 	"github.com/rs/cors"
 	"github.com/vibhavp/wsevent"
 )
@@ -44,15 +44,13 @@ func main() {
 	helpers.Logger.Debug("Starting the server")
 
 	// init http server
-	routes.SetupHTTPRoutes()
 
 	// init socket.io server
-	socketServer := wsevent.NewServer()
-
-	broadcaster.Init(socketServer)
-	defer broadcaster.Stop()
-	routes.SetupSocketRoutes(socketServer)
-	http.Handle("/socket.io/", socketServer)
+	server := wsevent.NewServer()
+	broadcaster.Init(server)
+	socket.ServerInit(server)
+	routes.SetupHTTPRoutes(server)
+	go server.Listener()
 
 	// init static FileServer
 	// TODO be careful to set this to correct location when deploying

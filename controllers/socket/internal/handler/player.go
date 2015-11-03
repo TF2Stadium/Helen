@@ -4,12 +4,10 @@ import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
-	"github.com/googollee/go-socket.io"
 	"github.com/vibhavp/wsevent"
-	"reflect"
 )
 
-func PlayerSettingsGet(so *wsevent.Client, data string) string {
+func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
@@ -30,7 +28,7 @@ func PlayerSettingsGet(so *wsevent.Client, data string) string {
 
 	var settings []models.PlayerSetting
 	var setting models.PlayerSetting
-	if key == "" {
+	if args.Key == "*" {
 		settings, err = player.GetSettings()
 	} else {
 		setting, err = player.GetSetting(args.Key)
@@ -47,7 +45,7 @@ func PlayerSettingsGet(so *wsevent.Client, data string) string {
 	return string(resp)
 }
 
-func PlayerSettingsSet(so socketio.Socket) func(string) string {
+func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
@@ -77,14 +75,7 @@ func PlayerSettingsSet(so socketio.Socket) func(string) string {
 	return string(resp)
 }
 
-var playerProfileFilter = chelpers.FilterParams{
-	FilterLogin: true,
-	Params: map[string]chelpers.Param{
-		"steamid": chelpers.Param{Kind: reflect.String, Default: ""},
-	},
-}
-
-func PlayerProfile(so socketio.Socket) func(string) string {
+func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {

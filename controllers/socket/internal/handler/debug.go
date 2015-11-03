@@ -17,11 +17,10 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/bitly/go-simplejson"
-	"github.com/googollee/go-socket.io"
 	"github.com/vibhavp/wsevent"
 )
 
-func DebugLobbyFill(so *wsevent.Client, data string) string {
+func DebugLobbyFill(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
@@ -61,7 +60,7 @@ func DebugLobbyFill(so *wsevent.Client, data string) string {
 
 }
 
-func DebugLobbyReady(so *wsevent.Client, data string) string {
+func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
@@ -94,7 +93,7 @@ func DebugLobbyReady(so *wsevent.Client, data string) string {
 
 }
 
-func DebugRequestAllLobbies(so *wsevent.Client, data string) string {
+func DebugRequestAllLobbies(server *wsevent.Server, so *wsevent.Client, data string) string {
 	var lobbies []models.Lobby
 	db.DB.Where("state <> ?", models.LobbyStateEnded).Find(&lobbies)
 	list, err := models.DecorateLobbyListData(lobbies)
@@ -115,7 +114,7 @@ func DebugRequestAllLobbies(so *wsevent.Client, data string) string {
 
 }
 
-func DebugRequestLobbyStart(so *wsevent.Client, data string) string {
+func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
@@ -150,7 +149,7 @@ var debugUpdateStatsFilter = chelpers.FilterParams{
 	},
 }
 
-func DebugUpdateStatsFilter(so *wsevent.Client, data string) string {
+func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {

@@ -34,12 +34,7 @@ var adminChangeRoleFilter = chelpers.FilterParams{
 	},
 }
 
-//adminChangeRoleFilter,
-//func(params map[string]interface{}) string {
-//return ChangeRole(&so, params["role"].(string), params["steamid"].(string))
-//})
-
-func AdminChangeRole(so *wsevent.Client, data string) string {
+func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {

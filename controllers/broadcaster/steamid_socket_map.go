@@ -1,14 +1,15 @@
 package broadcaster
 
 import (
-	"github.com/googollee/go-socket.io"
 	"sync"
+
+	"github.com/vibhavp/wsevent"
 )
 
-var steamIdSocketMap = make(map[string]socketio.Socket)
-var steamIdSocketMapLock sync.Mutex
+var steamIdSocketMap = make(map[string]*wsevent.Client)
+var steamIdSocketMapLock = new(sync.RWMutex)
 
-func SetSocket(steamid string, so socketio.Socket) {
+func SetSocket(steamid string, so *wsevent.Client) {
 	steamIdSocketMapLock.Lock()
 	defer steamIdSocketMapLock.Unlock()
 
@@ -22,9 +23,9 @@ func RemoveSocket(steamid string) {
 	delete(steamIdSocketMap, steamid)
 }
 
-func GetSocket(steamid string) (so socketio.Socket, success bool) {
-	steamIdSocketMapLock.Lock()
-	defer steamIdSocketMapLock.Unlock()
+func GetSocket(steamid string) (so *wsevent.Client, success bool) {
+	steamIdSocketMapLock.RLock()
+	defer steamIdSocketMapLock.RUnlock()
 
 	so, success = steamIdSocketMap[steamid]
 	return

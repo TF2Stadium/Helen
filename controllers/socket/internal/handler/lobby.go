@@ -9,7 +9,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -21,7 +20,7 @@ import (
 	"github.com/vibhavp/wsevent"
 )
 
-func LobbyCreate(so *wsevent.Client, data string) string {
+func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -92,16 +91,7 @@ func LobbyCreate(so *wsevent.Client, data string) string {
 	return string(bytes)
 }
 
-var serverVerifyFilters = chelpers.FilterParams{
-	Action:      authority.AuthAction(0),
-	FilterLogin: true,
-	Params: map[string]chelpers.Param{
-		"server":  {Kind: reflect.String},
-		"rconpwd": {Kind: reflect.String},
-	},
-}
-
-func ServerVerify(so *wsevent.Client, data string) string {
+func ServerVerify(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -134,15 +124,7 @@ func ServerVerify(so *wsevent.Client, data string) string {
 
 }
 
-var lobbyCloseFilters = chelpers.FilterParams{
-	Action:      authority.AuthAction(0),
-	FilterLogin: true,
-	Params: map[string]chelpers.Param{
-		"id": chelpers.Param{Kind: reflect.Uint},
-	},
-}
-
-func LobbyClose(so *wsevent.Client, data string) string {
+func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -187,17 +169,7 @@ func LobbyClose(so *wsevent.Client, data string) string {
 
 }
 
-var lobbyJoinFilters = chelpers.FilterParams{
-	Action:      authority.AuthAction(0),
-	FilterLogin: true,
-	Params: map[string]chelpers.Param{
-		"id":    chelpers.Param{Kind: reflect.Uint},
-		"class": chelpers.Param{Kind: reflect.String},
-		"team":  chelpers.Param{Kind: reflect.String},
-	},
-}
-
-func LobbyJoin(so *wsevent.Client, data string) string {
+func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -251,7 +223,7 @@ func LobbyJoin(so *wsevent.Client, data string) string {
 	}
 
 	if !sameLobby {
-		chelpers.AfterLobbyJoin(so, lob, player)
+		chelpers.AfterLobbyJoin(server, so, lob, player)
 	}
 
 	if lob.IsFull() {
@@ -270,7 +242,7 @@ func LobbyJoin(so *wsevent.Client, data string) string {
 	return string(bytes)
 }
 
-func LobbySpectatorJoin(so *wsevent.Client, data string) string {
+func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 	var noLogin bool
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
@@ -299,7 +271,7 @@ func LobbySpectatorJoin(so *wsevent.Client, data string) string {
 
 	if noLogin {
 
-		chelpers.AfterLobbySpec(so, lob)
+		chelpers.AfterLobbySpec(server, so, lob)
 		bytes, _ := models.DecorateLobbyDataJSON(lob, true).Encode()
 
 		reply, _ := json.Marshal(struct {
@@ -332,12 +304,12 @@ func LobbySpectatorJoin(so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	chelpers.AfterLobbySpec(so, lob)
+	chelpers.AfterLobbySpec(server, so, lob)
 	models.BroadcastLobbyToUser(lob, player.SteamId)
 	return string(bytes)
 }
 
-func LobbyKick(so *wsevent.Client, data string) string {
+func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -406,9 +378,9 @@ func LobbyKick(so *wsevent.Client, data string) string {
 	}
 
 	if !spec {
-		chelpers.AfterLobbyLeave(so, lob, player)
+		chelpers.AfterLobbyLeave(server, so, lob, player)
 	} else {
-		chelpers.AfterLobbySpecLeave(so, lob)
+		chelpers.AfterLobbySpecLeave(server, so, lob)
 	}
 
 	if !self {
@@ -421,11 +393,10 @@ func LobbyKick(so *wsevent.Client, data string) string {
 	return string(bytes)
 }
 
-func PlayerReady(so *wsevent.Client, data string) string {
+func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		bool = true
 		bytes, _ := reqerr.ErrorJSON().Encode()
 		return string(bytes)
 	}
@@ -478,11 +449,10 @@ func PlayerReady(so *wsevent.Client, data string) string {
 	return string(bytes)
 }
 
-func PlayerNotReady(so *wsevent.Client) string {
+func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		bool = true
 		bytes, _ := reqerr.ErrorJSON().Encode()
 		return string(bytes)
 	}
@@ -527,14 +497,14 @@ func PlayerNotReady(so *wsevent.Client) string {
 	return string(bytes)
 }
 
-func RequestLobbyListData(so *wsevent.Client, data string) string {
+func RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	var lobbies []models.Lobby
 	db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	list, err := models.DecorateLobbyListData(lobbies)
 	if err != nil {
 		helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
 	} else {
-		so.Emit("lobbyListData", list)
+		so.EmitJSON(helpers.NewRequest("lobbyListData", []byte(list)))
 	}
 
 	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()

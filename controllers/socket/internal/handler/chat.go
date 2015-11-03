@@ -6,7 +6,6 @@ package handler
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 	"time"
 
@@ -19,7 +18,7 @@ import (
 	"github.com/vibhavp/wsevent"
 )
 
-func ChatSend(so *wsevent.Client, data string) string {
+func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {

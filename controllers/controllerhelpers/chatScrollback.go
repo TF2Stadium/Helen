@@ -4,7 +4,8 @@ import (
 	"container/ring"
 	"sync"
 
-	"github.com/googollee/go-socket.io"
+	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/vibhavp/wsevent"
 )
 
 type chatRing struct {
@@ -37,10 +38,10 @@ func AddScrollbackMessage(room uint, message string) {
 	c.curr = c.curr.Next()
 }
 
-func BroadcastScrollback(so socketio.Socket, room uint) {
+func BroadcastScrollback(so *wsevent.Client, room uint) {
 
-	so.Emit("chatHistoryClear", "{}")
-	
+	so.EmitJSON(helpers.NewRequest("chatHistoryClear", []byte("{}")))
+
 	c, ok := chatScrollback[room]
 	if !ok {
 		return
@@ -58,7 +59,7 @@ func BroadcastScrollback(so socketio.Socket, room uint) {
 		if curr.Value == nil {
 			return
 		}
-		so.Emit("chatReceive", curr.Value.(string))
+		so.EmitJSON(helpers.NewRequest("chatReceive", []byte(curr.Value.(string))))
 		curr = curr.Next()
 	}
 }
