@@ -13,9 +13,9 @@ dependencies:
 test:
   override:
     - mkdir -p ~/.go_workspace/src/$IMPORT_PATH
-    - rsync -azC --delete ./ ~/.go_workspace/src/$IMPORT_PATH/
     - cd ~/.go_workspace/src/$IMPORT_PATH
     - go get
+    - rsync -azC --delete ~/$CIRCLE_PROJECT_REPONAME ~/.go_workspace/src/$IMPORT_PATH/
     - go test ./...
 deployment:
   dev:
