@@ -504,7 +504,7 @@ func RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data string) st
 	if err != nil {
 		helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
 	} else {
-		so.EmitJSON(helpers.NewRequest("lobbyListData", []byte(list)))
+		so.EmitJSON(helpers.NewRequest("lobbyListData", list))
 	}
 
 	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()

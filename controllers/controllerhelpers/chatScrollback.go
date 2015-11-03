@@ -40,7 +40,7 @@ func AddScrollbackMessage(room uint, message string) {
 
 func BroadcastScrollback(so *wsevent.Client, room uint) {
 
-	so.EmitJSON(helpers.NewRequest("chatHistoryClear", []byte("{}")))
+	so.EmitJSON(helpers.NewRequest("chatHistoryClear", "{}"))
 
 	c, ok := chatScrollback[room]
 	if !ok {
@@ -59,7 +59,7 @@ func BroadcastScrollback(so *wsevent.Client, room uint) {
 		if curr.Value == nil {
 			return
 		}
-		so.EmitJSON(helpers.NewRequest("chatReceive", []byte(curr.Value.(string))))
+		so.EmitJSON(helpers.NewRequest("chatReceive", curr.Value.(string)))
 		curr = curr.Next()
 	}
 }

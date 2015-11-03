@@ -24,9 +24,9 @@ func SendMessage(steamid string, event string, content string) {
 		helpers.Logger.Critical("Failed to get the user's socket: %s", steamid)
 		return
 	}
-	socket.EmitJSON(helpers.NewRequest(event, []byte(content)))
+	socket.EmitJSON(helpers.NewRequest(event, content))
 }
 
 func SendMessageToRoom(room string, event string, content string) {
-	socketServer.BroadcastJSON(room, helpers.NewRequest(event, []byte(content)))
+	socketServer.BroadcastJSON(room, helpers.NewRequest(event, content))
 }

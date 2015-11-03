@@ -62,7 +62,7 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 		return
 	}
 
-	so.EmitJSON(helpers.NewRequest("lobbyListData", []byte(list)))
+	so.EmitJSON(helpers.NewRequest("lobbyListData", list))
 	BroadcastScrollback(so, 0)
 }
 

@@ -89,9 +89,9 @@ func SocketInit(server *wsevent.Server, so *wsevent.Client) {
 
 		chelpers.AfterConnectLoggedIn(server, so, player)
 	} else {
-		so.EmitJSON(helpers.NewRequest("playerSettings", []byte("{}")))
-		so.EmitJSON(helpers.NewRequest("playerProfile", []byte("{}")))
+		so.EmitJSON(helpers.NewRequest("playerSettings", "{}"))
+		so.EmitJSON(helpers.NewRequest("playerProfile", "{}"))
 	}
 
-	so.EmitJSON(helpers.NewRequest("socketInitialized", []byte{}))
+	so.EmitJSON(helpers.NewRequest("socketInitialized", ""))
 }
