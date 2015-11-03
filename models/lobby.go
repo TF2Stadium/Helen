@@ -425,8 +425,13 @@ func (lobby *Lobby) UpdateStats() {
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
 
 	for _, slot := range slots {
-		var player *Player
-		db.DB.Preload("Stats").First(slot.ID, player)
+		player := &Player{}
+		err := db.DB.First(player, slot.PlayerId).Error
+		if err != nil {
+			helpers.Logger.Critical("%s", err.Error())
+			return
+		}
+		db.DB.Preload("Stats").First(player, slot.PlayerId)
 		player.Stats.PlayedCountIncrease(lobby.Type)
 		player.Save()
 	}
