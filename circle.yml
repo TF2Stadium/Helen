@@ -12,9 +12,9 @@ dependencies:
     - go get github.com/stretchr/testify/assert
 test:
   override:
+    - go get
     - mkdir -p ~/.go_workspace/src/$IMPORT_PATH
     - cd ~/.go_workspace/src/$IMPORT_PATH
-    - go get
     - rsync -azC --delete ~/$CIRCLE_PROJECT_REPONAME ~/.go_workspace/src/$IMPORT_PATH/
     - go test ./...
 deployment:
