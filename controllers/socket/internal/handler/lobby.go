@@ -180,13 +180,13 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 	var args struct {
 		Id    uint   `json:"id"`
 		Class string `json:"class"`
-		Team  string `json:"team" valid:"red,blue"`
+		Team  string `json:"team" valid:"red,blu"`
 	}
-
 	if err := chelpers.GetParams(data, &args); err != nil {
 		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
 		return string(bytes)
 	}
+	helpers.Logger.Debug("id %d class %s team %s", args.Id, args.Class, args.Team)
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
