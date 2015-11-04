@@ -33,8 +33,8 @@ func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 
 func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby,
 	player *models.Player) {
-	server.RemoveClient(so, fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
-	server.RemoveClient(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+	server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
+	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 }
 
 func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
@@ -43,7 +43,7 @@ func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 }
 
 func AfterLobbySpecLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
-	server.RemoveClient(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 }
 
 func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
