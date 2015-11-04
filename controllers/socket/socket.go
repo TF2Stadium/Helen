@@ -76,8 +76,14 @@ func ServerInit(server *wsevent.Server) {
 }
 
 func SocketInit(server *wsevent.Server, so *wsevent.Client) {
-	chelpers.AfterConnect(server, so)
+	chelpers.AuthenticateSocket(so.Id(), so.Request())
 	loggedIn := chelpers.IsLoggedInSocket(so.Id())
+	if loggedIn {
+		steamid := chelpers.GetSteamId(so.Id())
+		broadcaster.SetSocket(steamid, so)
+	}
+
+	chelpers.AfterConnect(server, so)
 	if loggedIn {
 		player, err := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 		if err != nil {
@@ -93,5 +99,5 @@ func SocketInit(server *wsevent.Server, so *wsevent.Client) {
 		so.EmitJSON(helpers.NewRequest("playerProfile", "{}"))
 	}
 
-	so.EmitJSON(helpers.NewRequest("socketInitialized", ""))
+	so.EmitJSON(helpers.NewRequest("socketInitialized", "{}"))
 }
