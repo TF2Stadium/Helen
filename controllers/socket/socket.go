@@ -45,7 +45,10 @@ func ServerInit(server *wsevent.Server) {
 			return string(bytes)
 		}
 
-		return "authenticated"
+		bytes, _ := json.Marshal(struct {
+			Message string `json:"message"`
+		}{"authenticated"})
+		return string(bytes)
 	})
 	//Lobby Handlers
 	server.On("lobbyCreate", handler.LobbyCreate)
