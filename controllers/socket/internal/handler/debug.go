@@ -142,13 +142,6 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 	return string(bytes)
 }
 
-var debugUpdateStatsFilter = chelpers.FilterParams{
-	FilterLogin: true,
-	Params: map[string]chelpers.Param{
-		"id": chelpers.Param{Kind: reflect.Uint},
-	},
-}
-
 func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 

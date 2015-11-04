@@ -25,15 +25,6 @@ func (f FakeResponseWriter) Write(b []byte) (int, error) {
 }
 func (f FakeResponseWriter) WriteHeader(int) {}
 
-var adminChangeRoleFilter = chelpers.FilterParams{
-	Action:      helpers.ActionChangeRole,
-	FilterLogin: true,
-	Params: map[string]chelpers.Param{
-		"steamid": chelpers.Param{Kind: reflect.String},
-		"role":    chelpers.Param{Kind: reflect.String},
-	},
-}
-
 func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 

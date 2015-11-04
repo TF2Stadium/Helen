@@ -8,25 +8,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
-	"reflect"
 	"strings"
 
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/vibhavp/wsevent"
 )
-
-type Param struct {
-	Kind    reflect.Kind
-	Default interface{}
-	In      interface{}
-}
-
-type FilterParams struct {
-	Action      authority.AuthAction
-	FilterLogin bool
-	Params      map[string]Param
-}
 
 var WhitelistSteamID = make(map[string]bool)
 
@@ -42,6 +29,10 @@ func InitSteamIDWhitelist(filename string) {
 }
 
 func FilterRequest(so *wsevent.Client, action authority.AuthAction, login bool) (err *helpers.TPError) {
+	if login && !IsLoggedInSocket(so.Id()) {
+		return helpers.NewTPError("Player isn't logged in.", -4)
+
+	}
 	if int(action) != 0 {
 		var role, _ = GetPlayerRole(so.Id())
 		can := role.Can(action)
