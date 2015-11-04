@@ -61,8 +61,8 @@ so.On("asdf", function() {
 })
 
 function sendAuthTest() {
-  so.Emit({request: "authenticationTest"}, "asdf", function(response){
-    alert(response)
+  so.Emit({request: "authenticationTest"}, function(s){
+    alert(JSON.parse(s))
   })
 }
 
