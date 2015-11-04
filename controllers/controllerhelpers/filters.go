@@ -6,8 +6,12 @@ package controllerhelpers
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/TF2Stadium/Helen/helpers"
@@ -44,5 +48,54 @@ func FilterRequest(so *wsevent.Client, action authority.AuthAction, login bool) 
 }
 
 func GetParams(data string, i interface{}) error {
-	return json.Unmarshal([]byte(data), i)
+	err := json.Unmarshal([]byte(data), i)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s: %x\n", data, i)
+	ptrValue := reflect.ValueOf(i)
+
+	st := reflect.Indirect(ptrValue).Type()
+	value := reflect.Indirect(ptrValue)
+
+	for i := 0; i < st.NumField(); i++ {
+		field := st.Field(i)
+		validTag := field.Tag.Get("valid")
+
+		if validTag == "" {
+			continue
+		}
+
+		arr := strings.Split(validTag, ",")
+		var valid bool
+	outer:
+		for _, validVal := range arr {
+			switch field.Type.Kind() {
+			case reflect.Uint:
+				num, err := strconv.ParseUint(validVal, 2, 32)
+				if err != nil {
+					panic(err.Error())
+				}
+
+				if reflect.DeepEqual(value.Field(i).Uint(), num) {
+					valid = true
+					break outer
+				}
+
+			case reflect.String:
+				if reflect.DeepEqual(value.Field(i).String(), validVal) {
+					valid = true
+					break outer
+				}
+
+			}
+		}
+		if !valid {
+			return errors.New(fmt.Sprintf("Field %s isn't valid.", field.Name))
+		}
+	}
+
+	return nil
 }
