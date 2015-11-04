@@ -56,6 +56,7 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 
 	var playErr error
 	if err == gorm.RecordNotFound {
+		// Successful first-time login
 		player, playErr = models.NewPlayer(steamid)
 
 		if playErr != nil {
@@ -63,7 +64,16 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 		}
 
 		database.DB.Create(player)
+	} else if err == nil {
+		// Successful repeat login
+		err = player.UpdatePlayerInfo()
+		if err == nil {
+			database.DB.Save(player)
+		} else {
+			helpers.Logger.Debug("Error updating player ", err)
+		}
 	} else if err != nil {
+		// Failed login
 		helpers.Logger.Debug("steamLogin.go:60 ", err)
 	}
 
