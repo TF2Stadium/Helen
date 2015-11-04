@@ -12,7 +12,6 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/vibhavp/wsevent"
-	"reflect"
 )
 
 type FakeResponseWriter struct{}
