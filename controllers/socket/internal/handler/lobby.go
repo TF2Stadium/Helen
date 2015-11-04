@@ -30,11 +30,11 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 
 	var args struct {
 		Map         string `json:"map"`
-		Type        string `json:"type"`
-		League      string `json:"league"`
+		Type        string `json:"type" valid:"debug,sixes,highlander"`
+		League      string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
 		Server      string `json:"server"`
 		RconPwd     string `json:"rconpwd"`
-		WhitelistID int    `json:"whitelistID"`
+		WhitelistID uint   `json:"whitelistID"`
 		Mumble      bool   `json:"mumbleRequired"`
 	}
 
@@ -73,7 +73,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		return err.Error()
 	}
 
-	lob := models.NewLobby(args.Map, lobbyType, args.League, info, args.WhitelistID, args.Mumble)
+	lob := models.NewLobby(args.Map, lobbyType, args.League, info, int(args.WhitelistID), args.Mumble)
 	lob.CreatedBySteamID = player.SteamId
 	lob.Save()
 	err = lob.SetupServer()
@@ -180,7 +180,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 	var args struct {
 		Id    uint   `json:"id"`
 		Class string `json:"class"`
-		Team  string `json:"team"`
+		Team  string `json:"team" valid:"red,blue"`
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
