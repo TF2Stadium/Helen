@@ -48,7 +48,8 @@ var createBox = function(so, messageName, messageFields) {
 
 var getCookie = function C(k){return(document.cookie.match('(^|; )'+k+'=([^;]*)')||0)[2]}
 
-var conn = new WebSocket("ws://localhost:8080/websocket/");
+var url = 'ws://' + window.location.hostname + ':' + window.location.port + '/websocket/';
+var conn = new WebSocket(url);
 
 var extract = function(obj) {
   return obj["request"]
