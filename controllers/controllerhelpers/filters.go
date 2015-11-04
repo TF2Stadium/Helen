@@ -54,7 +54,6 @@ func GetParams(data string, i interface{}) error {
 		return err
 	}
 
-	fmt.Printf("%s: %x\n", data, i)
 	ptrValue := reflect.ValueOf(i)
 
 	st := reflect.Indirect(ptrValue).Type()
