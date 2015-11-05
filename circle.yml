@@ -22,7 +22,7 @@ test:
   override:
     - ls
     - pwd
-    - go test ./...
+    - go test ./...:
         pwd:
           ../../../../../../../../../$GOPATH/src/$IMPORT_PATH/
 deployment:
