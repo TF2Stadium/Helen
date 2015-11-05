@@ -10,10 +10,14 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
-	"github.com/googollee/go-socket.io"
+	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/gorilla/websocket"
+	"github.com/vibhavp/wsevent"
 )
 
-func SetupHTTPRoutes() {
+var upgrader = websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool { return true }}
+
+func SetupHTTPRoutes(server *wsevent.Server) {
 	http.HandleFunc("/", controllers.MainHandler)
 	http.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
 	http.HandleFunc("/startLogin", controllers.LoginHandler)
@@ -21,8 +25,14 @@ func SetupHTTPRoutes() {
 	if config.Constants.MockupAuth {
 		http.HandleFunc("/startMockLogin/", controllers.MockLoginHandler)
 	}
-}
+	http.HandleFunc("/websocket/", func(w http.ResponseWriter, r *http.Request) {
+		so, err := server.NewClient(upgrader, w, r)
+		if err != nil {
+			helpers.Logger.Warning("%s", err.Error())
+			return
+		}
 
-func SetupSocketRoutes(server *socketio.Server) {
-	server.On("connection", socket.SocketInit)
+		helpers.Logger.Debug("Connected to Socket")
+		socket.SocketInit(server, so)
+	})
 }

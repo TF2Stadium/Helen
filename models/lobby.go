@@ -425,11 +425,39 @@ func (lobby *Lobby) UpdateStats() {
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
 
 	for _, slot := range slots {
-		var player *Player
-		db.DB.Preload("Stats").First(slot.ID, player)
+		player := &Player{}
+		err := db.DB.First(player, slot.PlayerId).Error
+		if err != nil {
+			helpers.Logger.Critical("%s", err.Error())
+			return
+		}
+		db.DB.Preload("Stats").First(player, slot.PlayerId)
 		player.Stats.PlayedCountIncrease(lobby.Type)
 		player.Save()
 	}
+	lobby.OnChange(false)
+}
+
+func (lobby *Lobby) setInGameStatus(player *Player, inGame bool) error {
+	var slot *LobbySlot
+	err := db.DB.Where("player_id = ? AND lobby_id = ? ").First(slot).Error
+	if err != nil {
+		return err
+	}
+
+	slot.InGame = true
+	db.DB.Save(slot)
+	lobby.OnChange(false)
+
+	return nil
+}
+
+func (lobby *Lobby) SetInGame(player *Player) error {
+	return lobby.setInGameStatus(player, true)
+}
+
+func (lobby *Lobby) SetNotInGame(player *Player) error {
+	return lobby.setInGameStatus(player, false)
 }
 
 // GORM callback

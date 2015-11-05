@@ -19,6 +19,7 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) *simplejso
 	if err == nil && includeDetails {
 		var player Player
 		db.DB.First(&player, playerId)
+		db.DB.Preload("Stats").First(&player, player.ID)
 
 		j.Set("player", DecoratePlayerSummaryJson(&player))
 		ready, _ := lobby.IsPlayerReady(&player)
