@@ -27,7 +27,7 @@ test:
           ../../../../../../../../../$GOPATH/src/$IMPORT_PATH/
 deployment:
   master:
-    branch: deploy_prod
+    branch: master
     commands:
       - mkdir binaries
       - go build -o binaries/helen-prod *.go
