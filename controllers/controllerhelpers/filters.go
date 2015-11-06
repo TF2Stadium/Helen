@@ -133,5 +133,3 @@ func GetParams(data string, v interface{}) error {
 
 	return nil
 }
-
-var a = `{A:1, B: null}`
