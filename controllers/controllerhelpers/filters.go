@@ -64,13 +64,31 @@ func GetParams(data string, v interface{}) error {
 
 		if field.Type.Kind() != reflect.String {
 			if fieldPtrValue.IsNil() {
-				return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
-					strings.ToLower(field.Name)))
+				emptyTag := field.Tag.Get("empty")
+				if emptyTag == "" {
+					return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
+						strings.ToLower(field.Name)))
+				}
+
+				switch fieldValue.Kind() {
+				case reflect.Uint:
+					num, err := strconv.ParseUint(emptyTag, 2, 32)
+					if err != nil {
+						panic(err.Error())
+					}
+					fieldValue.SetUint(num)
+				case reflect.String:
+					fieldValue.SetString(emptyTag)
+				case reflect.Bool:
+					fieldValue.SetBool(map[string]bool{
+						"true":  true,
+						"false": false}[emptyTag])
+				}
+				continue
 			}
-		} else if fieldValue.String() == "" {
+		} else if fieldValue.String() == "" && field.Tag.Get("empty") == "" {
 			return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
 				strings.ToLower(field.Name)))
-
 		}
 
 		validTag := field.Tag.Get("valid")
