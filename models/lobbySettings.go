@@ -6,6 +6,8 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/bitly/go-simplejson"
@@ -30,7 +32,7 @@ type LobbyMap struct {
 	Formats []*LobbyMapFormat `gorm:"many2many:lobby_map_formats"`
 }
 
-// TODO: make int?
+// TODO make int?
 type MapType string
 
 type LobbyLeagueDescription struct {
@@ -73,11 +75,30 @@ var lobbyLeagueFromName map[string]int
 var LobbyWhitelists []LobbyWhitelist
 var lobbyWhitelistFromID map[int]int
 
-func GetMap(mapName string) (*LobbyMap, bool) {
-	for _, m := range LobbyMaps {
-		if m.Name == mapName {
-			return &m, true
-		}
+func GetLobbyFormat(formatName string) (*LobbyFormat, bool) {
+	if format, ok := lobbyFormatFromName[formatName]; ok {
+		return &LobbyFormats[format], true
+	}
+	return nil, false
+}
+
+func GetLobbyMap(mapName string) (*LobbyMap, bool) {
+	if amap, ok := lobbyMapFromName[mapName]; ok {
+		return &LobbyMaps[amap], true
+	}
+	return nil, false
+}
+
+func GetLobbyLeague(leagueName string) (*LobbyLeague, bool) {
+	if league, ok := lobbyLeagueFromName[leagueName]; ok {
+		return &LobbyLeagues[league], true
+	}
+	return nil, false
+}
+
+func GetLobbyWhitelist(whitelistId int) (*LobbyWhitelist, bool) {
+	if whitelist, ok := lobbyWhitelistFromID[whitelistId]; ok {
+		return &LobbyWhitelists[whitelist], true
 	}
 	return nil, false
 }
@@ -143,14 +164,18 @@ func LoadLobbySettings(data []byte) error {
 			Formats: make([]*LobbyMapFormat, 0, len(amap.Formats)),
 		}
 		for name, importance := range amap.Formats {
-			lobbyMapFormat := &LobbyMapFormat{
-				Format:     &LobbyFormats[lobbyFormatFromName[name]],
-				Importance: importance,
+			if lobbyFormat, ok := GetLobbyFormat(name); ok {
+				lobbyMap.Formats = append(lobbyMap.Formats, &LobbyMapFormat{
+					Format:     lobbyFormat,
+					Importance: importance,
+				})
+			} else {
+				return errors.New(fmt.Sprintf("Referenced a non existing format %q", name))
 			}
-			lobbyMap.Formats = append(lobbyMap.Formats, lobbyMapFormat)
 		}
 
 		LobbyMaps[i] = lobbyMap
+		lobbyMapFromName[amap.Name] = i
 	}
 
 	// leagues
@@ -171,28 +196,42 @@ func LoadLobbySettings(data []byte) error {
 			lobbyLeague.Descriptions = append(lobbyLeague.Descriptions, lobbyLeagueDescription)
 		}
 		for name, used := range league.Formats {
-			lobbyLeagueFormat := &LobbyLeagueFormat{
-				Format: &LobbyFormats[lobbyFormatFromName[name]],
-				Used:   used,
+			if lobbyFormat, ok := GetLobbyFormat(name); ok {
+				lobbyLeagueFormat := &LobbyLeagueFormat{
+					Format: lobbyFormat,
+					Used:   used,
+				}
+				lobbyLeague.Formats = append(lobbyLeague.Formats, lobbyLeagueFormat)
+			} else {
+				return errors.New(fmt.Sprintf("Referenced a non existing format %q", name))
 			}
-			lobbyLeague.Formats = append(lobbyLeague.Formats, lobbyLeagueFormat)
 		}
 
 		LobbyLeagues[i] = lobbyLeague
+		lobbyLeagueFromName[league.Name] = i
 	}
 
 	// whitelists
 	LobbyWhitelists = make([]LobbyWhitelist, len(args.Whitelists))
 	lobbyWhitelistFromID = make(map[int]int)
 	for i, whitelist := range args.Whitelists {
-		lobbyWhitelist := LobbyWhitelist{
-			ID:         whitelist.ID,
-			PrettyName: whitelist.PrettyName,
-			League:     &LobbyLeagues[lobbyLeagueFromName[whitelist.League]],
-			Format:     &LobbyFormats[lobbyFormatFromName[whitelist.Format]],
-		}
+		if lobbyLeague, ok := GetLobbyLeague(whitelist.League); ok {
+			if lobbyFormat, ok := GetLobbyFormat(whitelist.Format); ok {
+				lobbyWhitelist := LobbyWhitelist{
+					ID:         whitelist.ID,
+					PrettyName: whitelist.PrettyName,
+					League:     lobbyLeague,
+					Format:     lobbyFormat,
+				}
 
-		LobbyWhitelists[i] = lobbyWhitelist
+				LobbyWhitelists[i] = lobbyWhitelist
+				lobbyWhitelistFromID[whitelist.ID] = i
+			} else {
+				return errors.New(fmt.Sprintf("Referenced a non existing format %q", whitelist.Format))
+			}
+		} else {
+			return errors.New(fmt.Sprintf("Referenced a non existing league %q", whitelist.League))
+		}
 	}
 
 	return nil
