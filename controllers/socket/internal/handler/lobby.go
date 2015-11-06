@@ -29,13 +29,13 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	var args struct {
-		Map         string `json:"map"`
-		Type        string `json:"type" valid:"debug,sixes,highlander"`
-		League      string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
-		Server      string `json:"server"`
-		RconPwd     string `json:"rconpwd"`
-		WhitelistID uint   `json:"whitelistID"`
-		Mumble      bool   `json:"mumbleRequired"`
+		Map         *string `json:"map"`
+		Type        *string `json:"type" valid:"debug,sixes,highlander"`
+		League      *string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
+		Server      *string `json:"server"`
+		RconPwd     *string `json:"rconpwd"`
+		WhitelistID *uint   `json:"whitelistID"`
+		Mumble      *bool   `json:"mumbleRequired"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -52,7 +52,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		"highlander": models.LobbyTypeHighlander,
 	}
 
-	lobbyType, exists := playermap[args.Type]
+	lobbyType, exists := playermap[*args.Type]
 
 	if !exists {
 		bytes, _ := chelpers.BuildFailureJSON("Invalid lobby type", -1).Encode()
@@ -65,15 +65,15 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 
 	//TODO what if playermap[lobbytype] is nil?
 	info := models.ServerRecord{
-		Host:           args.Server,
-		RconPassword:   args.RconPwd,
+		Host:           *args.Server,
+		RconPassword:   *args.RconPwd,
 		ServerPassword: serverPwd}
 	err = models.VerifyInfo(info)
 	if err != nil {
 		return err.Error()
 	}
 
-	lob := models.NewLobby(args.Map, lobbyType, args.League, info, int(args.WhitelistID), args.Mumble)
+	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, int(*args.WhitelistID), *args.Mumble)
 	lob.CreatedBySteamID = player.SteamId
 	lob.Save()
 	err = lob.SetupServer()
@@ -100,8 +100,8 @@ func ServerVerify(server *wsevent.Server, so *wsevent.Client, data string) strin
 	}
 
 	var args struct {
-		Server  string `json:"server"`
-		Rconpwd string `json:"rconpwd"`
+		Server  *string `json:"server"`
+		Rconpwd *string `json:"rconpwd"`
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
@@ -110,8 +110,8 @@ func ServerVerify(server *wsevent.Server, so *wsevent.Client, data string) strin
 	}
 
 	info := models.ServerRecord{
-		Host:         args.Server,
-		RconPassword: args.Rconpwd,
+		Host:         *args.Server,
+		RconPassword: *args.Rconpwd,
 	}
 	err := models.VerifyInfo(info)
 	if err != nil {
@@ -133,7 +133,7 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 	}
 
 	var args struct {
-		Id uint `json:"id"`
+		Id *uint `json:"id"`
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
@@ -143,7 +143,7 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
-	lob, tperr := models.GetLobbyById(uint(args.Id))
+	lob, tperr := models.GetLobbyById(uint(*args.Id))
 	if tperr != nil {
 		bytes, _ := tperr.ErrorJSON().Encode()
 		return string(bytes)
@@ -178,15 +178,15 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	var args struct {
-		Id    uint   `json:"id"`
-		Class string `json:"class"`
-		Team  string `json:"team" valid:"red,blu"`
+		Id    *uint   `json:"id"`
+		Class *string `json:"class"`
+		Team  *string `json:"team" valid:"red,blu"`
 	}
 	if err := chelpers.GetParams(data, &args); err != nil {
 		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
 		return string(bytes)
 	}
-	helpers.Logger.Debug("id %d class %s team %s", args.Id, args.Class, args.Team)
+	helpers.Logger.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
@@ -195,7 +195,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	lob, tperr := models.GetLobbyById(args.Id)
+	lob, tperr := models.GetLobbyById(*args.Id)
 	if tperr != nil {
 		bytes, _ := tperr.ErrorJSON().Encode()
 		return string(bytes)
@@ -203,11 +203,11 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	//Check if player is in the same lobby
 	var sameLobby bool
-	if id, err := player.GetLobbyId(); err == nil && id == args.Id {
+	if id, err := player.GetLobbyId(); err == nil && id == *args.Id {
 		sameLobby = true
 	}
 
-	slot, tperr := models.LobbyGetPlayerSlot(lob.Type, args.Team, args.Class)
+	slot, tperr := models.LobbyGetPlayerSlot(lob.Type, *args.Team, *args.Class)
 	if tperr != nil {
 		bytes, _ := tperr.ErrorJSON().Encode()
 		return string(bytes)
@@ -253,7 +253,7 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 	}
 
 	var args struct {
-		Id uint `json:"id"`
+		Id *uint `json:"id"`
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
@@ -262,7 +262,7 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 	}
 
 	var lob *models.Lobby
-	lob, tperr := models.GetLobbyById(args.Id)
+	lob, tperr := models.GetLobbyById(*args.Id)
 
 	if tperr != nil {
 		bytes, _ := tperr.ErrorJSON().Encode()
@@ -291,7 +291,7 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 		return string(bytes)
 	}
 
-	if id, _ := player.GetLobbyId(); id != args.Id {
+	if id, _ := player.GetLobbyId(); id != *args.Id {
 		helpers.LockRecord(lob.ID, lob)
 		tperr = lob.AddSpectator(player)
 		helpers.UnlockRecord(lob.ID, lob)
@@ -318,9 +318,9 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	var args struct {
-		Id      uint   `json:"id"`
-		Steamid string `json:"steamid"`
-		Ban     bool   `json:"bool"`
+		Id      *uint   `json:"id"`
+		Steamid *string `json:"steamid"`
+		Ban     *bool   `json:"bool"`
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
@@ -328,7 +328,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	steamid := args.Steamid
+	steamid := *args.Steamid
 	var self bool
 
 	selfSteamid := chelpers.GetSteamId(so.Id())
@@ -345,7 +345,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	lob, tperr := models.GetLobbyById(args.Id)
+	lob, tperr := models.GetLobbyById(*args.Id)
 	if tperr != nil {
 		bytes, _ := chelpers.BuildFailureJSON(tperr.Error(), -1).Encode()
 		return string(bytes)
@@ -373,7 +373,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	if args.Ban {
+	if *args.Ban {
 		lob.BanPlayer(player)
 	}
 
@@ -385,7 +385,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	if !self {
 		broadcaster.SendMessage(steamid, "sendNotification",
-			fmt.Sprintf("You have been removed from Lobby #%d", args.Id))
+			fmt.Sprintf("You have been removed from Lobby #%d", *args.Id))
 
 	}
 

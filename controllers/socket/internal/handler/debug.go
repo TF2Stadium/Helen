@@ -27,7 +27,7 @@ func DebugLobbyFill(server *wsevent.Server, so *wsevent.Client, data string) str
 		return string(bytes)
 	}
 	var args struct {
-		Id uint `json:"id"`
+		Id *uint `json:"id"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -36,7 +36,7 @@ func DebugLobbyFill(server *wsevent.Server, so *wsevent.Client, data string) str
 		return string(bytes)
 	}
 
-	lobby, _ := models.GetLobbyById(args.Id)
+	lobby, _ := models.GetLobbyById(*args.Id)
 	var players []*models.Player
 
 	for i := 1; i < int(lobby.Type)*2; i++ {
@@ -68,7 +68,7 @@ func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) st
 	}
 
 	var args struct {
-		Id uint `json:"id"`
+		Id *uint `json:"id"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -77,7 +77,7 @@ func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) st
 		return string(bytes)
 	}
 
-	lobby, _ := models.GetLobbyById(args.Id)
+	lobby, _ := models.GetLobbyById(*args.Id)
 
 	var slots []models.LobbySlot
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
@@ -122,7 +122,7 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 	}
 
 	var args struct {
-		Id uint `json:"id"`
+		Id *uint `json:"id"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -131,7 +131,7 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 		return string(bytes)
 	}
 
-	lobby, _ := models.GetLobbyById(args.Id)
+	lobby, _ := models.GetLobbyById(*args.Id)
 	bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
 	room := fmt.Sprintf("%s_private", chelpers.GetLobbyRoom(lobby.ID))
 	broadcaster.SendMessageToRoom(room,
@@ -150,7 +150,7 @@ func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data str
 	}
 
 	var args struct {
-		Id uint `json:"id"`
+		Id *uint `json:"id"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -159,7 +159,7 @@ func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data str
 		return string(bytes)
 	}
 
-	lobby, tperr := models.GetLobbyById(args.Id)
+	lobby, tperr := models.GetLobbyById(*args.Id)
 	if err != nil {
 		bytes, _ := tperr.ErrorJSON().Encode()
 		return string(bytes)

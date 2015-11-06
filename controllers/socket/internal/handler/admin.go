@@ -32,8 +32,8 @@ func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) st
 		return string(bytes)
 	}
 	var args struct {
-		Steamid string `json:"steamid"`
-		Role    string `json:"role"`
+		Steamid *string `json:"steamid"`
+		Role    *string `json:"role"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -42,13 +42,13 @@ func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) st
 		return string(bytes)
 	}
 
-	role, ok := helpers.RoleMap[args.Role]
+	role, ok := helpers.RoleMap[*args.Role]
 	if !ok || role == helpers.RoleAdmin {
 		bytes, _ := chelpers.BuildFailureJSON("Invalid role parameter", 0).Encode()
 		return string(bytes)
 	}
 
-	otherPlayer, err := models.GetPlayerBySteamId(args.Steamid)
+	otherPlayer, err := models.GetPlayerBySteamId(*args.Steamid)
 	if err != nil {
 		bytes, _ := chelpers.BuildFailureJSON("Player not found.", 0).Encode()
 		return string(bytes)

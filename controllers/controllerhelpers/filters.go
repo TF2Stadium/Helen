@@ -54,22 +54,31 @@ func GetParams(data string, i interface{}) error {
 		return err
 	}
 
-	ptrValue := reflect.ValueOf(i)
+	stValue := reflect.Indirect(reflect.ValueOf(i))
+	stType := stValue.Type()
 
-	st := reflect.Indirect(ptrValue).Type()
-	value := reflect.Indirect(ptrValue)
+outer:
+	for i := 0; i < stType.NumField(); i++ {
+		field := stType.Field(i)
+		fieldValue := stValue.Field(i)
+		if field.Type.Kind() != reflect.String {
+			if fieldValue.IsNil() {
+				return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
+					strings.ToLower(field.Name)))
+			}
+		} else if fieldValue.String() == "" {
+			return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
+				strings.ToLower(field.Name)))
 
-	for i := 0; i < st.NumField(); i++ {
-		field := st.Field(i)
+		}
+
 		validTag := field.Tag.Get("valid")
-
 		if validTag == "" {
 			continue
 		}
 
 		arr := strings.Split(validTag, ",")
 		var valid bool
-	outer:
 		for _, validVal := range arr {
 			switch field.Type.Kind() {
 			case reflect.Uint:
@@ -78,15 +87,15 @@ func GetParams(data string, i interface{}) error {
 					panic(err.Error())
 				}
 
-				if reflect.DeepEqual(value.Field(i).Uint(), num) {
+				if reflect.DeepEqual(fieldValue.Uint(), num) {
 					valid = true
-					break outer
+					continue outer
 				}
 
 			case reflect.String:
-				if reflect.DeepEqual(value.Field(i).String(), validVal) {
+				if reflect.DeepEqual(fieldValue.String(), validVal) {
 					valid = true
-					break outer
+					continue outer
 				}
 
 			}
