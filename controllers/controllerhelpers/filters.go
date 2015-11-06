@@ -59,8 +59,8 @@ func GetParams(data string, v interface{}) error {
 
 	for i := 0; i < stType.NumField(); i++ {
 		field := stType.Field(i)
-		fieldPtrValue := stValue.Field(i)
-		fieldValue := reflect.Indirect(fieldPtrValue)
+		fieldPtrValue := stValue.Field(i)             //The pointer field
+		fieldValue := reflect.Indirect(fieldPtrValue) //The value to which the pointer points too
 
 		if field.Type.Kind() != reflect.String {
 			if fieldPtrValue.IsNil() {
@@ -70,19 +70,25 @@ func GetParams(data string, v interface{}) error {
 						strings.ToLower(field.Name)))
 				}
 
-				switch fieldValue.Kind() {
+				switch fieldPtrValue.Type().Elem().Kind() {
 				case reflect.Uint:
 					num, err := strconv.ParseUint(emptyTag, 2, 32)
 					if err != nil {
 						panic(err.Error())
 					}
-					fieldValue.SetUint(num)
+					fieldPtrValue.Set(reflect.ValueOf(&num))
 				case reflect.String:
-					fieldValue.SetString(emptyTag)
+					fieldPtrValue.Set(reflect.ValueOf(&emptyTag))
 				case reflect.Bool:
-					fieldValue.SetBool(map[string]bool{
+					b, ok := map[string]bool{
 						"true":  true,
-						"false": false}[emptyTag])
+						"false": false}[emptyTag]
+					if !ok {
+						panic(fmt.Sprintf(
+							"%s is not a valid boolean literal string",
+							emptyTag))
+					}
+					fieldPtrValue.Set(reflect.ValueOf(&b))
 				}
 				continue
 			}
@@ -127,3 +133,5 @@ func GetParams(data string, v interface{}) error {
 
 	return nil
 }
+
+var a = `{A:1, B: null}`
