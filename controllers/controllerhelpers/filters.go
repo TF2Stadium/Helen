@@ -47,22 +47,23 @@ func FilterRequest(so *wsevent.Client, action authority.AuthAction, login bool) 
 	return
 }
 
-func GetParams(data string, i interface{}) error {
-	err := json.Unmarshal([]byte(data), i)
+func GetParams(data string, v interface{}) error {
+	err := json.Unmarshal([]byte(data), v)
 
 	if err != nil {
 		return err
 	}
 
-	stValue := reflect.Indirect(reflect.ValueOf(i))
+	stValue := reflect.Indirect(reflect.ValueOf(v))
 	stType := stValue.Type()
 
-outer:
 	for i := 0; i < stType.NumField(); i++ {
 		field := stType.Field(i)
-		fieldValue := stValue.Field(i)
+		fieldPtrValue := stValue.Field(i)
+		fieldValue := reflect.Indirect(fieldPtrValue)
+
 		if field.Type.Kind() != reflect.String {
-			if fieldValue.IsNil() {
+			if fieldPtrValue.IsNil() {
 				return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
 					strings.ToLower(field.Name)))
 			}
@@ -79,8 +80,9 @@ outer:
 
 		arr := strings.Split(validTag, ",")
 		var valid bool
+	outer:
 		for _, validVal := range arr {
-			switch field.Type.Kind() {
+			switch fieldValue.Kind() {
 			case reflect.Uint:
 				num, err := strconv.ParseUint(validVal, 2, 32)
 				if err != nil {
@@ -89,13 +91,13 @@ outer:
 
 				if reflect.DeepEqual(fieldValue.Uint(), num) {
 					valid = true
-					continue outer
+					break outer
 				}
 
 			case reflect.String:
 				if reflect.DeepEqual(fieldValue.String(), validVal) {
 					valid = true
-					continue outer
+					break outer
 				}
 
 			}
