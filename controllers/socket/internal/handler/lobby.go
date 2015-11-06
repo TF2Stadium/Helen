@@ -186,7 +186,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
 		return string(bytes)
 	}
-	helpers.Logger.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
+	//helpers.Logger.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
@@ -237,7 +237,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		models.BroadcastLobbyList()
 	}
 
-	models.BroadcastLobbyToUser(lob, player.SteamId)
+	//models.BroadcastLobbyToUser(lob, player.SteamId)
 	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 	return string(bytes)
 }
@@ -319,8 +319,8 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	var args struct {
 		Id      *uint   `json:"id"`
-		Steamid *string `json:"steamid"`
-		Ban     *bool   `json:"bool"`
+		Steamid *string `json:"steamid" empty:"yes"`
+		Ban     *bool   `json:"bool" empty:"false"`
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
