@@ -5,8 +5,9 @@
 package handler
 
 import (
+	"encoding/json"
+
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
@@ -36,8 +37,13 @@ func GetConstant(server *wsevent.Server, so *wsevent.Client, data string) string
 		return string(bytes)
 	}
 
-	so.EmitJSON(helpers.NewRequest("getConstantResponse", string(outputString)))
+	var resp struct {
+		Success bool   `json:"success"`
+		Data    string `json:"data"`
+	}
+	resp.Success = true
+	resp.Data = string(outputString)
 
-	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(resp)
+	bytes, _ := json.Marshal(resp)
+	return string(bytes)
 }
