@@ -47,9 +47,11 @@ func listener(ticker *time.Ticker) {
 		event := make(models.Event)
 		err := models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &event)
 
-		if err == rpc.ErrShutdown { //Pauling has crashed
-			//TODO
-		} else if err != nil {
+		if err != nil {
+			if err == rpc.ErrShutdown {
+				models.PaulingReconnect()
+				continue
+			}
 			helpers.Logger.Fatal(err)
 		}
 		if _, empty := event["empty"]; !empty {
