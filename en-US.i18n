@@ -1,0 +1,15 @@
+# LOBBY SETTINGS STRINGS
+
+lobby-settings-format = "Format"
+
+lobby-settings-map = "Map"
+
+lobby-settings-league = "League"
+
+lobby-settings-whitelist = "Whitelist"
+
+lobby-settings-mumble = "Mumble required"
+lobby-settings-mumble-required = "Mumble required"
+lobby-settings-mumble-required-desc = "All participants will need to join the mumble channel."
+lobby-settings-mumble-not-required = "Mumble not required"
+lobby-settings-mumble-not-required-desc = "Participants will join the mumble only if they want to do so."

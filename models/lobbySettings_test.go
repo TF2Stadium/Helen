@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -65,6 +66,7 @@ var testSettingsData = []byte(`
 func TestSettingsLoad(t *testing.T) {
 	assert := assert.New(t)
 
+	config.InitializeLocalizations("../en-US.i18n")
 	err := models.LoadLobbySettings(testSettingsData)
 
 	if assert.Nil(err) {

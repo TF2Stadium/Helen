@@ -27,15 +27,17 @@ import (
 
 func main() {
 	authority.RegisterTypes()
+
 	helpers.InitLogger()
 	helpers.InitAuthorization()
 	config.SetupConstants()
+	config.InitializeLocalizations("./en-US.i18n")
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()
 	models.PaulingConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
-	
+
 	go models.ReadyTimeoutListener()
 	StartListener()
 	chelpers.CheckLogger()
