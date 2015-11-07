@@ -50,6 +50,8 @@ func ServerInit(server *wsevent.Server) {
 		}{"authenticated"})
 		return string(bytes)
 	})
+	//Global Handlers
+	server.On("getConstant", handler.GetConstant)
 	//Lobby Handlers
 	server.On("lobbyCreate", handler.LobbyCreate)
 	server.On("serverVerify", handler.ServerVerify)

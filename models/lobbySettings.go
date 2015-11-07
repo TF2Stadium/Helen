@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/bitly/go-simplejson"
 )
@@ -104,7 +105,12 @@ func GetLobbyWhitelist(whitelistId int) (*LobbyWhitelist, bool) {
 }
 
 func LoadLobbySettingsFromFile(fileName string) error {
-	data, err := ioutil.ReadFile(fileName)
+	realPath, err := filepath.Abs(fileName)
+	if err != nil {
+		return err
+	}
+	
+	data, err := ioutil.ReadFile(realPath)
 	if err != nil {
 		return err
 	}
@@ -277,6 +283,8 @@ func LobbySettingsToJson() *simplejson.Json {
 		maps.Set("key", "mapName")
 		maps.Set("title", "Map")
 		maps.Set("options", mapList)
+
+		j.Set("maps", maps)
 	}
 
 	// leagues
