@@ -70,34 +70,46 @@ func TestSettingsLoad(t *testing.T) {
 	err := models.LoadLobbySettings(testSettingsData)
 
 	if assert.Nil(err) {
-		if assert.Equal(len(models.LobbyFormats), 3) {
-			assert.Equal(models.LobbyFormats[0].Name, "sixes")
-			assert.Equal(models.LobbyFormats[0].PrettyName, "6v6")
-			assert.Equal(models.LobbyFormats[0].Important, true)
-
-			assert.Equal(models.LobbyFormats[1].Name, "highlander")
-			assert.Equal(models.LobbyFormats[1].PrettyName, "Highlander")
-			assert.Equal(models.LobbyFormats[1].Important, true)
-
-			assert.Equal(models.LobbyFormats[2].Name, "fours")
-			assert.Equal(models.LobbyFormats[2].PrettyName, "4v4")
-			assert.Equal(models.LobbyFormats[2].Important, false)
-		}
-
-		if assert.Equal(len(models.LobbyMaps), 2) {
-			assert.Equal(models.LobbyMaps[0].Name, "cp_process_final")
-			if assert.Equal(len(models.LobbyMaps[0].Formats), 2) {
-				assert.Equal(models.LobbyMaps[0].Formats[0].Format.Name, "highlander")
-				assert.Equal(models.LobbyMaps[0].Formats[0].Importance, 1)
-
-				assert.Equal(models.LobbyMaps[0].Formats[1].Format.Name, "sixes")
-				assert.Equal(models.LobbyMaps[0].Formats[1].Importance, 2)
+		// test formats
+		if assert.Equal(3, len(models.LobbyFormats)) {
+			if format, ok := models.GetLobbyFormat("sixes"); assert.True(ok) {
+				assert.Equal("6v6", format.PrettyName)
+				assert.Equal(true, format.Important)
 			}
 
-			assert.Equal(models.LobbyMaps[1].Name, "pl_upward")
-			if assert.Equal(len(models.LobbyMaps[1].Formats), 1) {
-				assert.Equal(models.LobbyMaps[1].Formats[0].Format.Name, "highlander")
-				assert.Equal(models.LobbyMaps[1].Formats[0].Importance, 2)
+			if format, ok := models.GetLobbyFormat("highlander"); assert.True(ok) {
+				assert.Equal("Highlander", format.PrettyName)
+				assert.Equal(true, format.Important)
+			}
+
+			if format, ok := models.GetLobbyFormat("fours"); assert.True(ok) {
+				assert.Equal("4v4", format.PrettyName)
+				assert.Equal(false, format.Important)
+			}
+		}
+
+		// test maps
+		if assert.Equal(2, len(models.LobbyMaps)) {
+			if amap, ok := models.GetLobbyMap("cp_process_final"); assert.True(ok) {
+				assert.Equal(2, len(amap.Formats))
+
+				if mapFormat, ok := amap.GetFormat("highlander"); assert.True(ok) {
+					assert.Equal(1, mapFormat.Importance)
+				}
+				if mapFormat, ok := amap.GetFormat("sixes"); assert.True(ok) {
+					assert.Equal(2, mapFormat.Importance)
+				}
+				if mapFormat, ok := amap.GetFormat("fours"); assert.True(ok) {
+					assert.Equal(0, mapFormat.Importance)
+				}
+			}
+
+			if amap, ok := models.GetLobbyMap("pl_upward"); assert.True(ok) {
+				assert.Equal(1, len(amap.Formats))
+
+				if mapFormat, ok := amap.GetFormat("highlander"); assert.True(ok) {
+					assert.Equal(2, mapFormat.Importance)
+				}
 			}
 		}
 

@@ -35,6 +35,21 @@ type LobbyMap struct {
 	Formats []*LobbyMapFormat `gorm:"many2many:lobby_map_formats"`
 }
 
+func (m *LobbyMap) GetFormat(formatName string) (*LobbyMapFormat, bool) {
+	for _, mapFormat := range m.Formats {
+		if mapFormat.Format.Name == formatName {
+			return mapFormat, true
+		}
+	}
+	if format, ok := GetLobbyFormat(formatName); ok {
+		return &LobbyMapFormat{
+			Format:     format,
+			Importance: 0,
+		}, true
+	}
+	return nil, false
+}
+
 // TODO make int?
 type MapType string
 
