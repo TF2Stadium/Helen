@@ -118,20 +118,18 @@ func DecorateLobbyConnectJSON(lobby *Lobby) *simplejson.Json {
 	return json
 }
 
-func DecorateLobbyJoinJSON(lobby *Lobby, player *Player) *simplejson.Json {
+func DecorateLobbyJoinJSON(lobby *Lobby) *simplejson.Json {
 	json := simplejson.New()
 
 	json.Set("lobbyId", lobby.ID)
-	json.Set("playerId", player.SteamId)
 
 	return json
 }
 
-func DecorateLobbyLeaveJSON(lobby *Lobby, player *Player) *simplejson.Json {
+func DecorateLobbyLeaveJSON(lobby *Lobby) *simplejson.Json {
 	json := simplejson.New()
 
 	json.Set("lobbyId", lobby.ID)
-	json.Set("playerId", player.SteamId)
 
 	return json
 }
