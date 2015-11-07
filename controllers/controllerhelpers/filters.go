@@ -16,7 +16,7 @@ import (
 
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
-	"github.com/vibhavp/wsevent"
+	"github.com/TF2Stadium/wsevent"
 )
 
 var WhitelistSteamID = make(map[string]bool)

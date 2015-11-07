@@ -147,6 +147,11 @@ func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
 		return nil, nonExistentLobby
 	}
 
+	err = db.DB.Preload("Spectators").First(lob, id).Error
+	if err != nil {
+		return nil, nonExistentLobby
+	}
+
 	return lob, nil
 }
 

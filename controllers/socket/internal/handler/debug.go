@@ -15,8 +15,8 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
-	"github.com/vibhavp/wsevent"
 )
 
 func DebugLobbyFill(server *wsevent.Server, so *wsevent.Client, data string) string {

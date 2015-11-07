@@ -3,8 +3,8 @@ package handler
 import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
-	"github.com/vibhavp/wsevent"
 )
 
 func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) string {

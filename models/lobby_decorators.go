@@ -117,3 +117,19 @@ func DecorateLobbyConnectJSON(lobby *Lobby) *simplejson.Json {
 
 	return json
 }
+
+func DecorateLobbyJoinJSON(lobby *Lobby) *simplejson.Json {
+	json := simplejson.New()
+
+	json.Set("lobbyId", lobby.ID)
+
+	return json
+}
+
+func DecorateLobbyLeaveJSON(lobby *Lobby) *simplejson.Json {
+	json := simplejson.New()
+
+	json.Set("lobbyId", lobby.ID)
+
+	return json
+}

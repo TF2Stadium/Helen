@@ -21,8 +21,8 @@ import (
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes"
+	"github.com/TF2Stadium/wsevent"
 	"github.com/rs/cors"
-	"github.com/vibhavp/wsevent"
 )
 
 func main() {
@@ -34,6 +34,8 @@ func main() {
 	migrations.Do()
 	stores.SetupStores()
 	models.PaulingConnect()
+	models.InitializeLobbySettings("./lobbySettingsData.json")
+	
 	go models.ReadyTimeoutListener()
 	StartListener()
 	chelpers.CheckLogger()

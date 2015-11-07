@@ -13,7 +13,7 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/socket/internal/handler"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/vibhavp/wsevent"
+	"github.com/TF2Stadium/wsevent"
 )
 
 func onDisconnect(id string) {
@@ -50,6 +50,8 @@ func ServerInit(server *wsevent.Server) {
 		}{"authenticated"})
 		return string(bytes)
 	})
+	//Global Handlers
+	server.On("getConstant", handler.GetConstant)
 	//Lobby Handlers
 	server.On("lobbyCreate", handler.LobbyCreate)
 	server.On("serverVerify", handler.ServerVerify)
