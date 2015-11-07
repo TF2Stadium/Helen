@@ -11,8 +11,8 @@ import (
 	"github.com/TF2Stadium/Helen/controllers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/websocket"
-	"github.com/vibhavp/wsevent"
 )
 
 var upgrader = websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool { return true }}

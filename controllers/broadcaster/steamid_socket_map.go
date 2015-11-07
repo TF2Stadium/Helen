@@ -3,7 +3,7 @@ package broadcaster
 import (
 	"sync"
 
-	"github.com/vibhavp/wsevent"
+	"github.com/TF2Stadium/wsevent"
 )
 
 var steamIdSocketMap = make(map[string]*wsevent.Client)

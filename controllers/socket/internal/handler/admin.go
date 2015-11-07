@@ -11,7 +11,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/vibhavp/wsevent"
+	"github.com/TF2Stadium/wsevent"
 )
 
 type FakeResponseWriter struct{}

@@ -13,8 +13,8 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
-	"github.com/vibhavp/wsevent"
 )
 
 var BanTypeList = []string{"join", "create", "chat", "full"}

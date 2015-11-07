@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/vibhavp/wsevent"
+	"github.com/TF2Stadium/wsevent"
 )
 
 type chatRing struct {
