@@ -17,12 +17,29 @@ import (
 )
 
 func onDisconnect(id string) {
-	chelpers.DeauthenticateSocket(id)
+	defer helpers.Logger.Debug("Disconnected from Socket")
 	if chelpers.IsLoggedInSocket(id) {
 		steamid := chelpers.GetSteamId(id)
 		broadcaster.RemoveSocket(steamid)
+		player, _ := models.GetPlayerBySteamId(steamid)
+		ids, err := player.GetSpectatingIds()
+		if err != nil {
+			helpers.Logger.Debug(err.Error())
+			return
+		}
+
+		for _, id := range ids {
+			lobby, _ := models.GetLobbyById(id)
+			err := lobby.RemoveSpectator(player, true)
+			if err != nil {
+				helpers.Logger.Critical(err.Error())
+				continue
+			}
+			helpers.Logger.Debug("removing %s from %d", player.SteamId, id)
+		}
+
 	}
-	helpers.Logger.Debug("Disconnected from Socket")
+	chelpers.DeauthenticateSocket(id)
 }
 
 func getEvent(data string) string {
