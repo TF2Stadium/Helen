@@ -121,7 +121,7 @@ func DecorateLobbyConnectJSON(lobby *Lobby) *simplejson.Json {
 func DecorateLobbyJoinJSON(lobby *Lobby) *simplejson.Json {
 	json := simplejson.New()
 
-	json.Set("lobbyId", lobby.ID)
+	json.Set("id", lobby.ID)
 
 	return json
 }
@@ -129,7 +129,7 @@ func DecorateLobbyJoinJSON(lobby *Lobby) *simplejson.Json {
 func DecorateLobbyLeaveJSON(lobby *Lobby) *simplejson.Json {
 	json := simplejson.New()
 
-	json.Set("lobbyId", lobby.ID)
+	json.Set("id", lobby.ID)
 
 	return json
 }

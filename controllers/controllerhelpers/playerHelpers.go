@@ -30,7 +30,7 @@ func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 	room := fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID))
 	server.AddClient(so, room)
 
-	bytes, _ := models.DecorateLobbyJoinJSON(lobby).Encode()
+	bytes, _ := models.DecorateLobbyDataJSON(lobby, false).Encode()
 	broadcaster.SendMessage(player.SteamId, "lobbyJoined", string(bytes))
 }
 
