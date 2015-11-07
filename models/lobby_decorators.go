@@ -67,10 +67,15 @@ func DecorateLobbyDataJSON(lobby *Lobby, includeDetails bool) *simplejson.Json {
 	lobbyJs.Set("whitelistId", lobby.Whitelist)
 
 	var spectators []*simplejson.Json
-	for _, spectator := range lobby.Spectators {
+	var specIDs []uint
+	db.DB.Table("spectators_players_lobbies").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &specIDs)
+	for _, spectatorID := range specIDs {
+		specPlayer := &Player{}
+		db.DB.First(specPlayer, spectatorID)
+
 		specJs := simplejson.New()
-		specJs.Set("name", spectator.Name)
-		specJs.Set("steamid", spectator.SteamId)
+		specJs.Set("name", specPlayer.Name)
+		specJs.Set("steamid", specPlayer.SteamId)
 		spectators = append(spectators, specJs)
 	}
 	lobbyJs.Set("spectators", spectators)
@@ -121,7 +126,7 @@ func DecorateLobbyConnectJSON(lobby *Lobby) *simplejson.Json {
 func DecorateLobbyJoinJSON(lobby *Lobby) *simplejson.Json {
 	json := simplejson.New()
 
-	json.Set("lobbyId", lobby.ID)
+	json.Set("id", lobby.ID)
 
 	return json
 }
@@ -129,7 +134,7 @@ func DecorateLobbyJoinJSON(lobby *Lobby) *simplejson.Json {
 func DecorateLobbyLeaveJSON(lobby *Lobby) *simplejson.Json {
 	json := simplejson.New()
 
-	json.Set("lobbyId", lobby.ID)
+	json.Set("id", lobby.ID)
 
 	return json
 }

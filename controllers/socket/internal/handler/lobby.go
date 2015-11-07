@@ -7,7 +7,6 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -248,8 +247,8 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 
 	if reqerr != nil {
 		noLogin = true
-		bytes, _ := reqerr.ErrorJSON().Encode()
-		return string(bytes)
+		// bytes, _ := reqerr.ErrorJSON().Encode()
+		// return string(bytes)
 	}
 
 	var args struct {
@@ -270,17 +269,10 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 	}
 
 	if noLogin {
-
 		chelpers.AfterLobbySpec(server, so, lob)
 		bytes, _ := models.DecorateLobbyDataJSON(lob, true).Encode()
 
-		reply, _ := json.Marshal(struct {
-			Request string          `json:"request"`
-			Data    json.RawMessage `json:"data"`
-		}{"lobbyData", bytes})
-
-		so.Emit(string(reply))
-
+		so.EmitJSON(helpers.NewRequest("lobbyData", string(bytes)))
 		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 		return string(bytes)
 	}
