@@ -26,15 +26,20 @@ var BanTypeMap = map[string]models.PlayerBanType{
 	"full":   models.PlayerBanFull,
 }
 
-func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby,
-	player *models.Player) {
-	server.AddClient(so, fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
+func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby, player *models.Player) {
+	room := fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID))
+	server.AddClient(so, room)
+
+	bytes, _ := models.DecorateLobbyJoinJSON(lobby).Encode()
+	broadcaster.SendMessage(player.SteamId, "lobbyJoin", string(bytes))
 }
 
-func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby,
-	player *models.Player) {
+func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby, player *models.Player) {
 	server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
 	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+
+	bytes, _ := models.DecorateLobbyLeaveJSON(lobby).Encode()
+	broadcaster.SendMessage(player.SteamId, "lobbyLeave", string(bytes))
 }
 
 func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
