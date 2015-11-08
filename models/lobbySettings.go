@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/N1xx1/golang-i18n"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/bitly/go-simplejson"
 )
@@ -32,6 +33,21 @@ type LobbyMap struct {
 	//gorm.Model -- not in a database yet
 	Name    string
 	Formats []*LobbyMapFormat `gorm:"many2many:lobby_map_formats"`
+}
+
+func (m *LobbyMap) GetFormat(formatName string) (*LobbyMapFormat, bool) {
+	for _, mapFormat := range m.Formats {
+		if mapFormat.Format.Name == formatName {
+			return mapFormat, true
+		}
+	}
+	if format, ok := GetLobbyFormat(formatName); ok {
+		return &LobbyMapFormat{
+			Format:     format,
+			Importance: 0,
+		}, true
+	}
+	return nil, false
 }
 
 // TODO make int?
@@ -109,9 +125,8 @@ func InitializeLobbySettings(fileName string) {
 	realPath, err := filepath.Abs(fileName)
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
-		return
 	}
-	
+
 	err = LoadLobbySettingsFromFile(realPath)
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
@@ -269,7 +284,7 @@ func LobbySettingsToJson() *simplejson.Json {
 			formatList[i] = f
 		}
 		formats.Set("key", "type")
-		formats.Set("title", "Format")
+		formats.Set("title", i18n.T("lobby-settings-format"))
 		formats.Set("options", formatList)
 
 		j.Set("formats", formats)
@@ -290,7 +305,7 @@ func LobbySettingsToJson() *simplejson.Json {
 			mapList[i] = f
 		}
 		maps.Set("key", "mapName")
-		maps.Set("title", "Map")
+		maps.Set("title", i18n.T("lobby-settings-map"))
 		maps.Set("options", mapList)
 
 		j.Set("maps", maps)
@@ -318,7 +333,7 @@ func LobbySettingsToJson() *simplejson.Json {
 			leagueList[i] = f
 		}
 		leagues.Set("key", "league")
-		leagues.Set("title", "League")
+		leagues.Set("title", i18n.T("lobby-settings-league"))
 		leagues.Set("options", leagueList)
 
 		j.Set("leagues", leagues)
@@ -339,10 +354,32 @@ func LobbySettingsToJson() *simplejson.Json {
 			whitelistList[i] = f
 		}
 		whitelists.Set("key", "whitelist")
-		whitelists.Set("title", "Whitelist")
+		whitelists.Set("title", i18n.T("lobby-settings-whitelist"))
 		whitelists.Set("options", whitelistList)
 
 		j.Set("whitelists", whitelists)
+	}
+
+	// mumble
+	{
+		mumble := simplejson.New()
+
+		mumbleList := make([]*simplejson.Json, 2)
+		mumbleList[0] = simplejson.New()
+		mumbleList[0].Set("value", true)
+		mumbleList[0].Set("title", i18n.T("lobby-settings-mumble-required"))
+		mumbleList[0].Set("description", i18n.T("lobby-settings-mumble-required-desc"))
+
+		mumbleList[1] = simplejson.New()
+		mumbleList[1].Set("value", false)
+		mumbleList[1].Set("title", i18n.T("lobby-settings-mumble-not-required"))
+		mumbleList[1].Set("description", i18n.T("lobby-settings-mumble-not-required-desc"))
+
+		mumble.Set("key", "mumbleRequired")
+		mumble.Set("title", i18n.T("lobby-settings-mumble"))
+		mumble.Set("options", mumbleList)
+
+		j.Set("mumble", mumble)
 	}
 
 	return j
