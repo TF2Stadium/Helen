@@ -30,7 +30,7 @@ func SetupHTTPRoutes(server *wsevent.Server) {
 		if config.Constants.SteamIDWhitelist != "" {
 			session, err := chelpers.GetSessionHTTP(r)
 
-			allowed := false
+			allowed := true
 
 			if err == nil {
 				if _, ok := session.Values["steamid"]; !ok {
