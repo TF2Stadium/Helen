@@ -160,7 +160,7 @@ func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data str
 	}
 
 	lobby, tperr := models.GetLobbyById(*args.Id)
-	if err != nil {
+	if tperr != nil {
 		bytes, _ := tperr.ErrorJSON().Encode()
 		return string(bytes)
 	}
