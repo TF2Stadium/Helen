@@ -9,6 +9,7 @@ import (
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers"
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/wsevent"
@@ -26,7 +27,25 @@ func SetupHTTPRoutes(server *wsevent.Server) {
 		http.HandleFunc("/startMockLogin/", controllers.MockLoginHandler)
 	}
 	http.HandleFunc("/websocket/", func(w http.ResponseWriter, r *http.Request) {
+		if config.Constants.SteamIDWhitelist != "" {
+			session, err := chelpers.GetSessionHTTP(r)
+
+			allowed := false
+
+			if err == nil {
+				if _, ok := session.Values["steamid"]; !ok {
+					allowed = false
+				}
+			} else {
+				allowed = false
+			}
+			if !allowed {
+				http.Error(w, "Sorry, but you're not in the closed alpha", 403)
+			}
+		}
+
 		so, err := server.NewClient(upgrader, w, r)
+
 		if err != nil {
 			helpers.Logger.Warning("%s", err.Error())
 			return
