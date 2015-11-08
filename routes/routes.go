@@ -41,6 +41,7 @@ func SetupHTTPRoutes(server *wsevent.Server) {
 			}
 			if !allowed {
 				http.Error(w, "Sorry, but you're not in the closed alpha", 403)
+				return
 			}
 		}
 
