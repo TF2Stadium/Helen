@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/N1xx1/golang-i18n"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/bitly/go-simplejson"
 )
@@ -125,8 +124,9 @@ func InitializeLobbySettings(fileName string) {
 	realPath, err := filepath.Abs(fileName)
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
+		return
 	}
-
+	
 	err = LoadLobbySettingsFromFile(realPath)
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
@@ -284,7 +284,7 @@ func LobbySettingsToJson() *simplejson.Json {
 			formatList[i] = f
 		}
 		formats.Set("key", "type")
-		formats.Set("title", i18n.T("lobby-settings-format"))
+		formats.Set("title", "Format")
 		formats.Set("options", formatList)
 
 		j.Set("formats", formats)
@@ -305,7 +305,7 @@ func LobbySettingsToJson() *simplejson.Json {
 			mapList[i] = f
 		}
 		maps.Set("key", "mapName")
-		maps.Set("title", i18n.T("lobby-settings-map"))
+		maps.Set("title", "Map")
 		maps.Set("options", mapList)
 
 		j.Set("maps", maps)
@@ -333,7 +333,7 @@ func LobbySettingsToJson() *simplejson.Json {
 			leagueList[i] = f
 		}
 		leagues.Set("key", "league")
-		leagues.Set("title", i18n.T("lobby-settings-league"))
+		leagues.Set("title", "League")
 		leagues.Set("options", leagueList)
 
 		j.Set("leagues", leagues)
@@ -354,32 +354,10 @@ func LobbySettingsToJson() *simplejson.Json {
 			whitelistList[i] = f
 		}
 		whitelists.Set("key", "whitelist")
-		whitelists.Set("title", i18n.T("lobby-settings-whitelist"))
+		whitelists.Set("title", "Whitelist")
 		whitelists.Set("options", whitelistList)
 
 		j.Set("whitelists", whitelists)
-	}
-
-	// mumble
-	{
-		mumble := simplejson.New()
-
-		mumbleList := make([]*simplejson.Json, 2)
-		mumbleList[0] = simplejson.New()
-		mumbleList[0].Set("value", true)
-		mumbleList[0].Set("title", i18n.T("lobby-settings-mumble-required"))
-		mumbleList[0].Set("description", i18n.T("lobby-settings-mumble-required-desc"))
-
-		mumbleList[1] = simplejson.New()
-		mumbleList[1].Set("value", false)
-		mumbleList[1].Set("title", i18n.T("lobby-settings-mumble-not-required"))
-		mumbleList[1].Set("description", i18n.T("lobby-settings-mumble-not-required-desc"))
-
-		mumble.Set("key", "mumbleRequired")
-		mumble.Set("title", i18n.T("lobby-settings-mumble"))
-		mumble.Set("options", mumbleList)
-
-		j.Set("mumble", mumble)
 	}
 
 	return j
