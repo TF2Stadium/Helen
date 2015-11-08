@@ -89,8 +89,8 @@ func ServerInit(server *wsevent.Server) {
 	server.On("adminChangeRole", handler.AdminChangeRole)
 	//Debugging handlers
 	if config.Constants.ServerMockUp {
-		server.On("debugLobbyFill", handler.DebugLobbyFill)
-		server.On("debugLobbyReady", handler.DebugLobbyReady)
+		// server.On("debugLobbyFill", handler.DebugLobbyFill)
+		// server.On("debugLobbyReady", handler.DebugLobbyReady)
 		server.On("debugGetAllLobbies", handler.DebugRequestAllLobbies)
 		server.On("debugRequestLobbyStart", handler.DebugRequestLobbyStart)
 		server.On("debugUpdateStatsFilter", handler.DebugUpdateStatsFilter)
@@ -98,9 +98,9 @@ func ServerInit(server *wsevent.Server) {
 }
 
 func SocketInit(server *wsevent.Server, so *wsevent.Client) {
-	chelpers.AuthenticateSocket(so.Id(), so.Request())
 	loggedIn := chelpers.IsLoggedInSocket(so.Id())
 	if loggedIn {
+		chelpers.AuthenticateSocket(so.Id(), so.Request())
 		steamid := chelpers.GetSteamId(so.Id())
 		broadcaster.SetSocket(steamid, so)
 	}
