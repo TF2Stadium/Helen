@@ -369,6 +369,10 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		lob.BanPlayer(player)
 	}
 
+	if !self {
+		so, _ = broadcaster.GetSocket(player.SteamId)
+	}
+
 	if !spec {
 		chelpers.AfterLobbyLeave(server, so, lob, player)
 	} else {
@@ -377,7 +381,8 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	if !self {
 		broadcaster.SendMessage(steamid, "sendNotification",
-			fmt.Sprintf("You have been removed from Lobby #%d", *args.Id))
+			fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`,
+				*args.Id))
 
 	}
 
