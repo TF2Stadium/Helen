@@ -98,9 +98,9 @@ func ServerInit(server *wsevent.Server) {
 }
 
 func SocketInit(server *wsevent.Server, so *wsevent.Client) {
+	chelpers.AuthenticateSocket(so.Id(), so.Request())
 	loggedIn := chelpers.IsLoggedInSocket(so.Id())
 	if loggedIn {
-		chelpers.AuthenticateSocket(so.Id(), so.Request())
 		steamid := chelpers.GetSteamId(so.Id())
 		broadcaster.SetSocket(steamid, so)
 	}
