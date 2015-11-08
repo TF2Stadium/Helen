@@ -35,12 +35,12 @@ func main() {
 	stores.SetupStores()
 	models.PaulingConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
-	
+
 	go models.ReadyTimeoutListener()
 	StartListener()
 	chelpers.CheckLogger()
 	if config.Constants.SteamIDWhitelist != "" {
-		chelpers.InitSteamIDWhitelist(config.Constants.SteamIDWhitelist)
+		go chelpers.WhitelistListener()
 	}
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 	helpers.Logger.Debug("Starting the server")

@@ -94,7 +94,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	parts := strings.Split(id, "/")
 	steamid := parts[len(parts)-1]
-	if config.Constants.SteamIDWhitelist != "" && !controllerhelpers.WhitelistSteamID[steamid] {
+	if config.Constants.SteamIDWhitelist != "" && !controllerhelpers.IsSteamIDWhitelisted(steamid) {
 		//Use a more user-friendly message later
 		http.Error(w, "Sorry, you're not in the closed alpha.", 403)
 		return
