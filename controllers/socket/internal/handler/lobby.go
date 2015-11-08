@@ -236,7 +236,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		models.BroadcastLobbyList()
 	}
 
-	//models.BroadcastLobbyToUser(lob, player.SteamId)
+	models.BroadcastLobbyToUser(lob, player.SteamId)
 	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 	return string(bytes)
 }
