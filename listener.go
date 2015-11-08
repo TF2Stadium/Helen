@@ -80,7 +80,8 @@ func eventListener() {
 
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
-				"sendNotification", fmt.Sprintf("%s has disconected from the server .",
+				"sendNotification",
+				fmt.Sprintf(`{"notification": "%s has disconected from the server."}`,
 					player.Name))
 			go func() {
 				t := time.After(time.Minute * 2)
@@ -123,7 +124,8 @@ func eventListener() {
 			db.DB.Save(slot)
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
-				"sendNotification", fmt.Sprintf("%s has been reported.",
+				"sendNotification",
+				fmt.Sprintf(`{"notification": "%s has been reported."}`,
 					player.Name))
 
 			helpers.Logger.Debug("#%d: Reported player %s<%s>",
@@ -141,7 +143,7 @@ func eventListener() {
 			helpers.UnlockRecord(lobby.ID, lobby)
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
-				"sendNotification", "Lobby Closed (Connection to server lost).")
+				"sendNotification", `{"notification": "Lobby Closed (Connection to server lost)."}`)
 
 		case event := <-eventChanMap["matchEnded"]:
 			lobbyid := event["lobbyId"].(uint)
@@ -156,7 +158,7 @@ func eventListener() {
 			helpers.UnlockRecord(lobby.ID, lobby)
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
-				"sendNotification", "Lobby Ended.")
+				"sendNotification", `{"notification": ""Lobby Ended."}`)
 
 		case <-eventChanMap["getServers"]:
 			var lobbies []*models.Lobby
