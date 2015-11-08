@@ -33,7 +33,7 @@ func SetupHTTPRoutes(server *wsevent.Server) {
 			allowed := true
 
 			if err == nil {
-				if _, ok := session.Values["steamid"]; !ok {
+				if _, ok := session.Values["steam_id"]; !ok {
 					allowed = false
 				}
 			} else {
