@@ -23,7 +23,10 @@ var WhitelistSteamID = make(map[string]bool)
 
 func InitSteamIDWhitelist(filename string) {
 	absName, _ := filepath.Abs(filename)
-	data, _ := ioutil.ReadFile(absName)
+	data, err := ioutil.ReadFile(absName)
+	if err != nil {
+		helpers.Logger.Fatalf("%s", err.Error())
+	}
 	ids := strings.Split(string(data), "\n")
 
 	for _, id := range ids {
