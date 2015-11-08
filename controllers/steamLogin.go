@@ -60,7 +60,7 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 		player, playErr = models.NewPlayer(steamid)
 
 		if playErr != nil {
-			helpers.Logger.Debug(playErr.Error())
+			helpers.Logger.Warning(playErr.Error())
 		}
 
 		database.DB.Create(player)
@@ -70,11 +70,11 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 		if err == nil {
 			database.DB.Save(player)
 		} else {
-			helpers.Logger.Debug("Error updating player ", err)
+			helpers.Logger.Warning("Error updating player ", err)
 		}
 	} else if err != nil {
 		// Failed login
-		helpers.Logger.Debug("steamLogin.go:60 ", err)
+		helpers.Logger.Warning("%s", err)
 	}
 
 	session.Values["id"] = fmt.Sprint(player.ID)
@@ -88,7 +88,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	fullURL := config.Constants.Domain + r.URL.String()
 	id, err := openid.Verify(fullURL, discoveryCache, nonceStore)
 	if err != nil {
-		helpers.Logger.Debug(err.Error())
+		helpers.Logger.Warning(err.Error())
 		return
 	}
 
@@ -96,7 +96,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	steamid := parts[len(parts)-1]
 	if config.Constants.SteamIDWhitelist != "" && !controllerhelpers.WhitelistSteamID[steamid] {
 		//Use a more user-friendly message later
-		fmt.Fprintf(w, "Player isn't in the Alpha Whitelist.")
+		http.Error(w, "Sorry, you're not in the closed alpha.", 403)
 		return
 	}
 	setSession(w, r, steamid)
