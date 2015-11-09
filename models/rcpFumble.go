@@ -114,11 +114,21 @@ func FumbleLobbyStarted(lob_ *Lobby) {
 }
 
 func FumbleLobbyPlayerJoinedSub(lob *Lobby, player *Player, slot int) {
+	if Fumble == nil {
+		// TODO fix
+		return
+	}
+
 	team, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
 	FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, strings.ToUpper(team))
 }
 
 func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
+	if Fumble == nil {
+		// TODO fix
+		return
+	}
+
 	_, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
 	FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, "")
 }
