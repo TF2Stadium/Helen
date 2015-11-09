@@ -34,8 +34,9 @@ func main() {
 	migrations.Do()
 	stores.SetupStores()
 	models.PaulingConnect()
+	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
-	
+
 	go models.ReadyTimeoutListener()
 	StartListener()
 	chelpers.CheckLogger()

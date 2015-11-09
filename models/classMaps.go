@@ -7,6 +7,8 @@ package models
 import "github.com/TF2Stadium/Helen/helpers"
 
 var teamMap = map[string]int{"red": 0, "blu": 1}
+var teamList = []string{"red", "blu"}
+
 var sixesClassMap = map[string]int{
 	"scout1":  0,
 	"scout2":  1,
@@ -73,4 +75,42 @@ func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (i
 	}
 
 	return team*len(classMap) + class, nil
+}
+
+func LobbyGetSlotInfoString(lobbytype LobbyType, slot int) (string, string, *helpers.TPError) {
+	var classList []string
+	switch lobbytype {
+	case LobbyTypeHighlander:
+		classList = hlClassList
+	case LobbyTypeSixes:
+		classList = sixesClassList
+	case LobbyTypeDebug:
+		classList = debugClassList
+	}
+
+	team, class, err := LobbyGetSlotInfo(lobbytype, slot)
+	if err == nil {
+		return teamList[team], classList[class], nil
+	}
+	return "", "", err
+}
+
+func LobbyGetSlotInfo(lobbytype LobbyType, slot int) (int, int, *helpers.TPError) {
+	var classList []string
+	switch lobbytype {
+	case LobbyTypeHighlander:
+		classList = hlClassList
+	case LobbyTypeSixes:
+		classList = sixesClassList
+	case LobbyTypeDebug:
+		classList = debugClassList
+	}
+
+	if slot < len(classList) {
+		return 0, slot, nil
+	} else if slot < 2*len(classList) {
+		return 1, slot - len(classList), nil
+	} else {
+		return 0, 0, helpers.NewTPError("Invalid slot", -1)
+	}
 }

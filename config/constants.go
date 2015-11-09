@@ -23,6 +23,7 @@ type constants struct {
 	ChatLogsDir        string
 	SessionName        string
 	PaulingPort        string
+	FumblePort         string
 	ServerMockUp       bool
 	ChatLogsEnabled    bool
 	MockupAuth         bool
@@ -84,6 +85,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
 	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
 	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT")
+	overrideFromEnv(&Constants.FumblePort, "FUMBLE_PORT")
 	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN")
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
 	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
@@ -108,11 +110,12 @@ func setupDevelopmentConstants() {
 	Constants.Domain = "http://localhost:8080"
 	Constants.OpenIDRealm = "http://localhost:8080"
 	Constants.CookieDomain = ""
-	Constants.LoginRedirectPath = "http://localhost:8080/"
+	Constants.LoginRedirectPath = "http://localhost:3000/"
 	Constants.CookieStoreSecret = "dev secret is very secret"
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
 	Constants.PaulingPort = "8001"
+	Constants.FumblePort = "7070"
 	Constants.ChatLogsDir = "."
 	Constants.ServerMockUp = true
 	Constants.ChatLogsEnabled = false
