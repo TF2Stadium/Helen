@@ -142,7 +142,8 @@ func GetParams(data string, v interface{}) error {
 			case reflect.Uint:
 				num, err := strconv.ParseUint(validVal, 2, 32)
 				if err != nil {
-					panic(err.Error())
+					panic(fmt.Sprintf("Error while parsing struct tag: %s",
+						err.Error()))
 				}
 
 				if reflect.DeepEqual(fieldValue.Uint(), num) {
