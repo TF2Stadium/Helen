@@ -25,6 +25,7 @@ type constants struct {
 	PaulingPort        string
 	MumbleAddr         string
 	MumblePort         string
+	MumblePassword     string
 	SteamIDWhitelist   string
 	ServerMockUp       bool
 	ChatLogsEnabled    bool
@@ -96,6 +97,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.SteamIDWhitelist, "STEAMID_WHITELIST")
 	overrideFromEnv(&Constants.MumbleAddr, "MUMBLE_ADDR")
 	overrideFromEnv(&Constants.MumblePort, "MUMBLE_PORT")
+	overrideFromEnv(&Constants.MumblePassword, "MUMBLE_PASSWORD")
 
 	// conditional assignments
 

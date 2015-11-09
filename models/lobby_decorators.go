@@ -118,6 +118,7 @@ func DecorateLobbyConnectJSON(lobby *Lobby) *simplejson.Json {
 	mumble := simplejson.New()
 	mumble.Set("address", config.Constants.MumbleAddr)
 	mumble.Set("port", config.Constants.MumblePort)
+	mumble.Set("password", config.Constants.MumblePassword)
 	mumble.Set("channel", "match"+strconv.FormatUint(uint64(lobby.ID), 10))
 	json.Set("mumble", mumble)
 
