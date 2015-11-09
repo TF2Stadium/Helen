@@ -268,15 +268,6 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 		return string(bytes)
 	}
 
-	switch lob.State {
-	case models.LobbyStateInProgress:
-		bytes, _ := chelpers.BuildFailureJSON("Lobby is in progress.", 1).Encode()
-		return string(bytes)
-	case models.LobbyStateEnded:
-		bytes, _ := chelpers.BuildFailureJSON("Lobby has closed.", 1).Encode()
-		return string(bytes)
-	}
-
 	if noLogin {
 		chelpers.AfterLobbySpec(server, so, lob)
 		bytes, _ := models.DecorateLobbyDataJSON(lob, true).Encode()
