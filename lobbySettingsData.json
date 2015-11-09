@@ -176,7 +176,7 @@
 			}
 		},
 		{
-			"name": "asia",
+			"name": "asiafortress",
 			"prettyName": "AsiaFortress",
 			"descriptions": {
 				"cp": "First to 5 rounds wins automatically. Whoever has more points after 30 minutes wins."
