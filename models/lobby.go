@@ -425,6 +425,10 @@ func (lobby *Lobby) Close(rpc bool) {
 	delete(LobbyServerSettingUp, lobby.ID)
 	db.DB.Save(lobby)
 	helpers.RemoveRecord(lobby.ID, lobby)
+
+	room := fmt.Sprintf("%d_public", lobby.ID)
+	bytes, _ := DecorateLobbyLeaveJSON(lobby).Encode()
+	broadcaster.SendMessageToRoom(room, "lobbyLeft", string(bytes))
 }
 
 func (lobby *Lobby) UpdateStats() {
