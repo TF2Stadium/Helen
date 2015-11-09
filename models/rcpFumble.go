@@ -65,6 +65,8 @@ func FumbleLobbyCreated(lob *Lobby) error {
 	FumbleLobbiesLock.Lock()
 	defer FumbleLobbiesLock.Unlock()
 	FumbleLobbies[lob.ID] = lobby
+
+	return nil
 }
 
 func FumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error {
@@ -83,7 +85,8 @@ func FumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error
 	}
 	FumbleLobbiesLock.Lock()
 	defer FumbleLobbiesLock.Unlock()
-	FumbleLobbies[lob.ID] = reply
+	FumbleLobbies[lobbyId] = reply
+	return nil
 }
 
 func FumbleLobbyStarted(lob_ *Lobby) {
@@ -120,13 +123,13 @@ func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
 	FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, "")
 }
 
-func FumbleLobbyEnded(lobby *Lobby) {
+func FumbleLobbyEnded(lob *Lobby) {
 	FumbleLobbiesLock.Lock()
 	defer FumbleLobbiesLock.Unlock()
 
 	err := Fumble.Call("Fumble.EndLobby", FumbleLobbies[lob.ID], nil)
 	if err != nil {
-		helpers.Logger().Warning(err)
+		helpers.Logger.Warning(err.Error())
 	}
-	delete(FumbleLobbies[lob.ID])
+	delete(FumbleLobbies, lob.ID)
 }
