@@ -7,6 +7,7 @@ package models
 import (
 	"strconv"
 
+	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/bitly/go-simplejson"
 )
@@ -115,8 +116,8 @@ func DecorateLobbyConnectJSON(lobby *Lobby) *simplejson.Json {
 	json.Set("game", game)
 
 	mumble := simplejson.New()
-	mumble.Set("ip", "we still need to decide on mumble connections")
-	mumble.Set("port", "we still need to decide on mumble connections")
+	mumble.Set("address", config.Constants.MumbleAddr)
+	mumble.Set("port", config.Constants.MumblePort)
 	mumble.Set("channel", "match"+strconv.FormatUint(uint64(lobby.ID), 10))
 	json.Set("mumble", mumble)
 

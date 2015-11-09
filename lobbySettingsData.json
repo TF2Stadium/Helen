@@ -176,7 +176,7 @@
 			}
 		},
 		{
-			"name": "asia",
+			"name": "asiafortress",
 			"prettyName": "AsiaFortress",
 			"descriptions": {
 				"cp": "First to 5 rounds wins automatically. Whoever has more points after 30 minutes wins."
@@ -232,7 +232,7 @@
 		{
 			"id": 3872,
 			"prettyName": "AsiaFortress 6v6 (Season 9)",
-			"league": "asia",
+			"league": "asiafortress",
 			"format": "sixes"
 		}
 	]

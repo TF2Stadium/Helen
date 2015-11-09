@@ -6,33 +6,62 @@ package controllerhelpers
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
+	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/wsevent"
 )
 
-var WhitelistSteamID = make(map[string]bool)
+var whitelistLock = new(sync.RWMutex)
+var whitelistSteamID = make(map[string]bool)
 
-func InitSteamIDWhitelist(filename string) {
-	absName, _ := filepath.Abs(filename)
-	data, err := ioutil.ReadFile(absName)
-	if err != nil {
-		helpers.Logger.Fatalf("%s", err.Error())
-	}
-	ids := strings.Split(string(data), "\n")
+func WhitelistListener() {
+	ticker := time.NewTicker(time.Minute * 30)
+	for {
+		resp, err := http.Get(config.Constants.SteamIDWhitelist)
+		if err != nil {
+			continue
+		}
 
-	for _, id := range ids {
-		helpers.Logger.Debug("Whitelisting SteamID %s", id)
-		WhitelistSteamID[id] = true
+		bytes, _ := ioutil.ReadAll(resp.Body)
+		var groupXML struct {
+			//XMLName xml.Name `xml:"memberList"`
+			//GroupID uint64   `xml:"groupID64"`
+			Members []string `xml:"members>steamID64"`
+		}
+
+		xml.Unmarshal(bytes, &groupXML)
+
+		whitelistLock.Lock()
+		for _, steamID := range groupXML.Members {
+			_, ok := whitelistSteamID[steamID]
+			if !ok {
+				helpers.Logger.Info("Whitelisting SteamID %s", steamID)
+			}
+			whitelistSteamID[steamID] = true
+		}
+		whitelistLock.Unlock()
+		<-ticker.C
 	}
+}
+
+func IsSteamIDWhitelisted(steamid string) bool {
+	whitelistLock.RLock()
+	defer whitelistLock.RUnlock()
+	whitelisted, exists := whitelistSteamID[steamid]
+
+	return whitelisted && exists
 }
 
 func FilterRequest(so *wsevent.Client, action authority.AuthAction, login bool) (err *helpers.TPError) {
@@ -113,7 +142,8 @@ func GetParams(data string, v interface{}) error {
 			case reflect.Uint:
 				num, err := strconv.ParseUint(validVal, 2, 32)
 				if err != nil {
-					panic(err.Error())
+					panic(fmt.Sprintf("Error while parsing struct tag: %s",
+						err.Error()))
 				}
 
 				if reflect.DeepEqual(fieldValue.Uint(), num) {

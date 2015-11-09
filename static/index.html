@@ -48,19 +48,17 @@ var getCookie = function C(k){return(document.cookie.match('(^|; )'+k+'=([^;]*)'
 
 var url = 'ws://' + window.location.hostname + ':' + window.location.port + '/websocket/';
 
-var so = new Socket(url, {
-	extractor: function(obj) {
-	return obj["request"]
-}})
-
-so.On("asdf", function() {
-console.log("asdf received");
-})
+var opts = {
+	extractor = function(obj) {
+		return obj["request"]
+	}
+};
+var so = new Socket(url, opts)
 
 function sendAuthTest() {
-so.Emit({request: "authenticationTest"}, function(s){
-alert(JSON.parse(s))
-})
+	so.Emit({request: "authenticationTest"}, function(s){
+		alert(JSON.parse(s))
+	});
 }
 
 
@@ -75,6 +73,8 @@ function soOnFunc(what, other) {
 	});
 }
 
+
+soOnFunc("asdf");
 soOnFunc("chatReceive");
 soOnFunc("lobbyData");
 soOnFunc("lobbyReadyUp");
