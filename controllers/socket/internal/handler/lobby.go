@@ -78,7 +78,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	err = lob.SetupServer()
 
 	if err != nil {
-		bytes, _ := err.(*helpers.TPError).ErrorJSON().Encode()
+		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
 		return string(bytes)
 	}
 
