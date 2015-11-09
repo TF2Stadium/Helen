@@ -16,6 +16,9 @@ import (
 var FumbleLock = new(sync.RWMutex)
 var Fumble *rpc.Client
 
+var FumbleLobbiesLock = new(sync.RWMutex)
+var FumbleLobbies = make(map[uint]*mumble.Lobby)
+
 func FumbleConnect() {
 	FumbleLock.Lock()
 	defer FumbleLock.Unlock()
@@ -47,7 +50,7 @@ func FumbleReconnect() {
 	helpers.Logger.Debug("Connected!")
 }
 
-func FumbleLobbyCreated(lob *Lobby) *mumble.Lobby {
+func FumbleLobbyCreated(lob *Lobby) error {
 	newLobby := mumble.NewLobby()
 	newLobby.ID = int(lob.ID)
 
@@ -57,9 +60,30 @@ func FumbleLobbyCreated(lob *Lobby) *mumble.Lobby {
 
 	if err != nil {
 		helpers.Logger.Warning(err.Error())
-		return nil
+		return err
 	}
-	return lobby
+	FumbleLobbiesLock.Lock()
+	defer FumbleLobbiesLock.Unlock()
+	FumbleLobbies[lob.ID] = lobby
+}
+
+func FumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error {
+	user := mumble.NewUser()
+	user.Name = playerName
+	user.Team = mumble.Team(playerTeam)
+
+	FumbleLobbiesLock.Lock()
+	defer FumbleLobbiesLock.Unlock()
+
+	reply := new(mumble.Lobby)
+
+	err := Fumble.Call("Fumble.AllowPlayer", &mumble.LobbyArgs{user, FumbleLobbies[lobbyId]}, reply)
+	if err != nil {
+		helpers.Logger.Warning(err.Error())
+	}
+	FumbleLobbiesLock.Lock()
+	defer FumbleLobbiesLock.Unlock()
+	FumbleLobbies[lob.ID] = reply
 }
 
 func FumbleLobbyStarted(lob_ *Lobby) {
@@ -79,20 +103,7 @@ func FumbleLobbyStarted(lob_ *Lobby) {
 			} else {
 				userIp = so.Request().RemoteAddr
 			}*/
-
-			user := mumble.NewUser()
-			user.Name = strings.ToUpper(class) + " " + player.Name
-			lobby := mumble.NewLobby()
-			lobby.ID = int(lob.ID)
-
-			Fumble.Call("Fumble.AddNameToLobbyWhitelist", mumble.LobbyArgsTeam{user, lobby, strings.ToUpper(team)}, nil)
-
-			/*user := mumble.NewUser()
-			Fumble.Call("Fumble.FindUserByIP", userIp, &user)
-
-			if user.UserID != 0 {
-				Fumble.Call("Fumble.AllowPlayer", &mumble.LobbyArgs{}, nil)
-			}*/
+			FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, strings.ToUpper(team))
 		} else {
 			helpers.Logger.Warning("Socket for player with steamid[%d] not found.", player.SteamId)
 		}
@@ -101,24 +112,21 @@ func FumbleLobbyStarted(lob_ *Lobby) {
 
 func FumbleLobbyPlayerJoinedSub(lob *Lobby, player *Player, slot int) {
 	team, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
-
-	user := mumble.NewUser()
-	user.Name = strings.ToUpper(class) + " " + player.Name
-	lobby := mumble.NewLobby()
-	lobby.ID = int(lob.ID)
-	Fumble.Call("Fumble.AddNameToLobbyWhitelist", mumble.LobbyArgsTeam{user, lobby, strings.ToUpper(team)}, nil)
+	FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, strings.ToUpper(team))
 }
 
 func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
 	_, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
-
-	user := mumble.NewUser()
-	user.Name = strings.ToUpper(class) + " " + player.Name
-	lobby := mumble.NewLobby()
-	lobby.ID = int(lob.ID)
-	Fumble.Call("Fumble.AddNameToLobbyWhitelist", mumble.LobbyArgsTeam{user, lobby, ""}, nil)
+	FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, "")
 }
 
 func FumbleLobbyEnded(lobby *Lobby) {
+	FumbleLobbiesLock.Lock()
+	defer FumbleLobbiesLock.Unlock()
 
+	err := Fumble.Call("Fumble.EndLobby", FumbleLobbies[lob.ID], nil)
+	if err != nil {
+		helpers.Logger().Warning(err)
+	}
+	delete(FumbleLobbies[lob.ID])
 }
