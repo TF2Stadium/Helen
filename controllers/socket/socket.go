@@ -6,6 +6,7 @@ package socket
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -15,6 +16,8 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 )
+
+var RecordNotFoundError = errors.New("Plyaer record for found.")
 
 func onDisconnect(id string) {
 	defer helpers.Logger.Debug("Disconnected from Socket")
@@ -102,7 +105,7 @@ func ServerInit(server *wsevent.Server) {
 	}
 }
 
-func SocketInit(server *wsevent.Server, so *wsevent.Client) {
+func SocketInit(server *wsevent.Server, so *wsevent.Client) error {
 	chelpers.AuthenticateSocket(so.Id(), so.Request())
 	loggedIn := chelpers.IsLoggedInSocket(so.Id())
 	if loggedIn {
@@ -117,8 +120,9 @@ func SocketInit(server *wsevent.Server, so *wsevent.Client) {
 			helpers.Logger.Warning(
 				"User has a cookie with but a matching player record doesn't exist: %s",
 				chelpers.GetSteamId(so.Id()))
+			chelpers.DeauthenticateSocket(so.Id())
 			so.Close()
-			return
+			return RecordNotFoundError
 		}
 
 		chelpers.AfterConnectLoggedIn(server, so, player)
@@ -128,4 +132,6 @@ func SocketInit(server *wsevent.Server, so *wsevent.Client) {
 	}
 
 	so.EmitJSON(helpers.NewRequest("socketInitialized", "{}"))
+
+	return nil
 }

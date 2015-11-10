@@ -53,6 +53,9 @@ func SetupHTTPRoutes(server *wsevent.Server) {
 		}
 
 		helpers.Logger.Debug("Connected to Socket")
-		socket.SocketInit(server, so)
+		err = socket.SocketInit(server, so)
+		if err != nil {
+			controllers.LogoutHandler(w, r)
+		}
 	})
 }
