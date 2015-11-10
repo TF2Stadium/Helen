@@ -114,7 +114,7 @@ func setupDevelopmentConstants() {
 	Constants.Domain = "http://localhost:8080"
 	Constants.OpenIDRealm = "http://localhost:8080"
 	Constants.CookieDomain = ""
-	Constants.LoginRedirectPath = "http://localhost:3000/"
+	Constants.LoginRedirectPath = "http://localhost:8080/"
 	Constants.CookieStoreSecret = "dev secret is very secret"
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
