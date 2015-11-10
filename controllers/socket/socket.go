@@ -19,19 +19,17 @@ import (
 func onDisconnect(id string) {
 	defer helpers.Logger.Debug("Disconnected from Socket")
 	if chelpers.IsLoggedInSocket(id) {
-		var err error
-
 		steamid := chelpers.GetSteamId(id)
 		broadcaster.RemoveSocket(steamid)
-		player, err := models.GetPlayerBySteamId(steamid)
-		if err != nil || player == nil {
-			helpers.Logger.Debug(err.Error())
+		player, tperr := models.GetPlayerBySteamId(steamid)
+		if tperr != nil || player == nil {
+			helpers.Logger.Debug(tperr.Error())
 			return
 		}
 
-		ids, err := player.GetSpectatingIds()
-		if err != nil {
-			helpers.Logger.Debug(err.Error())
+		ids, tperr := player.GetSpectatingIds()
+		if tperr != nil {
+			helpers.Logger.Debug(tperr.Error())
 			return
 		}
 
