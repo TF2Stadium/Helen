@@ -140,3 +140,12 @@ func DecorateLobbyLeaveJSON(lobby *Lobby) *simplejson.Json {
 
 	return json
 }
+
+func DecorateLobbyClosedJSON(lobby *Lobby) *simplejson.Json {
+	json := simplejson.New()
+
+	json.Set("id", lobby.ID)
+
+	return json
+}
+
