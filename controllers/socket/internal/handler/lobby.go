@@ -335,9 +335,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		bytes, _ := chelpers.BuildFailureJSON("Player can't ban himself.", -1).Encode()
 		return string(bytes)
 	}
-
-	fmt.Println(*args.Ban)
-
+	
 	//player to kick
 	player, tperr := models.GetPlayerBySteamId(steamid)
 	if tperr != nil {
