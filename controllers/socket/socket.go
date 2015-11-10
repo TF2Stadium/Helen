@@ -19,9 +19,16 @@ import (
 func onDisconnect(id string) {
 	defer helpers.Logger.Debug("Disconnected from Socket")
 	if chelpers.IsLoggedInSocket(id) {
+		var err error
+
 		steamid := chelpers.GetSteamId(id)
 		broadcaster.RemoveSocket(steamid)
-		player, _ := models.GetPlayerBySteamId(steamid)
+		player, err := models.GetPlayerBySteamId(steamid)
+		if err != nil || player == nil {
+			helpers.Logger.Debug(err.Error())
+			return
+		}
+
 		ids, err := player.GetSpectatingIds()
 		if err != nil {
 			helpers.Logger.Debug(err.Error())
@@ -112,6 +119,7 @@ func SocketInit(server *wsevent.Server, so *wsevent.Client) {
 			helpers.Logger.Warning(
 				"User has a cookie with but a matching player record doesn't exist: %s",
 				chelpers.GetSteamId(so.Id()))
+			so.Close()
 			return
 		}
 
