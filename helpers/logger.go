@@ -20,8 +20,7 @@ func (f FakeLogger) Print(v ...interface{}) {
 var Logger = logging.MustGetLogger("main")
 
 var format = logging.MustStringFormatter(
-	"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}",
-)
+	`%{time:15:04:05} %{color} [%{level:.4s}] %{shortfunc}() : %{color:reset} %{message}`)
 
 // Sample usage
 // Logger.Debug("debug %s", Password("secret"))

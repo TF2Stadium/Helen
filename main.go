@@ -65,6 +65,6 @@ func main() {
 	}).Handler(http.DefaultServeMux)
 
 	// start the server
-	helpers.Logger.Debug("Serving at localhost:" + config.Constants.Port + "...")
+	helpers.Logger.Debug("Serving at %s", config.Constants.Domain)
 	graceful.Run(":"+config.Constants.Port, 10*time.Second, corsHandler)
 }
