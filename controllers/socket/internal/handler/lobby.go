@@ -311,8 +311,8 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	var args struct {
 		Id      *uint   `json:"id"`
-		Steamid *string `json:"steamid" empty:"yes"`
-		Ban     *bool   `json:"bool" empty:"false"`
+		Steamid *string `json:"steamid"`
+		Ban     *bool   `json:"ban" empty:"false"`
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
@@ -325,11 +325,17 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	selfSteamid := chelpers.GetSteamId(so.Id())
 	// TODO check authorization, currently can kick anyone
-	if steamid == "" {
+
+	if steamid == "" || steamid == selfSteamid {
 		self = true
 		steamid = selfSteamid
 	}
 
+	if self && *args.Ban {
+		bytes, _ := chelpers.BuildFailureJSON("Player can't ban himself.", -1).Encode()
+		return string(bytes)
+	}
+	
 	//player to kick
 	player, tperr := models.GetPlayerBySteamId(steamid)
 	if tperr != nil {
