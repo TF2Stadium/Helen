@@ -426,9 +426,13 @@ func (lobby *Lobby) Close(rpc bool) {
 	db.DB.Save(lobby)
 	helpers.RemoveRecord(lobby.ID, lobby)
 
-	room := fmt.Sprintf("%d_public", lobby.ID)
-	bytes, _ := DecorateLobbyLeaveJSON(lobby).Encode()
-	broadcaster.SendMessageToRoom(room, "lobbyLeft", string(bytes))
+	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
+	bytesLobbyLeft, _ := DecorateLobbyLeaveJSON(lobby).Encode()
+	broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", string(bytesLobbyLeft))
+
+	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
+	bytesLobbyClosed, _ := DecorateLobbyClosedJSON(lobby).Encode()
+	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", string(bytesLobbyClosed))
 }
 
 func (lobby *Lobby) UpdateStats() {
