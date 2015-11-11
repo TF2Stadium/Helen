@@ -2,29 +2,9 @@ machine:
   services:
     - postgresql
   environment:
-    IMPORT_PATH: "github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
     DATABASE_NAME: "circle_test"
     DATABASE_USERNAME: "ubuntu"
     DATABASE_PASSWORD: ""
-    GOPATH: /tmp/go/
-    GOBIN: $GOPATH/bin
-dependencies:
-  override:
-    - mkdir -p $GOPATH
-    - go get github.com/stretchr/testify/assert
-    - go get github.com/tools/godep
-    - mkdir -p "$GOPATH/src/$IMPORT_PATH"
-    - cp -r ./ "$GOPATH/src/$IMPORT_PATH"
-    - go get ./...:
-        pwd:
-          ../../../../../../../../../$GOPATH/src/$IMPORT_PATH/
-test:
-  override:
-    - ls
-    - pwd
-    - go test ./...:
-        pwd:
-          ../../../../../../../../../$GOPATH/src/$IMPORT_PATH/
 deployment:
   master:
     branch: master
