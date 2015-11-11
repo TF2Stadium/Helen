@@ -454,7 +454,7 @@ func (lobby *Lobby) UpdateStats() {
 
 func (lobby *Lobby) setInGameStatus(player *Player, inGame bool) error {
 	slot := &LobbySlot{}
-	err := db.DB.Where("player_id = ? AND lobby_id = ? ").First(slot).Error
+	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).First(slot).Error
 	if err != nil {
 		return err
 	}
