@@ -20,7 +20,7 @@ import (
 var RecordNotFoundError = errors.New("Plyaer record for found.")
 
 func onDisconnect(id string) {
-	defer helpers.Logger.Debug("Disconnected from Socket")
+	//defer helpers.Logger.Debug("Disconnected from Socket")
 	if chelpers.IsLoggedInSocket(id) {
 		steamid := chelpers.GetSteamId(id)
 		broadcaster.RemoveSocket(steamid)

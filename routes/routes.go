@@ -11,7 +11,6 @@ import (
 	"github.com/TF2Stadium/Helen/controllers"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/websocket"
 )
@@ -47,12 +46,7 @@ func SetupHTTPRoutes(server *wsevent.Server) {
 
 		so, err := server.NewClient(upgrader, w, r)
 
-		if err != nil {
-			helpers.Logger.Warning("%s", err.Error())
-			return
-		}
-
-		helpers.Logger.Debug("Connected to Socket")
+		//helpers.Logger.Debug("Connected to Socket")
 		err = socket.SocketInit(server, so)
 		if err != nil {
 			controllers.LogoutHandler(w, r)
