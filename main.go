@@ -22,10 +22,17 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes"
 	"github.com/TF2Stadium/wsevent"
+	"github.com/DSchalla/go-pid"
 	"github.com/rs/cors"
 )
 
 func main() {
+
+	pid := &pid.Instance {}
+	if pid.Create() == nil {
+		defer pid.Remove()
+	}
+
 	authority.RegisterTypes()
 	helpers.InitLogger()
 	helpers.InitAuthorization()
