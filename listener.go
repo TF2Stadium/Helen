@@ -17,15 +17,13 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 )
 
-var eventChanMap = make(map[string](chan map[string]interface{}))
-
-func StartListener() {
+func StartPaulingListener() {
 	if config.Constants.ServerMockUp {
 		return
 	}
-
+	var eventChanMap = make(map[string](chan map[string]interface{}))
 	var events = [...]string{"test", "playerDisc", "playerConn", "discFromServer",
-		"matchEnded", "playerRep", "playerSub"}
+		"matchEnded", "playerSub"}
 
 	for _, e := range events {
 		eventChanMap[e] = make(chan map[string]interface{})
@@ -34,14 +32,13 @@ func StartListener() {
 	var ticker *time.Ticker
 	ticker = time.NewTicker(time.Millisecond * 500)
 
-	go eventListener()
-	go listener(ticker)
+	go eventListener(eventChanMap)
+	go listener(ticker, eventChanMap)
 	helpers.Logger.Debug("Listening for events on Pauling")
 }
 
-func listener(ticker *time.Ticker) {
+func listener(ticker *time.Ticker, eventChanMap map[string](chan map[string]interface{})) {
 	for {
-
 		<-ticker.C
 
 		event := make(models.Event)
@@ -61,7 +58,7 @@ func listener(ticker *time.Ticker) {
 
 }
 
-func eventListener() {
+func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 	for {
 		select {
 		case event := <-eventChanMap["playerDisc"]:
@@ -112,7 +109,7 @@ func eventListener() {
 			lobby.SetInGame(player)
 			helpers.UnlockRecord(lobby.ID, lobby)
 
-		case event := <-eventChanMap["playerRep"]:
+		case event := <-eventChanMap["playerSub"]:
 			lobbyid := event["lobbyId"].(uint)
 			steamId := event["steamId"].(string)
 

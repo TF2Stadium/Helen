@@ -37,7 +37,7 @@ func main() {
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
 	go models.ReadyTimeoutListener()
-	StartListener()
+	StartPaulingListener()
 	chelpers.CheckLogger()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
