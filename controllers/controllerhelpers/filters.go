@@ -5,142 +5,164 @@
 package controllerhelpers
 
 import (
+	"encoding/json"
+	"encoding/xml"
+	"errors"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
+	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
+	"sync"
+	"time"
 
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
-	"github.com/bitly/go-simplejson"
-	"github.com/googollee/go-socket.io"
+	"github.com/TF2Stadium/wsevent"
 )
 
-type Param struct {
-	Kind    reflect.Kind
-	Default interface{}
-	In      interface{}
-}
+var whitelistLock = new(sync.RWMutex)
+var whitelistSteamID = make(map[string]bool)
 
-type FilterParams struct {
-	Action      authority.AuthAction
-	FilterLogin bool
-	Params      map[string]Param
-}
-
-var WhitelistSteamID = make(map[string]bool)
-
-func InitSteamIDWhitelist(filename string) {
-	absName, _ := filepath.Abs(filename)
-	data, _ := ioutil.ReadFile(absName)
-	ids := strings.Split(string(data), "\n")
-
-	for _, id := range ids {
-		helpers.Logger.Debug("Whitelisting SteamID %s", id)
-		WhitelistSteamID[id] = true
-	}
-}
-
-func FilterRequest(so socketio.Socket, filters FilterParams, f func(map[string]interface{}) string) func(string) string {
-
-	return func(jsonStr string) string {
-		if filters.FilterLogin && !IsLoggedInSocket(so.Id()) {
-			bytes, _ := BuildFailureJSON("Player isn't logged in.", -4).Encode()
-			return string(bytes)
-		}
-
-		// steamid := GetSteamId(so.Id())
-
-		// if config.Constants.SteamIDWhitelist != "" && !WhitelistSteamID[steamid] {
-		// 	bytes, _ := BuildFailureJSON("Player isn't in the Whitelist.", -4).Encode()
-		// 	return string(bytes)
-		// }
-
-		// Careful: this assumes normal players can do everything (since helpers.RolePlayer==0)
-		if int(filters.Action) != 0 {
-			var role, _ = GetPlayerRole(so.Id())
-			can := role.Can(filters.Action)
-			if !can {
-				bytes, _ := BuildFailureJSON("You are not authorized to perform this action.", 0).Encode()
-				return string(bytes)
-			}
-		}
-
-		if filters.Params == nil {
-			return f(nil)
-		}
-
-		js, err := simplejson.NewFromReader(strings.NewReader(jsonStr))
+func WhitelistListener() {
+	ticker := time.NewTicker(time.Minute * 30)
+	for {
+		resp, err := http.Get(config.Constants.SteamIDWhitelist)
 		if err != nil {
-			bytes, _ := BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
+			continue
 		}
 
-		paramMap, err := js.Map()
-		if err != nil {
-			bytes, _ := BuildFailureJSON("Malformed JSON syntax.", 0).Encode()
-			return string(bytes)
+		bytes, _ := ioutil.ReadAll(resp.Body)
+		var groupXML struct {
+			//XMLName xml.Name `xml:"memberList"`
+			//GroupID uint64   `xml:"groupID64"`
+			Members []string `xml:"members>steamID64"`
 		}
 
-	outer:
-		for key, param := range filters.Params {
-			_, ok := paramMap[key]
+		xml.Unmarshal(bytes, &groupXML)
 
+		whitelistLock.Lock()
+		for _, steamID := range groupXML.Members {
+			_, ok := whitelistSteamID[steamID]
 			if !ok {
-				if param.Default == nil {
-					bytes, _ := BuildMissingArgJSON(key).Encode()
-					return string(bytes)
-				}
-				paramMap[key] = param.Default
+				helpers.Logger.Info("Whitelisting SteamID %s", steamID)
 			}
+			whitelistSteamID[steamID] = true
+		}
+		whitelistLock.Unlock()
+		<-ticker.C
+	}
+}
 
-			if kind := reflect.ValueOf(paramMap[key]).Kind(); kind != param.Kind {
-				if param.Kind == reflect.Uint {
-					if num, err := js.Get(key).Uint64(); err == nil {
-						paramMap[key] = uint(num)
-						continue
-					}
-				} else if param.Kind == reflect.Int {
-					if num, err := js.Get(key).Int64(); err == nil {
-						paramMap[key] = int(num)
-						continue
-					}
+func IsSteamIDWhitelisted(steamid string) bool {
+	whitelistLock.RLock()
+	defer whitelistLock.RUnlock()
+	whitelisted, exists := whitelistSteamID[steamid]
+
+	return whitelisted && exists
+}
+
+func FilterRequest(so *wsevent.Client, action authority.AuthAction, login bool) (err *helpers.TPError) {
+	if login && !IsLoggedInSocket(so.Id()) {
+		return helpers.NewTPError("Player isn't logged in.", -4)
+
+	}
+	if int(action) != 0 {
+		var role, _ = GetPlayerRole(so.Id())
+		can := role.Can(action)
+		if !can {
+			err = helpers.NewTPError("You are not authorized to perform this action.", 0)
+		}
+	}
+	return
+}
+
+func GetParams(data string, v interface{}) error {
+	err := json.Unmarshal([]byte(data), v)
+
+	if err != nil {
+		return err
+	}
+
+	stValue := reflect.Indirect(reflect.ValueOf(v))
+	stType := stValue.Type()
+
+	for i := 0; i < stType.NumField(); i++ {
+		field := stType.Field(i)
+		fieldPtrValue := stValue.Field(i)             //The pointer field
+		fieldValue := reflect.Indirect(fieldPtrValue) //The value to which the pointer points too
+
+		if field.Type.Kind() != reflect.String {
+			if fieldPtrValue.IsNil() {
+				emptyTag := field.Tag.Get("empty")
+				if emptyTag == "" {
+					return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
+						strings.ToLower(field.Name)))
 				}
-				bytes, _ := BuildMissingArgJSON(key).Encode()
-				return string(bytes)
-			}
 
-			errFormat := `Paramter "%s" not valid, or of invalid type.`
-
-			if param.In != nil {
-				switch param.Kind {
-				case reflect.String:
-					for _, val := range param.In.([]string) {
-						if paramMap[key] == val {
-							continue outer
-						}
-					}
-
-				case reflect.Int:
-					for _, val := range param.In.([]int) {
-						if paramMap[key] == val {
-							continue outer
-						}
-					}
-
+				switch fieldPtrValue.Type().Elem().Kind() {
 				case reflect.Uint:
-					for _, val := range param.In.([]uint) {
-						if paramMap[key] == val {
-							continue outer
-						}
+					num, err := strconv.ParseUint(emptyTag, 2, 32)
+					if err != nil {
+						panic(err.Error())
 					}
+					fieldPtrValue.Set(reflect.ValueOf(&num))
+				case reflect.String:
+					fieldPtrValue.Set(reflect.ValueOf(&emptyTag))
+				case reflect.Bool:
+					b, ok := map[string]bool{
+						"true":  true,
+						"false": false}[emptyTag]
+					if !ok {
+						panic(fmt.Sprintf(
+							"%s is not a valid boolean literal string",
+							emptyTag))
+					}
+					fieldPtrValue.Set(reflect.ValueOf(&b))
 				}
-				bytes, _ := BuildFailureJSON(fmt.Sprintf(errFormat, key), 0).Encode()
-				return string(bytes)
+				continue
 			}
+		} else if fieldValue.String() == "" && field.Tag.Get("empty") == "" {
+			return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
+				strings.ToLower(field.Name)))
 		}
 
-		return f(paramMap)
+		validTag := field.Tag.Get("valid")
+		if validTag == "" {
+			continue
+		}
+
+		arr := strings.Split(validTag, ",")
+		var valid bool
+	outer:
+		for _, validVal := range arr {
+			switch fieldValue.Kind() {
+			case reflect.Uint:
+				num, err := strconv.ParseUint(validVal, 2, 32)
+				if err != nil {
+					panic(fmt.Sprintf("Error while parsing struct tag: %s",
+						err.Error()))
+				}
+
+				if reflect.DeepEqual(fieldValue.Uint(), num) {
+					valid = true
+					break outer
+				}
+
+			case reflect.String:
+				if reflect.DeepEqual(fieldValue.String(), validVal) {
+					valid = true
+					break outer
+				}
+
+			}
+		}
+		if !valid {
+			return errors.New(fmt.Sprintf("Field %s isn't valid.", field.Name))
+		}
 	}
+
+	return nil
 }

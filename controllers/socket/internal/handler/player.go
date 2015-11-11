@@ -3,99 +3,108 @@ package handler
 import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
-	"github.com/googollee/go-socket.io"
-	"reflect"
 )
 
-var playerSettingsGetFilter = chelpers.FilterParams{
-	FilterLogin: true,
-	Params: map[string]chelpers.Param{
-		"key": chelpers.Param{Kind: reflect.String, Default: ""},
-	},
+func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) string {
+	reqerr := chelpers.FilterRequest(so, 0, true)
+
+	if reqerr != nil {
+		bytes, _ := reqerr.ErrorJSON().Encode()
+		return string(bytes)
+	}
+	var args struct {
+		Key string `json:"key"`
+	}
+
+	err := chelpers.GetParams(data, &args)
+	if err != nil {
+		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		return string(bytes)
+	}
+
+	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+	var settings []models.PlayerSetting
+	var setting models.PlayerSetting
+	if args.Key == "*" {
+		settings, err = player.GetSettings()
+	} else {
+		setting, err = player.GetSetting(args.Key)
+		settings = append(settings, setting)
+	}
+
+	if err != nil {
+		bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
+		return string(bytes)
+	}
+
+	result := models.DecoratePlayerSettingsJson(settings)
+	resp, _ := chelpers.BuildSuccessJSON(result).Encode()
+	return string(resp)
 }
 
-func PlayerSettingsGet(so socketio.Socket) func(string) string {
-	return chelpers.FilterRequest(so, playerSettingsGetFilter,
-		func(params map[string]interface{}) string {
-			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data string) string {
+	reqerr := chelpers.FilterRequest(so, 0, true)
 
-			key := params["key"].(string)
+	if reqerr != nil {
+		bytes, _ := reqerr.ErrorJSON().Encode()
+		return string(bytes)
+	}
+	var args struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	}
 
-			var err error
-			var settings []models.PlayerSetting
-			var setting models.PlayerSetting
-			if key == "" {
-				settings, err = player.GetSettings()
-			} else {
-				setting, err = player.GetSetting(key)
-				settings = append(settings, setting)
-			}
+	err := chelpers.GetParams(data, &args)
+	if err != nil {
+		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		return string(bytes)
+	}
 
-			if err != nil {
-				bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
-				return string(bytes)
-			}
+	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
-			result := models.DecoratePlayerSettingsJson(settings)
-			resp, _ := chelpers.BuildSuccessJSON(result).Encode()
-			return string(resp)
-		})
+	err = player.SetSetting(args.Key, args.Value)
+	if err != nil {
+		bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
+		return string(bytes)
+	}
+
+	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+	return string(resp)
 }
 
-var playerSettingsSetFilter = chelpers.FilterParams{
-	FilterLogin: true,
-	Params: map[string]chelpers.Param{
-		"key":   chelpers.Param{Kind: reflect.String},
-		"value": chelpers.Param{Kind: reflect.String},
-	},
-}
+func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data string) string {
+	reqerr := chelpers.FilterRequest(so, 0, true)
 
-func PlayerSettingsSet(so socketio.Socket) func(string) string {
-	return chelpers.FilterRequest(so, playerSettingsSetFilter,
-		func(params map[string]interface{}) string {
-			player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	if reqerr != nil {
+		bytes, _ := reqerr.ErrorJSON().Encode()
+		return string(bytes)
+	}
+	var args struct {
+		Steamid string `json:"steamid"`
+	}
 
-			key := params["key"].(string)
-			value := params["value"].(string)
+	err := chelpers.GetParams(data, &args)
+	if err != nil {
+		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		return string(bytes)
+	}
 
-			err := player.SetSetting(key, value)
-			if err != nil {
-				bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
-				return string(bytes)
-			}
+	steamid := args.Steamid
+	if steamid == "" {
+		steamid = chelpers.GetSteamId(so.Id())
+	}
 
-			resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-			return string(resp)
-		})
-}
+	player, playErr := models.GetPlayerWithStats(steamid)
 
-var playerProfileFilter = chelpers.FilterParams{
-	FilterLogin: true,
-	Params: map[string]chelpers.Param{
-		"steamid": chelpers.Param{Kind: reflect.String, Default: ""},
-	},
-}
+	if playErr != nil {
+		bytes, _ := chelpers.BuildFailureJSON(playErr.Error(), 0).Encode()
+		return string(bytes)
+	}
 
-func PlayerProfile(so socketio.Socket) func(string) string {
-	return chelpers.FilterRequest(so, playerProfileFilter,
-		func(params map[string]interface{}) string {
-
-			steamid := params["steamid"].(string)
-
-			if steamid == "" {
-				steamid = chelpers.GetSteamId(so.Id())
-			}
-
-			player, playErr := models.GetPlayerWithStats(steamid)
-
-			if playErr != nil {
-				bytes, _ := chelpers.BuildFailureJSON(playErr.Error(), 0).Encode()
-				return string(bytes)
-			}
-
-			result := models.DecoratePlayerProfileJson(player)
-			resp, _ := chelpers.BuildSuccessJSON(result).Encode()
-			return string(resp)
-		})
+	result := models.DecoratePlayerProfileJson(player)
+	resp, _ := chelpers.BuildSuccessJSON(result).Encode()
+	return string(resp)
 }

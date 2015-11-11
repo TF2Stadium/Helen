@@ -1,0 +1,239 @@
+{
+	"formats": [
+		{
+			"name": "sixes",
+			"prettyName": "6v6",
+			"important": true
+		},
+		{
+			"name": "highlander",
+			"prettyName": "Highlander",
+			"important": true
+		},
+		{
+			"name": "fours",
+			"prettyName": "4v4"
+		},
+		{
+			"name": "ultiduo",
+			"prettyName": "Ultiduo"
+		},
+		{
+			"name": "arena-respawn",
+			"prettyName": "Arena:Respawn"
+		},
+		{
+			"name": "bball",
+			"prettyName": "Bball"
+		},
+		{
+			"name": "debug",
+			"prettyName": "Debug"
+		}
+	],
+	"maps": [
+		{
+			"name": "cp_badlands",
+			"formats": {
+		    	"sixes": 1
+			}
+		},
+		{
+			"name": "cp_granary_pro_b10",
+			"formats": {
+				"sixes": 1
+			}
+		},
+		{
+			"name": "cp_process_final",
+			"formats": {
+				"sixes": 1
+			}
+		},
+		{
+			"name": "cp_snakewater_final1",
+			"formats": {
+				"sixes": 1
+			}
+		},
+		{
+			"name": "cp_gullywash_final1",
+			"formats": {
+				"sixes": 1,
+				"highlander": 1
+			}
+		},
+		{
+			"name": "cp_metalworks_rc5",
+			"formats": {
+				"sixes": 1
+			}
+		},
+		{
+			"name": "cp_sunshine_rc7",
+			"formats": {
+				"sixes": 1,
+				"highlander": 1
+			}
+		},
+		{
+			"name": "koth_product_rc8",
+			"formats": {
+				"sixes": 1,
+				"highlander": 1
+			}
+		},
+		{
+			"name": "pl_upward",
+			"formats": {
+				"highlander": 1
+			}
+		},
+		{
+			"name": "pl_badwater",
+			"formats": {
+				"highlander": 1
+			}
+		},
+		{
+			"name": "pl_borneo",
+			"formats": {
+				"highlander": 1
+			}
+		},
+		{
+			"name": "pl_swiftwater_ugc",
+			"formats": {
+				"highlander": 1
+			}
+		},
+		{
+			"name": "pl_barnblitz_pro6",
+			"formats": {
+				"highlander": 1
+			}
+		},
+		{
+			"name": "cp_steel",
+			"formats": {
+				"highlander": 1
+			}
+		},
+		{
+			"name": "koth_lakeside_final",
+			"formats": {
+				"highlander": 1
+			}
+		},
+		{
+			"name": "koth_ramjam_rc1",
+			"formats": {
+				"highlander": 1
+			}
+		}
+	],
+	"leagues": [
+		{
+			"name": "etf2l",
+			"prettyName": "ETF2L",
+			"descriptions": {
+				"cp": "First to lead by 5 rounds wins automatically. Whoever has more points after 30 minutes wins."
+			},
+			"formats": {
+				"sixes": true,
+				"highlander": true
+			}
+		},
+		{
+			"name": "ugc",
+			"prettyName": "UGC",
+			"descriptions": {
+				"cp": "First to 5 rounds wins automatically. Whoever has more points after 30 minutes wins."
+			},
+			"formats": {
+				"sixes": true,
+				"highlander": true
+			}
+		},
+		{
+			"name": "esea",
+			"prettyName": "ESEA",
+			"descriptions": {
+				"cp": "First to 5 rounds wins automatically. Whoever has more points after 30 minutes wins."
+			},
+			"formats": {
+				"sixes": true
+			}
+		},
+		{
+			"name": "ozfortress",
+			"prettyName": "ozfortress",
+			"descriptions": {
+				"cp": "First to lead by 5 rounds wins automatically. Whoever has more points after 30 minutes wins."
+			},
+			"formats": {
+				"sixes": true
+			}
+		},
+		{
+			"name": "asiafortress",
+			"prettyName": "AsiaFortress",
+			"descriptions": {
+				"cp": "First to 5 rounds wins automatically. Whoever has more points after 30 minutes wins."
+			},
+			"formats": {
+				"sixes": true
+			}
+		}
+	],
+	"whitelists": [
+		{
+			"id": 3250,
+			"prettyName": "ETF2L Highlander (Season 8)",
+			"league": "etf2l",
+			"format": "highlander"
+		},
+		{
+			"id": 4498,
+			"prettyName": "ETF2L 6v6 (Season 22)",
+			"league": "etf2l",
+			"format": "sixes"
+		},
+		{
+			"id": 3951,
+			"prettyName": "UGC Highlander (Season 16)",
+			"league": "ugc",
+			"format": "highlander"
+		},
+		{
+			"id": 4559,
+			"prettyName": "UGC 6v6 (Season 19)",
+			"league": "ugc",
+			"format": "sixes"
+		},
+		{
+			"id": 3771,
+			"prettyName": "UGC Highlander (Season 16)",
+			"league": "ugc",
+			"format": "fours"
+		},
+		{
+			"id": 3688,
+			"prettyName": "ESEA 6v6 (Season 19)",
+			"league": "esea",
+			"format": "sixes"
+		},
+		{
+			"id": 4034,
+			"prettyName": "ozfortress 6v6 (OWL 14)",
+			"league": "ozfortress",
+			"format": "sixes"
+		},
+		{
+			"id": 3872,
+			"prettyName": "AsiaFortress 6v6 (Season 9)",
+			"league": "asiafortress",
+			"format": "sixes"
+		}
+	]
+}

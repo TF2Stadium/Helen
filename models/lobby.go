@@ -218,7 +218,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 
 	db.DB.Create(newSlotObj)
 
-	AllowPlayer(lobby.ID, player.SteamId)
 	lobby.OnChange(true)
 	return nil
 }
@@ -299,9 +298,12 @@ func (lobby *Lobby) UnreadyAllPlayers() error {
 	return err
 }
 
+var TimeoutStopMap = make(map[uint](chan bool))
+
 func ReadyTimeoutListener() {
 	for {
 		id := <-readyUpLobbyID
+		TimeoutStopMap[id] = make(chan bool)
 		go func() {
 			tick := time.After(time.Second * 30)
 			lobby, _ := GetLobbyById(id)
@@ -309,24 +311,28 @@ func ReadyTimeoutListener() {
 			lobby.ReadyUpTimestamp = time.Now().Unix() + 30
 			lobby.Save()
 			helpers.UnlockRecord(lobby.ID, lobby)
-			<-tick
-			db.DB.First(lobby, id)
+			select {
+			case <-tick:
+				db.DB.First(lobby, id)
 
-			if lobby.State != LobbyStateInProgress {
-				helpers.LockRecord(lobby.ID, lobby)
-				defer helpers.UnlockRecord(lobby.ID, lobby)
-				err := lobby.RemoveUnreadyPlayers()
-				if err != nil {
-					helpers.Logger.Critical(err.Error())
+				if lobby.State != LobbyStateInProgress {
+					helpers.LockRecord(lobby.ID, lobby)
+					defer helpers.UnlockRecord(lobby.ID, lobby)
+					err := lobby.RemoveUnreadyPlayers()
+					if err != nil {
+						helpers.Logger.Critical(err.Error())
+					}
+
+					lobby.UnreadyAllPlayers()
+					if err != nil {
+						helpers.Logger.Critical(err.Error())
+					}
+
+					lobby.State = LobbyStateWaiting
+					lobby.Save()
 				}
-
-				lobby.UnreadyAllPlayers()
-				if err != nil {
-					helpers.Logger.Critical(err.Error())
-				}
-
-				lobby.State = LobbyStateWaiting
-				lobby.Save()
+			case <-TimeoutStopMap[lobby.ID]:
+				return
 			}
 		}()
 	}
@@ -418,6 +424,14 @@ func (lobby *Lobby) Close(rpc bool) {
 	delete(LobbyServerSettingUp, lobby.ID)
 	db.DB.Save(lobby)
 	helpers.RemoveRecord(lobby.ID, lobby)
+
+	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
+	bytesLobbyLeft, _ := DecorateLobbyLeaveJSON(lobby).Encode()
+	broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", string(bytesLobbyLeft))
+
+	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
+	bytesLobbyClosed, _ := DecorateLobbyClosedJSON(lobby).Encode()
+	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", string(bytesLobbyClosed))
 }
 
 func (lobby *Lobby) UpdateStats() {
@@ -425,11 +439,39 @@ func (lobby *Lobby) UpdateStats() {
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
 
 	for _, slot := range slots {
-		var player *Player
-		db.DB.Preload("Stats").First(slot.ID, player)
+		player := &Player{}
+		err := db.DB.First(player, slot.PlayerId).Error
+		if err != nil {
+			helpers.Logger.Critical("%s", err.Error())
+			return
+		}
+		db.DB.Preload("Stats").First(player, slot.PlayerId)
 		player.Stats.PlayedCountIncrease(lobby.Type)
 		player.Save()
 	}
+	lobby.OnChange(false)
+}
+
+func (lobby *Lobby) setInGameStatus(player *Player, inGame bool) error {
+	slot := &LobbySlot{}
+	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).First(slot).Error
+	if err != nil {
+		return err
+	}
+
+	slot.InGame = true
+	db.DB.Save(slot)
+	lobby.OnChange(false)
+
+	return nil
+}
+
+func (lobby *Lobby) SetInGame(player *Player) error {
+	return lobby.setInGameStatus(player, true)
+}
+
+func (lobby *Lobby) SetNotInGame(player *Player) error {
+	return lobby.setInGameStatus(player, false)
 }
 
 // GORM callback
@@ -460,7 +502,7 @@ func (lobby *Lobby) OnChange(base bool) {
 }
 
 func BroadcastLobby(lobby *Lobby) {
-	db.DB.Preload("Spectators").First(&lobby, lobby.ID)
+	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
 	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
 	room := strconv.FormatUint(uint64(lobby.ID), 10)
 
@@ -469,7 +511,7 @@ func BroadcastLobby(lobby *Lobby) {
 }
 
 func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
-	db.DB.Preload("Spectators").First(&lobby, lobby.ID)
+	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
 	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
 	broadcaster.SendMessage(steamid, "lobbyData", string(bytes))
 }

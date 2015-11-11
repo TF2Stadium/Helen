@@ -23,10 +23,13 @@ type constants struct {
 	ChatLogsDir        string
 	SessionName        string
 	PaulingPort        string
+	MumbleAddr         string
+	MumblePort         string
+	MumblePassword     string
+	SteamIDWhitelist   string
 	ServerMockUp       bool
 	ChatLogsEnabled    bool
 	MockupAuth         bool
-	SteamIDWhitelist   string
 	AllowedCorsOrigins []string
 
 	// database
@@ -80,6 +83,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY")
 	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST")
 	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT")
+	overrideFromEnv(&Constants.DbDatabase, "DATABASE_NAME")
 	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
 	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
 	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT")
@@ -91,6 +95,9 @@ func SetupConstants() {
 	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
 	overrideFromEnv(&Constants.SteamIDWhitelist, "STEAMID_WHITELIST")
+	overrideFromEnv(&Constants.MumbleAddr, "MUMBLE_ADDR")
+	overrideFromEnv(&Constants.MumblePort, "MUMBLE_PORT")
+	overrideFromEnv(&Constants.MumblePassword, "MUMBLE_PASSWORD")
 
 	// conditional assignments
 

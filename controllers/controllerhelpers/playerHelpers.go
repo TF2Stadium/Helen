@@ -13,8 +13,8 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
-	"github.com/googollee/go-socket.io"
 )
 
 var BanTypeList = []string{"join", "create", "chat", "full"}
@@ -26,26 +26,33 @@ var BanTypeMap = map[string]models.PlayerBanType{
 	"full":   models.PlayerBanFull,
 }
 
-func AfterLobbyJoin(so socketio.Socket, lobby *models.Lobby, player *models.Player) {
-	so.Join(fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
+func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby, player *models.Player) {
+	room := fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID))
+	server.AddClient(so, room)
+
+	bytes, _ := models.DecorateLobbyDataJSON(lobby, false).Encode()
+	broadcaster.SendMessage(player.SteamId, "lobbyJoined", string(bytes))
 }
 
-func AfterLobbyLeave(so socketio.Socket, lobby *models.Lobby, player *models.Player) {
-	so.Leave(fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
-	so.Leave(fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby, player *models.Player) {
+	server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
+	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+
+	bytes, _ := models.DecorateLobbyLeaveJSON(lobby).Encode()
+	broadcaster.SendMessage(player.SteamId, "lobbyLeft", string(bytes))
 }
 
-func AfterLobbySpec(so socketio.Socket, lobby *models.Lobby) {
-	so.Join(fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
+	server.AddClient(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 	BroadcastScrollback(so, lobby.ID)
 }
 
-func AfterLobbySpecLeave(so socketio.Socket, lobby *models.Lobby) {
-	so.Leave(fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+func AfterLobbySpecLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
+	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 }
 
-func AfterConnect(so socketio.Socket) {
-	so.Join(fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom)) //room for global chat
+func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
+	server.AddClient(so, fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom)) //room for global chat
 
 	var lobbies []models.Lobby
 	err := db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies).Error
@@ -60,16 +67,16 @@ func AfterConnect(so socketio.Socket) {
 		return
 	}
 
-	so.Emit("lobbyListData", list)
+	so.EmitJSON(helpers.NewRequest("lobbyListData", list))
 	BroadcastScrollback(so, 0)
 }
 
-func AfterConnectLoggedIn(so socketio.Socket, player *models.Player) {
+func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *models.Player) {
 	lobbyIdPlaying, err := player.GetLobbyId()
 	if err == nil {
 		lobby, _ := models.GetLobbyById(lobbyIdPlaying)
-		AfterLobbyJoin(so, lobby, player)
-		AfterLobbySpec(so, lobby)
+		AfterLobbyJoin(server, so, lobby, player)
+		AfterLobbySpec(server, so, lobby)
 		models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
 		slot := &models.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
