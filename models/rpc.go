@@ -29,6 +29,7 @@ type Args struct {
 	Map       string
 	SteamId   string
 	SteamId2  string
+	Slot      string
 }
 
 var PaulingLock = new(sync.RWMutex)
@@ -73,7 +74,7 @@ func PaulingConnect() {
 	helpers.Logger.Debug("Connected!")
 }
 
-func AllowPlayer(lobbyId uint, steamId string) error {
+func AllowPlayer(lobbyId uint, steamId string, slot string) error {
 	if config.Constants.ServerMockUp {
 		return nil
 	}
@@ -81,7 +82,7 @@ func AllowPlayer(lobbyId uint, steamId string) error {
 	PaulingLock.RLock()
 	defer PaulingLock.RUnlock()
 
-	return Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
+	return Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobbyId, SteamId: steamId, Slot: slot}, &Args{})
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {

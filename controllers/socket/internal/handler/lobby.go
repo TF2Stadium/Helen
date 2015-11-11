@@ -236,6 +236,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		models.BroadcastLobbyList()
 	}
 
+	models.AllowPlayer(*args.Id, player.SteamId, *args.Team+*args.Class)
 	models.BroadcastLobbyToUser(lob, player.SteamId)
 	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 	return string(bytes)
@@ -335,7 +336,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		bytes, _ := chelpers.BuildFailureJSON("Player can't ban himself.", -1).Encode()
 		return string(bytes)
 	}
-	
+
 	//player to kick
 	player, tperr := models.GetPlayerBySteamId(steamid)
 	if tperr != nil {

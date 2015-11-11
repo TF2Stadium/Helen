@@ -218,7 +218,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 
 	db.DB.Create(newSlotObj)
 
-	AllowPlayer(lobby.ID, player.SteamId)
 	lobby.OnChange(true)
 	return nil
 }
@@ -454,7 +453,7 @@ func (lobby *Lobby) UpdateStats() {
 }
 
 func (lobby *Lobby) setInGameStatus(player *Player, inGame bool) error {
-	var slot *LobbySlot
+	slot := &LobbySlot{}
 	err := db.DB.Where("player_id = ? AND lobby_id = ? ").First(slot).Error
 	if err != nil {
 		return err
