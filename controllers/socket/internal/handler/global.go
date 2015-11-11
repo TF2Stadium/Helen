@@ -5,8 +5,6 @@
 package handler
 
 import (
-	"encoding/json"
-
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
@@ -31,19 +29,6 @@ func GetConstant(server *wsevent.Server, so *wsevent.Client, data string) string
 		return string(bytes)
 	}
 
-	outputString, err := output.Encode()
-	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
-		return string(bytes)
-	}
-
-	var resp struct {
-		Success bool   `json:"success"`
-		Data    string `json:"data"`
-	}
-	resp.Success = true
-	resp.Data = string(outputString)
-
-	bytes, _ := json.Marshal(resp)
+	bytes, _ := chelpers.BuildSuccessJSON(output).Encode()
 	return string(bytes)
 }
