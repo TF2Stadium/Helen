@@ -113,9 +113,9 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 			lobbyid := event["lobbyId"].(uint)
 			steamId := event["steamId"].(string)
 
+			var slot = &models.LobbySlot{}
 			player, _ := models.GetPlayerBySteamId(steamId)
 
-			var slot *models.LobbySlot
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Find(slot)
 			slot.NeedSub = true
 			db.DB.Save(slot)
@@ -170,7 +170,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 					info.BannedPlayers = append(info.BannedPlayers, player.SteamId)
 				}
 				for _, slot := range lobby.Slots {
-					var player *models.Player
+					var player = &models.Player{}
 					db.DB.Find(player, slot.PlayerId)
 					info.Players = append(info.Players, player.SteamId)
 				}
