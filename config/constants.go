@@ -53,9 +53,7 @@ func overrideFromEnv(constant *string, name string, secret bool) {
 		} else {
 			helpers.Logger.Debug("%s = %s", name, *constant)
 		}
-
 	}
-
 }
 
 func overrideBoolFromEnv(constant *bool, name string) {
