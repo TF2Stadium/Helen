@@ -43,11 +43,17 @@ type constants struct {
 	SteamApiMockUp bool
 }
 
-func overrideFromEnv(constant *string, name string) {
+func overrideFromEnv(constant *string, name string, secret bool) {
 	val := os.Getenv(name)
 	if "" != val {
 		*constant = val
-		helpers.Logger.Debug("%s = %s", name, *constant)
+
+		str := `%s = %s`
+		if secret {
+			str = `%s = <secret>`
+		}
+
+		helpers.Logger.Debug(str, name, *constant)
 	}
 
 }
@@ -77,27 +83,27 @@ func SetupConstants() {
 		setupTravisTestConstants()
 	}
 
-	overrideFromEnv(&Constants.Port, "PORT")
-	overrideFromEnv(&Constants.ChatLogsDir, "CHAT_LOG_DIR")
-	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET")
-	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY")
-	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST")
-	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT")
-	overrideFromEnv(&Constants.DbDatabase, "DATABASE_NAME")
-	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME")
-	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD")
-	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT")
-	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN")
-	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM")
-	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN")
+	overrideFromEnv(&Constants.Port, "PORT", false)
+	overrideFromEnv(&Constants.ChatLogsDir, "CHAT_LOG_DIR", false)
+	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET", true)
+	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY", true)
+	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST", true)
+	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT", true)
+	overrideFromEnv(&Constants.DbDatabase, "DATABASE_NAME", true)
+	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME", true)
+	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD", true)
+	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT", false)
+	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN", false)
+	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM", false)
+	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN", false)
 	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
 	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_DISABLE")
 	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")
-	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH")
-	overrideFromEnv(&Constants.SteamIDWhitelist, "STEAMID_WHITELIST")
-	overrideFromEnv(&Constants.MumbleAddr, "MUMBLE_ADDR")
-	overrideFromEnv(&Constants.MumblePort, "MUMBLE_PORT")
-	overrideFromEnv(&Constants.MumblePassword, "MUMBLE_PASSWORD")
+	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH", false)
+	overrideFromEnv(&Constants.SteamIDWhitelist, "STEAMID_WHITELIST", false)
+	overrideFromEnv(&Constants.MumbleAddr, "MUMBLE_ADDR", false)
+	overrideFromEnv(&Constants.MumblePort, "MUMBLE_PORT", false)
+	overrideFromEnv(&Constants.MumblePassword, "MUMBLE_PASSWORD", true)
 
 	// conditional assignments
 
