@@ -47,7 +47,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
-func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
+func setSession(w http.ResponseWriter, r *http.Request, steamid string) error {
 	session, _ := controllerhelpers.GetSessionHTTP(r)
 	session.Values["steam_id"] = steamid
 
@@ -60,7 +60,7 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 		player, playErr = models.NewPlayer(steamid)
 
 		if playErr != nil {
-			helpers.Logger.Warning(playErr.Error())
+			return playErr
 		}
 
 		database.DB.Create(player)
@@ -70,11 +70,11 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 		if err == nil {
 			database.DB.Save(player)
 		} else {
-			helpers.Logger.Warning("Error updating player ", err)
+			return err
 		}
 	} else if err != nil {
 		// Failed login
-		helpers.Logger.Warning("%s", err)
+		return err
 	}
 
 	session.Values["id"] = fmt.Sprint(player.ID)
@@ -82,6 +82,7 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 
 	session.Options.Domain = config.Constants.CookieDomain
 	err = session.Save(r, w)
+	return err
 }
 
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -99,6 +100,9 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Sorry, you're not in the closed alpha.", 403)
 		return
 	}
-	setSession(w, r, steamid)
+	err = setSession(w, r, steamid)
+	if err != nil {
+		http.Error(w, "Internal Server Error", 500)
+	}
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
