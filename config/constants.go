@@ -48,12 +48,12 @@ func overrideFromEnv(constant *string, name string, secret bool) {
 	if "" != val {
 		*constant = val
 
-		str := `%s = %s`
 		if secret {
-			str = `%s = <secret>`
+			helpers.Logger.Debug("%s = <secret>", name)
+		} else {
+			helpers.Logger.Debug("%s = %s", name, *constant)
 		}
 
-		helpers.Logger.Debug(str, name, *constant)
 	}
 
 }
