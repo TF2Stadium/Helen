@@ -111,7 +111,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = setSession(w, r, steamid)
 	if err != nil {
-		helpers.Logger.Error("", err.Error())
+		helpers.Logger.Error(err.Error())
 		http.Error(w, "Internal Server Error.", 500)
 		return
 	}

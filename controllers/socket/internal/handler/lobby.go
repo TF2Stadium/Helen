@@ -66,7 +66,8 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		ServerPassword: serverPwd}
 	err = models.VerifyInfo(info)
 	if err != nil {
-		return err.Error()
+		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		return string(bytes)
 	}
 
 	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, int(*args.WhitelistID), *args.Mumble)

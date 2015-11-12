@@ -7,6 +7,7 @@ package models
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -44,10 +45,22 @@ var stateString = map[LobbyState]string{
 	LobbyStateEnded:      "Lobby Ended",
 }
 
-var FormatMap = map[LobbyType]string{
+var formatMap = map[LobbyType]string{
 	LobbyTypeDebug:      "Debug",
 	LobbyTypeSixes:      "Sixes",
 	LobbyTypeHighlander: "Highlander",
+	LobbyTypeBball:      "BBall",
+	LobbyTypeFours:      "Fours",
+}
+
+func (l *Lobby) FormatString() string {
+	str := formatMap[l.Type]
+
+	if strings.HasPrefix("ultiduo", l.MapName) || strings.HasPrefix("koth_ultiduo", l.MapName) {
+		str = "ultiduo"
+	}
+
+	return str
 }
 
 var readyUpLobbyID = make(chan uint)

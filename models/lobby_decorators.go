@@ -35,7 +35,7 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) *simplejso
 func DecorateLobbyDataJSON(lobby *Lobby, includeDetails bool) *simplejson.Json {
 	lobbyJs := simplejson.New()
 	lobbyJs.Set("id", lobby.ID)
-	lobbyJs.Set("type", FormatMap[lobby.Type])
+	lobbyJs.Set("type", lobby.FormatString())
 	lobbyJs.Set("players", lobby.GetPlayerNumber())
 	lobbyJs.Set("map", lobby.MapName)
 	lobbyJs.Set("league", lobby.League)
