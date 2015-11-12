@@ -29,7 +29,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 
 	var args struct {
 		Map         *string `json:"map"`
-		Type        *string `json:"type" valid:"debug,sixes,highlander"`
+		Type        *string `json:"type" valid:"debug,sixes,highlander,fours,ultiduo,bball"`
 		League      *string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
 		Server      *string `json:"server"`
 		RconPwd     *string `json:"rconpwd"`
@@ -49,14 +49,11 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		"debug":      models.LobbyTypeDebug,
 		"sixes":      models.LobbyTypeSixes,
 		"highlander": models.LobbyTypeHighlander,
+		"ultiduo":    models.LobbyTypeUltiduo,
+		"bball":      models.LobbyTypeBball,
 	}
 
-	lobbyType, exists := playermap[*args.Type]
-
-	if !exists {
-		bytes, _ := chelpers.BuildFailureJSON("Invalid lobby type", -1).Encode()
-		return string(bytes)
-	}
+	lobbyType := playermap[*args.Type]
 
 	randBytes := make([]byte, 6)
 	rand.Read(randBytes)

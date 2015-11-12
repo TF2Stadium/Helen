@@ -22,6 +22,9 @@ type LobbyState int
 const (
 	LobbyTypeSixes      LobbyType = 6
 	LobbyTypeHighlander LobbyType = 9
+	LobbyTypeFours      LobbyType = 4
+	LobbyTypeUltiduo    LobbyType = 2
+	LobbyTypeBball      LobbyType = 2
 	LobbyTypeDebug      LobbyType = 1
 )
 
