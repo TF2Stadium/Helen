@@ -12,7 +12,6 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
@@ -42,7 +41,7 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	helpers.Logger.Debug("received chat message: %s %s", *args.Message, player.Name)
+	//helpers.Logger.Debug("received chat message: %s %s", *args.Message, player.Name)
 
 	spec := player.IsSpectatingId(uint(*args.Room))
 	//Check if player has either joined, or is spectating lobby
