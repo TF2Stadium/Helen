@@ -6,7 +6,6 @@ package models
 
 import (
 	"github.com/TF2Stadium/Helen/helpers"
-	"strings"
 )
 
 var teamMap = map[string]int{"red": 0, "blu": 1}
@@ -54,31 +53,36 @@ var ultiduoClassList = []string{"soldier", "medic"}
 var foursClassMap = map[string]int{
 	"scout":   0,
 	"soldier": 1,
-	"demo":    2,
+	"demoman": 2,
 	"medic":   3,
 }
-var foursClassList = []string{"scout", "soldier", "demo", "medic"}
+var foursClassList = []string{"scout", "soldier", "demoman", "medic"}
 
 var TypeClassMap = map[LobbyType]map[string]int{
 	LobbyTypeHighlander: hlClassMap,
 	LobbyTypeSixes:      sixesClassMap,
+	LobbyTypeFours:      foursClassMap,
+	LobbyTypeUltiduo:    ultiduoClassMap,
+	LobbyTypeBball:      bballClassMap,
 	LobbyTypeDebug:      debugClassMap,
 }
 
-var typeClassList = map[LobbyType][]string{
+var TypeClassList = map[LobbyType][]string{
 	LobbyTypeHighlander: hlClassList,
 	LobbyTypeSixes:      sixesClassList,
-	LobbyTypeDebug:      debugClassList,
-	LobbyTypeBball:      bballClassList,
 	LobbyTypeFours:      foursClassList,
+	LobbyTypeUltiduo:    ultiduoClassList,
+	LobbyTypeBball:      bballClassList,
+	LobbyTypeDebug:      debugClassList,
 }
 
-func TypeClassList(l LobbyType, mapname string) []string {
-	list := typeClassList[l]
-	if strings.HasPrefix(mapname, "ultiduo") || strings.HasPrefix(mapname, "koth_ultiduo") {
-		list = ultiduoClassList
-	}
-	return list
+var NumberOfClassesMap = map[LobbyType]int{
+	LobbyTypeHighlander: 9,
+	LobbyTypeSixes:      6,
+	LobbyTypeFours:      4,
+	LobbyTypeUltiduo:    2,
+	LobbyTypeBball:      2,
+	LobbyTypeDebug:      1,	
 }
 
 func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (int, *helpers.TPError) {
@@ -87,29 +91,10 @@ func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (i
 		return -1, helpers.NewTPError("Invalid team", -1)
 	}
 
-	var classMap map[string]int
-
-	switch lobbytype {
-	case LobbyTypeHighlander:
-		classMap = hlClassMap
-	case LobbyTypeSixes:
-		classMap = sixesClassMap
-	case LobbyTypeDebug:
-		classMap = debugClassMap
-	case LobbyTypeFours:
-		classMap = foursClassMap
-	case LobbyTypeUltiduo:
-		classMap = bballClassMap
-		if classStr == "soldier" || classStr == "medic" {
-			classMap = ultiduoClassMap
-		}
-	}
-
-	class, ok := classMap[classStr]
-
+	class, ok := TypeClassMap[lobbytype][classStr]
 	if !ok {
 		return -1, helpers.NewTPError("Invalid class", -1)
 	}
 
-	return team*len(classMap) + class, nil
+	return team*NumberOfClassesMap[lobbytype] + class, nil
 }

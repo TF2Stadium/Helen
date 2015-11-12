@@ -7,7 +7,6 @@ package models
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -24,7 +23,7 @@ const (
 	LobbyTypeSixes      LobbyType = 6
 	LobbyTypeHighlander LobbyType = 9
 	LobbyTypeFours      LobbyType = 4
-	LobbyTypeUltiduo    LobbyType = 2
+	LobbyTypeUltiduo    LobbyType = 3
 	LobbyTypeBball      LobbyType = 2
 	LobbyTypeDebug      LobbyType = 1
 )
@@ -45,22 +44,13 @@ var stateString = map[LobbyState]string{
 	LobbyStateEnded:      "Lobby Ended",
 }
 
-var formatMap = map[LobbyType]string{
-	LobbyTypeDebug:      "Debug",
-	LobbyTypeSixes:      "Sixes",
+var FormatMap = map[LobbyType]string{
+	LobbyTypeSixes:      "6s",
 	LobbyTypeHighlander: "Highlander",
-	LobbyTypeBball:      "BBall",
-	LobbyTypeFours:      "Fours",
-}
-
-func (l *Lobby) FormatString() string {
-	str := formatMap[l.Type]
-
-	if strings.HasPrefix("ultiduo", l.MapName) || strings.HasPrefix("koth_ultiduo", l.MapName) {
-		str = "ultiduo"
-	}
-
-	return str
+	LobbyTypeFours:      "4v4",
+	LobbyTypeUltiduo:    "Ultiduo",
+	LobbyTypeBball:      "Bball",
+	LobbyTypeDebug:      "Debug",
 }
 
 var readyUpLobbyID = make(chan uint)
@@ -192,7 +182,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		return lobbyBanError
 	}
 
-	if slot >= 2*int(lobby.Type) || slot < 0 {
+	if slot >= 2*NumberOfClassesMap[lobby.Type] || slot < 0 {
 		return badSlotError
 	}
 
@@ -366,7 +356,7 @@ func (lobby *Lobby) IsEveryoneReady() bool {
 	var slots []LobbySlot
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
 
-	if len(slots) != int(lobby.Type)*2 {
+	if len(slots) != NumberOfClassesMap[lobby.Type]*2 {
 		return false
 	}
 
@@ -408,7 +398,7 @@ func (lobby *Lobby) GetPlayerNumber() int {
 }
 
 func (lobby *Lobby) IsFull() bool {
-	return lobby.GetPlayerNumber() >= 2*int(lobby.Type)
+	return lobby.GetPlayerNumber() >= 2*NumberOfClassesMap[lobby.Type]
 }
 
 func (lobby *Lobby) IsSlotFilled(slot int) bool {
