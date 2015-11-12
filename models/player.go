@@ -148,6 +148,10 @@ func (player *Player) GetSpectatingIds() ([]uint, *helpers.TPError) {
 }
 
 func (player *Player) UpdatePlayerInfo() error {
+	if config.Constants.SteamApiMockUp {
+		return nil
+	}
+
 	scraper.SetSteamApiKey(config.Constants.SteamDevApiKey)
 	p, _ := GetPlayerBySteamId(player.SteamId)
 
