@@ -7,6 +7,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -86,15 +87,23 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) error {
 }
 
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	regex := regexp.MustCompile(`http://steamcommunity.com/openid/id/(\d+)`)
+
 	fullURL := config.Constants.Domain + r.URL.String()
-	id, err := openid.Verify(fullURL, discoveryCache, nonceStore)
+	idURL, err := openid.Verify(fullURL, discoveryCache, nonceStore)
 	if err != nil {
-		helpers.Logger.Warning(err.Error())
+		helpers.Logger.Warning("%s", err.Error())
 		return
 	}
 
-	parts := strings.Split(id, "/")
-	steamid := parts[len(parts)-1]
+	parts := regex.FindStringSubmatch(idURL)
+	if len(parts) != 2 {
+		http.Error(w, "Steam Authentication failed, please try again.", 500)
+		return
+	}
+
+	steamid := parts[1]
+
 	if config.Constants.SteamIDWhitelist != "" && !controllerhelpers.IsSteamIDWhitelisted(steamid) {
 		//Use a more user-friendly message later
 		http.Error(w, "Sorry, you're not in the closed alpha.", 403)
