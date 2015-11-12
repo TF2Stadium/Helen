@@ -102,7 +102,8 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = setSession(w, r, steamid)
 	if err != nil {
-		http.Error(w, "Internal Server Error", 500)
+		http.Error(w, "Internal Server Error.", 500)
+		return
 	}
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
