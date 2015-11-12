@@ -63,11 +63,7 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) {
 			helpers.Logger.Warning(playErr.Error())
 		}
 
-		err := database.DB.Create(player).Error
-		if err != nil {
-			database.DB.Where("steam_id = ?", steamid).Delete(models.Player{})
-			database.DB.Create(player)
-		}
+		database.DB.Create(player)
 	} else if err == nil {
 		// Successful repeat login
 		err = player.UpdatePlayerInfo()
