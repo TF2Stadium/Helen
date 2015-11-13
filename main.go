@@ -10,6 +10,7 @@ import (
 
 	"gopkg.in/tylerb/graceful.v1"
 
+	"github.com/DSchalla/go-pid"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -22,13 +23,16 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes"
 	"github.com/TF2Stadium/wsevent"
-	"github.com/DSchalla/go-pid"
 	"github.com/rs/cors"
+	_ "net/http/pprof"
 )
 
 func main() {
+	go func() {
+		helpers.Logger.Fatal(http.ListenAndServe("localhost:6060", nil))
+	}()
 
-	pid := &pid.Instance {}
+	pid := &pid.Instance{}
 	if pid.Create() == nil {
 		defer pid.Remove()
 	}
