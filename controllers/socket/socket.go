@@ -26,13 +26,13 @@ func onDisconnect(id string) {
 		broadcaster.RemoveSocket(steamid)
 		player, tperr := models.GetPlayerBySteamId(steamid)
 		if tperr != nil || player == nil {
-			helpers.Logger.Debug(tperr.Error())
+			helpers.Logger.Error(tperr.Error())
 			return
 		}
 
 		ids, tperr := player.GetSpectatingIds()
 		if tperr != nil {
-			helpers.Logger.Debug(tperr.Error())
+			helpers.Logger.Error(tperr.Error())
 			return
 		}
 
@@ -40,10 +40,10 @@ func onDisconnect(id string) {
 			lobby, _ := models.GetLobbyById(id)
 			err := lobby.RemoveSpectator(player, true)
 			if err != nil {
-				helpers.Logger.Critical(err.Error())
+				helpers.Logger.Error(err.Error())
 				continue
 			}
-			helpers.Logger.Debug("removing %s from %d", player.SteamId, id)
+			//helpers.Logger.Debug("removing %s from %d", player.SteamId, id)
 		}
 
 	}
