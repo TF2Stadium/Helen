@@ -28,8 +28,9 @@ import (
 )
 
 func main() {
+	config.SetupConstants()
 	go func() {
-		helpers.Logger.Fatal(http.ListenAndServe("localhost:6060", nil))
+		helpers.Logger.Fatal(http.ListenAndServe("localhost:"+config.Constants.ProfilerPort, nil))
 	}()
 
 	pid := &pid.Instance{}
@@ -40,7 +41,6 @@ func main() {
 	authority.RegisterTypes()
 	helpers.InitLogger()
 	helpers.InitAuthorization()
-	config.SetupConstants()
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()
