@@ -104,13 +104,18 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	steamid := parts[1]
 
-	if config.Constants.SteamIDWhitelist != "" && !controllerhelpers.IsSteamIDWhitelisted(steamid) {
+	if config.Constants.SteamIDWhitelist != "" &&
+		!controllerhelpers.IsSteamIDWhitelisted(steamid) {
 		//Use a more user-friendly message later
 		http.Error(w, "Sorry, you're not in the closed alpha.", 403)
 		return
 	}
 	err = setSession(w, r, steamid)
 	if err != nil {
+		session, _ := controllerhelpers.GetSessionHTTP(r)
+		session.Options = &sessions.Options{MaxAge: -1}
+		session.Save(r, w)
+
 		helpers.Logger.Error(err.Error())
 		http.Error(w, "Internal Server Error.", 500)
 		return
