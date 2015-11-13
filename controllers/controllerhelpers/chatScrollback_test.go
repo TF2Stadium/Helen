@@ -8,8 +8,6 @@ import (
 )
 
 func TestAddScrollbackMessage(t *testing.T) {
-	initChatScrollback(0)
-
 	messages := make([]string, 20)
 	for i, _ := range messages {
 		messages[i] = strconv.Itoa(i)
