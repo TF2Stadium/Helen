@@ -29,7 +29,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 
 	var args struct {
 		Map         *string `json:"map"`
-		Type        *string `json:"type" valid:"debug,sixes,highlander,fours,ultiduo,bball"`
+		Type        *string `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
 		League      *string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
 		Server      *string `json:"server"`
 		RconPwd     *string `json:"rconpwd"`
@@ -47,11 +47,11 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 
 	var playermap = map[string]models.LobbyType{
 		"debug":      models.LobbyTypeDebug,
-		"sixes":      models.LobbyTypeSixes,
+		"6s":         models.LobbyTypeSixes,
 		"highlander": models.LobbyTypeHighlander,
 		"ultiduo":    models.LobbyTypeUltiduo,
 		"bball":      models.LobbyTypeBball,
-		"fours":      models.LobbyTypeFours,
+		"4v4":        models.LobbyTypeFours,
 	}
 
 	lobbyType := playermap[*args.Type]
