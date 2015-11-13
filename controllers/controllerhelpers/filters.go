@@ -27,7 +27,7 @@ var whitelistLock = new(sync.RWMutex)
 var whitelistSteamID = make(map[string]bool)
 
 func WhitelistListener() {
-	ticker := time.NewTicker(time.Minute * 30)
+	ticker := time.NewTicker(time.Minute * 5)
 	for {
 		resp, err := http.Get(config.Constants.SteamIDWhitelist)
 		if err != nil {
