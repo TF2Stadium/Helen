@@ -24,7 +24,7 @@ import (
 )
 
 var whitelistLock = new(sync.RWMutex)
-var whitelistSteamID = make(map[string]bool)
+var whitelistSteamID map[string]bool
 
 func WhitelistListener() {
 	ticker := time.NewTicker(time.Minute * 5)
@@ -44,11 +44,12 @@ func WhitelistListener() {
 		xml.Unmarshal(bytes, &groupXML)
 
 		whitelistLock.Lock()
+		whitelistSteamID = make(map[string]bool)
+
 		for _, steamID := range groupXML.Members {
 			//_, ok := whitelistSteamID[steamID]
 			//helpers.Logger.Info("Whitelisting SteamID %s", steamID)
 			whitelistSteamID[steamID] = true
-
 		}
 		whitelistLock.Unlock()
 		<-ticker.C
