@@ -42,7 +42,8 @@ type constants struct {
 	SteamDevApiKey string
 	SteamApiMockUp bool
 
-	ProfilerPort string
+	ProfilerEnable bool
+	ProfilerPort   string
 }
 
 func overrideFromEnv(constant *string, name string, secret bool) {
@@ -104,8 +105,9 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.MumbleAddr, "MUMBLE_ADDR", false)
 	overrideFromEnv(&Constants.MumblePort, "MUMBLE_PORT", false)
 	overrideFromEnv(&Constants.MumblePassword, "MUMBLE_PASSWORD", true)
-	overrideFromEnv(&Constants.ProfilerPort, "PROFILER_PORT", true)
 
+	overrideFromEnv(&Constants.ProfilerPort, "PROFILER_PORT", true)
+	overrideBoolFromEnv(&Constants.ProfilerEnable, "PROFILER_ENABLE")
 	// conditional assignments
 
 	if Constants.SteamDevApiKey == "your steam dev api key" && !Constants.SteamApiMockUp {

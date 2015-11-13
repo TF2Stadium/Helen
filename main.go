@@ -29,9 +29,14 @@ import (
 
 func main() {
 	config.SetupConstants()
-	go func() {
-		helpers.Logger.Fatal(http.ListenAndServe("localhost:"+config.Constants.ProfilerPort, nil))
-	}()
+	if config.Constants.ProfilerEnable {
+		address := "localhost:" + config.Constants.ProfilerPort
+		go func() {
+			helpers.Logger.Fatal(
+				http.ListenAndServe(address, nil))
+		}()
+		helpers.Logger.Debug("Running Profiler at %s", address)
+	}
 
 	pid := &pid.Instance{}
 	if pid.Create() == nil {
