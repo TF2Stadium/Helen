@@ -28,7 +28,9 @@ import (
 )
 
 func main() {
+	helpers.InitLogger()
 	config.SetupConstants()
+
 	if config.Constants.ProfilerEnable {
 		address := "localhost:" + config.Constants.ProfilerPort
 		go func() {
@@ -44,7 +46,6 @@ func main() {
 	}
 
 	authority.RegisterTypes()
-	helpers.InitLogger()
 	helpers.InitAuthorization()
 	database.Init()
 	migrations.Do()
