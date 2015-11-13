@@ -51,6 +51,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		"highlander": models.LobbyTypeHighlander,
 		"ultiduo":    models.LobbyTypeUltiduo,
 		"bball":      models.LobbyTypeBball,
+		"fours":      models.LobbyTypeFours,
 	}
 
 	lobbyType := playermap[*args.Type]
