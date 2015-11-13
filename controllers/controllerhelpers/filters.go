@@ -48,7 +48,7 @@ func WhitelistListener() {
 
 		for _, steamID := range groupXML.Members {
 			//_, ok := whitelistSteamID[steamID]
-			//helpers.Logger.Info("Whitelisting SteamID %s", steamID)
+			helpers.Logger.Info("Whitelisting SteamID %s", steamID)
 			whitelistSteamID[steamID] = true
 		}
 		whitelistLock.Unlock()
@@ -60,6 +60,8 @@ func IsSteamIDWhitelisted(steamid string) bool {
 	whitelistLock.RLock()
 	defer whitelistLock.RUnlock()
 	whitelisted, exists := whitelistSteamID[steamid]
+
+	helpers.Logger.Debug("steamid: %s, whitelisted: %t, eixsts: %t", steamid, whitelisted, exists)
 
 	return whitelisted && exists
 }
