@@ -53,7 +53,6 @@ func main() {
 	models.PaulingConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
-	go models.ReadyTimeoutListener()
 	StartPaulingListener()
 	chelpers.CheckLogger()
 	if config.Constants.SteamIDWhitelist != "" {

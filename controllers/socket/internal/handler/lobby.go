@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -167,6 +168,8 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 
 }
 
+var timeoutStop = make(map[uint](chan bool))
+
 func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
@@ -226,8 +229,46 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	if lob.IsFull() {
 		lob.State = models.LobbyStateReadyingUp
+		lob.ReadyUpTimestamp = time.Now().Unix() + 30
 		lob.Save()
-		lob.ReadyUpTimeoutCheck()
+
+		tick := time.After(time.Second * 30)
+		id := lob.ID
+		timeoutStop[id] = make(chan bool)
+
+		go func() {
+			select {
+			case <-tick:
+				lobby := &models.Lobby{}
+				db.DB.First(lobby, id)
+
+				helpers.RLockRecord(id, lobby)
+				state := lobby.State
+				helpers.RUnlockRecord(id, lobby)
+
+				if state != models.LobbyStateInProgress {
+					helpers.LockRecord(lobby.ID, lobby)
+					defer helpers.UnlockRecord(lobby.ID, lobby)
+					err := lobby.RemoveUnreadyPlayers()
+					if err != nil {
+						helpers.Logger.Error("RemoveUnreadyPlayers: ", err.Error())
+						err = nil
+					}
+
+					err = lobby.UnreadyAllPlayers()
+					if err != nil {
+						helpers.Logger.Error("UnreadyAllPlayers: ", err.Error())
+					}
+
+					lobby.State = models.LobbyStateWaiting
+					lobby.Save()
+				}
+
+			case <-timeoutStop[id]:
+				return
+			}
+		}()
+
 		room := fmt.Sprintf("%s_private",
 			chelpers.GetLobbyRoom(lob.ID))
 		broadcaster.SendMessageToRoom(room, "lobbyReadyUp",
@@ -447,6 +488,7 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	if lobby.IsEveryoneReady() {
+		timeoutStop[lobby.ID] <- true
 		lobby.State = models.LobbyStateInProgress
 		lobby.Save()
 		bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
@@ -504,7 +546,10 @@ func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	lobby.UnreadyAllPlayers()
-	models.TimeoutStopMap[lobby.ID] <- true
+	c, ok := timeoutStop[lobby.ID]
+	if ok {
+		c <- true
+	}
 
 	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 	return string(bytes)
