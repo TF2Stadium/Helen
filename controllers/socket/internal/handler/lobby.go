@@ -488,6 +488,7 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	if lobby.IsEveryoneReady() {
+		timeoutStop[lobby.ID] <- true
 		lobby.State = models.LobbyStateInProgress
 		lobby.Save()
 		bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
