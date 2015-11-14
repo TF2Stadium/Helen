@@ -304,50 +304,6 @@ func (lobby *Lobby) UnreadyAllPlayers() error {
 	return err
 }
 
-var TimeoutStopMap = make(map[uint](chan bool))
-
-func ReadyTimeoutListener() {
-	for {
-		id := <-readyUpLobbyID
-		TimeoutStopMap[id] = make(chan bool)
-		go func() {
-			tick := time.After(time.Second * 30)
-			lobby, _ := GetLobbyById(id)
-			helpers.LockRecord(lobby.ID, lobby)
-			lobby.ReadyUpTimestamp = time.Now().Unix() + 30
-			lobby.Save()
-			helpers.UnlockRecord(lobby.ID, lobby)
-			select {
-			case <-tick:
-				db.DB.First(lobby, id)
-
-				if lobby.State != LobbyStateInProgress {
-					helpers.LockRecord(lobby.ID, lobby)
-					defer helpers.UnlockRecord(lobby.ID, lobby)
-					err := lobby.RemoveUnreadyPlayers()
-					if err != nil {
-						helpers.Logger.Critical(err.Error())
-					}
-
-					lobby.UnreadyAllPlayers()
-					if err != nil {
-						helpers.Logger.Critical(err.Error())
-					}
-
-					lobby.State = LobbyStateWaiting
-					lobby.Save()
-				}
-			case <-TimeoutStopMap[lobby.ID]:
-				return
-			}
-		}()
-	}
-}
-
-func (lobby *Lobby) ReadyUpTimeoutCheck() {
-	readyUpLobbyID <- lobby.ID
-}
-
 func (lobby *Lobby) ReadyUpTimeLeft() int64 {
 	return int64(lobby.ReadyUpTimestamp - time.Now().Unix())
 }

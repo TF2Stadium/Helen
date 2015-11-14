@@ -6,8 +6,6 @@ package handler
 
 import (
 	"fmt"
-	"strconv"
-	"time"
 
 	"encoding/json"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -18,46 +16,6 @@ import (
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
 )
-
-func DebugLobbyFill(server *wsevent.Server, so *wsevent.Client, data string) string {
-	reqerr := chelpers.FilterRequest(so, 0, true)
-
-	if reqerr != nil {
-		bytes, _ := reqerr.ErrorJSON().Encode()
-		return string(bytes)
-	}
-	var args struct {
-		Id *uint `json:"id"`
-	}
-
-	err := chelpers.GetParams(data, &args)
-	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
-		return string(bytes)
-	}
-
-	lobby, _ := models.GetLobbyById(*args.Id)
-	var players []*models.Player
-
-	for i := 1; i < int(lobby.Type)*2; i++ {
-		steamid := "DEBUG" + strconv.FormatUint(uint64(time.Now().Unix()), 10) + strconv.Itoa(i)
-
-		player, _ := models.NewPlayer(steamid)
-		player.Debug = true
-		player.Save()
-		players = append(players, player)
-		lobby.AddPlayer(player, i)
-	}
-
-	lobby.State = models.LobbyStateReadyingUp
-	lobby.Save()
-	room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobby.ID))
-	broadcaster.SendMessageToRoom(room, "lobbyReadyUp", "")
-	lobby.ReadyUpTimeoutCheck()
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
-
-}
 
 func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
