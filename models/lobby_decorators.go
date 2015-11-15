@@ -102,6 +102,7 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		Players: lobby.GetPlayerNumber(),
 		Map:     lobby.MapName,
 		League:  lobby.League,
+		Region:  lobby.Region,
 		Mumble:  lobby.Mumble,
 	}
 
