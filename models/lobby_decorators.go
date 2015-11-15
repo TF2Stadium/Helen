@@ -5,10 +5,8 @@
 package models
 
 import (
-	"fmt"
 	"strconv"
 
-	"encoding/json"
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 )
