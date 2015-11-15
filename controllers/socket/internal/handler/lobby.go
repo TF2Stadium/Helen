@@ -7,6 +7,7 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -316,7 +317,7 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 
 	if noLogin {
 		chelpers.AfterLobbySpec(server, so, lob)
-		bytes, _ := models.DecorateLobbyDataJSON(lob, true).Encode()
+		bytes, _ := json.Marshal(models.DecorateLobbyData(lob, true))
 
 		so.EmitJSON(helpers.NewRequest("lobbyData", string(bytes)))
 		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
@@ -496,7 +497,7 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		timeoutStop[lobby.ID] <- true
 		lobby.State = models.LobbyStateInProgress
 		lobby.Save()
-		bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
+		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
 		room := fmt.Sprintf("%s_private",
 			chelpers.GetLobbyRoom(lobby.ID))
 		broadcaster.SendMessageToRoom(room,
@@ -563,12 +564,8 @@ func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 func RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	var lobbies []models.Lobby
 	db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
-	list, err := models.DecorateLobbyListData(lobbies)
-	if err != nil {
-		helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
-	} else {
-		so.EmitJSON(helpers.NewRequest("lobbyListData", list))
-	}
+	list, _ := json.Marshal(models.DecorateLobbyListData(lobbies))
+	so.EmitJSON(helpers.NewRequest("lobbyListData", string(list)))
 
 	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 	return string(resp)

@@ -11,7 +11,6 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
@@ -50,27 +49,6 @@ func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) st
 
 }
 
-func DebugRequestAllLobbies(server *wsevent.Server, so *wsevent.Client, data string) string {
-	var lobbies []models.Lobby
-	db.DB.Where("state <> ?", models.LobbyStateEnded).Find(&lobbies)
-	list, err := models.DecorateLobbyListData(lobbies)
-
-	if err != nil {
-		helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
-	} else {
-		reply, _ := json.Marshal(struct {
-			Request string          `json:"request"`
-			Data    json.RawMessage `json:"data"`
-		}{"lobbyListData", []byte(list)})
-
-		so.Emit(string(reply))
-	}
-
-	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(resp)
-
-}
-
 func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
@@ -90,7 +68,7 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 	}
 
 	lobby, _ := models.GetLobbyById(*args.Id)
-	bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
+	bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
 	room := fmt.Sprintf("%s_private", chelpers.GetLobbyRoom(lobby.ID))
 	broadcaster.SendMessageToRoom(room,
 		"lobbyStart", string(bytes))

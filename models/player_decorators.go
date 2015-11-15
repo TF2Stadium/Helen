@@ -9,6 +9,37 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
+type PlayerSummary struct {
+	Avatar        string   `json:"avatar,omitempty"`
+	GameHours     int      `json:"gameHours,omitempty"`
+	ProfileURL    string   `json:"profileUrl,omitempty"`
+	LobbiesPlayed int      `json:"lobbiesPlayed,omitempty"`
+	SteamID       string   `json:"steamid,omitempty"`
+	Name          string   `json:"name,omitempty"`
+	Tags          []string `json:"tags,omitempty"`
+	Role          string   `json:"role,omitempty"`
+}
+
+type Stats struct {
+	Sixes      int `json:"playedSixesCount"`
+	Highlander int `json:"playedHighlanderCount"`
+	// Fours      int `json:"playedFoursCount"`
+	// Ultiduo    int `json:"playedUltiduoCount"`
+	// Bball      int `json:"playedBballCount"`
+}
+
+type PlayerProfile struct {
+	Stats Stats `json:"stats,omitempty"`
+
+	CreatedAt int64  `json:"createdAt,omitempty"`
+	GameHours int    `json:"gameHours,omitempty"`
+	SteamID   string `json:"steamid,omitempty"`
+	Avatar    string `json:"avatar,omitempty"`
+	Name      string `json:"string,omitempty"`
+	ID        int    `json:"int,omitempty"`
+	Role      string `json:"role,omitempty"`
+}
+
 func DecoratePlayerSettingsJson(settings []PlayerSetting) *simplejson.Json {
 	json := simplejson.New()
 
@@ -24,40 +55,36 @@ func decoratePlayerTags(p *Player) []string {
 	return tags
 }
 
-func DecoratePlayerProfileJson(p *Player) *simplejson.Json {
-	j := simplejson.New()
+func DecoratePlayerProfileJson(p *Player) PlayerProfile {
+	profile := PlayerProfile{}
 
-	// stats
-	s := simplejson.New()
-	s.Set("playedHighlanderCount", p.Stats.PlayedHighlanderCount)
-	s.Set("playedSixesCount", p.Stats.PlayedSixesCount)
+	s := Stats{}
+	s.Sixes = p.Stats.PlayedHighlanderCount
+	s.Highlander = p.Stats.PlayedSixesCount
+	profile.Stats = s
 
 	// info
-	j.Set("createdAt", p.CreatedAt)
-	j.Set("gameHours", p.GameHours)
-	j.Set("steamid", p.SteamId)
-	j.Set("avatar", p.Avatar)
-	j.Set("stats", s)
-	j.Set("name", p.Name)
-	j.Set("id", p.ID)
-	j.Set("role", helpers.RoleNames[p.Role])
+	profile.CreatedAt = p.CreatedAt.Unix()
+	profile.GameHours = p.GameHours
+	profile.SteamID = p.SteamId
+	profile.Avatar = p.Avatar
+	profile.Name = p.Name
+	profile.Role = helpers.RoleNames[p.Role]
 
 	// TODO ban info
 
-	return j
+	return profile
 }
 
-func DecoratePlayerSummaryJson(p *Player) *simplejson.Json {
-	j := simplejson.New()
-
-	j.Set("avatar", p.Avatar)
-	j.Set("gameHours", p.GameHours)
-	j.Set("profileUrl", p.Profileurl)
-	j.Set("lobbiesPlayed", p.Stats.PlayedHighlanderCount+p.Stats.PlayedSixesCount)
-	j.Set("steamid", p.SteamId)
-	j.Set("name", p.Name)
-	j.Set("tags", decoratePlayerTags(p))
-	j.Set("role", helpers.RoleNames[p.Role])
-
-	return j
+func DecoratePlayerSummary(p *Player) PlayerSummary {
+	return PlayerSummary{
+		Avatar:        p.Avatar,
+		GameHours:     p.GameHours,
+		ProfileURL:    p.Profileurl,
+		LobbiesPlayed: p.Stats.PlayedHighlanderCount + p.Stats.PlayedSixesCount,
+		SteamID:       p.SteamId,
+		Name:          p.Name,
+		Tags:          decoratePlayerTags(p),
+		Role:          helpers.RoleNames[p.Role],
+	}
 }

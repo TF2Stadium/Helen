@@ -5,6 +5,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -16,6 +17,13 @@ import (
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
 )
+
+type chatMessage struct {
+	Timestamp int64                `json:"timestamp"`
+	Message   string               `json:"message"`
+	Room      int                  `json:"room"`
+	Player    models.PlayerSummary `json:"player"`
+}
 
 func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, 0, true)
@@ -56,14 +64,13 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 		*args.Room, _ = strconv.Atoi(config.Constants.GlobalChatRoom)
 	}
 
-	chatMessage := simplejson.New()
-	// TODO send proper timestamps
-	chatMessage.Set("timestamp", time.Now().Unix())
-	chatMessage.Set("message", *args.Message)
-	chatMessage.Set("room", *args.Room)
+	message := chatMessage{
+		Timestamp: time.Now().Unix(),
+		Message:   *args.Message,
+		Room:      *args.Room,
+		Player:    models.DecoratePlayerSummary(player)}
 
-	chatMessage.Set("player", models.DecoratePlayerSummaryJson(player))
-	bytes, _ := chatMessage.Encode()
+	bytes, _ := json.Marshal(message)
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public",
 		chelpers.GetLobbyRoom(uint(*args.Room))),
 		"chatReceive", string(bytes))

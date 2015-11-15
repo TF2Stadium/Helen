@@ -5,6 +5,7 @@
 package controllerhelpers
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
-	"github.com/bitly/go-simplejson"
 )
 
 var BanTypeList = []string{"join", "create", "chat", "full"}
@@ -30,7 +30,7 @@ func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 	room := fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID))
 	server.AddClient(so, room)
 
-	bytes, _ := models.DecorateLobbyDataJSON(lobby, false).Encode()
+	bytes, _ := json.Marshal(models.DecorateLobbyData(lobby, false))
 	broadcaster.SendMessage(player.SteamId, "lobbyJoined", string(bytes))
 }
 
@@ -38,7 +38,7 @@ func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.L
 	server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
 	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 
-	bytes, _ := models.DecorateLobbyLeaveJSON(lobby).Encode()
+	bytes, _ := json.Marshal(models.DecorateLobbyLeave(lobby))
 	broadcaster.SendMessage(player.SteamId, "lobbyLeft", string(bytes))
 }
 
@@ -61,13 +61,13 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 		return
 	}
 
-	list, err := models.DecorateLobbyListData(lobbies)
+	bytes, _ := json.Marshal(models.DecorateLobbyListData(lobbies))
 	if err != nil {
 		helpers.Logger.Critical("Failed to send lobby list: %s", err.Error())
 		return
 	}
 
-	so.EmitJSON(helpers.NewRequest("lobbyListData", list))
+	so.EmitJSON(helpers.NewRequest("lobbyListData", string(bytes)))
 	BroadcastScrollback(so, 0)
 }
 
@@ -82,12 +82,14 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
 		if err == nil {
 			if lobby.State == models.LobbyStateInProgress && !models.IsPlayerInServer(player.SteamId) {
-				bytes, _ := models.DecorateLobbyConnectJSON(lobby).Encode()
+				bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
 				broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
 			} else if lobby.State == models.LobbyStateReadyingUp && !slot.Ready {
-				left := simplejson.New()
-				left.Set("timeout", lobby.ReadyUpTimeLeft())
-				bytes, _ := left.Encode()
+				data := struct {
+					Timeout int64 `json:"timeout"`
+				}{lobby.ReadyUpTimeLeft()}
+
+				bytes, _ := json.Marshal(data)
 				broadcaster.SendMessage(player.SteamId, "lobbyReadyUp", string(bytes))
 			}
 		}
@@ -95,15 +97,13 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 
 	settings, err2 := player.GetSettings()
 	if err2 == nil {
-		json := models.DecoratePlayerSettingsJson(settings)
-		bytes, _ := json.Encode()
+		bytes, _ := json.Marshal(models.DecoratePlayerSettingsJson(settings))
 		broadcaster.SendMessage(player.SteamId, "playerSettings", string(bytes))
 	}
 
 	profilePlayer, err3 := models.GetPlayerWithStats(player.SteamId)
 	if err3 == nil {
-		json := models.DecoratePlayerProfileJson(profilePlayer)
-		bytes, _ := json.Encode()
+		bytes, _ := json.Marshal(models.DecoratePlayerProfileJson(profilePlayer))
 		broadcaster.SendMessage(player.SteamId, "playerProfile", string(bytes))
 	}
 

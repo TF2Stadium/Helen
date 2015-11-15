@@ -99,7 +99,6 @@ func ServerInit(server *wsevent.Server) {
 	if config.Constants.ServerMockUp {
 		// server.On("debugLobbyFill", handler.DebugLobbyFill)
 		// server.On("debugLobbyReady", handler.DebugLobbyReady)
-		server.On("debugGetAllLobbies", handler.DebugRequestAllLobbies)
 		server.On("debugRequestLobbyStart", handler.DebugRequestLobbyStart)
 		server.On("debugUpdateStatsFilter", handler.DebugUpdateStatsFilter)
 	}

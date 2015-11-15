@@ -9,52 +9,117 @@ import (
 
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/bitly/go-simplejson"
 )
 
-func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) *simplejson.Json {
-	j := simplejson.New()
+type SlotDetails struct {
+	Filled bool          `json:"filled"`
+	Player PlayerSummary `json:"player,omitempty"`
+	Ready  bool          `json:"ready,omitempty"`
+	InGame bool          `json:"ingame,omitempty"`
+}
 
+type ClassDetails struct {
+	Red   SlotDetails `json:"red,omitempty"`
+	Blu   SlotDetails `json:"blu,omitempty"`
+	Class string      `json:"class"`
+}
+
+type SpecDetails struct {
+	Name    string `json:"name"`
+	SteamID string `json:"steamid"`
+}
+
+type LobbyData struct {
+	ID         uint   `json:"id,omitempty"`
+	Type       string `json:"type,omitempty"`
+	Players    int    `json:"players,omitempty"`
+	Map        string `json:"map,omitempty"`
+	League     string `json:"league,omitempty"`
+	Mumble     bool   `json:"mumbleRequired,omitempty"`
+	MaxPlayers int    `json:"maxPlayers,omitempty"`
+
+	Classes []ClassDetails `json:"classes,omitempty"`
+
+	Leader      PlayerSummary `json:"leader,omitempty"`
+	CreatedAt   int64         `json:"createdAt,omitempty"`
+	State       int           `json:"state,omitempty"`
+	WhitelistID int           `json:"whitelistId,omitempty"`
+
+	Spectators []SpecDetails `json:"spectators,omitempty"`
+}
+
+type LobbyListData struct {
+	Lobbies []LobbyData `json:"lobbies,omitempty"`
+}
+
+type LobbyConnectData struct {
+	ID   uint   `json:"id"`
+	Time int64  `json:"time"`
+	Pass string `json:"password"`
+
+	Game struct {
+		Host string `json:"host"`
+	} `json:"game"`
+
+	Mumble struct {
+		Address  string `json:"address"`
+		Port     string `json:"port"`
+		Password string `json:"password"`
+		Channel  string `json:"channel"`
+	} `json:"mumble"`
+}
+
+type LobbyEvent struct {
+	ID uint `json:"id"`
+}
+
+func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetails {
 	playerId, err := lobby.GetPlayerIdBySlot(slot)
-	j.Set("filled", err == nil)
+	j := SlotDetails{Filled: err == nil}
+
 	if err == nil && includeDetails {
 		var player Player
 		db.DB.First(&player, playerId)
 		db.DB.Preload("Stats").First(&player, player.ID)
 
-		j.Set("player", DecoratePlayerSummaryJson(&player))
+		j.Player = DecoratePlayerSummary(&player)
+
 		ready, _ := lobby.IsPlayerReady(&player)
-		j.Set("ready", ready)
+		j.Ready = ready
+
 		ingame, _ := lobby.IsPlayerInGame(&player)
-		j.Set("inGame", ingame)
+		j.InGame = ingame
 	}
 
 	return j
 }
 
-func DecorateLobbyDataJSON(lobby *Lobby, includeDetails bool) *simplejson.Json {
-	lobbyJs := simplejson.New()
-	lobbyJs.Set("id", lobby.ID)
-	lobbyJs.Set("type", FormatMap[lobby.Type])
-	lobbyJs.Set("players", lobby.GetPlayerNumber())
-	lobbyJs.Set("map", lobby.MapName)
-	lobbyJs.Set("league", lobby.League)
-	lobbyJs.Set("mumbleRequired", lobby.Mumble)
-
-	var classes []*simplejson.Json
+func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
+	lobbyJs := LobbyData{
+		ID:      lobby.ID,
+		Type:    FormatMap[lobby.Type],
+		Players: lobby.GetPlayerNumber(),
+		Map:     lobby.MapName,
+		League:  lobby.League,
+		Mumble:  lobby.Mumble,
+	}
 
 	var classList = TypeClassList[lobby.Type]
-	lobbyJs.Set("maxPlayers", NumberOfClassesMap[lobby.Type]*2)
+
+	classes := make([]ClassDetails, len(classList))
+	lobbyJs.MaxPlayers = NumberOfClassesMap[lobby.Type] * 2
 
 	for slot, className := range classList {
-		class := simplejson.New()
+		class := ClassDetails{
+			Red:   decorateSlotDetails(lobby, slot, includeDetails),
+			Blu:   decorateSlotDetails(lobby, slot+NumberOfClassesMap[lobby.Type], includeDetails),
+			Class: className,
+		}
 
-		class.Set("red", decorateSlotDetails(lobby, slot, includeDetails))
-		class.Set("blu", decorateSlotDetails(lobby, slot+NumberOfClassesMap[lobby.Type], includeDetails))
-		class.Set("class", className)
-		classes = append(classes, class)
+		classes[slot] = class
 	}
-	lobbyJs.Set("classes", classes)
+
+	lobbyJs.Classes = classes
 
 	if !includeDetails {
 		return lobbyJs
@@ -62,89 +127,75 @@ func DecorateLobbyDataJSON(lobby *Lobby, includeDetails bool) *simplejson.Json {
 
 	var leader Player
 	db.DB.Where("steam_id = ?", lobby.CreatedBySteamID).First(&leader)
-	lobbyJs.Set("leader", DecoratePlayerSummaryJson(&leader))
-	lobbyJs.Set("createdAt", lobby.CreatedAt.Unix())
-	lobbyJs.Set("state", lobby.State)
-	lobbyJs.Set("whitelistId", lobby.Whitelist)
 
-	var spectators []*simplejson.Json
+	lobbyJs.Leader = DecoratePlayerSummary(&leader)
+	lobbyJs.CreatedAt = lobby.CreatedAt.Unix()
+	lobbyJs.State = int(lobby.State)
+	lobbyJs.WhitelistID = lobby.Whitelist
+
 	var specIDs []uint
 	db.DB.Table("spectators_players_lobbies").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &specIDs)
-	for _, spectatorID := range specIDs {
+
+	spectators := make([]SpecDetails, len(specIDs))
+
+	for i, spectatorID := range specIDs {
 		specPlayer := &Player{}
 		db.DB.First(specPlayer, spectatorID)
 
-		specJs := simplejson.New()
-		specJs.Set("name", specPlayer.Name)
-		specJs.Set("steamid", specPlayer.SteamId)
-		spectators = append(spectators, specJs)
+		specJs := SpecDetails{
+			Name:    specPlayer.Name,
+			SteamID: specPlayer.SteamId,
+		}
+
+		spectators[i] = specJs
 	}
-	lobbyJs.Set("spectators", spectators)
+
+	lobbyJs.Spectators = spectators
 
 	return lobbyJs
 }
 
-func DecorateLobbyListData(lobbies []Lobby) (string, error) {
-
+func DecorateLobbyListData(lobbies []Lobby) LobbyListData {
 	if len(lobbies) == 0 {
-		return "{}", nil
+		return LobbyListData{}
 	}
 
-	var lobbyList []*simplejson.Json
+	var lobbyList = make([]LobbyData, len(lobbies))
 
-	for _, lobby := range lobbies {
-		lobbyJs := DecorateLobbyDataJSON(&lobby, false)
-		lobbyList = append(lobbyList, lobbyJs)
+	for i, lobby := range lobbies {
+		lobbyData := DecorateLobbyData(&lobby, false)
+		lobbyList[i] = lobbyData
 	}
 
-	listObj := simplejson.New()
-	listObj.Set("lobbies", lobbyList)
+	listObj := LobbyListData{lobbyList}
 
-	bytes, _ := listObj.MarshalJSON()
-	return string(bytes), nil
+	return listObj
 }
 
-func DecorateLobbyConnectJSON(lobby *Lobby) *simplejson.Json {
-	json := simplejson.New()
+func DecorateLobbyConnect(lobby *Lobby) LobbyConnectData {
+	l := LobbyConnectData{}
+	l.ID = lobby.ID
+	l.Time = lobby.CreatedAt.Unix()
+	l.Pass = lobby.ServerInfo.ServerPassword
 
-	json.Set("id", lobby.ID)
-	json.Set("time", lobby.CreatedAt.Unix())
-	json.Set("password", lobby.ServerInfo.ServerPassword)
+	l.Game.Host = lobby.ServerInfo.Host
 
-	game := simplejson.New()
-	game.Set("host", lobby.ServerInfo.Host)
-	json.Set("game", game)
+	l.Mumble.Address = config.Constants.MumbleAddr
+	l.Mumble.Port = config.Constants.MumblePort
+	l.Mumble.Password = config.Constants.MumblePassword
+	l.Mumble.Channel = "match" + strconv.FormatUint(uint64(lobby.ID), 10)
 
-	mumble := simplejson.New()
-	mumble.Set("address", config.Constants.MumbleAddr)
-	mumble.Set("port", config.Constants.MumblePort)
-	mumble.Set("password", config.Constants.MumblePassword)
-	mumble.Set("channel", "match"+strconv.FormatUint(uint64(lobby.ID), 10))
-	json.Set("mumble", mumble)
-
-	return json
+	return l
 }
 
-func DecorateLobbyJoinJSON(lobby *Lobby) *simplejson.Json {
-	json := simplejson.New()
-
-	json.Set("id", lobby.ID)
-
-	return json
+func DecorateLobbyJoin(lobby *Lobby) LobbyEvent {
+	return LobbyEvent{lobby.ID}
 }
 
-func DecorateLobbyLeaveJSON(lobby *Lobby) *simplejson.Json {
-	json := simplejson.New()
-
-	json.Set("id", lobby.ID)
-
-	return json
+func DecorateLobbyLeave(lobby *Lobby) LobbyEvent {
+	return LobbyEvent{lobby.ID}
 }
 
-func DecorateLobbyClosedJSON(lobby *Lobby) *simplejson.Json {
-	json := simplejson.New()
-
-	json.Set("id", lobby.ID)
-
-	return json
+func DecorateLobbyClosed(lobby *Lobby) LobbyEvent {
+	return LobbyEvent{lobby.ID}
 }

@@ -5,6 +5,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -388,11 +389,11 @@ func (lobby *Lobby) Close(rpc bool) {
 	helpers.RemoveRecord(lobby.ID, lobby)
 
 	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
-	bytesLobbyLeft, _ := DecorateLobbyLeaveJSON(lobby).Encode()
+	bytesLobbyLeft, _ := json.Marshal(DecorateLobbyLeave(lobby))
 	broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", string(bytesLobbyLeft))
 
 	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
-	bytesLobbyClosed, _ := DecorateLobbyClosedJSON(lobby).Encode()
+	bytesLobbyClosed, _ := json.Marshal(DecorateLobbyClosed(lobby))
 	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", string(bytesLobbyClosed))
 }
 
@@ -464,7 +465,7 @@ func (lobby *Lobby) OnChange(base bool) {
 
 func BroadcastLobby(lobby *Lobby) {
 	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
-	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
+	bytes, _ := json.Marshal(DecorateLobbyData(lobby, true))
 	room := strconv.FormatUint(uint64(lobby.ID), 10)
 
 	broadcaster.SendMessageToRoom(room, "lobbyData", string(bytes))
@@ -473,17 +474,16 @@ func BroadcastLobby(lobby *Lobby) {
 
 func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
 	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
-	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
+	bytes, _ := json.Marshal(DecorateLobbyData(lobby, true))
 	broadcaster.SendMessage(steamid, "lobbyData", string(bytes))
 }
 
 func BroadcastLobbyList() {
 	var lobbies []Lobby
 	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)
-	list, err := DecorateLobbyListData(lobbies)
-	if err != nil {
-		helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
-	} else {
-		broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom), "lobbyListData", list)
-	}
+	bytes, _ := json.Marshal(DecorateLobbyListData(lobbies))
+	broadcaster.SendMessageToRoom(
+		fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom),
+		"lobbyListData", string(bytes))
+
 }
