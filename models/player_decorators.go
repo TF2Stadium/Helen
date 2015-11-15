@@ -10,14 +10,14 @@ import (
 )
 
 type PlayerSummary struct {
-	Avatar        string   `json:"avatar,omitempty"`
-	GameHours     int      `json:"gameHours,omitempty"`
-	ProfileURL    string   `json:"profileUrl,omitempty"`
-	LobbiesPlayed int      `json:"lobbiesPlayed,omitempty"`
-	SteamID       string   `json:"steamid,omitempty"`
-	Name          string   `json:"name,omitempty"`
-	Tags          []string `json:"tags,omitempty"`
-	Role          string   `json:"role,omitempty"`
+	Avatar        string   `json:"avatar"`
+	GameHours     int      `json:"gameHours"`
+	ProfileURL    string   `json:"profileUrl"`
+	LobbiesPlayed int      `json:"lobbiesPlayed"`
+	SteamID       string   `json:"steamid"`
+	Name          string   `json:"name"`
+	Tags          []string `json:"tags"`
+	Role          string   `json:"role"`
 }
 
 type Stats struct {
@@ -29,15 +29,15 @@ type Stats struct {
 }
 
 type PlayerProfile struct {
-	Stats Stats `json:"stats,omitempty"`
+	Stats Stats `json:"stats"`
 
-	CreatedAt int64  `json:"createdAt,omitempty"`
-	GameHours int    `json:"gameHours,omitempty"`
-	SteamID   string `json:"steamid,omitempty"`
-	Avatar    string `json:"avatar,omitempty"`
-	Name      string `json:"name,omitempty"`
-	ID        int    `json:"id,omitempty"`
-	Role      string `json:"role,omitempty"`
+	CreatedAt int64  `json:"createdAt"`
+	GameHours int    `json:"gameHours"`
+	SteamID   string `json:"steamid"`
+	Avatar    string `json:"avatar"`
+	Name      string `json:"name"`
+	ID        int    `json:"id"`
+	Role      string `json:"role"`
 }
 
 func DecoratePlayerSettingsJson(settings []PlayerSetting) *simplejson.Json {
