@@ -34,7 +34,7 @@ func main() {
 	if config.Constants.ProfilerEnable {
 		address := "localhost:" + config.Constants.ProfilerPort
 		go func() {
-			graceful.Run(address, 3*time.Second, nil)
+			graceful.Run(address, 1*time.Second, nil)
 		}()
 		helpers.Logger.Debug("Running Profiler at %s", address)
 	}
@@ -81,5 +81,5 @@ func main() {
 
 	// start the server
 	helpers.Logger.Debug("Serving at %s", config.Constants.Domain)
-	graceful.Run(":"+config.Constants.Port, 10*time.Second, corsHandler)
+	graceful.Run(":"+config.Constants.Port, 1*time.Second, corsHandler)
 }
