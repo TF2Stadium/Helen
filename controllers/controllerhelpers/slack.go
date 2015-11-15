@@ -25,7 +25,7 @@ func SlackBroadcaster() {
 
 	for {
 		m := <-messages
-		final := fmt.Sprintf("[%s](https://steamcommunity.com/id/%s): %s", m.Name, m.SteamID, m.Message)
+		final := fmt.Sprintf("[%s](https://steamcommunity.com/profiles/%s): %s", m.Name, m.SteamID, m.Message)
 		_, err := http.Post(config.Constants.SlackbotURL, "text/plain",
 			strings.NewReader(final))
 
