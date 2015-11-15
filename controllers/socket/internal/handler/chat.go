@@ -8,11 +8,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
@@ -76,6 +78,11 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 		"chatReceive", string(bytes))
 
 	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
+
+	helpers.Logger.Debug("%t", strings.HasPrefix(*args.Message, "!admin"))
+	if strings.HasPrefix(*args.Message, "!admin") {
+		chelpers.SendToSlack(*args.Message, player.Name, player.SteamId)
+	}
 
 	chelpers.LogChat(uint(*args.Room), player.Name, player.SteamId, *args.Message)
 

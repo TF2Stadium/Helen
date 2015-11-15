@@ -75,6 +75,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 
 	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, int(*args.WhitelistID), *args.Mumble)
 	lob.CreatedBySteamID = player.SteamId
+	lob.Region = chelpers.GetRegion(*args.Server)
 	lob.Save()
 	err = lob.SetupServer()
 
