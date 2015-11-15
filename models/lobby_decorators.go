@@ -5,8 +5,10 @@
 package models
 
 import (
+	"fmt"
 	"strconv"
 
+	"encoding/json"
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 )
@@ -14,8 +16,8 @@ import (
 type SlotDetails struct {
 	Filled bool          `json:"filled"`
 	Player PlayerSummary `json:"player,omitempty"`
-	Ready  bool          `json:"ready,omitempty"`
-	InGame bool          `json:"ingame,omitempty"`
+	Ready  bool          `json:"ready"`
+	InGame bool          `json:"ingame"`
 }
 
 type ClassDetails struct {
@@ -25,25 +27,25 @@ type ClassDetails struct {
 }
 
 type SpecDetails struct {
-	Name    string `json:"name"`
-	SteamID string `json:"steamid"`
+	Name    string `json:"name,omitempty"`
+	SteamID string `json:"steamid,omitempty"`
 }
 
 type LobbyData struct {
-	ID         uint   `json:"id,omitempty"`
-	Type       string `json:"type,omitempty"`
-	Players    int    `json:"players,omitempty"`
-	Map        string `json:"map,omitempty"`
-	League     string `json:"league,omitempty"`
-	Mumble     bool   `json:"mumbleRequired,omitempty"`
-	MaxPlayers int    `json:"maxPlayers,omitempty"`
+	ID         uint   `json:"id"`
+	Type       string `json:"type"`
+	Players    int    `json:"players"`
+	Map        string `json:"map"`
+	League     string `json:"league"`
+	Mumble     bool   `json:"mumbleRequired"`
+	MaxPlayers int    `json:"maxPlayers"`
 
-	Classes []ClassDetails `json:"classes,omitempty"`
+	Classes []ClassDetails `json:"classes"`
 
-	Leader      PlayerSummary `json:"leader,omitempty"`
-	CreatedAt   int64         `json:"createdAt,omitempty"`
-	State       int           `json:"state,omitempty"`
-	WhitelistID int           `json:"whitelistId,omitempty"`
+	Leader      PlayerSummary `json:"leader"`
+	CreatedAt   int64         `json:"createdAt"`
+	State       int           `json:"state"`
+	WhitelistID int           `json:"whitelistId"`
 
 	Spectators []SpecDetails `json:"spectators,omitempty"`
 }
