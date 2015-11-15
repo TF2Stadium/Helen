@@ -2,6 +2,7 @@ package controllerhelpers
 
 import (
 	"net"
+	"path/filepath"
 	"strings"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -17,7 +18,8 @@ func InitDB() {
 	}
 
 	var err error
-	geodb, err = geoip2.Open(config.Constants.GeoIP)
+	filename, _ := filepath.Abs(config.Constants.GeoIP)
+	geodb, err = geoip2.Open(filename)
 
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
