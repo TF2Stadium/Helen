@@ -35,8 +35,8 @@ type PlayerProfile struct {
 	GameHours int    `json:"gameHours,omitempty"`
 	SteamID   string `json:"steamid,omitempty"`
 	Avatar    string `json:"avatar,omitempty"`
-	Name      string `json:"string,omitempty"`
-	ID        int    `json:"int,omitempty"`
+	Name      string `json:"name,omitempty"`
+	ID        int    `json:"id,omitempty"`
 	Role      string `json:"role,omitempty"`
 }
 
