@@ -32,7 +32,10 @@ func SetupHTTPRoutes(server *wsevent.Server) {
 			allowed := true
 
 			if err == nil {
-				if _, ok := session.Values["steam_id"]; !ok {
+				steamid, ok := session.Values["steam_id"]
+				if !ok {
+					allowed = false
+				} else if !chelpers.IsSteamIDWhitelisted(steamid.(string)) {
 					allowed = false
 				}
 			} else {
