@@ -390,6 +390,12 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
+	playerRequesting, tperr2 := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	if tperr2 != nil {
+		bytes, _ := tperr2.ErrorJSON().Encode()
+		return string(bytes)
+	}
+
 	lob, tperr := models.GetLobbyById(*args.Id)
 	if tperr != nil {
 		bytes, _ := chelpers.BuildFailureJSON(tperr.Error(), -1).Encode()
@@ -405,10 +411,9 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	if !self && selfSteamid != lob.CreatedBySteamID {
-		// TODO proper authorization checks
+	if !self && selfSteamid != lob.CreatedBySteamID && playerRequesting.Role != helpers.RoleAdmin {
 		bytes, _ := chelpers.BuildFailureJSON(
-			"Not authorized to remove players", 1).Encode()
+			"Not authorized to kick players", 1).Encode()
 		return string(bytes)
 	}
 
@@ -428,7 +433,14 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	if *args.Ban {
-		lob.BanPlayer(player)
+		fmt.Println(playerRequesting.Role)
+		if playerRequesting.Role == helpers.RoleAdmin {
+			lob.BanPlayer(player)
+		} else {
+			bytes, _ := chelpers.BuildFailureJSON(
+				"Not authorized to ban players", 1).Encode()
+			return string(bytes)
+		}
 	}
 
 	if !self {
