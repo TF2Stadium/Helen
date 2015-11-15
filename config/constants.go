@@ -30,6 +30,7 @@ type constants struct {
 	ServerMockUp       bool
 	ChatLogsEnabled    bool
 	MockupAuth         bool
+	GeoIP              string
 	AllowedCorsOrigins []string
 
 	// database
@@ -44,6 +45,8 @@ type constants struct {
 
 	ProfilerEnable bool
 	ProfilerPort   string
+
+	SlackbotURL string
 }
 
 func overrideFromEnv(constant *string, name string, secret bool) {
@@ -100,6 +103,7 @@ func SetupConstants() {
 	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
 	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_DISABLE")
 	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")
+	overrideFromEnv(&Constants.GeoIP, "GEOIP_DB", true)
 	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH", false)
 	overrideFromEnv(&Constants.SteamIDWhitelist, "STEAMID_WHITELIST", false)
 	overrideFromEnv(&Constants.MumbleAddr, "MUMBLE_ADDR", false)
@@ -108,6 +112,7 @@ func SetupConstants() {
 
 	overrideFromEnv(&Constants.ProfilerPort, "PROFILER_PORT", true)
 	overrideBoolFromEnv(&Constants.ProfilerEnable, "PROFILER_ENABLE")
+	overrideFromEnv(&Constants.SlackbotURL, "SLACK_URL", true)
 	// conditional assignments
 
 	if Constants.SteamDevApiKey == "your steam dev api key" && !Constants.SteamApiMockUp {

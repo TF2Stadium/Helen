@@ -35,6 +35,7 @@ type LobbyData struct {
 	Players    int    `json:"players"`
 	Map        string `json:"map"`
 	League     string `json:"league"`
+	Region     string `json:"region"`
 	Mumble     bool   `json:"mumbleRequired"`
 	MaxPlayers int    `json:"maxPlayers"`
 

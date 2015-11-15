@@ -14,6 +14,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
+	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/database"
@@ -52,6 +53,7 @@ func main() {
 	models.PaulingConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
+	go controllerhelpers.SlackBroadcaster()
 	StartPaulingListener()
 	chelpers.CheckLogger()
 	if config.Constants.SteamIDWhitelist != "" {

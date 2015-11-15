@@ -82,6 +82,7 @@ type Lobby struct {
 	State   LobbyState
 	Type    LobbyType
 	League  string
+	Region  string
 	Mumble  bool
 
 	Slots []LobbySlot
