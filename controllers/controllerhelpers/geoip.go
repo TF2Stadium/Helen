@@ -30,11 +30,17 @@ func GetRegion(server string) string {
 	}
 
 	arr := strings.Split(server, ":")
-	ip := net.ParseIP(arr[0])
-	record, err := geodb.Country(ip)
+	addr, err := net.ResolveIPAddr("ip4", arr[0])
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+		return ""
+
+	}
+
+	record, err := geodb.Country(addr.IP)
 	if err != nil {
 		helpers.Logger.Error(err.Error())
 		return ""
 	}
-	return record.Continent.Names["en"]
+	return record.Continent.Code
 }

@@ -79,7 +79,6 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 
-	helpers.Logger.Debug("%t", strings.HasPrefix(*args.Message, "!admin"))
 	if strings.HasPrefix(*args.Message, "!admin") {
 		chelpers.SendToSlack(*args.Message, player.Name, player.SteamId)
 	}
