@@ -19,9 +19,9 @@ type SlotDetails struct {
 }
 
 type ClassDetails struct {
-	Red   SlotDetails `json:"red,omitempty"`
-	Blu   SlotDetails `json:"blu,omitempty"`
+	Blu   SlotDetails `json:"blu"`
 	Class string      `json:"class"`
+	Red   SlotDetails `json:"red"`
 }
 
 type SpecDetails struct {
