@@ -202,6 +202,11 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
+	if lob.State == models.LobbyStateEnded {
+		bytes, _ := chelpers.BuildFailureJSON("Cannot join a closed lobby.", -1).Encode()
+		return string(bytes)
+	}
+
 	//Check if player is in the same lobby
 	var sameLobby bool
 	if id, err := player.GetLobbyId(); err == nil && id == *args.Id {
