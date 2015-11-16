@@ -1,8 +1,8 @@
 package controllerhelpers
 
 import (
-	"encoding/json"
 	"container/ring"
+	"encoding/json"
 	"sync"
 
 	"github.com/TF2Stadium/Helen/helpers"
@@ -16,7 +16,7 @@ type chatRing struct {
 }
 
 type ChatHistoryClearEvent struct {
-	room uint `json:"room"`
+	Room uint `json:"room"`
 }
 
 var mapLock = new(sync.RWMutex)
