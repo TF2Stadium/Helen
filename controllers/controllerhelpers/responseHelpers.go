@@ -37,10 +37,6 @@ func BuildFailureJSON(message string, code int) *simplejson.Json {
 	return e.ErrorJSON()
 }
 
-func BuildMissingArgJSON(arg string) *simplejson.Json {
-	return BuildFailureJSON(fmt.Sprintf("Missing argument: '%s'", arg), 0)
-}
-
 func RedirectHome(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.Constants.Domain, 303)
 }
