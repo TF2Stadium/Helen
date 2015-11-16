@@ -337,9 +337,12 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 
 	arr, tperr := player.GetSpectatingIds()
 	if len(arr) != 0 {
-		specSameLobby = (arr[0] == *args.Id)
-
 		for _, id := range arr {
+			if id == *args.Id {
+				specSameLobby = true
+				continue
+			}
+
 			lobby, _ := models.GetLobbyById(id)
 
 			helpers.LockRecord(lobby.ID, lobby)
