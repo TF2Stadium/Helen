@@ -4,17 +4,20 @@
 
 package controllerhelpers
 
-import (
-	"github.com/bitly/go-simplejson"
-)
+import "encoding/json"
 
-func BuildSuccessJSON(data interface{}) *simplejson.Json {
-	j := simplejson.New()
-	j.Set("success", true)
-	j.Set("data", data)
+var emptyBytes, _ = BuildSuccessJSON(struct{}{}).Encode()
+var EmptySuccessJS = string(emptyBytes)
 
-	return j
+type Response struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data"`
 }
 
-var emptyBytes, _ = BuildSuccessJSON(simplejson.New()).Encode()
-var EmptySuccessJS = string(emptyBytes)
+func BuildSuccessJSON(data interface{}) Response {
+	return Response{true, data}
+}
+
+func (r Response) Encode() ([]byte, error) {
+	return json.Marshal(r)
+}
