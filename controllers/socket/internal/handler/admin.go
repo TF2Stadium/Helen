@@ -71,5 +71,5 @@ func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) st
 		session.Save(so.Request(), FakeResponseWriter{})
 	}
 
-	return chelpers.BuildEmptySuccessString()
+	return chelpers.EmptySuccessJS
 }

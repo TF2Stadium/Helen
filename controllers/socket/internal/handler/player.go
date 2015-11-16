@@ -74,8 +74,7 @@ func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data string) 
 		return string(bytes)
 	}
 
-	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(resp)
+	return chelpers.EmptySuccessJS
 }
 
 func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data string) string {

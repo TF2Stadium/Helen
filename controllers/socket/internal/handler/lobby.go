@@ -18,7 +18,6 @@ import (
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
-	"github.com/bitly/go-simplejson"
 )
 
 func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
@@ -67,18 +66,17 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		Host:           *args.Server,
 		RconPassword:   *args.RconPwd,
 		ServerPassword: serverPwd}
-	err = models.VerifyInfo(info)
-	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
-	}
+	// err = models.VerifyInfo(info)
+	// if err != nil {
+	// 	bytes, _ := helpers.NewTPErrorFromError(err).Encode()
+	// 	return string(bytes)
+	// }
 
 	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, int(*args.WhitelistID), *args.Mumble)
 	lob.CreatedBySteamID = player.SteamId
 	lob.Region = chelpers.GetRegion(*args.Server)
-	lob.Save()
-	err = lob.SetupServer()
 
+	err = lob.SetupServer()
 	if err != nil {
 		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
@@ -86,9 +84,11 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 
 	lob.State = models.LobbyStateWaiting
 	lob.Save()
-	lobby_id := simplejson.New()
-	lobby_id.Set("id", lob.ID)
-	bytes, _ := chelpers.BuildSuccessJSON(lobby_id).Encode()
+
+	reply_str := struct {
+		ID uint `json:"id"`
+	}{lob.ID}
+	bytes, _ := chelpers.BuildSuccessJSON(reply_str).Encode()
 	return string(bytes)
 }
 
@@ -120,10 +120,10 @@ func ServerVerify(server *wsevent.Server, so *wsevent.Client, data string) strin
 		return string(bytes)
 	}
 
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
-
+	return chelpers.EmptySuccessJS
 }
+
+var timeoutStop = make(map[uint](chan bool))
 
 func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
@@ -146,7 +146,7 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 
 	lob, tperr := models.GetLobbyById(uint(*args.Id))
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
+		bytes, _ := tperr.Encode()
 		return string(bytes)
 	}
 
@@ -165,12 +165,13 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 	helpers.UnlockRecord(lob.ID, lob)
 	models.BroadcastLobbyList() // has to be done manually for now
 
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
+	c, ok := timeoutStop[*args.Id]
+	if !ok {
+		c <- true
+	}
 
+	return chelpers.EmptySuccessJS
 }
-
-var timeoutStop = make(map[uint](chan bool))
 
 func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
@@ -185,6 +186,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		Class *string `json:"class"`
 		Team  *string `json:"team" valid:"red,blu"`
 	}
+
 	if err := chelpers.GetParams(data, &args); err != nil {
 		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
@@ -285,8 +287,8 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	models.AllowPlayer(*args.Id, player.SteamId, *args.Team+*args.Class)
 	models.BroadcastLobbyToUser(lob, player.SteamId)
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
+
+	return chelpers.EmptySuccessJS
 }
 
 func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
@@ -321,8 +323,8 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 		bytes, _ := json.Marshal(models.DecorateLobbyData(lob, true))
 
 		so.EmitJSON(helpers.NewRequest("lobbyData", string(bytes)))
-		bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-		return string(bytes)
+
+		return chelpers.EmptySuccessJS
 	}
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -337,8 +339,6 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 		helpers.UnlockRecord(lob.ID, lob)
 	}
 
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-
 	if tperr != nil {
 		bytes, _ := json.Marshal(tperr)
 		return string(bytes)
@@ -346,7 +346,7 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 
 	chelpers.AfterLobbySpec(server, so, lob)
 	models.BroadcastLobbyToUser(lob, player.SteamId)
-	return string(bytes)
+	return chelpers.EmptySuccessJS
 }
 
 func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
@@ -461,8 +461,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	}
 
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
+	return chelpers.EmptySuccessJS
 }
 
 func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
@@ -518,8 +517,7 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		models.BroadcastLobbyList()
 	}
 
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
+	return chelpers.EmptySuccessJS
 }
 
 func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
@@ -570,8 +568,7 @@ func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		c <- true
 	}
 
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
+	return chelpers.EmptySuccessJS
 }
 
 func RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data string) string {
@@ -580,6 +577,5 @@ func RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data string) st
 	list, _ := json.Marshal(models.DecorateLobbyListData(lobbies))
 	so.EmitJSON(helpers.NewRequest("lobbyListData", string(list)))
 
-	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(resp)
+	return chelpers.EmptySuccessJS
 }

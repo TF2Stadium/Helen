@@ -5,16 +5,15 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 
-	"encoding/json"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
-	"github.com/bitly/go-simplejson"
 )
 
 func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) string {
@@ -45,9 +44,7 @@ func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) st
 	}
 	lobby.OnChange(true)
 
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
-
+	return chelpers.EmptySuccessJS
 }
 
 func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data string) string {
@@ -74,8 +71,7 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 	broadcaster.SendMessageToRoom(room,
 		"lobbyStart", string(bytes))
 
-	bytes, _ = chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
+	return chelpers.EmptySuccessJS
 }
 
 func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data string) string {
@@ -103,6 +99,5 @@ func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data str
 	}
 	lobby.UpdateStats()
 
-	bytes, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
+	return chelpers.EmptySuccessJS
 }

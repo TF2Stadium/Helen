@@ -71,14 +71,13 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 		Timestamp: time.Now().Unix(),
 		Message:   *args.Message,
 		Room:      *args.Room,
-		Player:    models.DecoratePlayerSummary(player)}
+		Player:    models.DecoratePlayerSummary(player),
+	}
 
 	bytes, _ := json.Marshal(message)
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public",
 		chelpers.GetLobbyRoom(uint(*args.Room))),
 		"chatReceive", string(bytes))
-
-	resp, _ := chelpers.BuildSuccessJSON(simplejson.New()).Encode()
 
 	if strings.HasPrefix(*args.Message, "!admin") {
 		chelpers.SendToSlack(*args.Message, player.Name, player.SteamId)
@@ -87,6 +86,5 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 	chelpers.LogChat(uint(*args.Room), player.Name, player.SteamId, *args.Message)
 
 	chelpers.AddScrollbackMessage(uint(*args.Room), string(bytes))
-	return string(resp)
-
+	return chelpers.EmptySuccessJS
 }

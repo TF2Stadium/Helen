@@ -16,7 +16,5 @@ func BuildSuccessJSON(data interface{}) *simplejson.Json {
 	return j
 }
 
-func BuildEmptySuccessString() string {
-	bytes, _ := BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
-}
+var emptyBytes, _ = BuildSuccessJSON(simplejson.New()).Encode()
+var EmptySuccessJS = string(emptyBytes)
