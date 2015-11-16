@@ -285,17 +285,6 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		models.BroadcastLobbyList()
 	}
 
-	pub := fmt.Sprintf("%d_public", *args.Id)
-	priv := fmt.Sprintf("%d_private", *args.Id)
-
-	for _, room := range server.RoomsJoined(so.Id()) {
-		if room == "0_public" {
-			continue
-		}
-		if room != pub || room != priv {
-			server.RemoveClient(so.Id(), room)
-		}
-	}
 	models.AllowPlayer(*args.Id, player.SteamId, *args.Team+*args.Class)
 	models.BroadcastLobbyToUser(lob, player.SteamId)
 
