@@ -6,9 +6,6 @@ package controllerhelpers
 
 import "encoding/json"
 
-var emptyBytes, _ = BuildSuccessJSON(struct{}{}).Encode()
-var EmptySuccessJS = string(emptyBytes)
-
 type Response struct {
 	Success bool        `json:"success"`
 	Data    interface{} `json:"data"`
@@ -21,3 +18,6 @@ func BuildSuccessJSON(data interface{}) Response {
 func (r Response) Encode() ([]byte, error) {
 	return json.Marshal(r)
 }
+
+var emptyBytes, _ = BuildSuccessJSON(struct{}{}).Encode()
+var EmptySuccessJS = string(emptyBytes)
