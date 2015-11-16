@@ -11,6 +11,7 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
@@ -20,7 +21,7 @@ func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) st
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := reqerr.ErrorJSON().Encode()
+		bytes, _ := json.Marshal(reqerr)
 		return string(bytes)
 	}
 
@@ -30,7 +31,7 @@ func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) st
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
@@ -53,7 +54,7 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := reqerr.ErrorJSON().Encode()
+		bytes, _ := json.Marshal(reqerr)
 		return string(bytes)
 	}
 
@@ -63,7 +64,7 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
@@ -81,7 +82,7 @@ func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data str
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := reqerr.ErrorJSON().Encode()
+		bytes, _ := json.Marshal(reqerr)
 		return string(bytes)
 	}
 
@@ -91,13 +92,13 @@ func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data str
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
 	lobby, tperr := models.GetLobbyById(*args.Id)
 	if tperr != nil {
-		bytes, _ := tperr.ErrorJSON().Encode()
+		bytes, _ := json.Marshal(tperr)
 		return string(bytes)
 	}
 	lobby.UpdateStats()

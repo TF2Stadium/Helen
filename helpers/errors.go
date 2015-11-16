@@ -4,11 +4,15 @@
 
 package helpers
 
-import "github.com/bitly/go-simplejson"
+import (
+	"encoding/json"
+)
 
 type TPError struct {
-	Str  string
-	Code int
+	Str  string `json:"message"`
+	Code int    `json:"code"`
+	//For the json object
+	Success bool `json:"success"`
 }
 
 func (e *TPError) Error() string {
@@ -31,12 +35,6 @@ func NewTPErrorFromError(e error) *TPError {
 	}
 }
 
-func (e *TPError) ErrorJSON() *simplejson.Json {
-	j := simplejson.New()
-
-	j.Set("success", false)
-	j.Set("message", e.Str)
-	j.Set("code", e.Code)
-
-	return j
+func (e *TPError) Encode() ([]byte, error) {
+	return json.Marshal(e)
 }

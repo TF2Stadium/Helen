@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"encoding/json"
+
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
@@ -11,7 +14,7 @@ func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) 
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := reqerr.ErrorJSON().Encode()
+		bytes, _ := json.Marshal(reqerr)
 		return string(bytes)
 	}
 	var args struct {
@@ -20,7 +23,7 @@ func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) 
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
@@ -36,7 +39,7 @@ func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) 
 	}
 
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
@@ -49,7 +52,7 @@ func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data string) 
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := reqerr.ErrorJSON().Encode()
+		bytes, _ := json.Marshal(reqerr)
 		return string(bytes)
 	}
 	var args struct {
@@ -59,7 +62,7 @@ func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data string) 
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
@@ -67,7 +70,7 @@ func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data string) 
 
 	err = player.SetSetting(args.Key, args.Value)
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), 0).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
@@ -79,7 +82,7 @@ func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data string) stri
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := reqerr.ErrorJSON().Encode()
+		bytes, _ := json.Marshal(reqerr)
 		return string(bytes)
 	}
 	var args struct {
@@ -88,7 +91,7 @@ func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data string) stri
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
@@ -100,7 +103,7 @@ func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data string) stri
 	player, playErr := models.GetPlayerWithStats(steamid)
 
 	if playErr != nil {
-		bytes, _ := chelpers.BuildFailureJSON(playErr.Error(), 0).Encode()
+		bytes, _ := playErr.Encode()
 		return string(bytes)
 	}
 

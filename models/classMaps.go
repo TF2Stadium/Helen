@@ -82,7 +82,7 @@ var NumberOfClassesMap = map[LobbyType]int{
 	LobbyTypeFours:      4,
 	LobbyTypeUltiduo:    2,
 	LobbyTypeBball:      2,
-	LobbyTypeDebug:      1,	
+	LobbyTypeDebug:      1,
 }
 
 func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (int, *helpers.TPError) {

@@ -66,7 +66,7 @@ func ServerInit(server *wsevent.Server) {
 		reqerr := chelpers.FilterRequest(so, 0, true)
 
 		if reqerr != nil {
-			bytes, _ := reqerr.ErrorJSON().Encode()
+			bytes, _ := json.Marshal(reqerr)
 			return string(bytes)
 		}
 

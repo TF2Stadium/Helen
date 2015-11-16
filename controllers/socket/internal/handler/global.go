@@ -6,6 +6,7 @@ package handler
 
 import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
@@ -16,7 +17,7 @@ func GetConstant(server *wsevent.Server, so *wsevent.Client, data string) string
 		Constant string `json:"constant"`
 	}
 	if err := chelpers.GetParams(data, &args); err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
@@ -25,7 +26,7 @@ func GetConstant(server *wsevent.Server, so *wsevent.Client, data string) string
 	case "lobbySettingsList":
 		output = models.LobbySettingsToJson()
 	default:
-		bytes, _ := chelpers.BuildFailureJSON("Unknown constant.", -1).Encode()
+		bytes, _ := helpers.NewTPError("Unknown constant.", -1).Encode()
 		return string(bytes)
 	}
 
