@@ -333,18 +333,38 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 		return string(bytes)
 	}
 
-	if id, _ := player.GetLobbyId(); id != *args.Id {
+	var specSameLobby bool
+
+	arr, tperr := player.GetSpectatingIds()
+	if len(arr) != 0 {
+		specSameLobby = (arr[0] == *args.Id)
+
+		for _, id := range arr {
+			lobby, _ := models.GetLobbyById(id)
+
+			helpers.LockRecord(lobby.ID, lobby)
+			lobby.RemoveSpectator(player, true)
+			helpers.UnlockRecord(lobby.ID, lobby)
+
+			server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", id))
+		}
+	}
+
+	// If the player is already in the lobby (either joined a slot or is spectating), don't add them.
+	// Just Broadcast the lobby to them, so the frontend displays it.
+	if id, _ := player.GetLobbyId(); id != *args.Id && !specSameLobby {
 		helpers.LockRecord(lob.ID, lob)
 		tperr = lob.AddSpectator(player)
 		helpers.UnlockRecord(lob.ID, lob)
+
+		if tperr != nil {
+			bytes, _ := json.Marshal(tperr)
+			return string(bytes)
+		}
+
+		chelpers.AfterLobbySpec(server, so, lob)
 	}
 
-	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
-	}
-
-	chelpers.AfterLobbySpec(server, so, lob)
 	models.BroadcastLobbyToUser(lob, player.SteamId)
 	return chelpers.EmptySuccessJS
 }
