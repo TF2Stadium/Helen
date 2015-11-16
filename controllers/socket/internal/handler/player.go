@@ -7,7 +7,6 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
-	"github.com/bitly/go-simplejson"
 )
 
 func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) string {
