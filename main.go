@@ -70,7 +70,6 @@ func main() {
 	broadcaster.Init(server)
 	socket.ServerInit(server)
 	routes.SetupHTTPRoutes(server)
-	go server.Listener()
 
 	// init static FileServer
 	// TODO be careful to set this to correct location when deploying
