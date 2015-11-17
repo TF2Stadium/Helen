@@ -38,6 +38,16 @@ func TestLobbyCreation(t *testing.T) {
 	assert.Equal(t, "cp_granary", lobby2.MapName)
 }
 
+func TestLobbyClose(t *testing.T) {
+	testhelpers.CleanupDB()
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "", "", ""}, 0, false)
+	lobby.Save()
+	lobby.Close(false)
+
+	lobby, _ = models.GetLobbyById(lobby.ID)
+	assert.Equal(t, lobby.State, models.LobbyStateEnded)
+}
+
 func TestLobbyAdd(t *testing.T) {
 	testhelpers.CleanupDB()
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "", "", ""}, 0, false)
