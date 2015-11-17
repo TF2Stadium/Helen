@@ -75,8 +75,8 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 
 	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, int(*args.WhitelistID), *args.Mumble)
 	lob.CreatedBySteamID = player.SteamId
-	lob.RegionName, lob.RegionCode = chelpers.GetRegion(*args.Server)
-	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP == "" {
+	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
+	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP != "" {
 		bytes, _ := helpers.NewTPError("Couldn't find region server.", 1).Encode()
 		return string(bytes)
 	}

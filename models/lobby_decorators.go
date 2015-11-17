@@ -39,8 +39,8 @@ type LobbyData struct {
 	MaxPlayers int    `json:"maxPlayers"`
 
 	Region struct {
-		Name string `json:"code"`
-		Code string `json:"region"`
+		Name string `json:"name"`
+		Code string `json:"code"`
 	} `json:"region"`
 
 	Classes []ClassDetails `json:"classes"`
