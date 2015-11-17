@@ -6,6 +6,8 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/tylerb/graceful.v1"
@@ -71,11 +73,13 @@ func main() {
 	socket.ServerInit(server)
 	routes.SetupHTTPRoutes(server)
 
-	// init static FileServer
-	// TODO be careful to set this to correct location when deploying
-	http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, r.URL.Path[1:])
-	})
+	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
+		// init static FileServer
+		// TODO be careful to set this to correct location when deploying
+		http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, r.URL.Path[1:])
+		})
+	}
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   config.Constants.AllowedCorsOrigins,
 		AllowCredentials: true,
