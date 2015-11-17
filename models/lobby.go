@@ -113,10 +113,16 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 	return lobby
 }
 
-func (lobby *Lobby) GetPlayerSlot(player *Player) (int, error) {
+func (lobby *Lobby) GetPlayerSlotObj(player *Player) (*LobbySlot, error) {
 	slotObj := &LobbySlot{}
 
 	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).First(slotObj).Error
+
+	return slotObj, err
+}
+
+func (lobby *Lobby) GetPlayerSlot(player *Player) (int, error) {
+	slotObj, err := lobby.GetPlayerSlotObj(player)
 
 	return slotObj.Slot, err
 }
@@ -392,17 +398,10 @@ func (lobby *Lobby) UpdateStats() {
 }
 
 func (lobby *Lobby) setInGameStatus(player *Player, inGame bool) error {
-	slot := &LobbySlot{}
-	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).First(slot).Error
-	if err != nil {
-		return err
-	}
+	err := db.DB.Table("lobby_slots").Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).UpdateColumn("in_game", inGame).Error
 
-	slot.InGame = true
-	db.DB.Save(slot)
 	lobby.OnChange(false)
-
-	return nil
+	return err
 }
 
 func (lobby *Lobby) SetInGame(player *Player) error {
