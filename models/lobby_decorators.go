@@ -35,9 +35,13 @@ type LobbyData struct {
 	Players    int    `json:"players"`
 	Map        string `json:"map"`
 	League     string `json:"league"`
-	Region     string `json:"region"`
 	Mumble     bool   `json:"mumbleRequired"`
 	MaxPlayers int    `json:"maxPlayers"`
+
+	Region struct {
+		Name string `json:"code"`
+		Code string `json:"region"`
+	} `json:"region"`
 
 	Classes []ClassDetails `json:"classes"`
 
@@ -102,9 +106,11 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		Players: lobby.GetPlayerNumber(),
 		Map:     lobby.MapName,
 		League:  lobby.League,
-		Region:  lobby.Region,
 		Mumble:  lobby.Mumble,
 	}
+
+	lobbyJs.Region.Name = lobby.RegionName
+	lobbyJs.Region.Code = lobby.RegionCode
 
 	var classList = TypeClassList[lobby.Type]
 
