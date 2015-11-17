@@ -160,9 +160,7 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 		return string(bytes)
 	}
 
-	helpers.LockRecord(lob.ID, lob)
 	lob.Close(true)
-	helpers.UnlockRecord(lob.ID, lob)
 	models.BroadcastLobbyList() // has to be done manually for now
 
 	c, ok := timeoutStop[*args.Id]
@@ -223,9 +221,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	helpers.LockRecord(lob.ID, lob)
 	tperr = lob.AddPlayer(player, slot)
-	helpers.UnlockRecord(lob.ID, lob)
 
 	if tperr != nil {
 		bytes, _ := json.Marshal(tperr)
@@ -251,13 +247,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 				lobby := &models.Lobby{}
 				db.DB.First(lobby, id)
 
-				helpers.RLockRecord(id, lobby)
-				state := lobby.State
-				helpers.RUnlockRecord(id, lobby)
-
-				if state != models.LobbyStateInProgress {
-					helpers.LockRecord(lobby.ID, lobby)
-					defer helpers.UnlockRecord(lobby.ID, lobby)
+				if lobby.State != models.LobbyStateInProgress {
 					err := lobby.RemoveUnreadyPlayers()
 					if err != nil {
 						helpers.Logger.Error("RemoveUnreadyPlayers: ", err.Error())
@@ -344,10 +334,7 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 			}
 
 			lobby, _ := models.GetLobbyById(id)
-
-			helpers.LockRecord(lobby.ID, lobby)
 			lobby.RemoveSpectator(player, true)
-			helpers.UnlockRecord(lobby.ID, lobby)
 
 			server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", id))
 		}
@@ -356,9 +343,7 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 	// If the player is already in the lobby (either joined a slot or is spectating), don't add them.
 	// Just Broadcast the lobby to them, so the frontend displays it.
 	if id, _ := player.GetLobbyId(); id != *args.Id && !specSameLobby {
-		helpers.LockRecord(lob.ID, lob)
 		tperr = lob.AddSpectator(player)
-		helpers.UnlockRecord(lob.ID, lob)
 
 		if tperr != nil {
 			bytes, _ := json.Marshal(tperr)
@@ -442,8 +427,6 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	_, err := lob.GetPlayerSlot(player)
-	helpers.LockRecord(lob.ID, lob)
-	defer helpers.UnlockRecord(lob.ID, lob)
 
 	var spec bool
 	if err == nil {
@@ -519,9 +502,7 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	helpers.LockRecord(lobby.ID, lobby)
 	tperr = lobby.ReadyPlayer(player)
-	defer helpers.UnlockRecord(lobby.ID, lobby)
 
 	if tperr != nil {
 		bytes, _ := json.Marshal(tperr)
@@ -575,10 +556,8 @@ func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	helpers.LockRecord(lobby.ID, lobby)
 	tperr = lobby.UnreadyPlayer(player)
 	lobby.RemovePlayer(player)
-	helpers.UnlockRecord(lobby.ID, lobby)
 
 	if tperr != nil {
 		bytes, _ := json.Marshal(tperr)

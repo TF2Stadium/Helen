@@ -37,8 +37,6 @@ const (
 	LobbyStateEnded        LobbyState = 5
 )
 
-var LobbyServerSettingUp = make(map[uint]time.Time)
-
 var stateString = map[LobbyState]string{
 	LobbyStateWaiting:    "Waiting For Players",
 	LobbyStateInProgress: "Lobby in Progress",
@@ -53,8 +51,6 @@ var FormatMap = map[LobbyType]string{
 	LobbyTypeBball:      "Bball",
 	LobbyTypeDebug:      "Debug",
 }
-
-var readyUpLobbyID = make(chan uint)
 
 type LobbySlot struct {
 	ID uint
@@ -385,7 +381,6 @@ func (lobby *Lobby) Close(rpc bool) {
 	if rpc {
 		End(lobby.ID)
 	}
-	delete(LobbyServerSettingUp, lobby.ID)
 	db.DB.Save(lobby)
 	helpers.RemoveRecord(lobby.ID, lobby)
 
