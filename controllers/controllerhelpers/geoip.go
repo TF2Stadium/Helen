@@ -24,23 +24,28 @@ func InitDB() {
 	}
 }
 
-func GetRegion(server string) string {
+func GetRegion(server string) (string, string) {
 	if config.Constants.GeoIP == "" {
-		return ""
+		return "", ""
 	}
 
 	arr := strings.Split(server, ":")
 	addr, err := net.ResolveIPAddr("ip4", arr[0])
 	if err != nil {
 		helpers.Logger.Error(err.Error())
-		return ""
+		return "", ""
 
 	}
 
 	record, err := geodb.Country(addr.IP)
 	if err != nil {
 		helpers.Logger.Error(err.Error())
-		return ""
+		return "", ""
 	}
-	return record.Continent.Code
+
+	if record.Country.Names["en"] == "Russia" {
+		return "ru", "Russia"
+	}
+
+	return strings.ToLower(record.Continent.Code), record.Continent.Names["en"]
 }
