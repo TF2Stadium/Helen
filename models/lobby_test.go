@@ -174,6 +174,36 @@ func TestReadyPlayer(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestSetInGame(t *testing.T) {
+	testhelpers.CleanupDB()
+	player, _ := models.NewPlayer("0")
+	player.Save()
+
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
+	lobby.Save()
+	lobby.AddPlayer(player, 0)
+	lobby.SetInGame(player)
+
+	slot, err := lobby.GetPlayerSlotObj(player)
+	assert.Nil(t, err)
+	assert.True(t, slot.InGame)
+}
+
+func TestSetNotInGame(t *testing.T) {
+	testhelpers.CleanupDB()
+	player, _ := models.NewPlayer("0")
+	player.Save()
+
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
+	lobby.Save()
+	lobby.AddPlayer(player, 0)
+	lobby.SetInGame(player)
+	lobby.SetNotInGame(player)
+
+	slot, err := lobby.GetPlayerSlotObj(player)
+	assert.Nil(t, err)
+	assert.False(t, slot.InGame)
+}
 func TestIsEveryoneReady(t *testing.T) {
 	testhelpers.CleanupDB()
 	player, playErr := models.NewPlayer("0")
