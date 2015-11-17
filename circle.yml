@@ -19,6 +19,6 @@ deployment:
     commands:
       - mkdir binaries
       - cp lobbySettingsData.json binaries/lobbySettingsData.json
-      - go build -o -race binaries/helen-dev *.go
+      - go build -race -o binaries/helen-dev *.go
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_DEV
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_DEV
