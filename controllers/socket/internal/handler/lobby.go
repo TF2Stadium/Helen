@@ -149,7 +149,7 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
-	lob, tperr := models.GetLobbyById(uint(*args.Id))
+	lob, tperr := models.GetLobbyByIdServer(uint(*args.Id))
 	if tperr != nil {
 		bytes, _ := tperr.Encode()
 		return string(bytes)
@@ -496,7 +496,7 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		return string(bytes)
 	}
 
-	lobby, tperr := models.GetLobbyById(lobbyid)
+	lobby, tperr := models.GetLobbyByIdServer(lobbyid)
 	if tperr != nil {
 		bytes, _ := json.Marshal(tperr)
 		return string(bytes)

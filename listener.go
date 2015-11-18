@@ -125,7 +125,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 		case event := <-eventChanMap["discFromServer"]:
 			lobbyid := event["lobbyId"].(uint)
 
-			lobby, _ := models.GetLobbyById(lobbyid)
+			lobby, _ := models.GetLobbyByIdServer(lobbyid)
 
 			helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
@@ -137,7 +137,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 		case event := <-eventChanMap["matchEnded"]:
 			lobbyid := event["lobbyId"].(uint)
 
-			lobby, _ := models.GetLobbyById(lobbyid)
+			lobby, _ := models.GetLobbyByIdServer(lobbyid)
 
 			helpers.Logger.Debug("#%d: Match Ended", lobbyid)
 
@@ -150,7 +150,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 		case <-eventChanMap["getServers"]:
 			var lobbies []*models.Lobby
 			var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
-			db.DB.Model(&models.Lobby{}).Where("state IN (?)", activeStates).Find(&lobbies)
+			db.DB.Preload("ServerInfo").Model(&models.Lobby{}).Where("state IN (?)", activeStates).Find(&lobbies)
 			for _, lobby := range lobbies {
 				info := models.ServerBootstrap{
 					LobbyId: lobby.ID,

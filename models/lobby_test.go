@@ -25,7 +25,7 @@ func TestLobbyCreation(t *testing.T) {
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "testip", "", ""}, 0, false)
 	lobby.Save()
 
-	lobby2, _ := models.GetLobbyById(lobby.ID)
+	lobby2, _ := models.GetLobbyByIdServer(lobby.ID)
 
 	assert.Equal(t, lobby.ID, lobby2.ID)
 	assert.Equal(t, lobby.ServerInfo.Host, lobby2.ServerInfo.Host)

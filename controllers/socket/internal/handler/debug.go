@@ -65,7 +65,7 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 		return string(bytes)
 	}
 
-	lobby, _ := models.GetLobbyById(*args.Id)
+	lobby, _ := models.GetLobbyByIdServer(*args.Id)
 	bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
 	room := fmt.Sprintf("%s_private", chelpers.GetLobbyRoom(lobby.ID))
 	broadcaster.SendMessageToRoom(room, "lobbyStart", string(bytes))

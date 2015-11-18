@@ -150,11 +150,24 @@ func (lobby *Lobby) Save() error {
 	return err
 }
 
-func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
+func GetLobbyByIdServer(id uint) (*Lobby, *helpers.TPError) {
 	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
 
 	lob := &Lobby{}
 	err := db.DB.Preload("ServerInfo").First(lob, id).Error
+
+	if err != nil {
+		return nil, nonExistentLobby
+	}
+
+	return lob, nil
+}
+
+func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
+	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
+
+	lob := &Lobby{}
+	err := db.DB.First(lob, id).Error
 
 	if err != nil {
 		return nil, nonExistentLobby
@@ -413,16 +426,6 @@ func (lobby *Lobby) SetInGame(player *Player) error {
 
 func (lobby *Lobby) SetNotInGame(player *Player) error {
 	return lobby.setInGameStatus(player, false)
-}
-
-// GORM callback
-func (lobby *Lobby) AfterFind() error {
-	if (lobby.ServerInfo == ServerRecord{}) {
-		// hasn't been preloaded. Do that here.
-		db.DB.Find(&lobby.ServerInfo, lobby.ServerInfoID)
-	}
-
-	return nil
 }
 
 // manually called. Should be called after the change to lobby actually takes effect.

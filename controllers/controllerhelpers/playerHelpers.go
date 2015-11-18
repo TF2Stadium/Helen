@@ -74,7 +74,7 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *models.Player) {
 	lobbyIdPlaying, err := player.GetLobbyId()
 	if err == nil {
-		lobby, _ := models.GetLobbyById(lobbyIdPlaying)
+		lobby, _ := models.GetLobbyByIdServer(lobbyIdPlaying)
 		AfterLobbyJoin(server, so, lobby, player)
 		AfterLobbySpec(server, so, lobby)
 		models.BroadcastLobbyToUser(lobby, GetSteamId(so.Id()))
