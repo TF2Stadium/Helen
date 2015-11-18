@@ -5,6 +5,11 @@ machine:
     DATABASE_NAME: "circle_test"
     DATABASE_USERNAME: "ubuntu"
     DATABASE_PASSWORD: ""
+dependencies:
+  pre:
+      - go get gopkg.in/niemeyer/godeb.v1/cmd/godeb
+      - godeb install
+      - go version
 deployment:
   master:
     branch: master
