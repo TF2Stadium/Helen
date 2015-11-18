@@ -69,7 +69,7 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) error {
 		// Successful repeat login
 		err = player.UpdatePlayerInfo()
 		if err == nil {
-			database.DB.Save(player)
+			player.Save()
 		} else {
 			return err
 		}
