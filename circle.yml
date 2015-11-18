@@ -8,8 +8,9 @@ machine:
 dependencies:
   pre:
       - sudo rm -rf /usr/local/go
-      - go get gopkg.in/niemeyer/godeb.v1/cmd/godeb
-      - godeb install
+      - wget "https://godeb.s3.amazonaws.com/godeb-amd64.tar.gz"
+      - tar -xvf "godeb-amd64.tar.gz"
+      - ./godeb install
       - go version
 deployment:
   master:
