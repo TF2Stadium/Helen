@@ -23,6 +23,7 @@ type constants struct {
 	ChatLogsDir        string
 	SessionName        string
 	PaulingPort        string
+	FumblePort         string
 	MumbleAddr         string
 	MumblePort         string
 	MumblePassword     string
@@ -100,6 +101,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN", false)
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM", false)
 	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN", false)
+	overrideFromEnv(&Constants.FumblePort, "FUMBLE_PORT", false)
 	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
 	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_DISABLE")
 	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")

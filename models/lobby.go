@@ -220,6 +220,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		var prevPlayer *Player
 		db.DB.Where("player_id = ?", curSlot.PlayerId).First(prevPlayer)
 		lobby.RemovePlayer(prevPlayer)
+
+		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
+	} else {
+		FumbleLobbyPlayerJoined(lobby, player, slot)
 	}
 
 	if currLobbyId, err := player.GetLobbyId(); err == nil {
@@ -245,6 +249,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	db.DB.Create(newSlotObj)
 
 	lobby.OnChange(true)
+
 	return nil
 }
 

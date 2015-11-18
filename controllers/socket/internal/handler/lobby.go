@@ -94,6 +94,8 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		ID uint `json:"id"`
 	}{lob.ID}
 	bytes, _ := chelpers.BuildSuccessJSON(reply_str).Encode()
+	models.FumbleLobbyCreated(lob)
+
 	return string(bytes)
 }
 
@@ -164,6 +166,8 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 		bytes, _ := helpers.NewTPError("Lobby already closed.", -1).Encode()
 		return string(bytes)
 	}
+
+	models.FumbleLobbyEnded(lob)
 
 	lob.Close(true)
 	models.BroadcastLobbyList() // has to be done manually for now
@@ -524,6 +528,8 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 		broadcaster.SendMessageToRoom(room,
 			"lobbyStart", string(bytes))
 		models.BroadcastLobbyList()
+
+		models.FumbleLobbyStarted(lobby)
 	}
 
 	return chelpers.EmptySuccessJS
