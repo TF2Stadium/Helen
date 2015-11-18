@@ -7,6 +7,7 @@ machine:
     DATABASE_PASSWORD: ""
 dependencies:
   pre:
+      - sudo rm -rf /usr/local/go
       - go get gopkg.in/niemeyer/godeb.v1/cmd/godeb
       - godeb install
       - go version
