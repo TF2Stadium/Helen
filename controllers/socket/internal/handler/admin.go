@@ -7,6 +7,7 @@ package handler
 import (
 	"net/http"
 
+	"encoding/json"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -28,7 +29,7 @@ func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) st
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := reqerr.ErrorJSON().Encode()
+		bytes, _ := json.Marshal(reqerr)
 		return string(bytes)
 	}
 	var args struct {
@@ -38,19 +39,19 @@ func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) st
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON(err.Error(), -1).Encode()
+		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
 		return string(bytes)
 	}
 
 	role, ok := helpers.RoleMap[*args.Role]
 	if !ok || role == helpers.RoleAdmin {
-		bytes, _ := chelpers.BuildFailureJSON("Invalid role parameter", 0).Encode()
+		bytes, _ := helpers.NewTPError("Invalid role parameter", 0).Encode()
 		return string(bytes)
 	}
 
 	otherPlayer, err := models.GetPlayerBySteamId(*args.Steamid)
 	if err != nil {
-		bytes, _ := chelpers.BuildFailureJSON("Player not found.", 0).Encode()
+		bytes, _ := helpers.NewTPError("Player not found.", 0).Encode()
 		return string(bytes)
 	}
 
@@ -70,5 +71,5 @@ func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) st
 		session.Save(so.Request(), FakeResponseWriter{})
 	}
 
-	return chelpers.BuildEmptySuccessString()
+	return chelpers.EmptySuccessJS
 }

@@ -66,7 +66,7 @@ func ServerInit(server *wsevent.Server) {
 		reqerr := chelpers.FilterRequest(so, 0, true)
 
 		if reqerr != nil {
-			bytes, _ := reqerr.ErrorJSON().Encode()
+			bytes, _ := json.Marshal(reqerr)
 			return string(bytes)
 		}
 
@@ -99,7 +99,6 @@ func ServerInit(server *wsevent.Server) {
 	if config.Constants.ServerMockUp {
 		// server.On("debugLobbyFill", handler.DebugLobbyFill)
 		// server.On("debugLobbyReady", handler.DebugLobbyReady)
-		server.On("debugGetAllLobbies", handler.DebugRequestAllLobbies)
 		server.On("debugRequestLobbyStart", handler.DebugRequestLobbyStart)
 		server.On("debugUpdateStatsFilter", handler.DebugUpdateStatsFilter)
 	}

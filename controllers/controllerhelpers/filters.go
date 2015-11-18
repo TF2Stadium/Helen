@@ -89,6 +89,7 @@ func GetParams(data string, v interface{}) error {
 	stValue := reflect.Indirect(reflect.ValueOf(v))
 	stType := stValue.Type()
 
+outer:
 	for i := 0; i < stType.NumField(); i++ {
 		field := stType.Field(i)
 		fieldPtrValue := stValue.Field(i)             //The pointer field
@@ -136,7 +137,7 @@ func GetParams(data string, v interface{}) error {
 
 		arr := strings.Split(validTag, ",")
 		var valid bool
-	outer:
+
 		for _, validVal := range arr {
 			switch fieldValue.Kind() {
 			case reflect.Uint:
@@ -147,14 +148,12 @@ func GetParams(data string, v interface{}) error {
 				}
 
 				if reflect.DeepEqual(fieldValue.Uint(), num) {
-					valid = true
-					break outer
+					continue outer
 				}
 
 			case reflect.String:
 				if reflect.DeepEqual(fieldValue.String(), validVal) {
-					valid = true
-					break outer
+					continue outer
 				}
 
 			}

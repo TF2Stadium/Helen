@@ -6,6 +6,8 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/tylerb/graceful.v1"
@@ -14,6 +16,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
+	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/database"
@@ -50,9 +53,12 @@ func main() {
 	migrations.Do()
 	stores.SetupStores()
 	models.PaulingConnect()
+	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
+	go controllerhelpers.SlackBroadcaster()
 	StartPaulingListener()
+	chelpers.InitDB()
 	chelpers.CheckLogger()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
@@ -68,11 +74,13 @@ func main() {
 	socket.ServerInit(server)
 	routes.SetupHTTPRoutes(server)
 
-	// init static FileServer
-	// TODO be careful to set this to correct location when deploying
-	http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, r.URL.Path[1:])
-	})
+	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
+		// init static FileServer
+		// TODO be careful to set this to correct location when deploying
+		http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, r.URL.Path[1:])
+		})
+	}
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   config.Constants.AllowedCorsOrigins,
 		AllowCredentials: true,

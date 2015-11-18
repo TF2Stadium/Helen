@@ -5,6 +5,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -36,8 +37,6 @@ const (
 	LobbyStateEnded        LobbyState = 5
 )
 
-var LobbyServerSettingUp = make(map[uint]time.Time)
-
 var stateString = map[LobbyState]string{
 	LobbyStateWaiting:    "Waiting For Players",
 	LobbyStateInProgress: "Lobby in Progress",
@@ -52,8 +51,6 @@ var FormatMap = map[LobbyType]string{
 	LobbyTypeBball:      "Bball",
 	LobbyTypeDebug:      "Debug",
 }
-
-var readyUpLobbyID = make(chan uint)
 
 type LobbySlot struct {
 	ID uint
@@ -81,7 +78,11 @@ type Lobby struct {
 	State   LobbyState
 	Type    LobbyType
 	League  string
-	Mumble  bool
+
+	RegionCode string
+	RegionName string
+
+	Mumble bool
 
 	Slots []LobbySlot
 
@@ -115,10 +116,16 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 	return lobby
 }
 
-func (lobby *Lobby) GetPlayerSlot(player *Player) (int, error) {
+func (lobby *Lobby) GetPlayerSlotObj(player *Player) (*LobbySlot, error) {
 	slotObj := &LobbySlot{}
 
 	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).First(slotObj).Error
+
+	return slotObj, err
+}
+
+func (lobby *Lobby) GetPlayerSlot(player *Player) (int, error) {
+	slotObj, err := lobby.GetPlayerSlotObj(player)
 
 	return slotObj.Slot, err
 }
@@ -143,11 +150,24 @@ func (lobby *Lobby) Save() error {
 	return err
 }
 
-func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
+func GetLobbyByIdServer(id uint) (*Lobby, *helpers.TPError) {
 	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
 
 	lob := &Lobby{}
 	err := db.DB.Preload("ServerInfo").First(lob, id).Error
+
+	if err != nil {
+		return nil, nonExistentLobby
+	}
+
+	return lob, nil
+}
+
+func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
+	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
+
+	lob := &Lobby{}
+	err := db.DB.First(lob, id).Error
 
 	if err != nil {
 		return nil, nonExistentLobby
@@ -178,7 +198,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	if err := db.DB.Table("banned_players_lobbies").
 		Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).
 		Count(&num).Error; num > 0 || err != nil {
-		helpers.Logger.Debug(fmt.Sprint(err))
+		//helpers.Logger.Debug(fmt.Sprint(err))
 		return lobbyBanError
 	}
 
@@ -200,6 +220,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		var prevPlayer *Player
 		db.DB.Where("player_id = ?", curSlot.PlayerId).First(prevPlayer)
 		lobby.RemovePlayer(prevPlayer)
+
+		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
+	} else {
+		FumbleLobbyPlayerJoined(lobby, player, slot)
 	}
 
 	if currLobbyId, err := player.GetLobbyId(); err == nil {
@@ -225,6 +249,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 	db.DB.Create(newSlotObj)
 
 	lobby.OnChange(true)
+
 	return nil
 }
 
@@ -245,26 +270,20 @@ func (lobby *Lobby) BanPlayer(player *Player) {
 }
 
 func (lobby *Lobby) ReadyPlayer(player *Player) *helpers.TPError {
-	slot := &LobbySlot{}
-	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).UpdateColumn("ready", true).Error
 	if err != nil {
 		return helpers.NewTPError("Player is not in the lobby.", 5)
 	}
-	slot.Ready = true
-	db.DB.Save(slot)
 	lobby.OnChange(false)
 	return nil
 }
 
 func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
-	slot := &LobbySlot{}
-	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).UpdateColumn("ready", false).Error
 	if err != nil {
 		return helpers.NewTPError("Player is not in the lobby.", 5)
 	}
 
-	slot.Ready = false
-	db.DB.Save(slot)
 	lobby.OnChange(false)
 	return nil
 }
@@ -276,30 +295,27 @@ func (lobby *Lobby) RemoveUnreadyPlayers() error {
 }
 
 func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
-	slot := &LobbySlot{}
-	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+	var ingame []bool
+	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("in_game", &ingame).Error
 	if err != nil {
 		return false, err
 	}
-	return slot.InGame, nil
+
+	return (len(ingame) != 0 && ingame[0]), err
 }
 
 func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
-	slot := &LobbySlot{}
-	err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+	var ready []bool
+	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("ready", &ready).Error
 	if err != nil {
 		return false, helpers.NewTPError("Player is not in the lobby.", 5)
 	}
-	return slot.Ready, nil
+	return (len(ready) != 0 && ready[0]), nil
 }
 
 func (lobby *Lobby) UnreadyAllPlayers() error {
-	var slots []LobbySlot
-	err := db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots).Error
-	for _, slot := range slots {
-		slot.Ready = false
-		db.DB.Save(slot)
-	}
+	err := db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).UpdateColumn("ready", false).Error
+
 	lobby.OnChange(false)
 	return err
 }
@@ -309,19 +325,10 @@ func (lobby *Lobby) ReadyUpTimeLeft() int64 {
 }
 
 func (lobby *Lobby) IsEveryoneReady() bool {
-	var slots []LobbySlot
-	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
+	readyPlayers := 0
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND ready = ?", lobby.ID, true).Count(&readyPlayers)
 
-	if len(slots) != NumberOfClassesMap[lobby.Type]*2 {
-		return false
-	}
-
-	for _, slot := range slots {
-		if !slot.Ready {
-			return false
-		}
-	}
-	return true
+	return readyPlayers == 2*NumberOfClassesMap[lobby.Type]
 }
 
 func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
@@ -378,22 +385,19 @@ func (lobby *Lobby) SetupServer() error {
 }
 
 func (lobby *Lobby) Close(rpc bool) {
-	lobby.State = LobbyStateEnded
+	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.Delete(&lobby.ServerInfo)
 	if rpc {
 		End(lobby.ID)
+
+		privateRoom := fmt.Sprintf("%d_private", lobby.ID)
+		bytesLobbyLeft, _ := json.Marshal(DecorateLobbyLeave(lobby))
+		broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", string(bytesLobbyLeft))
+
+		publicRoom := fmt.Sprintf("%d_public", lobby.ID)
+		bytesLobbyClosed, _ := json.Marshal(DecorateLobbyClosed(lobby))
+		broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", string(bytesLobbyClosed))
 	}
-	delete(LobbyServerSettingUp, lobby.ID)
-	db.DB.Save(lobby)
-	helpers.RemoveRecord(lobby.ID, lobby)
-
-	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
-	bytesLobbyLeft, _ := DecorateLobbyLeaveJSON(lobby).Encode()
-	broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", string(bytesLobbyLeft))
-
-	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
-	bytesLobbyClosed, _ := DecorateLobbyClosedJSON(lobby).Encode()
-	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", string(bytesLobbyClosed))
 }
 
 func (lobby *Lobby) UpdateStats() {
@@ -415,17 +419,10 @@ func (lobby *Lobby) UpdateStats() {
 }
 
 func (lobby *Lobby) setInGameStatus(player *Player, inGame bool) error {
-	slot := &LobbySlot{}
-	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).First(slot).Error
-	if err != nil {
-		return err
-	}
+	err := db.DB.Table("lobby_slots").Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).UpdateColumn("in_game", inGame).Error
 
-	slot.InGame = true
-	db.DB.Save(slot)
 	lobby.OnChange(false)
-
-	return nil
+	return err
 }
 
 func (lobby *Lobby) SetInGame(player *Player) error {
@@ -434,16 +431,6 @@ func (lobby *Lobby) SetInGame(player *Player) error {
 
 func (lobby *Lobby) SetNotInGame(player *Player) error {
 	return lobby.setInGameStatus(player, false)
-}
-
-// GORM callback
-func (lobby *Lobby) AfterFind() error {
-	if (lobby.ServerInfo == ServerRecord{}) {
-		// hasn't been preloaded. Do that here.
-		db.DB.Find(&lobby.ServerInfo, lobby.ServerInfoID)
-	}
-
-	return nil
 }
 
 // manually called. Should be called after the change to lobby actually takes effect.
@@ -464,7 +451,7 @@ func (lobby *Lobby) OnChange(base bool) {
 
 func BroadcastLobby(lobby *Lobby) {
 	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
-	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
+	bytes, _ := json.Marshal(DecorateLobbyData(lobby, true))
 	room := strconv.FormatUint(uint64(lobby.ID), 10)
 
 	broadcaster.SendMessageToRoom(room, "lobbyData", string(bytes))
@@ -473,17 +460,16 @@ func BroadcastLobby(lobby *Lobby) {
 
 func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
 	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
-	bytes, _ := DecorateLobbyDataJSON(lobby, true).Encode()
+	bytes, _ := json.Marshal(DecorateLobbyData(lobby, true))
 	broadcaster.SendMessage(steamid, "lobbyData", string(bytes))
 }
 
 func BroadcastLobbyList() {
 	var lobbies []Lobby
 	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)
-	list, err := DecorateLobbyListData(lobbies)
-	if err != nil {
-		helpers.Logger.Warning("Failed to send lobby list: %s", err.Error())
-	} else {
-		broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom), "lobbyListData", list)
-	}
+	bytes, _ := json.Marshal(DecorateLobbyListData(lobbies))
+	broadcaster.SendMessageToRoom(
+		fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom),
+		"lobbyListData", string(bytes))
+
 }

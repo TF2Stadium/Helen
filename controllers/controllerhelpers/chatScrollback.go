@@ -2,6 +2,7 @@ package controllerhelpers
 
 import (
 	"container/ring"
+	"encoding/json"
 	"sync"
 
 	"github.com/TF2Stadium/Helen/helpers"
@@ -12,6 +13,10 @@ type chatRing struct {
 	curr  *ring.Ring
 	first *ring.Ring
 	*sync.RWMutex
+}
+
+type ChatHistoryClearEvent struct {
+	Room uint `json:"room"`
 }
 
 var mapLock = new(sync.RWMutex)
@@ -43,7 +48,8 @@ func AddScrollbackMessage(room uint, message string) {
 
 func BroadcastScrollback(so *wsevent.Client, room uint) {
 
-	so.EmitJSON(helpers.NewRequest("chatHistoryClear", "{}"))
+	bytes, _ := json.Marshal(ChatHistoryClearEvent{room})
+	so.EmitJSON(helpers.NewRequest("chatHistoryClear", string(bytes)))
 
 	mapLock.RLock()
 	c, ok := chatScrollback[room]

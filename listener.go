@@ -68,9 +68,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 			player, _ := models.GetPlayerBySteamId(steamId)
 			lobby, _ := models.GetLobbyById(lobbyid)
 
-			helpers.LockRecord(lobby.ID, lobby)
 			lobby.SetNotInGame(player)
-			helpers.UnlockRecord(lobby.ID, lobby)
 
 			helpers.Logger.Debug("#%d, player %s<%s> disconnected",
 				lobby.ID, player.Name, player.SteamId)
@@ -87,9 +85,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 				slot := &models.LobbySlot{}
 				db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
 				if !slot.InGame {
-					helpers.LockRecord(lobby.ID, lobby)
 					defer helpers.UnlockRecord(lobby.ID, lobby)
-					lobby.RemovePlayer(player)
 					broadcaster.SendMessage(player.SteamId,
 						"sendNotification",
 						"You have been removed from the lobby (Absence for >2 minutes).")
@@ -105,9 +101,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 			player, _ := models.GetPlayerBySteamId(steamId)
 			lobby, _ := models.GetLobbyById(lobbyid)
 
-			helpers.LockRecord(lobby.ID, lobby)
 			lobby.SetInGame(player)
-			helpers.UnlockRecord(lobby.ID, lobby)
 
 		case event := <-eventChanMap["playerSub"]:
 			lobbyid := event["lobbyId"].(uint)
@@ -131,13 +125,11 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 		case event := <-eventChanMap["discFromServer"]:
 			lobbyid := event["lobbyId"].(uint)
 
-			lobby, _ := models.GetLobbyById(lobbyid)
+			lobby, _ := models.GetLobbyByIdServer(lobbyid)
 
 			helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
-			helpers.LockRecord(lobby.ID, lobby)
 			lobby.Close(false)
-			helpers.UnlockRecord(lobby.ID, lobby)
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification", `{"notification": "Lobby Closed (Connection to server lost)."}`)
@@ -145,14 +137,12 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 		case event := <-eventChanMap["matchEnded"]:
 			lobbyid := event["lobbyId"].(uint)
 
-			lobby, _ := models.GetLobbyById(lobbyid)
+			lobby, _ := models.GetLobbyByIdServer(lobbyid)
 
 			helpers.Logger.Debug("#%d: Match Ended", lobbyid)
 
-			helpers.LockRecord(lobby.ID, lobby)
 			lobby.UpdateStats()
 			lobby.Close(false)
-			helpers.UnlockRecord(lobby.ID, lobby)
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification", `{"notification": ""Lobby Ended."}`)
@@ -160,7 +150,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 		case <-eventChanMap["getServers"]:
 			var lobbies []*models.Lobby
 			var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
-			db.DB.Model(&models.Lobby{}).Where("state IN (?)", activeStates).Find(&lobbies)
+			db.DB.Preload("ServerInfo").Model(&models.Lobby{}).Where("state IN (?)", activeStates).Find(&lobbies)
 			for _, lobby := range lobbies {
 				info := models.ServerBootstrap{
 					LobbyId: lobby.ID,

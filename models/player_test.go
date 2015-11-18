@@ -45,13 +45,37 @@ func TestIsSpectating(t *testing.T) {
 	isSpectating2 := player.IsSpectatingId(lobby2.ID)
 	assert.True(t, isSpectating2)
 
-	specIds, specErr := player.GetSpectatingIds()
-	assert.Nil(t, specErr)
-	assert.Equal(t, []uint{lobby.ID, lobby2.ID}, specIds)
-
 	lobby.RemoveSpectator(player, false)
 	isSpectating = player.IsSpectatingId(lobby.ID)
 	assert.False(t, isSpectating)
+}
+
+func TestGetSpectatingIds(t *testing.T) {
+	testhelpers.CleanupDB()
+
+	player, _ := models.NewPlayer("asdf")
+	database.DB.Save(player)
+
+	specIds, specErr := player.GetSpectatingIds()
+	assert.Nil(t, specErr)
+	assert.Equal(t, len(specIds), 0)
+	//assert.Equal(t, []uint{lobby.ID, lobby2.ID}, specIds)
+
+	lobby1 := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1, false)
+	database.DB.Save(lobby1)
+	lobby1.AddSpectator(player)
+
+	specIds, specErr = player.GetSpectatingIds()
+	assert.Nil(t, specErr)
+	assert.Equal(t, specIds[0], lobby1.ID)
+
+	lobby2 := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1, false)
+	database.DB.Save(lobby2)
+	lobby2.AddSpectator(player)
+
+	specIds, specErr = player.GetSpectatingIds()
+	assert.Nil(t, specErr)
+	assert.Equal(t, []uint{lobby1.ID, lobby2.ID}, specIds)
 }
 
 func TestPlayerInfoFetching(t *testing.T) {

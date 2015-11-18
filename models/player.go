@@ -5,13 +5,14 @@
 package models
 
 import (
+	"time"
+
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/PlayerStatsScraper"
 	"github.com/jinzhu/gorm"
-	"time"
 )
 
 // BANS

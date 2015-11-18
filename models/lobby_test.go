@@ -25,7 +25,7 @@ func TestLobbyCreation(t *testing.T) {
 	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "testip", "", ""}, 0, false)
 	lobby.Save()
 
-	lobby2, _ := models.GetLobbyById(lobby.ID)
+	lobby2, _ := models.GetLobbyByIdServer(lobby.ID)
 
 	assert.Equal(t, lobby.ID, lobby2.ID)
 	assert.Equal(t, lobby.ServerInfo.Host, lobby2.ServerInfo.Host)
@@ -36,6 +36,16 @@ func TestLobbyCreation(t *testing.T) {
 
 	db.DB.First(lobby2)
 	assert.Equal(t, "cp_granary", lobby2.MapName)
+}
+
+func TestLobbyClose(t *testing.T) {
+	testhelpers.CleanupDB()
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{0, "", "", ""}, 0, false)
+	lobby.Save()
+	lobby.Close(false)
+
+	lobby, _ = models.GetLobbyById(lobby.ID)
+	assert.Equal(t, lobby.State, models.LobbyStateEnded)
 }
 
 func TestLobbyAdd(t *testing.T) {
@@ -164,6 +174,36 @@ func TestReadyPlayer(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestSetInGame(t *testing.T) {
+	testhelpers.CleanupDB()
+	player, _ := models.NewPlayer("0")
+	player.Save()
+
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
+	lobby.Save()
+	lobby.AddPlayer(player, 0)
+	lobby.SetInGame(player)
+
+	slot, err := lobby.GetPlayerSlotObj(player)
+	assert.Nil(t, err)
+	assert.True(t, slot.InGame)
+}
+
+func TestSetNotInGame(t *testing.T) {
+	testhelpers.CleanupDB()
+	player, _ := models.NewPlayer("0")
+	player.Save()
+
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "", models.ServerRecord{0, "", "", ""}, 0, false)
+	lobby.Save()
+	lobby.AddPlayer(player, 0)
+	lobby.SetInGame(player)
+	lobby.SetNotInGame(player)
+
+	slot, err := lobby.GetPlayerSlotObj(player)
+	assert.Nil(t, err)
+	assert.False(t, slot.InGame)
+}
 func TestIsEveryoneReady(t *testing.T) {
 	testhelpers.CleanupDB()
 	player, playErr := models.NewPlayer("0")

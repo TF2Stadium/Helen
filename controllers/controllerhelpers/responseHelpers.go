@@ -4,43 +4,20 @@
 
 package controllerhelpers
 
-import (
-	"fmt"
-	"net/http"
+import "encoding/json"
 
-	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/bitly/go-simplejson"
-)
-
-func SendJSON(w http.ResponseWriter, json *simplejson.Json) {
-	w.Header().Add("Content-Type", "application/json")
-	val, _ := json.String()
-	fmt.Fprintf(w, val)
+type Response struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data"`
 }
 
-func BuildSuccessJSON(data *simplejson.Json) *simplejson.Json {
-	j := simplejson.New()
-	j.Set("success", true)
-	j.Set("data", data)
-
-	return j
+func BuildSuccessJSON(data interface{}) Response {
+	return Response{true, data}
 }
 
-func BuildEmptySuccessString() string {
-	bytes, _ := BuildSuccessJSON(simplejson.New()).Encode()
-	return string(bytes)
+func (r Response) Encode() ([]byte, error) {
+	return json.Marshal(r)
 }
 
-func BuildFailureJSON(message string, code int) *simplejson.Json {
-	e := helpers.NewTPError(message, code)
-	return e.ErrorJSON()
-}
-
-func BuildMissingArgJSON(arg string) *simplejson.Json {
-	return BuildFailureJSON(fmt.Sprintf("Missing argument: '%s'", arg), 0)
-}
-
-func RedirectHome(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, config.Constants.Domain, 303)
-}
+var emptyBytes, _ = BuildSuccessJSON(struct{}{}).Encode()
+var EmptySuccessJS = string(emptyBytes)

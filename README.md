@@ -29,3 +29,7 @@ The code is divided into multiple packages that follow the usual web application
 2. Ensure existing tests pass (with `go test ./...`), or are updated appropriately.
 3. For new features, you should add new tests.
 4. The pull request should be squashed (no more than 1 temporary commit per 100 loc, more info [here](http://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit))
+
+### License
+
+Helen is licensed under the GNU Public License v3.
