@@ -16,7 +16,7 @@ type Substitute struct {
 	Filled  bool   `json:"-"`
 
 	LobbyID uint   `json:"id"`
-	Format  string `json:"format"`
+	Format  string `json:"type"`
 	MapName string `json:"map"`
 	Region  string `json:"region"`
 	Mumble  bool   `json:"mumbleRequired"`
