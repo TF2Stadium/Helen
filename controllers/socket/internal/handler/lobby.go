@@ -21,12 +21,12 @@ import (
 	"github.com/TF2Stadium/wsevent"
 )
 
-func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
+func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
 		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return bytes
 	}
 
 	var args struct {
@@ -41,8 +41,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -77,14 +76,13 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	lob.CreatedBySteamID = player.SteamId
 	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP != "" {
-		bytes, _ := helpers.NewTPError("Couldn't find region server.", 1).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Couldn't find region server.", 1).Encode()
 	}
+	lob.Save()
 
 	err = lob.SetupServer()
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	lob.State = models.LobbyStateWaiting
@@ -93,18 +91,18 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	reply_str := struct {
 		ID uint `json:"id"`
 	}{lob.ID}
-	bytes, _ := chelpers.BuildSuccessJSON(reply_str).Encode()
+
 	models.FumbleLobbyCreated(lob)
 
-	return string(bytes)
+	bytes, _ := chelpers.BuildSuccessJSON(reply_str).Encode()
+	return bytes
 }
 
-func ServerVerify(server *wsevent.Server, so *wsevent.Client, data string) string {
+func ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 
 	var args struct {
@@ -113,8 +111,7 @@ func ServerVerify(server *wsevent.Server, so *wsevent.Client, data string) strin
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	info := models.ServerRecord{
@@ -123,21 +120,19 @@ func ServerVerify(server *wsevent.Server, so *wsevent.Client, data string) strin
 	}
 	err := models.VerifyInfo(info)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	return chelpers.EmptySuccessJS
 }
 
-var timeoutStop = make(map[uint](chan bool))
+var timeoutStop = make(map[uint](chan struct{}))
 
-func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string {
+func LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 
 	var args struct {
@@ -145,26 +140,24 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
+
 	}
 
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 	lob, tperr := models.GetLobbyByIdServer(uint(*args.Id))
 	if tperr != nil {
-		bytes, _ := tperr.Encode()
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	if player.SteamId != lob.CreatedBySteamID && player.Role != helpers.RoleAdmin {
-		bytes, _ := helpers.NewTPError("Player not authorized to close lobby.", -1).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Player not authorized to close lobby.", -1).Encode()
+
 	}
 
 	if lob.State == models.LobbyStateEnded {
-		bytes, _ := helpers.NewTPError("Lobby already closed.", -1).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Lobby already closed.", -1).Encode()
 	}
 
 	models.FumbleLobbyEnded(lob)
@@ -173,19 +166,19 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data string) string 
 	models.BroadcastLobbyList() // has to be done manually for now
 
 	c, ok := timeoutStop[*args.Id]
-	if !ok {
-		c <- true
+	if ok {
+		close(c)
 	}
 
 	return chelpers.EmptySuccessJS
 }
 
-func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
+func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
+
 	}
 
 	var args struct {
@@ -195,27 +188,24 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 	//helpers.Logger.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	lob, tperr := models.GetLobbyById(*args.Id)
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	if lob.State == models.LobbyStateEnded {
-		bytes, _ := helpers.NewTPError("Cannot join a closed lobby.", -1).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Cannot join a closed lobby.", -1).Encode()
+
 	}
 
 	//Check if player is in the same lobby
@@ -226,15 +216,14 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	slot, tperr := models.LobbyGetPlayerSlot(lob.Type, *args.Team, *args.Class)
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
+
 	}
 
-	tperr = lob.AddPlayer(player, slot)
+	tperr = lob.AddPlayer(player, slot, *args.Team, *args.Class)
 
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	if !sameLobby {
@@ -248,7 +237,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 		tick := time.After(time.Second * 30)
 		id := lob.ID
-		timeoutStop[id] = make(chan bool)
+		timeoutStop[id] = make(chan struct{})
 
 		go func() {
 			select {
@@ -284,13 +273,22 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
 		models.BroadcastLobbyList()
 	}
 
-	models.AllowPlayer(*args.Id, player.SteamId, *args.Team+*args.Class)
+	err := models.AllowPlayer(*args.Id, player.SteamId, *args.Team+*args.Class)
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+	}
+
 	models.BroadcastLobbyToUser(lob, player.SteamId)
+
+	if lob.State == models.LobbyStateInProgress {
+		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lob))
+		broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
+	}
 
 	return chelpers.EmptySuccessJS
 }
 
-func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string) string {
+func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	var noLogin bool
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
@@ -305,16 +303,14 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	var lob *models.Lobby
 	lob, tperr := models.GetLobbyById(*args.Id)
 
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	if noLogin {
@@ -328,8 +324,7 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	var specSameLobby bool
@@ -355,8 +350,7 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 		tperr = lob.AddSpectator(player)
 
 		if tperr != nil {
-			bytes, _ := json.Marshal(tperr)
-			return string(bytes)
+			return tperr.Encode()
 		}
 
 		chelpers.AfterLobbySpec(server, so, lob)
@@ -366,12 +360,11 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data string)
 	return chelpers.EmptySuccessJS
 }
 
-func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
+func LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 
 	var args struct {
@@ -381,8 +374,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	steamid := *args.Steamid
@@ -397,42 +389,36 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 	}
 
 	if self && *args.Ban {
-		bytes, _ := helpers.NewTPError("Player can't ban himself.", -1).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Player can't ban himself.", -1).Encode()
+
 	}
 
 	//player to kick
 	player, tperr := models.GetPlayerBySteamId(steamid)
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	playerRequesting, tperr2 := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 	if tperr2 != nil {
-		bytes, _ := json.Marshal(tperr2)
-		return string(bytes)
+		return tperr2.Encode()
 	}
 
 	lob, tperr := models.GetLobbyById(*args.Id)
 	if tperr != nil {
-		bytes, _ := tperr.Encode()
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	switch lob.State {
 	case models.LobbyStateInProgress:
-		bytes, _ := helpers.NewTPError("Lobby is in progress.", 1).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Lobby is in progress.", 1).Encode()
 	case models.LobbyStateEnded:
-		bytes, _ := helpers.NewTPError("Lobby has closed.", 1).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Lobby has closed.", 1).Encode()
 	}
 
 	if !self && selfSteamid != lob.CreatedBySteamID && playerRequesting.Role != helpers.RoleAdmin {
-		bytes, _ := helpers.NewTPError(
+		return helpers.NewTPError(
 			"Not authorized to kick players", 1).Encode()
-		return string(bytes)
 	}
 
 	_, err := lob.GetPlayerSlot(player)
@@ -444,8 +430,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		spec = true
 		lob.RemoveSpectator(player, true)
 	} else {
-		bytes, _ := helpers.NewTPError("Player neither playing nor spectating", 2).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Player neither playing nor spectating", 2).Encode()
 	}
 
 	if *args.Ban {
@@ -453,9 +438,8 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 		if playerRequesting.Role == helpers.RoleAdmin {
 			lob.BanPlayer(player)
 		} else {
-			bytes, _ := helpers.NewTPError(
+			return helpers.NewTPError(
 				"Not authorized to ban players", 1).Encode()
-			return string(bytes)
 		}
 	}
 
@@ -479,47 +463,41 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data string) string {
 	return chelpers.EmptySuccessJS
 }
 
-func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
+func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 
 	steamid := chelpers.GetSteamId(so.Id())
 	player, tperr := models.GetPlayerBySteamId(steamid)
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	lobbyid, tperr := player.GetLobbyId()
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	lobby, tperr := models.GetLobbyByIdServer(lobbyid)
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	if lobby.State != models.LobbyStateReadyingUp {
-		bytes, _ := json.Marshal(helpers.NewTPError("Lobby hasn't been filled up yet.", 4))
-		return string(bytes)
+		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4).Encode()
 	}
 
 	tperr = lobby.ReadyPlayer(player)
 
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	if lobby.IsEveryoneReady() {
-		timeoutStop[lobby.ID] <- true
+		close(timeoutStop[lobby.ID])
 		lobby.State = models.LobbyStateInProgress
 		lobby.Save()
 		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
@@ -535,56 +513,50 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
 	return chelpers.EmptySuccessJS
 }
 
-func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data string) string {
+func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	lobbyid, tperr := player.GetLobbyId()
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	lobby, tperr := models.GetLobbyById(lobbyid)
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	if lobby.State != models.LobbyStateReadyingUp {
-		bytes, _ := json.Marshal(helpers.NewTPError("Lobby hasn't been filled up yet.", 4))
-		return string(bytes)
+		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4).Encode()
 	}
 
 	tperr = lobby.UnreadyPlayer(player)
 	lobby.RemovePlayer(player)
 
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	lobby.UnreadyAllPlayers()
 	c, ok := timeoutStop[lobby.ID]
 	if ok {
-		c <- true
+		close(c)
 	}
 
 	return chelpers.EmptySuccessJS
 }
 
-func RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data string) string {
+func RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	var lobbies []models.Lobby
 	db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	list, _ := json.Marshal(models.DecorateLobbyListData(lobbies))

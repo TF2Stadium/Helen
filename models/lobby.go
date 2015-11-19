@@ -62,6 +62,9 @@ type LobbySlot struct {
 	Ready    bool
 	NeedSub  bool
 	InGame   bool
+
+	Team  string
+	Class string
 }
 
 type ServerRecord struct {
@@ -177,7 +180,7 @@ func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
 }
 
 // //Add player to lobby
-func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
+func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *helpers.TPError {
 	/* Possible errors while joining
 	 * Slot has been filled
 	 * Player has already joined a lobby
@@ -244,6 +247,8 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int) *helpers.TPError {
 		PlayerId: player.ID,
 		LobbyId:  lobby.ID,
 		Slot:     slot,
+		Team:     team,
+		Class:    class,
 	}
 
 	db.DB.Create(newSlotObj)

@@ -7,7 +7,6 @@ package handler
 import (
 	"net/http"
 
-	"encoding/json"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -25,12 +24,11 @@ func (f FakeResponseWriter) Write(b []byte) (int, error) {
 }
 func (f FakeResponseWriter) WriteHeader(int) {}
 
-func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) string {
+func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 	var args struct {
 		Steamid *string `json:"steamid"`
@@ -39,20 +37,17 @@ func AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data string) st
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	role, ok := helpers.RoleMap[*args.Role]
 	if !ok || role == helpers.RoleAdmin {
-		bytes, _ := helpers.NewTPError("Invalid role parameter", 0).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Invalid role parameter", 0).Encode()
 	}
 
 	otherPlayer, err := models.GetPlayerBySteamId(*args.Steamid)
 	if err != nil {
-		bytes, _ := helpers.NewTPError("Player not found.", 0).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Player not found.", 0).Encode()
 	}
 
 	currPlayer, _ := chelpers.GetPlayerSocket(so.Id())

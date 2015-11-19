@@ -1,20 +1,17 @@
 package handler
 
 import (
-	"encoding/json"
-
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 )
 
-func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) string {
+func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 	var args struct {
 		Key string `json:"key"`
@@ -22,8 +19,7 @@ func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) 
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -38,21 +34,19 @@ func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data string) 
 	}
 
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	result := models.DecoratePlayerSettingsJson(settings)
 	resp, _ := chelpers.BuildSuccessJSON(result).Encode()
-	return string(resp)
+	return resp
 }
 
-func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data string) string {
+func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 	var args struct {
 		Key   string `json:"key"`
@@ -61,27 +55,24 @@ func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data string) 
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 	err = player.SetSetting(args.Key, args.Value)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	return chelpers.EmptySuccessJS
 }
 
-func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data string) string {
+func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 	var args struct {
 		Steamid string `json:"steamid"`
@@ -89,8 +80,7 @@ func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data string) stri
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	steamid := args.Steamid
@@ -101,11 +91,10 @@ func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data string) stri
 	player, playErr := models.GetPlayerWithStats(steamid)
 
 	if playErr != nil {
-		bytes, _ := playErr.Encode()
-		return string(bytes)
+		return playErr.Encode()
 	}
 
 	result := models.DecoratePlayerProfileJson(player)
 	resp, _ := chelpers.BuildSuccessJSON(result).Encode()
-	return string(resp)
+	return resp
 }
