@@ -219,7 +219,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 
 	}
 
-	tperr = lob.AddPlayer(player, slot)
+	tperr = lob.AddPlayer(player, slot, *args.Team, *args.Class)
 
 	if tperr != nil {
 		return tperr.Encode()
@@ -274,6 +274,11 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 
 	models.AllowPlayer(*args.Id, player.SteamId, *args.Team+*args.Class)
 	models.BroadcastLobbyToUser(lob, player.SteamId)
+
+	if lob.State == models.LobbyStateInProgress {
+		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
+		broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
+	}
 
 	return chelpers.EmptySuccessJS
 }
