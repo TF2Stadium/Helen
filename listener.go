@@ -5,7 +5,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
@@ -100,14 +99,16 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 			lobbyid := event["lobbyId"].(uint)
 			steamId := event["steamId"].(string)
 
-			lob, _ := models.GetLobbyById(lobbyid)
 			sub, err := models.NewSub(lobbyid, steamId)
 			if err != nil {
 				helpers.Logger.Error(err.Error())
+				continue
 			}
 			db.DB.Save(sub)
 
 			models.BroadcastSubList()
+
+			player, _ := models.GetPlayerBySteamId(steamId)
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification",
