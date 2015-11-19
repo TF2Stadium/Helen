@@ -125,7 +125,7 @@ func ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) []byt
 	return chelpers.EmptySuccessJS
 }
 
-var timeoutStop = make(map[uint](chan bool))
+var timeoutStop = make(map[uint](chan struct{}))
 
 func LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
@@ -166,7 +166,7 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte 
 
 	c, ok := timeoutStop[*args.Id]
 	if !ok {
-		c <- true
+		close(c)
 	}
 
 	return chelpers.EmptySuccessJS
@@ -236,7 +236,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 
 		tick := time.After(time.Second * 30)
 		id := lob.ID
-		timeoutStop[id] = make(chan bool)
+		timeoutStop[id] = make(chan struct{})
 
 		go func() {
 			select {
@@ -487,7 +487,7 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	}
 
 	if lobby.IsEveryoneReady() {
-		timeoutStop[lobby.ID] <- true
+		close(timeoutStop[lobby.ID])
 		lobby.State = models.LobbyStateInProgress
 		lobby.Save()
 		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
@@ -540,7 +540,7 @@ func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	lobby.UnreadyAllPlayers()
 	c, ok := timeoutStop[lobby.ID]
 	if ok {
-		c <- true
+		close(c)
 	}
 
 	return chelpers.EmptySuccessJS
