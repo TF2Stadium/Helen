@@ -78,6 +78,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP != "" {
 		return helpers.NewTPError("Couldn't find region server.", 1).Encode()
 	}
+	lob.Save()
 
 	err = lob.SetupServer()
 	if err != nil {
@@ -165,7 +166,7 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte 
 	models.BroadcastLobbyList() // has to be done manually for now
 
 	c, ok := timeoutStop[*args.Id]
-	if !ok {
+	if ok {
 		close(c)
 	}
 
@@ -272,7 +273,11 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		models.BroadcastLobbyList()
 	}
 
-	models.AllowPlayer(*args.Id, player.SteamId, *args.Team+*args.Class)
+	err := models.AllowPlayer(*args.Id, player.SteamId, *args.Team+*args.Class)
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+	}
+
 	models.BroadcastLobbyToUser(lob, player.SteamId)
 
 	if lob.State == models.LobbyStateInProgress {
