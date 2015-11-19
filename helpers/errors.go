@@ -35,6 +35,7 @@ func NewTPErrorFromError(e error) *TPError {
 	}
 }
 
-func (e *TPError) Encode() ([]byte, error) {
-	return json.Marshal(e)
+func (e *TPError) Encode() []byte {
+	bytes, _ := json.Marshal(e)
+	return bytes
 }

@@ -26,12 +26,11 @@ type chatMessage struct {
 	Player    models.PlayerSummary `json:"player"`
 }
 
-func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
+func ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 	var args struct {
 		Message *string `json:"message"`
@@ -40,14 +39,12 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 	if tperr != nil {
-		bytes, _ := tperr.Encode()
-		return string(bytes)
+		return tperr.Encode()
 	}
 
 	//helpers.Logger.Debug("received chat message: %s %s", *args.Message, player.Name)
@@ -58,8 +55,7 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data string) string {
 		lobbyId, tperr := player.GetLobbyId()
 
 		if tperr != nil && !spec && lobbyId != uint(*args.Room) {
-			bytes, _ := helpers.NewTPError("Player is not in the lobby.", 5).Encode()
-			return string(bytes)
+			return helpers.NewTPError("Player is not in the lobby.", 5).Encode()
 		}
 	} else {
 		// else room is the lobby list room

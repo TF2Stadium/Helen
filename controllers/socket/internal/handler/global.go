@@ -12,13 +12,12 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
-func GetConstant(server *wsevent.Server, so *wsevent.Client, data string) string {
+func GetConstant(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	var args struct {
 		Constant string `json:"constant"`
 	}
 	if err := chelpers.GetParams(data, &args); err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	output := simplejson.New()
@@ -26,10 +25,9 @@ func GetConstant(server *wsevent.Server, so *wsevent.Client, data string) string
 	case "lobbySettingsList":
 		output = models.LobbySettingsToJson()
 	default:
-		bytes, _ := helpers.NewTPError("Unknown constant.", -1).Encode()
-		return string(bytes)
+		return helpers.NewTPError("Unknown constant.", -1).Encode()
 	}
 
 	bytes, _ := chelpers.BuildSuccessJSON(output).Encode()
-	return string(bytes)
+	return bytes
 }

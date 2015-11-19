@@ -16,12 +16,11 @@ import (
 	"github.com/TF2Stadium/wsevent"
 )
 
-func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) string {
+func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 
 	var args struct {
@@ -30,8 +29,7 @@ func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) st
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	lobby, _ := models.GetLobbyById(*args.Id)
@@ -47,12 +45,11 @@ func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data string) st
 	return chelpers.EmptySuccessJS
 }
 
-func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data string) string {
+func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 
 	var args struct {
@@ -61,8 +58,7 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	lobby, _ := models.GetLobbyByIdServer(*args.Id)
@@ -73,12 +69,11 @@ func DebugRequestLobbyStart(server *wsevent.Server, so *wsevent.Client, data str
 	return chelpers.EmptySuccessJS
 }
 
-func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data string) string {
+func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		bytes, _ := json.Marshal(reqerr)
-		return string(bytes)
+		return reqerr.Encode()
 	}
 
 	var args struct {
@@ -87,14 +82,12 @@ func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data str
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-		return string(bytes)
+		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
 	lobby, tperr := models.GetLobbyById(*args.Id)
 	if tperr != nil {
-		bytes, _ := json.Marshal(tperr)
-		return string(bytes)
+		return tperr.Encode()
 	}
 	lobby.UpdateStats()
 

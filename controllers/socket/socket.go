@@ -62,18 +62,18 @@ func ServerInit(server *wsevent.Server) {
 	server.OnDisconnect = onDisconnect
 	server.Extractor = getEvent
 
-	server.On("authenticationTest", func(server *wsevent.Server, so *wsevent.Client, data string) string {
+	server.On("authenticationTest", func(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		reqerr := chelpers.FilterRequest(so, 0, true)
 
 		if reqerr != nil {
 			bytes, _ := json.Marshal(reqerr)
-			return string(bytes)
+			return bytes
 		}
 
 		bytes, _ := json.Marshal(struct {
 			Message string `json:"message"`
 		}{"authenticated"})
-		return string(bytes)
+		return bytes
 	})
 	//Global Handlers
 	server.On("getConstant", handler.GetConstant)

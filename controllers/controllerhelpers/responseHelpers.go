@@ -20,4 +20,4 @@ func (r Response) Encode() ([]byte, error) {
 }
 
 var emptyBytes, _ = BuildSuccessJSON(struct{}{}).Encode()
-var EmptySuccessJS = string(emptyBytes)
+var EmptySuccessJS = emptyBytes
