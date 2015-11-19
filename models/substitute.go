@@ -16,9 +16,10 @@ type Substitute struct {
 	Filled  bool   `json:"-"`
 
 	LobbyID uint   `json:"id"`
-	Type    string `json:"type"`
+	Format  string `json:"format"`
 	MapName string `json:"map"`
 	Region  string `json:"region"`
+	Mumble  bool   `json:"mumbleRequired"`
 
 	Team  string `json:"team"`
 	Class string `json:"class"`
@@ -42,10 +43,11 @@ func NewSub(id uint, steamid string) (*Substitute, error) {
 	sub := &Substitute{}
 
 	sub.LobbyID = lob.ID
-	sub.Type = FormatMap[lob.Type]
+	sub.Format = FormatMap[lob.Type]
 	sub.SteamID = player.SteamId
 	sub.MapName = lob.MapName
 	sub.Region = lob.RegionName
+	sub.Mumble = lob.Mumble
 
 	sub.Team = slot.Team
 	sub.Class = slot.Class
