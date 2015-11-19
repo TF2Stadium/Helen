@@ -276,7 +276,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	models.BroadcastLobbyToUser(lob, player.SteamId)
 
 	if lob.State == models.LobbyStateInProgress {
-		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
+		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lob))
 		broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
 	}
 
