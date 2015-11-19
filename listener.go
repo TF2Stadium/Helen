@@ -5,8 +5,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"net/rpc"
+	"io"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -29,33 +30,25 @@ func StartPaulingListener() {
 		eventChanMap[e] = make(chan map[string]interface{})
 	}
 
-	var ticker *time.Ticker
-	ticker = time.NewTicker(time.Millisecond * 500)
-
 	go eventListener(eventChanMap)
-	go listener(ticker, eventChanMap)
+	go listener(eventChanMap)
 	helpers.Logger.Debug("Listening for events on Pauling")
 }
 
-func listener(ticker *time.Ticker, eventChanMap map[string](chan map[string]interface{})) {
+func listener(eventChanMap map[string](chan map[string]interface{})) {
 	for {
-		<-ticker.C
-
 		event := make(models.Event)
 		err := models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &event)
 
 		if err != nil {
-			if err == rpc.ErrShutdown {
+			if err == io.ErrUnexpectedEOF {
 				models.PaulingReconnect()
 				continue
 			}
 			helpers.Logger.Fatal(err)
 		}
-		if _, empty := event["empty"]; !empty {
-			eventChanMap[event["name"].(string)] <- event
-		}
+		eventChanMap[event["name"].(string)] <- event
 	}
-
 }
 
 func eventListener(eventChanMap map[string](chan map[string]interface{})) {
@@ -107,20 +100,22 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 			lobbyid := event["lobbyId"].(uint)
 			steamId := event["steamId"].(string)
 
-			var slot = &models.LobbySlot{}
-			player, _ := models.GetPlayerBySteamId(steamId)
+			lob, _ := models.GetLobbyById(lobbyid)
+			sub, err := models.NewSub(lobbyid, steamId)
+			if err != nil {
+				helpers.Logger.Error(err.Error())
+			}
+			db.DB.Save(sub)
 
-			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Find(slot)
-			slot.NeedSub = true
-			db.DB.Save(slot)
+			models.BroadcastSubList()
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification",
 				fmt.Sprintf(`{"notification": "%s has been reported."}`,
 					player.Name))
 
-			helpers.Logger.Debug("#%d: Reported player %s<%s>",
-				lobbyid, player.Name, player.SteamId)
+			//helpers.Logger.Debug("#%d: Reported player %s<%s>",
+			//	lobbyid, player.Name, player.SteamId)
 
 		case event := <-eventChanMap["discFromServer"]:
 			lobbyid := event["lobbyId"].(uint)

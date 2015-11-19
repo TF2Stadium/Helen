@@ -53,7 +53,7 @@ func NewSub(id uint, steamid string) (*Substitute, error) {
 	return sub, nil
 }
 
-func BroadcastSubData() {
+func BroadcastSubList() {
 	var allSubs []*Substitute
 	db.DB.Table("substitutes").Where("filled = ?", false).Find(&allSubs)
 
