@@ -57,8 +57,13 @@ func SetupHTTPRoutes(server *wsevent.Server, noauth *wsevent.Server) {
 				so, err = noauth.NewClient(upgrader, w, r)
 			}
 		}
-		if so == nil || err == nil {
-			http.Error(w, err.Error(), 500)
+		if so == nil {
+			var estr = "Couldn't create WebSocket connection."
+			if err != nil {
+				estr = err.Error()
+			}
+
+			http.Error(w, estr, 500)
 			return
 		}
 
