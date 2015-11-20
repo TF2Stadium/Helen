@@ -13,9 +13,11 @@ type commonBroadcaster interface {
 }
 
 var socketServer commonBroadcaster
+var socketServerNoLogin commonBroadcaster
 
-func Init(server commonBroadcaster) {
+func Init(server commonBroadcaster, nologin commonBroadcaster) {
 	socketServer = server
+	socketServerNoLogin = nologin
 }
 
 func SendMessage(steamid string, event string, content string) {
@@ -28,5 +30,8 @@ func SendMessage(steamid string, event string, content string) {
 }
 
 func SendMessageToRoom(room string, event string, content string) {
-	socketServer.BroadcastJSON(room, helpers.NewRequest(event, content))
+	v := helpers.NewRequest(event, content)
+
+	socketServer.BroadcastJSON(room, v)
+	socketServerNoLogin.BroadcastJSON(room, v)
 }

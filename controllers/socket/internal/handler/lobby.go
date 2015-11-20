@@ -289,13 +289,11 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 }
 
 func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
-	var noLogin bool
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		noLogin = true
-		// bytes, _ := json.Marshal(reqerr)
-		// return string(bytes)
+		bytes, _ := json.Marshal(reqerr)
+		return bytes
 	}
 
 	var args struct {
@@ -311,15 +309,6 @@ func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data []byte)
 
 	if tperr != nil {
 		return tperr.Encode()
-	}
-
-	if noLogin {
-		chelpers.AfterLobbySpec(server, so, lob)
-		bytes, _ := json.Marshal(models.DecorateLobbyData(lob, true))
-
-		so.EmitJSON(helpers.NewRequest("lobbyData", string(bytes)))
-
-		return chelpers.EmptySuccessJS
 	}
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))

@@ -70,9 +70,11 @@ func main() {
 
 	// init socket.io server
 	server := wsevent.NewServer()
-	broadcaster.Init(server)
-	socket.ServerInit(server)
-	routes.SetupHTTPRoutes(server)
+	nologin := wsevent.NewServer()
+
+	broadcaster.Init(server, nologin)
+	socket.ServerInit(server, nologin)
+	routes.SetupHTTPRoutes(server, nologin)
 
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
 		// init static FileServer
