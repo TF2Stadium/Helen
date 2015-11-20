@@ -220,10 +220,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 		}
 
 		//Substituting player
-		var prevPlayer *Player
-		db.DB.Where("player_id = ?", curSlot.PlayerId).First(prevPlayer)
+		prevPlayer := &Player{}
+		db.DB.First(prevPlayer, curSlot.PlayerId)
 		lobby.RemovePlayer(prevPlayer)
-		db.DB.Table("substitutes").Where("lobby_id = ? AND steam_id = ?", lobby.ID, player.SteamId).UpdateColumn("filled", true)
+		db.DB.Table("substitutes").Where("lobby_id = ? AND steam_id = ?", lobby.ID, prevPlayer.SteamId).UpdateColumn("filled", true)
 		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
 	} else {
 		FumbleLobbyPlayerJoined(lobby, player, slot)
