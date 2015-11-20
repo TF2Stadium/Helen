@@ -57,6 +57,11 @@ func SetupHTTPRoutes(server *wsevent.Server, noauth *wsevent.Server) {
 				so, err = noauth.NewClient(upgrader, w, r)
 			}
 		}
+		if so == nil || err == nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
 		//helpers.Logger.Debug("Connected to Socket")
 		err = socket.SocketInit(server, noauth, so)
 		if err != nil {
