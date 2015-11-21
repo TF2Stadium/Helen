@@ -56,7 +56,6 @@ func main() {
 	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
-	go controllerhelpers.SlackBroadcaster()
 	StartPaulingListener()
 	chelpers.InitDB()
 	chelpers.CheckLogger()

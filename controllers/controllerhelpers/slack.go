@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -17,12 +18,9 @@ type message struct {
 }
 
 var messages = make(chan message, 10)
+var once = new(sync.Once)
 
-func SlackBroadcaster() {
-	if config.Constants.SlackbotURL == "" {
-		return
-	}
-
+func slackBroadcaster() {
 	for {
 		m := <-messages
 		final := fmt.Sprintf("<https://steamcommunity.com/profiles/%s|%s>: %s", m.SteamID, m.Name, m.Message)
@@ -41,6 +39,8 @@ func SendToSlack(msg, name, steamid string) {
 	if config.Constants.SlackbotURL == "" {
 		return
 	}
+	go once.Do(slackBroadcaster)
 
 	messages <- message{name, steamid, msg}
+
 }
