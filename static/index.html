@@ -6,8 +6,8 @@
 <head>
 <script src="bower_components/wsevent.js/wsevent.js"></script>
 <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
-<script src="//cdnjs.buttflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
-<link href="https://cdnjs.buttflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet"/>
+<script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet"/>
 <script>
 
 var createBox = function(so, messageName, messageFields) {
@@ -131,7 +131,8 @@ $(function() {
   createBox(so, "getConstant", ["constant"]);
   createBox(so, "debugGetAllLobbies", []);
   createBox(so, "debugRequestLobbyStart", ["id"]);
-  createBox(so, "debugUpdateStatsFilter", ["id"]); 
+  createBox(so, "debugUpdateStatsFilter", ["id"]);
+  createBox(so, "debugPlayerSub", ["id", "team", "class"]);
 });
 
 </script>

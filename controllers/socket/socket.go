@@ -104,6 +104,7 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 		// server.On("debugLobbyReady", handler.DebugLobbyReady)
 		server.On("debugRequestLobbyStart", handler.DebugRequestLobbyStart)
 		server.On("debugUpdateStatsFilter", handler.DebugUpdateStatsFilter)
+		server.On("debugPlayerSub", handler.DebugPlayerSub)
 	}
 
 	noAuthServer.On("lobbySpectatorJoin", func(s *wsevent.Server, so *wsevent.Client, data []byte) []byte {
