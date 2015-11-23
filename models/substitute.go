@@ -25,7 +25,7 @@ type Substitute struct {
 	Class string `json:"class"`
 }
 
-func NewSub(id uint, steamid string) (*Substitute, error) {
+func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 	player, err := GetPlayerBySteamId(steamid)
 	if err != nil {
 		return nil, err
@@ -35,10 +35,10 @@ func NewSub(id uint, steamid string) (*Substitute, error) {
 
 	//helpers.Logger.Debug("#%d: Reported player %s<%s>",
 	//	lobbyid, player.Name, player.SteamId)
-	lob, _ := GetLobbyById(id)
+	lob, _ := GetLobbyById(lobbyid)
 	slot := &LobbySlot{}
 
-	db.DB.Where("lobby_id = ? AND player_id = ?", lob.ID, player.ID).First(slot)
+	db.DB.Where("lobby_id = ? AND player_id = ?", lobbyid, player.ID).First(slot)
 
 	sub := &Substitute{}
 

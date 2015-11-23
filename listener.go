@@ -74,14 +74,15 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 				t := time.After(time.Minute * 2)
 				<-t
 				lobby, _ := models.GetLobbyById(lobbyid)
-				slot := &models.LobbySlot{}
-				db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
-				if !slot.InGame {
-					defer helpers.UnlockRecord(lobby.ID, lobby)
-					broadcaster.SendMessage(player.SteamId,
-						"sendNotification",
-						"You have been removed from the lobby (Absence for >2 minutes).")
-					helpers.Logger.Debug("#%d: %s<%s> removed")
+				ingame, err := lobby.IsPlayerInGame(player)
+				if err != nil {
+					helpers.Logger.Error(err.Error())
+				}
+				if !ingame {
+					sub, _ := models.NewSub(lobby.ID, player.SteamId)
+					db.DB.Save(sub)
+					models.BroadcastSubList()
+					lobby.RemovePlayer(player)
 				}
 
 			}()
