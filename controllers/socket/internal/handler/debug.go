@@ -112,7 +112,6 @@ func DebugPlayerSub(server *wsevent.Server, so *wsevent.Client, data []byte) []b
 		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
-	helpers.Logger.Debug(*args.Team, *args.Class)
 	lob, tperr := models.GetLobbyById(*args.Id)
 	if tperr != nil {
 		return tperr.Encode()

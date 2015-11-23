@@ -77,6 +77,11 @@ so.On("sendNotification", function(s) {
   toastr.info(s);
 });
 
+so.On("subListData", function(s) {
+  console.log("Received subListData")
+  console.log(s)
+});
+
 so.On("lobbyListData", function(s) {
   console.log("Received lobbyListData");
   $("#lobby-list").html(JSON.stringify(s, null, 2).replace(/(\r)?\n/g, "<br>"));

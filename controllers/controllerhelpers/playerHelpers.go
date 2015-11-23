@@ -69,6 +69,8 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 
 	so.EmitJSON(helpers.NewRequest("lobbyListData", string(bytes)))
 	BroadcastScrollback(so, 0)
+	bytes, _ = json.Marshal(helpers.NewRequestFromObj("subListData", models.GetSubList()))
+	so.EmitJSON(helpers.NewRequest("subListData", string(bytes)))
 }
 
 func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *models.Player) {

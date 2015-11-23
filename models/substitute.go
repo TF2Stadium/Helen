@@ -55,13 +55,15 @@ func NewSub(id uint, steamid string) (*Substitute, error) {
 	return sub, nil
 }
 
-func BroadcastSubList() {
+func GetSubList() []*Substitute {
 	var allSubs []*Substitute
 	db.DB.Table("substitutes").Where("filled = ?", false).Find(&allSubs)
 
-	if len(allSubs) == 0 {
-		return
-	}
+	return allSubs
+}
+
+func BroadcastSubList() {
+	allSubs := GetSubList()
 
 	bytes, _ := json.Marshal(allSubs)
 	broadcaster.SendMessageToRoom("0_public", "subListData", string(bytes))

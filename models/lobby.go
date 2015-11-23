@@ -211,6 +211,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 
 	_, err := lobby.GetPlayerIdBySlot(slot)
 	//slot is occupied
+	var substitute bool
 	if err == nil {
 		curSlot := &LobbySlot{}
 		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).First(curSlot)
@@ -220,6 +221,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 		}
 
 		//Substituting player
+		substitute = true
 		prevPlayer := &Player{}
 		db.DB.First(prevPlayer, curSlot.PlayerId)
 		lobby.RemovePlayer(prevPlayer)
@@ -254,6 +256,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 	db.DB.Create(newSlotObj)
 
 	lobby.OnChange(true)
+	if substitute {
+		BroadcastSubList()
+	}
 
 	return nil
 }
