@@ -21,6 +21,7 @@ var RecordNotFoundError = errors.New("Plyaer record for found.")
 
 func onDisconnect(id string) {
 	//defer helpers.Logger.Debug("Disconnected from Socket")
+	defer chelpers.DeauthenticateSocket(id)
 	if chelpers.IsLoggedInSocket(id) {
 		steamid := chelpers.GetSteamId(id)
 		broadcaster.RemoveSocket(steamid)
@@ -47,7 +48,6 @@ func onDisconnect(id string) {
 		}
 
 	}
-	chelpers.DeauthenticateSocket(id)
 }
 
 func getEvent(data string) string {
@@ -80,6 +80,7 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	})
 	//Global Handlers
 	server.On("getConstant", handler.GetConstant)
+	server.On("getSocketInfo", handler.GetSocketInfo)
 	//Lobby Handlers
 	server.On("lobbyCreate", handler.LobbyCreate)
 	server.On("serverVerify", handler.ServerVerify)
@@ -130,6 +131,8 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 
 		return chelpers.EmptySuccessJS
 	})
+	noAuthServer.On("getSocketInfo", handler.GetSocketInfo)
+
 	noAuthServer.DefaultHandler = func(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		return helpers.NewTPError("Player isn't logged in.", -4).Encode()
 	}
