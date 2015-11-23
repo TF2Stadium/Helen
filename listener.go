@@ -70,8 +70,8 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 				"sendNotification",
 				fmt.Sprintf(`{"notification": "%s has disconected from the server."}`,
 					player.Name))
+			t := time.After(time.Minute * 2)
 			go func() {
-				t := time.After(time.Minute * 2)
 				<-t
 				lobby, _ := models.GetLobbyById(lobbyid)
 				ingame, err := lobby.IsPlayerInGame(player)
