@@ -394,20 +394,20 @@ func (lobby *Lobby) SetupServer() error {
 	return nil
 }
 
-func (lobby *Lobby) Close(rpc bool) {
+func (lobby *Lobby) Close() {
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.Delete(&lobby.ServerInfo)
-	if rpc {
-		End(lobby.ID)
+	End(lobby.ID)
 
-		privateRoom := fmt.Sprintf("%d_private", lobby.ID)
-		bytesLobbyLeft, _ := json.Marshal(DecorateLobbyLeave(lobby))
-		broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", string(bytesLobbyLeft))
+	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
+	bytesLobbyLeft, _ := json.Marshal(DecorateLobbyLeave(lobby))
+	broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", string(bytesLobbyLeft))
 
-		publicRoom := fmt.Sprintf("%d_public", lobby.ID)
-		bytesLobbyClosed, _ := json.Marshal(DecorateLobbyClosed(lobby))
-		broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", string(bytesLobbyClosed))
-	}
+	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
+	bytesLobbyClosed, _ := json.Marshal(DecorateLobbyClosed(lobby))
+	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", string(bytesLobbyClosed))
+
+	BroadcastLobby(lobby)
 }
 
 func (lobby *Lobby) UpdateStats() {

@@ -162,7 +162,7 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte 
 
 	models.FumbleLobbyEnded(lob)
 
-	lob.Close(true)
+	lob.Close()
 	models.BroadcastLobbyList() // has to be done manually for now
 
 	c, ok := timeoutStop[*args.Id]
