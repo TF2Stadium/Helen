@@ -30,6 +30,10 @@ func SendMessage(steamid string, event string, content string) {
 }
 
 func SendMessageToRoom(room string, event string, content string) {
+	if socketServer == nil {
+		return
+	}
+
 	v := helpers.NewRequest(event, content)
 
 	socketServer.BroadcastJSON(room, v)
