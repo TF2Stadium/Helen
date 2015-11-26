@@ -124,7 +124,10 @@ $(function() {
   createBox(so, "debugLobbyFill", ["id"]);
   createBox(so, "debugLobbyReady", ["id"]);
   createBox(so, "lobbySpectatorJoin", ["id"]);
-  createBox(so, "lobbyKick", ["id", "steamid", "ban"]);
+  createBox(so, "lobbyKick", ["id", "steamid"]);
+  createBox(so, "lobbyBan", ["id", "steamid"]);
+  createBox(so, "lobbyLeave", ["id"]);
+  createBox(so, "lobbySpectatorLeave", ["id"]);
   createBox(so, "playerReady", []);
   createBox(so, "playerNotReady", []);
   createBox(so, "chatSend", ["message", "room"]);

@@ -88,6 +88,9 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	server.On("lobbyJoin", handler.LobbyJoin)
 	server.On("lobbySpectatorJoin", handler.LobbySpectatorJoin)
 	server.On("lobbyKick", handler.LobbyKick)
+	server.On("lobbyBan", handler.LobbyBan)
+	server.On("lobbyLeave", handler.LobbyLeave)
+	server.On("lobbySpectatorLeave", handler.LobbySpectatorLeave)
 	server.On("requestLobbyListData", handler.RequestLobbyListData)
 	//Player Handlers
 	server.On("playerReady", handler.PlayerReady)
