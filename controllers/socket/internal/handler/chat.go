@@ -24,6 +24,13 @@ type chatMessage struct {
 	Message   string               `json:"message"`
 	Room      int                  `json:"room"`
 	Player    models.PlayerSummary `json:"player"`
+	Id        uint                 `json:"id"`
+}
+
+var nextId uint = 0
+func generateId() uint {
+  nextId++
+  return nextId
 }
 
 func ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
@@ -67,6 +74,7 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		Message:   *args.Message,
 		Room:      *args.Room,
 		Player:    models.DecoratePlayerSummary(player),
+		Id:        generateId(),
 	}
 
 	bytes, _ := json.Marshal(message)
