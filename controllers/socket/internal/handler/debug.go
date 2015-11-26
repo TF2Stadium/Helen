@@ -93,3 +93,53 @@ func DebugUpdateStatsFilter(server *wsevent.Server, so *wsevent.Client, data []b
 
 	return chelpers.EmptySuccessJS
 }
+
+func DebugPlayerSub(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+	reqerr := chelpers.FilterRequest(so, 0, true)
+
+	if reqerr != nil {
+		return reqerr.Encode()
+	}
+
+	var args struct {
+		Id    *uint   `json:"id"`
+		Team  *string `json:"team"`
+		Class *string `json:"class"`
+	}
+
+	err := chelpers.GetParams(data, &args)
+	if err != nil {
+		return helpers.NewTPErrorFromError(err).Encode()
+	}
+
+	lob, tperr := models.GetLobbyById(*args.Id)
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	s, tperr := models.LobbyGetPlayerSlot(lob.Type, *args.Team, *args.Class)
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	slot := models.LobbySlot{}
+	err = db.DB.Where("slot = ?", s).First(&slot).Error
+	if err != nil {
+		helpers.Logger.Debug("", slot, s)
+		return helpers.NewTPErrorFromError(err).Encode()
+	}
+
+	player := models.Player{}
+	err = db.DB.First(&player, slot.PlayerId).Error
+	if err != nil {
+		helpers.Logger.Debug("", player)
+		return helpers.NewTPErrorFromError(err).Encode()
+	}
+
+	sub, _ := models.NewSub(*args.Id, player.SteamId)
+	db.DB.Save(sub)
+
+	models.BroadcastSubList()
+
+	return chelpers.EmptySuccessJS
+}

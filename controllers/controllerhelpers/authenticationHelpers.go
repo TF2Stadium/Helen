@@ -89,8 +89,9 @@ func GetSessionSocket(socketid string) (*sessions.Session, error) {
 }
 
 func GetSteamId(socketid string) string {
-	session, _ := GetSessionSocket(socketid)
-	return session.Values["steam_id"].(string)
+	// session, _ := GetSessionSocket(socketid)
+	// return session.Values["steam_id"].(string)
+	return socketid
 }
 
 func GetPlayerSocket(socketid string) (*models.Player, error) {

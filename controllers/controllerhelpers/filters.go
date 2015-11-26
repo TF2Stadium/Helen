@@ -65,10 +65,6 @@ func IsSteamIDWhitelisted(steamid string) bool {
 }
 
 func FilterRequest(so *wsevent.Client, action authority.AuthAction, login bool) (err *helpers.TPError) {
-	if login && !IsLoggedInSocket(so.Id()) {
-		return helpers.NewTPError("Player isn't logged in.", -4)
-
-	}
 	if int(action) != 0 {
 		var role, _ = GetPlayerRole(so.Id())
 		can := role.Can(action)

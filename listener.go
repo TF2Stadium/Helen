@@ -70,18 +70,19 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 				"sendNotification",
 				fmt.Sprintf(`{"notification": "%s has disconected from the server."}`,
 					player.Name))
+			t := time.After(time.Minute * 2)
 			go func() {
-				t := time.After(time.Minute * 2)
 				<-t
 				lobby, _ := models.GetLobbyById(lobbyid)
-				slot := &models.LobbySlot{}
-				db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).First(slot)
-				if !slot.InGame {
-					defer helpers.UnlockRecord(lobby.ID, lobby)
-					broadcaster.SendMessage(player.SteamId,
-						"sendNotification",
-						"You have been removed from the lobby (Absence for >2 minutes).")
-					helpers.Logger.Debug("#%d: %s<%s> removed")
+				ingame, err := lobby.IsPlayerInGame(player)
+				if err != nil {
+					helpers.Logger.Error(err.Error())
+				}
+				if !ingame {
+					sub, _ := models.NewSub(lobby.ID, player.SteamId)
+					db.DB.Save(sub)
+					models.BroadcastSubList()
+					lobby.RemovePlayer(player)
 				}
 
 			}()
@@ -125,7 +126,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 
 			helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
-			lobby.Close(false)
+			lobby.Close()
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification", `{"notification": "Lobby Closed (Connection to server lost)."}`)
@@ -138,7 +139,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 			helpers.Logger.Debug("#%d: Match Ended", lobbyid)
 
 			lobby.UpdateStats()
-			lobby.Close(false)
+			lobby.Close()
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification", `{"notification": ""Lobby Ended."}`)
