@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -24,7 +25,10 @@ type chatMessage struct {
 	Message   string               `json:"message"`
 	Room      int                  `json:"room"`
 	Player    models.PlayerSummary `json:"player"`
+	Id        uint32                 `json:"id"`
 }
+
+var nextId uint32 = 0
 
 func ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
@@ -67,6 +71,7 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		Message:   *args.Message,
 		Room:      *args.Room,
 		Player:    models.DecoratePlayerSummary(player),
+		Id:        atomic.AddUint32(&nextId, 1),
 	}
 
 	bytes, _ := json.Marshal(message)
