@@ -1,17 +1,17 @@
 package controllerhelpers
 
 import (
-	"container/ring"
 	"encoding/json"
 	"sync"
+	"sync/atomic"
 
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/wsevent"
 )
 
 type chatRing struct {
-	curr  *ring.Ring
-	first *ring.Ring
+	messages []string
+	curr     int32
 	*sync.RWMutex
 }
 
@@ -23,8 +23,16 @@ var mapLock = new(sync.RWMutex)
 var chatScrollback = make(map[uint]*chatRing)
 
 func initChatScrollback() *chatRing {
-	r := ring.New(20)
-	return &chatRing{r, r, new(sync.RWMutex)}
+	return &chatRing{make([]string, 20), 0, new(sync.RWMutex)}
+}
+
+func (c *chatRing) incrCurr() {
+	atomic.AddInt32(&c.curr, 1)
+
+	if atomic.LoadInt32(&c.curr) == 20 {
+		atomic.StoreInt32(&c.curr, 0)
+	}
+
 }
 
 func AddScrollbackMessage(room uint, message string) {
@@ -36,18 +44,13 @@ func AddScrollbackMessage(room uint, message string) {
 	mapLock.Unlock()
 
 	c.Lock()
-	defer c.Unlock()
+	c.messages[c.curr] = message
+	c.Unlock()
 
-	if c.curr.Value != nil {
-		c.first = c.first.Next()
-	}
-
-	c.curr.Value = message
-	c.curr = c.curr.Next()
+	c.incrCurr()
 }
 
 func BroadcastScrollback(so *wsevent.Client, room uint) {
-
 	bytes, _ := json.Marshal(ChatHistoryClearEvent{room})
 	so.EmitJSON(helpers.NewRequest("chatHistoryClear", string(bytes)))
 
@@ -61,16 +64,20 @@ func BroadcastScrollback(so *wsevent.Client, room uint) {
 	c.RLock()
 	defer c.RUnlock()
 
-	curr := c.first
-	if curr.Value == nil {
-		return
+	curr := c.curr
+	if c.messages[curr] == "" {
+		curr = 0
 	}
 
-	for printed := 0; printed != 20; printed++ {
-		if curr.Value == nil {
+	for i := 0; i < 20; i++ {
+		if c.messages[curr] == "" {
 			return
 		}
-		so.EmitJSON(helpers.NewRequest("chatReceive", curr.Value.(string)))
-		curr = curr.Next()
+
+		so.EmitJSON(helpers.NewRequest("chatReceive", c.messages[curr]))
+		curr += 1
+		if curr == 20 {
+			curr = 0
+		}
 	}
 }

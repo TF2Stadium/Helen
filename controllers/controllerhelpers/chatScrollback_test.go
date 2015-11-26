@@ -12,11 +12,19 @@ func TestAddScrollbackMessage(t *testing.T) {
 	for i, _ := range messages {
 		messages[i] = strconv.Itoa(i)
 		AddScrollbackMessage(0, messages[i])
+		AddScrollbackMessage(1, messages[i])
 	}
 
-	c := chatScrollback[0].first
-	for _, message := range messages {
-		assert.Equal(t, message, c.Value.(string))
-		c = c.Next()
+	curr := chatScrollback[0].curr
+	c := chatScrollback[0]
+	c2 := chatScrollback[1]
+
+	for _, _ = range messages {
+		assert.Equal(t, c2.messages[curr], c.messages[curr])
+
+		curr += 1
+		if curr == 20 {
+			curr = 0
+		}
 	}
 }

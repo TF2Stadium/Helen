@@ -57,6 +57,12 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 
 	lobbyType := playermap[*args.Type]
 
+	var count int
+	db.DB.Table("server_records").Where("host = ?", *args.Server).Count(&count)
+	if count != 0 {
+		return helpers.NewTPError("A lobby is already using this server.", -1).Encode()
+	}
+
 	randBytes := make([]byte, 6)
 	rand.Read(randBytes)
 	serverPwd := base64.URLEncoding.EncodeToString(randBytes)
@@ -82,6 +88,11 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 
 	err = lob.SetupServer()
 	if err != nil {
+		err := db.DB.Where("id = ?", lob.ID).Delete(&models.Lobby{}).Error
+		if err != nil {
+			helpers.Logger.Warning(err.Error())
+		}
+		db.DB.Delete(&lob.ServerInfo)
 		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
@@ -112,6 +123,12 @@ func ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) []byt
 
 	if err := chelpers.GetParams(data, &args); err != nil {
 		return helpers.NewTPErrorFromError(err).Encode()
+	}
+
+	var count int
+	db.DB.Table("server_records").Where("host = ?", *args.Server).Count(&count)
+	if count != 0 {
+		return helpers.NewTPError("A lobby is already using this server.", -1).Encode()
 	}
 
 	info := models.ServerRecord{
