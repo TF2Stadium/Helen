@@ -88,6 +88,11 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 
 	err = lob.SetupServer()
 	if err != nil {
+		err := db.DB.Where("id = ?", lob.ID).Delete(&models.Lobby{}).Error
+		if err != nil {
+			helpers.Logger.Warning(err.Error())
+		}
+		db.DB.Delete(&lob.ServerInfo)
 		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
