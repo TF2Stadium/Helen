@@ -66,14 +66,14 @@ func SetupHTTPRoutes(server *wsevent.Server, noauth *wsevent.Server) {
 		}
 
 		if err != nil || so == nil {
-			controllers.LogoutHandler(w, r)
+			controllers.LogoutSession(w, r)
 			return
 		}
 
 		//helpers.Logger.Debug("Connected to Socket")
 		err = socket.SocketInit(server, noauth, so)
 		if err != nil {
-			controllers.LogoutHandler(w, r)
+			controllers.LogoutSession(w, r)
 		}
 	})
 }

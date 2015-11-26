@@ -40,10 +40,14 @@ func MockLoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+func LogoutSession(w http.ResponseWriter, r *http.Request) {
 	session, _ := controllerhelpers.GetSessionHTTP(r)
 	session.Options = &sessions.Options{MaxAge: -1}
 	session.Save(r, w)
+}
+
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	LogoutSession(w, r)
 
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
