@@ -51,19 +51,22 @@ func SetupHTTPRoutes(server *wsevent.Server, noauth *wsevent.Server) {
 		var so *wsevent.Client
 
 		if err == nil {
-			steamid, ok := session.Values["steam_id"]
+			_, ok := session.Values["steam_id"]
 			if ok {
-				so, err = server.NewClientWithID(upgrader, w, r, steamid.(string))
+				so, err = server.NewClient(upgrader, w, r)
 			} else {
 				so, err = noauth.NewClient(upgrader, w, r)
 			}
 		} else {
 			var estr = "Couldn't create WebSocket connection."
-			if err != nil {
-				estr = err.Error()
-			}
+			//estr = err.Error()
 
 			http.Error(w, estr, 500)
+			return
+		}
+
+		if err != nil || so == nil {
+			controllers.LogoutHandler(w, r)
 			return
 		}
 
