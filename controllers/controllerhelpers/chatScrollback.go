@@ -3,7 +3,6 @@ package controllerhelpers
 import (
 	"encoding/json"
 	"sync"
-	"sync/atomic"
 
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/wsevent"
@@ -26,15 +25,6 @@ func initChatScrollback() *chatRing {
 	return &chatRing{make([]string, 20), 0, new(sync.RWMutex)}
 }
 
-func (c *chatRing) incrCurr() {
-	atomic.AddInt32(&c.curr, 1)
-
-	if atomic.LoadInt32(&c.curr) == 20 {
-		atomic.StoreInt32(&c.curr, 0)
-	}
-
-}
-
 func AddScrollbackMessage(room uint, message string) {
 	mapLock.Lock()
 	if _, ok := chatScrollback[room]; !ok {
@@ -45,9 +35,11 @@ func AddScrollbackMessage(room uint, message string) {
 
 	c.Lock()
 	c.messages[c.curr] = message
+	c.curr += 1
+	if c.curr == 20 {
+		c.curr = 0
+	}
 	c.Unlock()
-
-	c.incrCurr()
 }
 
 func BroadcastScrollback(so *wsevent.Client, room uint) {
