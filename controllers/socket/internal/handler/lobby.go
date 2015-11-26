@@ -109,6 +109,39 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	return bytes
 }
 
+func LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
+
+	if reqerr != nil {
+		return reqerr.Encode()
+	}
+
+	var args struct {
+		ID *uint `json:"id"`
+	}
+
+	if err := chelpers.GetParams(data, &args); err != nil {
+		return helpers.NewTPErrorFromError(err).Encode()
+	}
+
+	lobby, tperr := models.GetLobbyById(*args.ID)
+
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	if lobby.State == models.LobbyStateEnded {
+		return helpers.NewTPError("Lobby has ended", 1).Encode()
+	}
+
+	if err := models.ReExecConfig(lobby.ID); err != nil {
+		return helpers.NewTPErrorFromError(err).Encode()
+	}
+
+	return chelpers.EmptySuccessJS
+
+}
+
 func ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
