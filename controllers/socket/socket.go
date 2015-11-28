@@ -50,11 +50,11 @@ func onDisconnect(id string) {
 	}
 }
 
-func getEvent(data string) string {
+func getEvent(data []byte) string {
 	var js struct {
 		Request string
 	}
-	json.Unmarshal([]byte(data), &js)
+	json.Unmarshal(data, &js)
 	return js.Request
 }
 
