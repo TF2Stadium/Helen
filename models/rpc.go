@@ -116,6 +116,10 @@ func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league st
 }
 
 func ReExecConfig(lobbyId uint) error {
+	if config.Constants.ServerMockUp {
+		return nil
+	}
+
 	return Pauling.Call("Pauling.ReExecConfig", &Args{Id: lobbyId}, &Args{})
 }
 
