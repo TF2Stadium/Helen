@@ -38,7 +38,10 @@ func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.L
 	server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
 	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 
-	bytes, _ := json.Marshal(models.DecorateLobbyLeave(lobby))
+	bytes, _ := json.Marshal(models.DecorateLobbyData(lobby, true))
+	broadcaster.SendMessageToRoom(player.SteamId, "lobbyData", string(bytes))
+
+	bytes, _ = json.Marshal(models.DecorateLobbyLeave(lobby))
 	broadcaster.SendMessage(player.SteamId, "lobbyLeft", string(bytes))
 }
 
