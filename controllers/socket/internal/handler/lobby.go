@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -177,6 +178,7 @@ func ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) []byt
 }
 
 var timeoutStop = make(map[uint](chan struct{}))
+var mapLock = new(sync.RWMutex)
 
 func LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
@@ -215,10 +217,13 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte 
 	lob.Close()
 	models.BroadcastLobbyList() // has to be done manually for now
 
+	mapLock.Lock()
 	c, ok := timeoutStop[*args.Id]
 	if ok {
 		close(c)
+		delete(timeoutStop, *args.Id)
 	}
+	mapLock.Unlock()
 
 	return chelpers.EmptySuccessJS
 }
@@ -287,7 +292,10 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 
 		tick := time.After(time.Second * 30)
 		id := lob.ID
-		timeoutStop[id] = make(chan struct{})
+		stop := make(chan struct{})
+		mapLock.Lock()
+		timeoutStop[id] = stop
+		mapLock.Unlock()
 
 		go func() {
 			select {
@@ -311,7 +319,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 					lobby.Save()
 				}
 
-			case <-timeoutStop[id]:
+			case <-stop:
 				return
 			}
 		}()
@@ -331,7 +339,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	models.BroadcastLobbyToUser(lob, player.SteamId)
 
 	if lob.State == models.LobbyStateInProgress {
-		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lob))
+		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lob, player.Name, *args.Class))
 		broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
 	}
 
@@ -622,16 +630,16 @@ func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	}
 
 	if lobby.IsEveryoneReady() {
+		mapLock.Lock()
+		timeoutStop[lobby.ID] <- struct{}{}
 		close(timeoutStop[lobby.ID])
+		delete(timeoutStop, lobby.ID)
+		mapLock.Unlock()
 		lobby.State = models.LobbyStateInProgress
 		lobby.Save()
-		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
-		room := fmt.Sprintf("%s_private",
-			chelpers.GetLobbyRoom(lobby.ID))
-		broadcaster.SendMessageToRoom(room,
-			"lobbyStart", string(bytes))
-		models.BroadcastLobbyList()
 
+		chelpers.BroadcastLobbyStart(lobby)
+		models.BroadcastLobbyList()
 		models.FumbleLobbyStarted(lobby)
 	}
 
@@ -673,10 +681,13 @@ func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	}
 
 	lobby.UnreadyAllPlayers()
+	mapLock.Lock()
 	c, ok := timeoutStop[lobby.ID]
 	if ok {
 		close(c)
+		delete(timeoutStop, lobby.ID)
 	}
+	mapLock.Unlock()
 
 	return chelpers.EmptySuccessJS
 }

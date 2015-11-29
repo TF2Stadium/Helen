@@ -88,7 +88,7 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
 		if err == nil {
 			if lobby.State == models.LobbyStateInProgress && !models.IsPlayerInServer(player.SteamId) {
-				bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
+				bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby, player.Name, slot.Class))
 				broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
 			} else if lobby.State == models.LobbyStateReadyingUp && !slot.Ready {
 				data := struct {
@@ -117,4 +117,19 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 
 func GetLobbyRoom(lobbyid uint) string {
 	return strconv.FormatUint(uint64(lobbyid), 10)
+}
+
+//Not really broadcast, since it sends each client a different LobbyStart JSON
+func BroadcastLobbyStart(lobby *models.Lobby) {
+	var slots []*models.LobbySlot
+
+	db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Find(&slots)
+
+	for _, slot := range slots {
+		var player models.Player
+		db.DB.First(&player, slot.PlayerId)
+
+		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby, player.Name, slot.Class))
+		broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
+	}
 }

@@ -75,6 +75,9 @@ func FilterRequest(so *wsevent.Client, action authority.AuthAction, login bool) 
 	return
 }
 
+//I forgot to document this while working on it, so it might be a bit
+//difficult to understand what's going on.
+//THINK TWICE BEFORE CHANGING ANYTHING HERE
 func GetParams(data []byte, v interface{}) error {
 	err := json.Unmarshal(data, v)
 

@@ -107,7 +107,6 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	if config.Constants.ServerMockUp {
 		// server.On("debugLobbyFill", handler.DebugLobbyFill)
 		// server.On("debugLobbyReady", handler.DebugLobbyReady)
-		server.On("debugRequestLobbyStart", handler.DebugRequestLobbyStart)
 		server.On("debugUpdateStatsFilter", handler.DebugUpdateStatsFilter)
 		server.On("debugPlayerSub", handler.DebugPlayerSub)
 	}
