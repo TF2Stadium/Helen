@@ -55,5 +55,10 @@ func GetScrollback(room int) ([]*ChatMessage, error) {
 
 	err := db.DB.Table("chat_messages").Where("room = ?", room).Order("id desc").Limit(20).Find(&messages).Error
 
+	for _, message := range messages {
+		var player Player
+		db.DB.First(&player, message.PlayerID)
+		message.Player = DecoratePlayerSummary(&player)
+	}
 	return messages, err
 }
