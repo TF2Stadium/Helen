@@ -20,7 +20,6 @@ type constants struct {
 	LoginRedirectPath  string
 	CookieStoreSecret  string
 	StaticFileLocation string
-	ChatLogsDir        string
 	SessionName        string
 	PaulingPort        string
 	FumblePort         string
@@ -29,7 +28,6 @@ type constants struct {
 	MumblePassword     string
 	SteamIDWhitelist   string
 	ServerMockUp       bool
-	ChatLogsEnabled    bool
 	MockupAuth         bool
 	GeoIP              string
 	AllowedCorsOrigins []string
@@ -89,7 +87,6 @@ func SetupConstants() {
 	}
 
 	overrideFromEnv(&Constants.Port, "PORT", false)
-	overrideFromEnv(&Constants.ChatLogsDir, "CHAT_LOG_DIR", false)
 	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET", true)
 	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY", true)
 	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST", true)
@@ -102,7 +99,6 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM", false)
 	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN", false)
 	overrideFromEnv(&Constants.FumblePort, "FUMBLE_PORT", false)
-	overrideBoolFromEnv(&Constants.ChatLogsEnabled, "LOG_CHAT")
 	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_DISABLE")
 	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")
 	overrideFromEnv(&Constants.GeoIP, "GEOIP_DB", true)
