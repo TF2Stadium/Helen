@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -77,6 +78,7 @@ type ServerRecord struct {
 //Given Lobby IDs are unique, we'll use them for mumble channel names
 type Lobby struct {
 	gorm.Model
+	Mode    string
 	MapName string
 	State   LobbyState
 	Type    LobbyType
@@ -103,8 +105,42 @@ type Lobby struct {
 	ReadyUpTimestamp int64 //Stores the timestamp at which the ready up timeout started
 }
 
+func getGamemode(mapName string, lobbyType LobbyType) string {
+	switch {
+	case strings.HasPrefix(mapName, "koth"):
+		if lobbyType == LobbyTypeUltiduo {
+			return "ultiduo"
+		}
+
+		return "koth"
+
+	case strings.HasPrefix(mapName, "ctf"):
+		if lobbyType == LobbyTypeBball {
+			return "bball"
+		}
+
+		return "ctf"
+
+	case strings.HasPrefix(mapName, "cp"):
+		if mapName == "cp_gravelpit" {
+			return "a/d"
+		}
+
+		return "5cp"
+
+	case strings.HasPrefix(mapName, "pl"):
+		return "payload"
+
+	case strings.HasPrefix(mapName, "arena"):
+		return "arena"
+	}
+
+	return "unknown"
+}
+
 func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int, mumble bool) *Lobby {
 	lobby := &Lobby{
+		Mode:       getGamemode(mapName, lobbyType),
 		Type:       lobbyType,
 		State:      LobbyStateInitializing,
 		League:     league,

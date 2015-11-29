@@ -31,6 +31,7 @@ type SpecDetails struct {
 
 type LobbyData struct {
 	ID         uint   `json:"id"`
+	Mode       string `json:"gamemode"`
 	Type       string `json:"type"`
 	Players    int    `json:"players"`
 	Map        string `json:"map"`
@@ -102,6 +103,7 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyJs := LobbyData{
 		ID:      lobby.ID,
+		Mode:    lobby.Mode,
 		Type:    FormatMap[lobby.Type],
 		Players: lobby.GetPlayerNumber(),
 		Map:     lobby.MapName,
