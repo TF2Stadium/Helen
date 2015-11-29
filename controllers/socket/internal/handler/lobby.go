@@ -422,7 +422,11 @@ func removePlayerFromLobby(lobbyId uint, steamId string) (*models.Lobby, *models
 		return lob, player, helpers.NewTPError("Player not playing", 2)
 	}
 
-	return lob, player, lob.RemovePlayer(player)
+	if err := lob.RemovePlayer(player); err != nil {
+		return lob, player, err
+	}
+
+	return lob, player, lob.AddSpectator(player)
 }
 
 func playerCanKick(lobbyId uint, steamId string) (bool, *helpers.TPError) {
