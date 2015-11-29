@@ -196,7 +196,7 @@ func DecorateLobbyConnect(lobby *Lobby, name, class string) LobbyConnectData {
 	l.Mumble.Port = config.Constants.MumblePort
 	l.Mumble.Password = config.Constants.MumblePassword
 	l.Mumble.Channel = "match" + strconv.FormatUint(uint64(lobby.ID), 10)
-	l.Mumble.Nick = fmt.Sprintf("%s(%s)", name, class)
+	l.Mumble.Nick = fmt.Sprintf("%s_%s", name, class)
 
 	return l
 }
