@@ -184,6 +184,17 @@ func DecorateLobbyListData(lobbies []Lobby) LobbyListData {
 	return listObj
 }
 
+func sanitize(name string) string {
+	var final string
+	for _, c := range name {
+		if c >= ' ' && c <= '~' {
+			final += string(c)
+		}
+	}
+
+	return final
+}
+
 func DecorateLobbyConnect(lobby *Lobby, name, class string) LobbyConnectData {
 	l := LobbyConnectData{}
 	l.ID = lobby.ID
@@ -196,7 +207,7 @@ func DecorateLobbyConnect(lobby *Lobby, name, class string) LobbyConnectData {
 	l.Mumble.Port = config.Constants.MumblePort
 	l.Mumble.Password = config.Constants.MumblePassword
 	l.Mumble.Channel = "match" + strconv.FormatUint(uint64(lobby.ID), 10)
-	l.Mumble.Nick = fmt.Sprintf("%s_%s", name, class)
+	l.Mumble.Nick = fmt.Sprintf("%s_%s", sanitize(name), class)
 
 	return l
 }
