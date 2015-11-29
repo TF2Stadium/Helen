@@ -131,9 +131,7 @@ func setupDevelopmentConstants() {
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
 	Constants.PaulingPort = "8001"
-	Constants.ChatLogsDir = "."
 	Constants.ServerMockUp = true
-	Constants.ChatLogsEnabled = false
 	Constants.AllowedCorsOrigins = []string{"*"}
 
 	Constants.DbHost = "127.0.0.1"
@@ -151,10 +149,8 @@ func setupDevelopmentConstants() {
 func setupProductionConstants() {
 	// override production stuff here
 	Constants.Port = "5555"
-	Constants.ChatLogsDir = "."
 	Constants.CookieDomain = ".tf2stadium.com"
 	Constants.ServerMockUp = false
-	Constants.ChatLogsEnabled = true
 }
 
 func setupTestConstants() {

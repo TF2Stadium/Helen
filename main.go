@@ -57,7 +57,6 @@ func main() {
 
 	StartPaulingListener()
 	chelpers.InitDB()
-	chelpers.CheckLogger()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
 	}
