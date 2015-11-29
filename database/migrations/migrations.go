@@ -22,4 +22,5 @@ func Do() {
 	database.DB.Model(&models.LobbySlot{}).AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
 	database.DB.Model(&models.PlayerSetting{}).AddUniqueIndex("idx_player_id_key", "player_id", "key")
 	database.DB.AutoMigrate(&models.Substitute{})
+	database.DB.AutoMigrate(&models.ChatMessage{})
 }
