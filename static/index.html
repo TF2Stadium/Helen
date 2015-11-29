@@ -6,8 +6,8 @@
 <head>
 <script src="bower_components/wsevent.js/wsevent.js"></script>
 <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
-<script src="//cdnjs.buttflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
-<link href="https://cdnjs.buttflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet"/>
+<script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet"/>
 <script>
 
 var createBox = function(so, messageName, messageFields) {
@@ -77,6 +77,11 @@ so.On("sendNotification", function(s) {
   toastr.info(s);
 });
 
+so.On("subListData", function(s) {
+  console.log("Received subListData")
+  console.log(s)
+});
+
 so.On("lobbyListData", function(s) {
   console.log("Received lobbyListData");
   $("#lobby-list").html(JSON.stringify(s, null, 2).replace(/(\r)?\n/g, "<br>"));
@@ -119,7 +124,10 @@ $(function() {
   createBox(so, "debugLobbyFill", ["id"]);
   createBox(so, "debugLobbyReady", ["id"]);
   createBox(so, "lobbySpectatorJoin", ["id"]);
-  createBox(so, "lobbyKick", ["id", "steamid", "ban"]);
+  createBox(so, "lobbyKick", ["id", "steamid"]);
+  createBox(so, "lobbyBan", ["id", "steamid"]);
+  createBox(so, "lobbyLeave", ["id"]);
+  createBox(so, "lobbySpectatorLeave", ["id"]);
   createBox(so, "playerReady", []);
   createBox(so, "playerNotReady", []);
   createBox(so, "chatSend", ["message", "room"]);
@@ -131,7 +139,9 @@ $(function() {
   createBox(so, "getConstant", ["constant"]);
   createBox(so, "debugGetAllLobbies", []);
   createBox(so, "debugRequestLobbyStart", ["id"]);
-  createBox(so, "debugUpdateStatsFilter", ["id"]); 
+  createBox(so, "debugUpdateStatsFilter", ["id"]);
+  createBox(so, "debugPlayerSub", ["id", "team", "class"]);
+  createBox(so, "getSocketInfo", []);
 });
 
 </script>

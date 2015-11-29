@@ -5,6 +5,8 @@
 package handler
 
 import (
+	"encoding/json"
+
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -29,5 +31,15 @@ func GetConstant(server *wsevent.Server, so *wsevent.Client, data []byte) []byte
 	}
 
 	bytes, _ := chelpers.BuildSuccessJSON(output).Encode()
+	return bytes
+}
+
+func GetSocketInfo(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+	socketinfo := struct {
+		ID    string   `json:"id"`
+		Rooms []string `json:"rooms"`
+	}{so.Id(), server.RoomsJoined(so.Id())}
+
+	bytes, _ := json.Marshal(socketinfo)
 	return bytes
 }

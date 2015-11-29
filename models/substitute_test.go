@@ -34,6 +34,14 @@ func TestNewSub(t *testing.T) {
 	subs, err := models.GetPlayerSubs(player.SteamId)
 	assert.Nil(t, err)
 	assert.Equal(t, len(subs), 1)
-	assert.Equal(t, subs[0].MapName, lobby.MapName)
 	assert.Equal(t, subs[0].LobbyID, lobby.ID)
+
+	player2 := testhelpers.CreatePlayer()
+	player2.Save()
+	tperr = lobby.AddPlayer(player2, 0, "red", "scout1")
+	assert.Nil(t, tperr)
+
+	err = db.DB.Where("lobby_id = ? AND steam_id = ?", lobby.ID, player.SteamId).First(sub).Error
+	assert.Nil(t, err)
+	assert.True(t, sub.Filled)
 }

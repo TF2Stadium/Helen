@@ -17,7 +17,7 @@ import (
 
 var upgrader = websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool { return true }}
 
-func SetupHTTPRoutes(server *wsevent.Server) {
+func SetupHTTPRoutes(server *wsevent.Server, noauth *wsevent.Server) {
 	http.HandleFunc("/", controllers.MainHandler)
 	http.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
 	http.HandleFunc("/startLogin", controllers.LoginHandler)
@@ -47,12 +47,33 @@ func SetupHTTPRoutes(server *wsevent.Server) {
 			}
 		}
 
-		so, err := server.NewClient(upgrader, w, r)
+		session, err := chelpers.GetSessionHTTP(r)
+		var so *wsevent.Client
+
+		if err == nil {
+			_, ok := session.Values["steam_id"]
+			if ok {
+				so, err = server.NewClient(upgrader, w, r)
+			} else {
+				so, err = noauth.NewClient(upgrader, w, r)
+			}
+		} else {
+			var estr = "Couldn't create WebSocket connection."
+			//estr = err.Error()
+
+			http.Error(w, estr, 500)
+			return
+		}
+
+		if err != nil || so == nil {
+			controllers.LogoutSession(w, r)
+			return
+		}
 
 		//helpers.Logger.Debug("Connected to Socket")
-		err = socket.SocketInit(server, so)
+		err = socket.SocketInit(server, noauth, so)
 		if err != nil {
-			controllers.LogoutHandler(w, r)
+			controllers.LogoutSession(w, r)
 		}
 	})
 }

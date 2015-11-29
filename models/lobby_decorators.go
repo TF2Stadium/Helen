@@ -5,6 +5,7 @@
 package models
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -31,6 +32,7 @@ type SpecDetails struct {
 
 type LobbyData struct {
 	ID         uint   `json:"id"`
+	Mode       string `json:"gamemode"`
 	Type       string `json:"type"`
 	Players    int    `json:"players"`
 	Map        string `json:"map"`
@@ -68,6 +70,7 @@ type LobbyConnectData struct {
 
 	Mumble struct {
 		Address  string `json:"address"`
+		Nick     string `json:"nick"`
 		Port     string `json:"port"`
 		Password string `json:"password"`
 		Channel  string `json:"channel"`
@@ -102,6 +105,7 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyJs := LobbyData{
 		ID:      lobby.ID,
+		Mode:    lobby.Mode,
 		Type:    FormatMap[lobby.Type],
 		Players: lobby.GetPlayerNumber(),
 		Map:     lobby.MapName,
@@ -180,7 +184,7 @@ func DecorateLobbyListData(lobbies []Lobby) LobbyListData {
 	return listObj
 }
 
-func DecorateLobbyConnect(lobby *Lobby) LobbyConnectData {
+func DecorateLobbyConnect(lobby *Lobby, name, class string) LobbyConnectData {
 	l := LobbyConnectData{}
 	l.ID = lobby.ID
 	l.Time = lobby.CreatedAt.Unix()
@@ -192,6 +196,7 @@ func DecorateLobbyConnect(lobby *Lobby) LobbyConnectData {
 	l.Mumble.Port = config.Constants.MumblePort
 	l.Mumble.Password = config.Constants.MumblePassword
 	l.Mumble.Channel = "match" + strconv.FormatUint(uint64(lobby.ID), 10)
+	l.Mumble.Nick = fmt.Sprintf("%s(%s)", name, class)
 
 	return l
 }

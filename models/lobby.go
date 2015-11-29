@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -77,6 +78,7 @@ type ServerRecord struct {
 //Given Lobby IDs are unique, we'll use them for mumble channel names
 type Lobby struct {
 	gorm.Model
+	Mode    string
 	MapName string
 	State   LobbyState
 	Type    LobbyType
@@ -103,8 +105,42 @@ type Lobby struct {
 	ReadyUpTimestamp int64 //Stores the timestamp at which the ready up timeout started
 }
 
+func getGamemode(mapName string, lobbyType LobbyType) string {
+	switch {
+	case strings.HasPrefix(mapName, "koth"):
+		if lobbyType == LobbyTypeUltiduo {
+			return "ultiduo"
+		}
+
+		return "koth"
+
+	case strings.HasPrefix(mapName, "ctf"):
+		if lobbyType == LobbyTypeBball {
+			return "bball"
+		}
+
+		return "ctf"
+
+	case strings.HasPrefix(mapName, "cp"):
+		if mapName == "cp_gravelpit" {
+			return "a/d"
+		}
+
+		return "5cp"
+
+	case strings.HasPrefix(mapName, "pl"):
+		return "payload"
+
+	case strings.HasPrefix(mapName, "arena"):
+		return "arena"
+	}
+
+	return "unknown"
+}
+
 func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int, mumble bool) *Lobby {
 	lobby := &Lobby{
+		Mode:       getGamemode(mapName, lobbyType),
 		Type:       lobbyType,
 		State:      LobbyStateInitializing,
 		League:     league,
@@ -211,6 +247,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 
 	_, err := lobby.GetPlayerIdBySlot(slot)
 	//slot is occupied
+	var substitute bool
 	if err == nil {
 		curSlot := &LobbySlot{}
 		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).First(curSlot)
@@ -220,10 +257,11 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 		}
 
 		//Substituting player
-		var prevPlayer *Player
-		db.DB.Where("player_id = ?", curSlot.PlayerId).First(prevPlayer)
+		substitute = true
+		prevPlayer := &Player{}
+		db.DB.First(prevPlayer, curSlot.PlayerId)
 		lobby.RemovePlayer(prevPlayer)
-		db.DB.Table("substitutes").Where("lobby_id = ? AND steam_id = ?", lobby.ID, player.SteamId).UpdateColumn("filled", true)
+		db.DB.Table("substitutes").Where("lobby_id = ? AND steam_id = ?", lobby.ID, prevPlayer.SteamId).UpdateColumn("filled", true)
 		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
 	} else {
 		FumbleLobbyPlayerJoined(lobby, player, slot)
@@ -254,6 +292,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 	db.DB.Create(newSlotObj)
 
 	lobby.OnChange(true)
+	if substitute {
+		BroadcastSubList()
+	}
 
 	return nil
 }
@@ -389,20 +430,20 @@ func (lobby *Lobby) SetupServer() error {
 	return nil
 }
 
-func (lobby *Lobby) Close(rpc bool) {
+func (lobby *Lobby) Close() {
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.Delete(&lobby.ServerInfo)
-	if rpc {
-		End(lobby.ID)
+	End(lobby.ID)
 
-		privateRoom := fmt.Sprintf("%d_private", lobby.ID)
-		bytesLobbyLeft, _ := json.Marshal(DecorateLobbyLeave(lobby))
-		broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", string(bytesLobbyLeft))
+	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
+	bytesLobbyLeft, _ := json.Marshal(DecorateLobbyLeave(lobby))
+	broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", string(bytesLobbyLeft))
 
-		publicRoom := fmt.Sprintf("%d_public", lobby.ID)
-		bytesLobbyClosed, _ := json.Marshal(DecorateLobbyClosed(lobby))
-		broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", string(bytesLobbyClosed))
-	}
+	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
+	bytesLobbyClosed, _ := json.Marshal(DecorateLobbyClosed(lobby))
+	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", string(bytesLobbyClosed))
+
+	BroadcastLobby(lobby)
 }
 
 func (lobby *Lobby) UpdateStats() {

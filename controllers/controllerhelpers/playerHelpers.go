@@ -35,11 +35,15 @@ func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 }
 
 func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby, player *models.Player) {
-	server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
-	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+	pub := fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID))
 
-	bytes, _ := json.Marshal(models.DecorateLobbyLeave(lobby))
+	bytes, _ := json.Marshal(models.DecorateLobbyData(lobby, true))
+	broadcaster.SendMessageToRoom(pub, "lobbyData", string(bytes))
+
+	bytes, _ = json.Marshal(models.DecorateLobbyLeave(lobby))
 	broadcaster.SendMessage(player.SteamId, "lobbyLeft", string(bytes))
+
+	server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
 }
 
 func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
@@ -69,6 +73,8 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 
 	so.EmitJSON(helpers.NewRequest("lobbyListData", string(bytes)))
 	BroadcastScrollback(so, 0)
+	bytes, _ = json.Marshal(helpers.NewRequestFromObj("subListData", models.GetSubList()))
+	so.EmitJSON(helpers.NewRequest("subListData", string(bytes)))
 }
 
 func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *models.Player) {
@@ -82,7 +88,7 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
 		if err == nil {
 			if lobby.State == models.LobbyStateInProgress && !models.IsPlayerInServer(player.SteamId) {
-				bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby))
+				bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby, player.Name, slot.Class))
 				broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
 			} else if lobby.State == models.LobbyStateReadyingUp && !slot.Ready {
 				data := struct {
@@ -111,4 +117,19 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 
 func GetLobbyRoom(lobbyid uint) string {
 	return strconv.FormatUint(uint64(lobbyid), 10)
+}
+
+//Not really broadcast, since it sends each client a different LobbyStart JSON
+func BroadcastLobbyStart(lobby *models.Lobby) {
+	var slots []*models.LobbySlot
+
+	db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Find(&slots)
+
+	for _, slot := range slots {
+		var player models.Player
+		db.DB.First(&player, slot.PlayerId)
+
+		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lobby, player.Name, slot.Class))
+		broadcaster.SendMessage(player.SteamId, "lobbyStart", string(bytes))
+	}
 }

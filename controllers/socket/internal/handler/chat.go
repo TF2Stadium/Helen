@@ -9,22 +9,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 )
-
-type chatMessage struct {
-	Timestamp int64                `json:"timestamp"`
-	Message   string               `json:"message"`
-	Room      int                  `json:"room"`
-	Player    models.PlayerSummary `json:"player"`
-}
 
 func ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
@@ -61,14 +54,12 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		// else room is the lobby list room
 		*args.Room, _ = strconv.Atoi(config.Constants.GlobalChatRoom)
 	}
-
-	message := chatMessage{
-		Timestamp: time.Now().Unix(),
-		Message:   *args.Message,
-		Room:      *args.Room,
-		Player:    models.DecoratePlayerSummary(player),
+	if len(*args.Message) > 120 {
+		return helpers.NewTPError("Message too long", 4).Encode()
 	}
 
+	message := models.NewChatMessage(*args.Message, *args.Room, player)
+	db.DB.Save(message)
 	bytes, _ := json.Marshal(message)
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public",
 		chelpers.GetLobbyRoom(uint(*args.Room))),
@@ -78,8 +69,5 @@ func ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		chelpers.SendToSlack(*args.Message, player.Name, player.SteamId)
 	}
 
-	chelpers.LogChat(uint(*args.Room), player.Name, player.SteamId, *args.Message)
-
-	chelpers.AddScrollbackMessage(uint(*args.Room), string(bytes))
 	return chelpers.EmptySuccessJS
 }

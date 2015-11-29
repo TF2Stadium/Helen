@@ -16,7 +16,6 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
-	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/database"
@@ -56,10 +55,8 @@ func main() {
 	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
-	go controllerhelpers.SlackBroadcaster()
 	StartPaulingListener()
 	chelpers.InitDB()
-	chelpers.CheckLogger()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
 	}
@@ -70,9 +67,11 @@ func main() {
 
 	// init socket.io server
 	server := wsevent.NewServer()
-	broadcaster.Init(server)
-	socket.ServerInit(server)
-	routes.SetupHTTPRoutes(server)
+	nologin := wsevent.NewServer()
+
+	broadcaster.Init(server, nologin)
+	socket.ServerInit(server, nologin)
+	routes.SetupHTTPRoutes(server, nologin)
 
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
 		// init static FileServer
