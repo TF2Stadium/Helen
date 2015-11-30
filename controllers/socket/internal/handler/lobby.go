@@ -333,7 +333,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 
 	err := models.AllowPlayer(*args.Id, player.SteamId, *args.Team+*args.Class)
 	if err != nil {
-		helpers.Logger.Error("%d: ", *args.Id, err.Error())
+		helpers.Logger.Error(err.Error())
 	}
 
 	models.BroadcastLobbyToUser(lob, player.SteamId)
