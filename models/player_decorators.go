@@ -22,6 +22,8 @@ type PlayerSummary struct {
 }
 
 type Stats struct {
+	LobbiesPlayed int `json:"lobbiesPlayed"`
+
 	Sixes      int `json:"playedSixesCount"`
 	Highlander int `json:"playedHighlanderCount"`
 	// Fours      int `json:"playedFoursCount"`
