@@ -95,9 +95,9 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []b
 
 	err = lob.SetupServer()
 	if err != nil {
-		err := db.DB.Where("id = ?", lob.ID).Delete(&models.Lobby{}).Error
-		if err != nil {
-			helpers.Logger.Warning(err.Error())
+		qerr := db.DB.Where("id = ?", lob.ID).Delete(&models.Lobby{}).Error
+		if qerr != nil {
+			helpers.Logger.Warning(qerr.Error())
 		}
 		db.DB.Delete(&lob.ServerInfo)
 		return helpers.NewTPErrorFromError(err).Encode()
