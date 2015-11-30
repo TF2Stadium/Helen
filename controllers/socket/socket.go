@@ -8,16 +8,16 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket/internal/handler"
+	"github.com/TF2Stadium/Helen/controllers/socket/internal/rpc"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 )
 
-var RecordNotFoundError = errors.New("Plyaer record for found.")
+var ErrRecordNotFound = errors.New("Player record for found.")
 
 func onDisconnect(id string) {
 	//defer helpers.Logger.Debug("Disconnected from Socket")
@@ -79,37 +79,23 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 		return bytes
 	})
 	//Global Handlers
-	server.On("getConstant", handler.GetConstant)
-	server.On("getSocketInfo", handler.GetSocketInfo)
+	rpc.Register(server, handler.Global{})
 	//Lobby Handlers
-	server.On("lobbyCreate", handler.LobbyCreate)
-	server.On("serverVerify", handler.ServerVerify)
-	server.On("lobbyServerReset", handler.LobbyServerReset)
-	server.On("lobbyClose", handler.LobbyClose)
-	server.On("lobbyJoin", handler.LobbyJoin)
-	server.On("lobbySpectatorJoin", handler.LobbySpectatorJoin)
-	server.On("lobbyKick", handler.LobbyKick)
-	server.On("lobbyBan", handler.LobbyBan)
-	server.On("lobbyLeave", handler.LobbyLeave)
-	server.On("lobbySpectatorLeave", handler.LobbySpectatorLeave)
-	server.On("requestLobbyListData", handler.RequestLobbyListData)
+	rpc.Register(server, handler.Lobby{})
+	//server.On("lobbyCreate", handler.LobbyCreate)
 	//Player Handlers
-	server.On("playerReady", handler.PlayerReady)
-	server.On("playerNotReady", handler.PlayerNotReady)
-	server.On("playerSettingsGet", handler.PlayerSettingsGet)
-	server.On("playerSettingsSet", handler.PlayerSettingsSet)
-	server.On("playerProfile", handler.PlayerProfile)
+	rpc.Register(server, handler.Player{})
 	//Chat Handlers
-	server.On("chatSend", handler.ChatSend)
+	rpc.Register(server, handler.Chat{})
 	//Admin Handlers
-	server.On("adminChangeRole", handler.AdminChangeRole)
+	rpc.Register(server, handler.Admin{})
 	//Debugging handlers
-	if config.Constants.ServerMockUp {
-		// server.On("debugLobbyFill", handler.DebugLobbyFill)
-		// server.On("debugLobbyReady", handler.DebugLobbyReady)
-		server.On("debugUpdateStatsFilter", handler.DebugUpdateStatsFilter)
-		server.On("debugPlayerSub", handler.DebugPlayerSub)
-	}
+	// if config.Constants.ServerMockUp {
+	// 	server.On("debugLobbyFill", handler.DebugLobbyFill)
+	// 	server.On("debugLobbyReady", handler.DebugLobbyReady)
+	// 	server.On("debugUpdateStatsFilter", handler.DebugUpdateStatsFilter)
+	// 	server.On("debugPlayerSub", handler.DebugPlayerSub)
+	// }
 
 	noAuthServer.On("lobbySpectatorJoin", func(s *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		var args struct {
@@ -134,7 +120,7 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 
 		return chelpers.EmptySuccessJS
 	})
-	noAuthServer.On("getSocketInfo", handler.GetSocketInfo)
+	noAuthServer.On("getSocketInfo", (handler.Global{}).GetSocketInfo)
 
 	noAuthServer.DefaultHandler = func(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		return helpers.NewTPError("Player isn't logged in.", -4).Encode()
@@ -159,7 +145,7 @@ func SocketInit(server *wsevent.Server, noauth *wsevent.Server, so *wsevent.Clie
 				chelpers.GetSteamId(so.Id()))
 			chelpers.DeauthenticateSocket(so.Id())
 			so.Close()
-			return RecordNotFoundError
+			return ErrRecordNotFound
 		}
 
 		chelpers.AfterConnectLoggedIn(server, so, player)

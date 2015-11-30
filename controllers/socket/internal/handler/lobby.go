@@ -22,7 +22,9 @@ import (
 	"github.com/TF2Stadium/wsevent"
 )
 
-func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+type Lobby struct{}
+
+func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -110,7 +112,7 @@ func LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	return bytes
 }
 
-func LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -143,7 +145,7 @@ func LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data []byte) [
 
 }
 
-func ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -180,7 +182,7 @@ func ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) []byt
 var timeoutStop = make(map[uint](chan struct{}))
 var mapLock = new(sync.RWMutex)
 
-func LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -228,7 +230,7 @@ func LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte 
 	return chelpers.EmptySuccessJS
 }
 
-func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -346,7 +348,7 @@ func LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	return chelpers.EmptySuccessJS
 }
 
-func LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -453,7 +455,7 @@ func playerCanKick(lobbyId uint, steamId string) (bool, *helpers.TPError) {
 	return true, nil
 }
 
-func LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -493,7 +495,7 @@ func LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	return chelpers.EmptySuccessJS
 }
 
-func LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -535,7 +537,7 @@ func LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	return chelpers.EmptySuccessJS
 }
 
-func LobbyLeave(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) LobbyLeave(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -561,7 +563,7 @@ func LobbyLeave(server *wsevent.Server, so *wsevent.Client, data []byte) []byte 
 	return chelpers.EmptySuccessJS
 }
 
-func LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
@@ -596,103 +598,7 @@ func LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, data []byte
 	return chelpers.EmptySuccessJS
 }
 
-func PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr.Encode()
-	}
-
-	steamid := chelpers.GetSteamId(so.Id())
-	player, tperr := models.GetPlayerBySteamId(steamid)
-	if tperr != nil {
-		return tperr.Encode()
-	}
-
-	lobbyid, tperr := player.GetLobbyId()
-	if tperr != nil {
-		return tperr.Encode()
-	}
-
-	lobby, tperr := models.GetLobbyByIdServer(lobbyid)
-	if tperr != nil {
-		return tperr.Encode()
-	}
-
-	if lobby.State != models.LobbyStateReadyingUp {
-		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4).Encode()
-	}
-
-	tperr = lobby.ReadyPlayer(player)
-
-	if tperr != nil {
-		return tperr.Encode()
-	}
-
-	if lobby.IsEveryoneReady() {
-		mapLock.Lock()
-		timeoutStop[lobby.ID] <- struct{}{}
-		close(timeoutStop[lobby.ID])
-		delete(timeoutStop, lobby.ID)
-		mapLock.Unlock()
-		lobby.State = models.LobbyStateInProgress
-		lobby.Save()
-
-		chelpers.BroadcastLobbyStart(lobby)
-		models.BroadcastLobbyList()
-		models.FumbleLobbyStarted(lobby)
-	}
-
-	return chelpers.EmptySuccessJS
-}
-
-func PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr.Encode()
-	}
-
-	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-
-	if tperr != nil {
-		return tperr.Encode()
-	}
-
-	lobbyid, tperr := player.GetLobbyId()
-	if tperr != nil {
-		return tperr.Encode()
-	}
-
-	lobby, tperr := models.GetLobbyById(lobbyid)
-	if tperr != nil {
-		return tperr.Encode()
-	}
-
-	if lobby.State != models.LobbyStateReadyingUp {
-		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4).Encode()
-	}
-
-	tperr = lobby.UnreadyPlayer(player)
-	lobby.RemovePlayer(player)
-
-	if tperr != nil {
-		return tperr.Encode()
-	}
-
-	lobby.UnreadyAllPlayers()
-	mapLock.Lock()
-	c, ok := timeoutStop[lobby.ID]
-	if ok {
-		close(c)
-		delete(timeoutStop, lobby.ID)
-	}
-	mapLock.Unlock()
-
-	return chelpers.EmptySuccessJS
-}
-
-func RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Lobby) RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	var lobbies []models.Lobby
 	db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	list, _ := json.Marshal(models.DecorateLobbyListData(lobbies))

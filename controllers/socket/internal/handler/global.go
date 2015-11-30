@@ -14,7 +14,9 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
-func GetConstant(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+type Global struct{}
+
+func (Global) GetConstant(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	var args struct {
 		Constant string `json:"constant"`
 	}
@@ -34,7 +36,7 @@ func GetConstant(server *wsevent.Server, so *wsevent.Client, data []byte) []byte
 	return bytes
 }
 
-func GetSocketInfo(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Global) GetSocketInfo(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	socketinfo := struct {
 		ID    string   `json:"id"`
 		Rooms []string `json:"rooms"`

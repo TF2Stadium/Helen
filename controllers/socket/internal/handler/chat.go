@@ -19,7 +19,9 @@ import (
 	"github.com/TF2Stadium/wsevent"
 )
 
-func ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+type Chat struct{}
+
+func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
