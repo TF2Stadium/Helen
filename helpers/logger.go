@@ -5,9 +5,10 @@
 package helpers
 
 import (
+	"fmt"
+	"log/syslog"
 	"os"
 
-	"fmt"
 	"github.com/op/go-logging"
 )
 
@@ -22,6 +23,9 @@ var Logger = logging.MustGetLogger("main")
 var format = logging.MustStringFormatter(
 	`%{time:15:04:05} %{color} [%{level:.4s}] %{shortfunc}() : %{message} %{color:reset}`)
 
+var syslogFormat = logging.MustStringFormatter(
+	`%{color} [%{level:.4s}] %{shortfunc}() : %{message} %{color:reset}`)
+
 // Sample usage
 // Logger.Debug("debug %s", Password("secret"))
 // Logger.Info("info")
@@ -30,9 +34,23 @@ var format = logging.MustStringFormatter(
 // Logger.Error("err")
 // Logger.Critical("crit")
 
-func InitLogger() {
-	backend := logging.NewLogBackend(os.Stderr, "", 0)
-	backendFormatter := logging.NewBackendFormatter(backend, format)
+var syslogAddr = os.Getenv("SYSLOG_ADDR")
 
-	logging.SetBackend(backendFormatter)
+func InitLogger() {
+	console := logging.NewBackendFormatter(logging.NewLogBackend(os.Stderr, "", 0), format)
+
+	if syslogAddr != "" {
+		writer, err := syslog.Dial("udp", syslogAddr, syslog.LOG_ALERT, "")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+
+		backend := &logging.SyslogBackend{writer}
+
+		backendFormatter := logging.NewBackendFormatter(backend, syslogFormat)
+		logging.SetBackend(backendFormatter, console)
+	} else {
+		logging.SetBackend(console)
+	}
 }
