@@ -11,7 +11,6 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket/internal/handler"
-	"github.com/TF2Stadium/Helen/controllers/socket/internal/rpc"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
@@ -79,16 +78,16 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 		return bytes
 	})
 	//Global Handlers
-	rpc.Register(server, handler.Global{})
+	server.Register(handler.Global{})
 	//Lobby Handlers
-	rpc.Register(server, handler.Lobby{})
+	server.Register(handler.Lobby{})
 	//server.On("lobbyCreate", handler.LobbyCreate)
 	//Player Handlers
-	rpc.Register(server, handler.Player{})
+	server.Register(handler.Player{})
 	//Chat Handlers
-	rpc.Register(server, handler.Chat{})
+	server.Register(handler.Chat{})
 	//Admin Handlers
-	rpc.Register(server, handler.Admin{})
+	server.Register(handler.Admin{})
 	//Debugging handlers
 	// if config.Constants.ServerMockUp {
 	// 	server.On("debugLobbyFill", handler.DebugLobbyFill)

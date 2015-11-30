@@ -24,6 +24,10 @@ import (
 
 type Lobby struct{}
 
+func (Lobby) Name(s string) string {
+	return string((s[0])+32) + s[1:]
+}
+
 func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 

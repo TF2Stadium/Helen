@@ -10,6 +10,10 @@ import (
 
 type Player struct{}
 
+func (Player) Name(s string) string {
+	return string((s[0])+32) + s[1:]
+}
+
 func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 

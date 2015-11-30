@@ -16,6 +16,10 @@ import (
 
 type Global struct{}
 
+func (Global) Name(s string) string {
+	return string((s[0])+32) + s[1:]
+}
+
 func (Global) GetConstant(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	var args struct {
 		Constant string `json:"constant"`

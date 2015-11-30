@@ -21,6 +21,10 @@ import (
 
 type Chat struct{}
 
+func (Chat) Name(s string) string {
+	return string((s[0])+32) + s[1:]
+}
+
 func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
