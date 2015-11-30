@@ -96,20 +96,17 @@ func TestPlayerInfoFetching(t *testing.T) {
 
 	assert.True(t, player.GameHours >= 3000)
 
-	player.Stats.PlayedCountSet(models.LobbyTypeSixes, 3)
-	player.Stats.PlayedCountSet(models.LobbyTypeHighlander, 7)
-	player.Stats.PlayedCountIncrease(models.LobbyTypeSixes) // sixes: 3 -> 4
-
-	assert.Equal(t, 4, player.Stats.PlayedCountGet(models.LobbyTypeSixes))
-	assert.Equal(t, 7, player.Stats.PlayedCountGet(models.LobbyTypeHighlander))
+	player.Stats.PlayedCountIncrease(models.LobbyTypeSixes)
+	player.Stats.PlayedCountIncrease(models.LobbyTypeHighlander)
+	player.Stats.PlayedCountIncrease(models.LobbyTypeSixes) // sixes: 1 -> 2
 
 	database.DB.Save(player)
 
 	player2, err := models.GetPlayerWithStats(player.SteamId)
 	assert.Nil(t, err)
 
-	assert.Equal(t, 4, player2.Stats.PlayedCountGet(models.LobbyTypeSixes))
-	assert.Equal(t, 7, player2.Stats.PlayedCountGet(models.LobbyTypeHighlander))
+	assert.Equal(t, 2, player2.Stats.PlayedSixesCount)
+	assert.Equal(t, 1, player2.Stats.PlayedHighlanderCount)
 	assert.Equal(t, "http://steamcommunity.com/id/nonagono/", player2.Profileurl)
 }
 
