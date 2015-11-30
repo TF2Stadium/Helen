@@ -22,12 +22,8 @@ func TestLobbiesPlayed(t *testing.T) {
 	testhelpers.CleanupDB()
 	stats1 := &models.PlayerStats{}
 
-	stats1.PlayedCountSet(models.LobbyTypeSixes, 5)
-	stats1.PlayedCountSet(models.LobbyTypeHighlander, 8)
-	stats1.PlayedCountIncrease(models.LobbyTypeSixes) // sixes: 5 -> 6
+	stats1.PlayedCountIncrease(models.LobbyTypeSixes) // sixes: 0 -> 1
 
-	assert.Equal(t, 6, stats1.PlayedCountGet(models.LobbyTypeSixes))
-	assert.Equal(t, 8, stats1.PlayedCountGet(models.LobbyTypeHighlander))
 	database.DB.Save(stats1)
 
 	// can load the record
@@ -35,6 +31,5 @@ func TestLobbiesPlayed(t *testing.T) {
 	err := database.DB.First(&stats2, stats1.ID).Error
 	assert.Nil(t, err)
 
-	assert.Equal(t, 6, stats2.PlayedCountGet(models.LobbyTypeSixes))
-	assert.Equal(t, 8, stats2.PlayedCountGet(models.LobbyTypeHighlander))
+	assert.Equal(t, 1, stats2.PlayedSixesCount)
 }
