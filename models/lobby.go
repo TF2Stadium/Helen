@@ -424,10 +424,7 @@ func (lobby *Lobby) SetupServer() error {
 	}
 
 	err := SetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.Whitelist, lobby.MapName)
-	if err != nil {
-		return helpers.NewTPError(err.Error(), 0)
-	}
-	return nil
+	return err
 }
 
 func (lobby *Lobby) Close() {

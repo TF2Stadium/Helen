@@ -5,9 +5,12 @@
 package models
 
 type PlayerStats struct {
-	ID                    uint
-	PlayedSixesCount      int `sql:"played_sixes_count",default:"0"`
-	PlayedHighlanderCount int `sql:"played_highlander_count",default:"0"`
+	ID                    uint `json:"-"`
+	PlayedSixesCount      int  `sql:"played_sixes_count",default:"0"`
+	PlayedHighlanderCount int  `sql:"played_highlander_count",default:"0"`
+	PlayedFoursCount      int  `sql:"played_fours_count",json:"playedFoursCount"`
+	PlayedUltiduoCount    int  `sql:"played_ultiduo_count",json:"playedUltiduoCount"`
+	PlayedBballCount      int  `sql:"played_bball_count",json:"playedBballCount"`
 }
 
 func NewPlayerStats() PlayerStats {
@@ -16,30 +19,17 @@ func NewPlayerStats() PlayerStats {
 	return stats
 }
 
-func (ps *PlayerStats) PlayedCountSet(lt LobbyType, value int) {
-	switch lt {
-	case LobbyTypeSixes:
-		ps.PlayedSixesCount = value
-	case LobbyTypeHighlander:
-		ps.PlayedHighlanderCount = value
-	}
-}
-
-func (ps *PlayerStats) PlayedCountGet(lt LobbyType) int {
-	switch lt {
-	case LobbyTypeSixes:
-		return ps.PlayedSixesCount
-	case LobbyTypeHighlander:
-		return ps.PlayedHighlanderCount
-	}
-	return 0
-}
-
 func (ps *PlayerStats) PlayedCountIncrease(lt LobbyType) {
 	switch lt {
 	case LobbyTypeSixes:
 		ps.PlayedSixesCount += 1
 	case LobbyTypeHighlander:
 		ps.PlayedHighlanderCount += 1
+	case LobbyTypeFours:
+		ps.PlayedFoursCount += 1
+	case LobbyTypeBball:
+		ps.PlayedBballCount += 1
+	case LobbyTypeUltiduo:
+		ps.PlayedUltiduoCount += 1
 	}
 }

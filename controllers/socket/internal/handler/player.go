@@ -3,11 +3,114 @@ package handler
 import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 )
 
-func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+type Player struct{}
+
+func (Player) Name(s string) string {
+	return string((s[0])+32) + s[1:]
+}
+
+func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
+
+	if reqerr != nil {
+		return reqerr.Encode()
+	}
+
+	steamid := chelpers.GetSteamId(so.Id())
+	player, tperr := models.GetPlayerBySteamId(steamid)
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	lobbyid, tperr := player.GetLobbyId()
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	lobby, tperr := models.GetLobbyByIdServer(lobbyid)
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	if lobby.State != models.LobbyStateReadyingUp {
+		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4).Encode()
+	}
+
+	tperr = lobby.ReadyPlayer(player)
+
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	if lobby.IsEveryoneReady() {
+		mapLock.Lock()
+		timeoutStop[lobby.ID] <- struct{}{}
+		close(timeoutStop[lobby.ID])
+		delete(timeoutStop, lobby.ID)
+		mapLock.Unlock()
+		lobby.State = models.LobbyStateInProgress
+		lobby.Save()
+
+		chelpers.BroadcastLobbyStart(lobby)
+		models.BroadcastLobbyList()
+		models.FumbleLobbyStarted(lobby)
+	}
+
+	return chelpers.EmptySuccessJS
+}
+
+func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
+
+	if reqerr != nil {
+		return reqerr.Encode()
+	}
+
+	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	lobbyid, tperr := player.GetLobbyId()
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	lobby, tperr := models.GetLobbyById(lobbyid)
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	if lobby.State != models.LobbyStateReadyingUp {
+		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4).Encode()
+	}
+
+	tperr = lobby.UnreadyPlayer(player)
+	lobby.RemovePlayer(player)
+
+	if tperr != nil {
+		return tperr.Encode()
+	}
+
+	lobby.UnreadyAllPlayers()
+	mapLock.Lock()
+	c, ok := timeoutStop[lobby.ID]
+	if ok {
+		close(c)
+		delete(timeoutStop, lobby.ID)
+	}
+	mapLock.Unlock()
+
+	return chelpers.EmptySuccessJS
+}
+
+func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
@@ -42,7 +145,7 @@ func PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	return resp
 }
 
-func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
@@ -68,7 +171,7 @@ func PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	return chelpers.EmptySuccessJS
 }
 
-func PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
