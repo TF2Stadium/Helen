@@ -131,7 +131,17 @@ func (Lobby) LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data [
 		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
+	player, err := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	if err != nil {
+		return err.Encode()
+	}
+
 	lobby, tperr := models.GetLobbyById(*args.ID)
+
+	if player.SteamId != lobby.CreatedBySteamID {
+		return helpers.NewTPError("Player not authorized to close lobby.", -1).Encode()
+
+	}
 
 	if tperr != nil {
 		return tperr.Encode()
