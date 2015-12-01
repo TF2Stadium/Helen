@@ -9,7 +9,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -131,7 +130,17 @@ func (Lobby) LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data [
 		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
+	player, err := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	if err != nil {
+		return err.Encode()
+	}
+
 	lobby, tperr := models.GetLobbyById(*args.ID)
+
+	if player.SteamId != lobby.CreatedBySteamID {
+		return helpers.NewTPError("Player not authorized to close lobby.", -1).Encode()
+
+	}
 
 	if tperr != nil {
 		return tperr.Encode()
@@ -183,9 +192,6 @@ func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byt
 	return chelpers.EmptySuccessJS
 }
 
-var timeoutStop = make(map[uint](chan struct{}))
-var mapLock = new(sync.RWMutex)
-
 func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
@@ -220,16 +226,8 @@ func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte)
 
 	models.FumbleLobbyEnded(lob)
 
-	lob.Close()
+	lob.Close(true)
 	models.BroadcastLobbyList() // has to be done manually for now
-
-	mapLock.Lock()
-	c, ok := timeoutStop[*args.Id]
-	if ok {
-		close(c)
-		delete(timeoutStop, *args.Id)
-	}
-	mapLock.Unlock()
 
 	return chelpers.EmptySuccessJS
 }
@@ -281,6 +279,11 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 
 	}
 
+	if prevId, err := player.GetLobbyId(); err != nil {
+		server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", prevId))
+		server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", prevId))
+	}
+
 	tperr = lob.AddPlayer(player, slot, *args.Team, *args.Class)
 
 	if tperr != nil {
@@ -299,9 +302,6 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		tick := time.After(time.Second * 30)
 		id := lob.ID
 		stop := make(chan struct{})
-		mapLock.Lock()
-		timeoutStop[id] = stop
-		mapLock.Unlock()
 
 		go func() {
 			select {
@@ -341,8 +341,6 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	if err != nil {
 		helpers.Logger.Error(err.Error())
 	}
-
-	models.BroadcastLobbyToUser(lob, player.SteamId)
 
 	if lob.State == models.LobbyStateInProgress {
 		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lob, player.Name, *args.Class))
@@ -593,6 +591,11 @@ func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, dat
 	}
 
 	if !player.IsSpectatingId(lob.ID) {
+		if id, _ := player.GetLobbyId(); id == *args.Id {
+			chelpers.AfterLobbySpecLeave(server, so, lob)
+			return chelpers.EmptySuccessJS
+		}
+
 		return helpers.NewTPError("Player is not spectating", -1).Encode()
 	}
 

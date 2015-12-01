@@ -2,6 +2,7 @@ package handler
 
 import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
@@ -48,13 +49,7 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []
 	}
 
 	if lobby.IsEveryoneReady() {
-		mapLock.Lock()
-		timeoutStop[lobby.ID] <- struct{}{}
-		close(timeoutStop[lobby.ID])
-		delete(timeoutStop, lobby.ID)
-		mapLock.Unlock()
-		lobby.State = models.LobbyStateInProgress
-		lobby.Save()
+		db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", models.LobbyStateInProgress)
 
 		chelpers.BroadcastLobbyStart(lobby)
 		models.BroadcastLobbyList()
@@ -99,14 +94,6 @@ func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte)
 	}
 
 	lobby.UnreadyAllPlayers()
-	mapLock.Lock()
-	c, ok := timeoutStop[lobby.ID]
-	if ok {
-		close(c)
-		delete(timeoutStop, lobby.ID)
-	}
-	mapLock.Unlock()
-
 	return chelpers.EmptySuccessJS
 }
 
