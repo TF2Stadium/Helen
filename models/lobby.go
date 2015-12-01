@@ -306,7 +306,7 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 	}
 
 	DisallowPlayer(lobby.ID, player.SteamId)
-	//lobby.OnChange(true)
+	lobby.OnChange(true)
 	return nil
 }
 
