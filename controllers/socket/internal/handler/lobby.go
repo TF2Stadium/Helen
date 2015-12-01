@@ -586,6 +586,11 @@ func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, dat
 	}
 
 	if !player.IsSpectatingId(lob.ID) {
+		if id, _ := player.GetLobbyId(); id == *args.Id {
+			chelpers.AfterLobbySpecLeave(server, so, lob)
+			return chelpers.EmptySuccessJS
+		}
+
 		return helpers.NewTPError("Player is not spectating", -1).Encode()
 	}
 
