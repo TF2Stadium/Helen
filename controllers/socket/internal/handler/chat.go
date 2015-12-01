@@ -60,6 +60,10 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 		// else room is the lobby list room
 		*args.Room, _ = strconv.Atoi(config.Constants.GlobalChatRoom)
 	}
+	if (*args.Message)[0] == '\n' {
+		return helpers.NewTPError("Cannot send messages prefixed with newline", 4).Encode()
+	}
+
 	if len(*args.Message) > 120 {
 		return helpers.NewTPError("Message too long", 4).Encode()
 	}
