@@ -59,6 +59,7 @@ func GetScrollback(room int) ([]*ChatMessage, error) {
 		var player Player
 		db.DB.First(&player, message.PlayerID)
 		message.Player = DecoratePlayerSummary(&player)
+		message.Timestamp = message.CreatedAt.Unix()
 	}
 	return messages, err
 }
