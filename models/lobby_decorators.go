@@ -13,10 +13,10 @@ import (
 )
 
 type SlotDetails struct {
-	Filled bool          `json:"filled"`
-	Player PlayerSummary `json:"player,omitempty"`
-	Ready  bool          `json:"ready"`
-	InGame bool          `json:"ingame"`
+	Filled bool           `json:"filled"`
+	Player *PlayerSummary `json:"player,omitempty"`
+	Ready  *bool          `json:"ready,omitempty"`
+	InGame *bool          `json:"ingame,omitempty"`
 }
 
 type ClassDetails struct {
@@ -90,13 +90,14 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 		db.DB.First(&player, playerId)
 		db.DB.Preload("Stats").First(&player, player.ID)
 
-		j.Player = DecoratePlayerSummary(&player)
+		summary := DecoratePlayerSummary(&player)
+		j.Player = &summary
 
 		ready, _ := lobby.IsPlayerReady(&player)
-		j.Ready = ready
+		j.Ready = &ready
 
 		ingame, _ := lobby.IsPlayerInGame(&player)
-		j.InGame = ingame
+		j.InGame = &ingame
 	}
 
 	return j
