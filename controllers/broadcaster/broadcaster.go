@@ -23,7 +23,6 @@ func Init(server commonBroadcaster, nologin commonBroadcaster) {
 func SendMessage(steamid string, event string, content string) {
 	socket, ok := GetSocket(steamid)
 	if !ok {
-		helpers.Logger.Critical("Failed to get the user's socket: %s", steamid)
 		return
 	}
 	socket.EmitJSON(helpers.NewRequest(event, content))

@@ -13,7 +13,7 @@ import (
 )
 
 var sessionStoreMutex = &sync.Mutex{}
-var authStoreMutex = &sync.Mutex{}
+var authStoreMutex = &sync.RWMutex{}
 
 // var CookieStore = sessions.NewCookieStore([]byte(Constants.SessionName))
 var SessionStore *pgstore.PGStore
@@ -44,8 +44,8 @@ func RemoveSocketSession(socketid string) {
 }
 
 func GetStore(socketid string) (session *sessions.Session, ok bool) {
-	authStoreMutex.Lock()
+	authStoreMutex.RLock()
 	session, ok = socketAuthStore[socketid]
-	authStoreMutex.Unlock()
+	authStoreMutex.RUnlock()
 	return
 }
