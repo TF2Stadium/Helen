@@ -185,6 +185,7 @@ func (lobby *Lobby) Save() error {
 		err = db.DB.Save(lobby).Error
 	}
 
+	lobby.RealAfterSave()
 	return err
 }
 
@@ -476,6 +477,11 @@ func (lobby *Lobby) SetInGame(player *Player) error {
 
 func (lobby *Lobby) SetNotInGame(player *Player) error {
 	return lobby.setInGameStatus(player, false)
+}
+
+// manually called. Should be called after the change to lobby actually takes effect.
+func (lobby *Lobby) RealAfterSave() {
+	lobby.OnChange(true)
 }
 
 // If base is true, broadcasts the lobby list update
