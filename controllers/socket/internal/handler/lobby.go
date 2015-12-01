@@ -9,7 +9,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -193,9 +192,6 @@ func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byt
 	return chelpers.EmptySuccessJS
 }
 
-var timeoutStop = make(map[uint](chan struct{}))
-var mapLock = new(sync.RWMutex)
-
 func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
@@ -230,16 +226,8 @@ func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte)
 
 	models.FumbleLobbyEnded(lob)
 
-	lob.Close()
+	lob.Close(true)
 	models.BroadcastLobbyList() // has to be done manually for now
-
-	mapLock.Lock()
-	c, ok := timeoutStop[*args.Id]
-	if ok {
-		close(c)
-		delete(timeoutStop, *args.Id)
-	}
-	mapLock.Unlock()
 
 	return chelpers.EmptySuccessJS
 }
@@ -309,9 +297,6 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		tick := time.After(time.Second * 30)
 		id := lob.ID
 		stop := make(chan struct{})
-		mapLock.Lock()
-		timeoutStop[id] = stop
-		mapLock.Unlock()
 
 		go func() {
 			select {
@@ -351,8 +336,6 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	if err != nil {
 		helpers.Logger.Error(err.Error())
 	}
-
-	models.BroadcastLobbyToUser(lob, player.SteamId)
 
 	if lob.State == models.LobbyStateInProgress {
 		bytes, _ := json.Marshal(models.DecorateLobbyConnect(lob, player.Name, *args.Class))

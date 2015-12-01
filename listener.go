@@ -126,7 +126,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 
 			helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
-			lobby.Close()
+			lobby.Close(false)
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification", `{"notification": "Lobby Closed (Connection to server lost)."}`)
@@ -139,7 +139,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 			helpers.Logger.Debug("#%d: Match Ended", lobbyid)
 
 			lobby.UpdateStats()
-			lobby.Close()
+			lobby.Close(false)
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification", `{"notification": ""Lobby Ended."}`)

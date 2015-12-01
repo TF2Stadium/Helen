@@ -275,7 +275,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 		} else {
 			// assign the player to a new slot
 			// try to remove them from the old slot (in case they are switching slots)
-			lobby.RemovePlayer(player)
+			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
 		}
 	}
 	// try to remove them from spectators
@@ -306,7 +306,7 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 	}
 
 	DisallowPlayer(lobby.ID, player.SteamId)
-	lobby.OnChange(true)
+	//lobby.OnChange(true)
 	return nil
 }
 
@@ -427,10 +427,13 @@ func (lobby *Lobby) SetupServer() error {
 	return err
 }
 
-func (lobby *Lobby) Close() {
+func (lobby *Lobby) Close(rpc bool) {
+	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).UpdateColumn("filled", true)
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.Delete(&lobby.ServerInfo)
-	End(lobby.ID)
+	if rpc {
+		End(lobby.ID)
+	}
 
 	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
 	bytesLobbyLeft, _ := json.Marshal(DecorateLobbyLeave(lobby))
