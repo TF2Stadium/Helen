@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -24,6 +25,8 @@ type Chat struct{}
 func (Chat) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
+
+var lastChatTime = make(map[string]int64)
 
 func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
@@ -41,7 +44,14 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
-	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	steamid := chelpers.GetSteamId(so.Id())
+	now := time.Now().Unix()
+	if now-lastChatTime[steamid] == 0 {
+		return helpers.NewTPError("You're sending messages too quickly", -1).Encode()
+	}
+
+	lastChatTime[steamid] = now
+	player, tperr := models.GetPlayerBySteamId(steamid)
 	if tperr != nil {
 		return tperr.Encode()
 	}
