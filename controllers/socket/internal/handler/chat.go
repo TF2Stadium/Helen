@@ -34,6 +34,13 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 	if reqerr != nil {
 		return reqerr.Encode()
 	}
+
+	steamid := chelpers.GetSteamId(so.Id())
+	now := time.Now().Unix()
+	if now-lastChatTime[steamid] == 0 {
+		return helpers.NewTPError("You're sending messages too quickly", -1).Encode()
+	}
+
 	var args struct {
 		Message *string `json:"message"`
 		Room    *int    `json:"room"`
@@ -42,12 +49,6 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
 		return helpers.NewTPErrorFromError(err).Encode()
-	}
-
-	steamid := chelpers.GetSteamId(so.Id())
-	now := time.Now().Unix()
-	if now-lastChatTime[steamid] == 0 {
-		return helpers.NewTPError("You're sending messages too quickly", -1).Encode()
 	}
 
 	lastChatTime[steamid] = now
