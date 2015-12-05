@@ -24,13 +24,13 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		steamid := r.URL.Path[strings.Index(r.URL.Path, "steamid/")+8:]
 		player, tperr := models.GetPlayerBySteamId(steamid)
 		if tperr != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), 400)
 			return
 		}
 
 		messages, err = models.GetPlayerMessages(player)
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), 400)
 			return
 		}
 
@@ -38,13 +38,13 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		roomstr := r.URL.Path[strings.Index(r.URL.Path, "room/")+5:]
 		room, err := strconv.Atoi(roomstr)
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), 400)
 			return
 		}
 
 		messages, err = models.GetRoomMessages(room)
 		if err != nil {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), 400)
 			return
 		}
 	}
