@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -12,10 +13,10 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 )
 
+var dateRegex = regexp.MustCompile(`(\d{2})-(\d{2})-(\d{4})`)
+
 func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 	var messages []*models.ChatMessage
-	logs := "<body>\n"
-
 	steamid := strings.Index(r.URL.Path, "steamid/")
 	room := strings.Index(r.URL.Path, "room/")
 
@@ -23,6 +24,11 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		var err error
 
 		steamid := r.URL.Path[strings.Index(r.URL.Path, "steamid/")+8:]
+		index := strings.Index(steamid, "/")
+		if index != -1 {
+			steamid = steamid[:index]
+		}
+
 		player, tperr := models.GetPlayerBySteamId(steamid)
 		if tperr != nil {
 			http.Error(w, tperr.Error(), 400)
@@ -37,6 +43,11 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 
 	} else if room != -1 {
 		roomstr := r.URL.Path[strings.Index(r.URL.Path, "room/")+5:]
+		index := strings.Index(roomstr, "/")
+		if index != -1 {
+			roomstr = roomstr[:index]
+		}
+
 		room, err := strconv.Atoi(roomstr)
 		if err != nil {
 			http.Error(w, err.Error(), 400)
@@ -50,6 +61,39 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	from := int64(0)
+	to := time.Now().Unix()
+
+	if dateRegex.MatchString(r.URL.Query().Get("from")) {
+		t, err := timestamp(r.URL.Query().Get("from"))
+
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+
+		from = t.Unix()
+	}
+	if dateRegex.MatchString(r.URL.Query().Get("to")) {
+		t, err := timestamp(r.URL.Query().Get("to"))
+
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+
+		to = t.Unix()
+	}
+
+	//fmt.Printf("%d %d\n", from, to)
+	var filteredMessages []*models.ChatMessage
+	for _, message := range messages {
+		if message.CreatedAt.Unix() >= from && message.CreatedAt.Unix() <= to {
+			filteredMessages = append(filteredMessages, message)
+		}
+	}
+
+	logs := "<body>\n"
 	format := "<font color=\"red\">[%s]</font> <a href=\"https://steamcommunity.com/profiles/%s\">%s</a>: %s<br>\n"
 	if steamid != -1 {
 		format = "<font color=\"red\">[%s]</font> <a href=\"https://steamcommunity.com/profiles/%s\">%s</a>: %s<br>\n"
@@ -57,7 +101,7 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 
 	prevRoom := -1
 	//format := "%s: %s\t[%s]\n"
-	for _, message := range messages {
+	for _, message := range filteredMessages {
 		var player models.Player
 		if prevRoom != message.Room {
 			logs += fmt.Sprintf("<font color=\"blue\"> Room #%d </font><br>\n", message.Room)
@@ -76,4 +120,27 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 
 	logs += "</body>"
 	fmt.Fprint(w, logs)
+}
+
+func timestamp(date string) (*time.Time, error) {
+	matches := dateRegex.FindStringSubmatch(date)
+
+	month, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return nil, err
+	}
+
+	day, err := strconv.Atoi(matches[2])
+	if err != nil {
+		return nil, err
+	}
+
+	year, err := strconv.Atoi(matches[3])
+	if err != nil {
+		return nil, err
+	}
+
+	t := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
+
+	return &t, nil
 }
