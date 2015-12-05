@@ -55,10 +55,10 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		format = "<font color=\"red\">[%s]</font> <a href=\"https://steamcommunity.com/profiles/%s\">%s</a>: %s<br>\n"
 	}
 
-	var player models.Player
 	prevRoom := -1
 	//format := "%s: %s\t[%s]\n"
 	for _, message := range messages {
+		var player models.Player
 		if prevRoom != message.Room {
 			logs += fmt.Sprintf("<font color=\"blue\"> Room #%d </font><br>\n", message.Room)
 		}
