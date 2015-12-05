@@ -403,10 +403,9 @@ func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data
 		if tperr != nil {
 			return tperr.Encode()
 		}
-
-		chelpers.AfterLobbySpec(server, so, lob)
 	}
 
+	chelpers.AfterLobbySpec(server, so, lob)
 	models.BroadcastLobbyToUser(lob, player.SteamId)
 	return chelpers.EmptySuccessJS
 }
