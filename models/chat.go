@@ -32,19 +32,19 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	}
 }
 
-func GetMessages(player *Player, room int) ([]*ChatMessage, error) {
+func GetRoomMessages(room int) ([]*ChatMessage, error) {
 	var messages []*ChatMessage
 
-	err := db.DB.Table("chat_messages").Where("player_id = ? AND room = ?", player.ID, room).Order("created_at").Find(&messages).Error
+	err := db.DB.Table("chat_messages").Where("room = ?", room).Order("created_at").Find(&messages).Error
 
 	return messages, err
 }
 
 //Get all messages sent by player in a specfified room
-func GetAllMessages(player *Player) ([]*ChatMessage, error) {
+func GetPlayerMessages(player *Player) ([]*ChatMessage, error) {
 	var messages []*ChatMessage
 
-	err := db.DB.Table("chat_messages").Where("player_id = ?", player.ID).Order("created_at").Find(&messages).Error
+	err := db.DB.Table("chat_messages").Where("player_id = ?", player.ID).Order("room, created_at").Find(&messages).Error
 
 	return messages, err
 
