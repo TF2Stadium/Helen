@@ -19,6 +19,7 @@ deployment:
       - mkdir binaries
       - cp lobbySettingsData.json binaries/lobbySettingsData.json
       - go build -o binaries/helen-prod *.go
+      - cp binaries/helen-prod $CIRCLE_ARTIFACTS/helen 
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_PROD
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_PROD
   dev:
@@ -27,5 +28,6 @@ deployment:
       - mkdir binaries
       - cp lobbySettingsData.json binaries/lobbySettingsData.json
       - go build -race -o binaries/helen-dev *.go
+      - cp binaries/helen-dev $CIRCLE_ARTIFACTS/helen
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_DEV
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_DEV
