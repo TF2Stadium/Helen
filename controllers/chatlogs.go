@@ -49,9 +49,9 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	format := "<font color=\"red\">[%s]</font> <a href=\"https://steamcommunity.com/profiles/%s\">hue%s</a>: %s<br>\n"
+	format := "<font color=\"red\">[%s]</font> <a href=\"https://steamcommunity.com/profiles/%s\">%s</a>: %s<br>\n"
 	if steamid != -1 {
-		format = "<font color=\"red\">[%s]</font> <a href=\"https://steamcommunity.com/profiles/%s\">hue%s</a>: %s<br>\n"
+		format = "<font color=\"red\">[%s]</font> <a href=\"https://steamcommunity.com/profiles/%s\">%s</a>: %s<br>\n"
 	}
 
 	var player models.Player
