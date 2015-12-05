@@ -25,7 +25,7 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		steamid := r.URL.Path[strings.Index(r.URL.Path, "steamid/")+8:]
 		player, tperr := models.GetPlayerBySteamId(steamid)
 		if tperr != nil {
-			http.Error(w, err.Error(), 400)
+			http.Error(w, tperr.Error(), 400)
 			return
 		}
 
