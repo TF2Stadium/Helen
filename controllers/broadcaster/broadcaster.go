@@ -6,16 +6,13 @@ package broadcaster
 
 import (
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/wsevent"
 )
 
-type commonBroadcaster interface {
-	BroadcastJSON(string, interface{})
-}
+var socketServer *wsevent.Server
+var socketServerNoLogin *wsevent.Server
 
-var socketServer commonBroadcaster
-var socketServerNoLogin commonBroadcaster
-
-func Init(server commonBroadcaster, nologin commonBroadcaster) {
+func Init(server *wsevent.Server, nologin *wsevent.Server) {
 	socketServer = server
 	socketServerNoLogin = nologin
 }
