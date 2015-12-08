@@ -15,6 +15,7 @@ import (
 	"github.com/DSchalla/go-pid"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
+	"github.com/TF2Stadium/Helen/controllers"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
@@ -23,7 +24,6 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/TF2Stadium/Helen/routes"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/rs/cors"
 	_ "net/http/pprof"
@@ -71,7 +71,7 @@ func main() {
 
 	broadcaster.Init(server, nologin)
 	socket.ServerInit(server, nologin)
-	routes.SetupHTTPRoutes(server, nologin)
+	controllers.SetupHTTPRoutes(server, nologin)
 
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
 		// init static FileServer
