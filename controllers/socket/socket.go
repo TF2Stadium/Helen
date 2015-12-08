@@ -88,6 +88,8 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	server.Register(handler.Chat{})
 	//Admin Handlers
 	server.Register(handler.Admin{})
+	//Ban handlers
+	handler.InitializeBans(server)
 	//Debugging handlers
 	// if config.Constants.ServerMockUp {
 	// 	server.On("debugLobbyFill", handler.DebugLobbyFill)

@@ -28,7 +28,7 @@ func TestNewChatMessage(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		time.Sleep(time.Second)
 
-		message := models.NewChatMessage(strconv.Itoa(i), 0, player)
+		message, _ := models.NewChatMessage(strconv.Itoa(i), 0, player)
 		assert.NotNil(t, message)
 
 		err := db.DB.Save(message).Error
@@ -46,7 +46,7 @@ func TestNewChatMessage(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		time.Sleep(time.Second)
 
-		message := models.NewChatMessage(strconv.Itoa(i), 1, player)
+		message, _ := models.NewChatMessage(strconv.Itoa(i), 1, player)
 		assert.NotNil(t, message)
 
 		err := db.DB.Save(message).Error

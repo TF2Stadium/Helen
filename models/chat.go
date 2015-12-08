@@ -4,6 +4,7 @@ import (
 	"time"
 
 	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/helpers"
 )
 
 type ChatMessage struct {
@@ -20,8 +21,12 @@ type ChatMessage struct {
 	Deleted bool   `json:"-"`
 }
 
-func NewChatMessage(message string, room int, player *Player) *ChatMessage {
-	return &ChatMessage{
+func NewChatMessage(message string, room int, player *Player) (*ChatMessage, *helpers.TPError) {
+	if banned, _ := player.IsBannedWithTime(PlayerBanChat); banned {
+		return nil, helpers.NewTPError("Player has been chat-banned.", 2)
+	}
+
+	record := &ChatMessage{
 		Timestamp: time.Now().Unix(),
 
 		PlayerID: player.ID,
@@ -30,6 +35,8 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 		Room:    room,
 		Message: message,
 	}
+
+	return record, nil
 }
 
 func GetRoomMessages(room int) ([]*ChatMessage, error) {

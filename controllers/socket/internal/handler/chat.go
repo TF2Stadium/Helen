@@ -41,6 +41,8 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 		return helpers.NewTPError("You're sending messages too quickly", -1).Encode()
 	}
 
+	player, tperr := models.GetPlayerBySteamId(steamid)
+
 	var args struct {
 		Message *string `json:"message"`
 		Room    *int    `json:"room"`
@@ -52,7 +54,6 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 	}
 
 	lastChatTime[steamid] = now
-	player, tperr := models.GetPlayerBySteamId(steamid)
 	if tperr != nil {
 		return tperr.Encode()
 	}
@@ -75,7 +76,10 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 		return helpers.NewTPError("Message too long", 4).Encode()
 	}
 
-	message := models.NewChatMessage(*args.Message, *args.Room, player)
+	message, tperr := models.NewChatMessage(*args.Message, *args.Room, player)
+	if tperr != nil {
+		return tperr.Encode()
+	}
 	db.DB.Save(message)
 	bytes, _ := json.Marshal(message)
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public",
