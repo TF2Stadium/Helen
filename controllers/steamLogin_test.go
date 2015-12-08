@@ -17,7 +17,9 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	//"github.com/TF2Stadium/Helen/routes"
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/testhelpers"
+	"github.com/TF2Stadium/wsevent"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,8 +31,11 @@ func init() {
 	migrations.Do()
 	stores.SetupStores()
 	helpers.InitLogger()
+	auth := wsevent.NewServer()
+	noauth := wsevent.NewServer()
 
-	//routes.SetupHTTPRoutes(,)
+	config.Constants.MockupAuth = true
+	SetupHTTPRoutes(auth, noauth)
 	go func() {
 		helpers.Logger.Fatal(http.ListenAndServe(":8080", nil))
 	}()
@@ -45,6 +50,7 @@ func TestLogin(t *testing.T) {
 	assert.NotNil(t, resp)
 
 	player, tperr := models.GetPlayerBySteamId(steamid)
+	addr, _ = url.Parse("http://localhost:8080")
 	assert.Nil(t, tperr)
 	assert.Equal(t, player.SteamId, steamid)
 }

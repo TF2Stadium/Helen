@@ -2,13 +2,12 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package routes
+package controllers
 
 import (
 	"net/http"
 
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/controllers"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/wsevent"
@@ -18,13 +17,13 @@ import (
 var upgrader = websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool { return true }}
 
 func SetupHTTPRoutes(server *wsevent.Server, noauth *wsevent.Server) {
-	http.HandleFunc("/", controllers.MainHandler)
-	http.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
-	http.HandleFunc("/startLogin", controllers.LoginHandler)
-	http.HandleFunc("/logout", controllers.LogoutHandler)
-	http.HandleFunc("/chatlogs/", controllers.GetChatLogs)
+	http.HandleFunc("/", MainHandler)
+	http.HandleFunc("/openidcallback", LoginCallbackHandler)
+	http.HandleFunc("/startLogin", LoginHandler)
+	http.HandleFunc("/logout", LogoutHandler)
+	http.HandleFunc("/chatlogs/", GetChatLogs)
 	if config.Constants.MockupAuth {
-		http.HandleFunc("/startMockLogin/", controllers.MockLoginHandler)
+		http.HandleFunc("/startMockLogin/", MockLoginHandler)
 	}
 	http.HandleFunc("/websocket/", func(w http.ResponseWriter, r *http.Request) {
 		if config.Constants.SteamIDWhitelist != "" {
@@ -67,14 +66,14 @@ func SetupHTTPRoutes(server *wsevent.Server, noauth *wsevent.Server) {
 		}
 
 		if err != nil || so == nil {
-			controllers.LogoutSession(w, r)
+			LogoutSession(w, r)
 			return
 		}
 
 		//helpers.Logger.Debug("Connected to Socket")
 		err = socket.SocketInit(server, noauth, so)
 		if err != nil {
-			controllers.LogoutSession(w, r)
+			LogoutSession(w, r)
 		}
 	})
 }
