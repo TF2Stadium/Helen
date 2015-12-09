@@ -5,11 +5,12 @@
 package stores
 
 import (
+	"sync"
+
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/antonlindstrom/pgstore"
 	"github.com/gorilla/sessions"
-	"sync"
 )
 
 var sessionStoreMutex = &sync.Mutex{}
@@ -23,10 +24,8 @@ var socketAuthStore = make(map[string]*sessions.Session)
 func SetupStores() {
 	if SessionStore == nil {
 		sessionStoreMutex.Lock()
-		if SessionStore == nil {
-			SessionStore = pgstore.NewPGStore(database.DbUrl, []byte(config.Constants.SessionName))
-			SessionStore.Options.HttpOnly = true
-		}
+		SessionStore = pgstore.NewPGStore(database.DbUrl, []byte(config.Constants.SessionName))
+		SessionStore.Options.HttpOnly = true
 		sessionStoreMutex.Unlock()
 	}
 }
