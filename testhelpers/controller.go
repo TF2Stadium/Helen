@@ -6,6 +6,7 @@ package testhelpers
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -14,10 +15,10 @@ import (
 	"testing"
 
 	"github.com/TF2Stadium/Helen/controllers"
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/websocket"
-	"net"
 )
 
 const InitMessages int = 5
@@ -90,6 +91,8 @@ func StartServer(auth *wsevent.Server, noauth *wsevent.Server) *httptest.Server 
 	mux.HandleFunc("/logout", controllers.LogoutHandler)
 	mux.HandleFunc("/chatlogs/", controllers.GetChatLogs)
 	mux.HandleFunc("/websocket/", controllers.Sockets{auth, noauth}.SocketHandler)
+
+	broadcaster.Init(auth, noauth)
 
 	l, err := net.Listen("tcp", "localhost:8080")
 	if err != nil {
