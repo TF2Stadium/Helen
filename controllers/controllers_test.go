@@ -26,7 +26,6 @@ func init() {
 
 func TestLogin(t *testing.T) {
 	server := testhelpers.StartServer(wsevent.NewServer(), wsevent.NewServer())
-	defer server.Close()
 
 	var count int
 
@@ -47,11 +46,12 @@ func TestLogin(t *testing.T) {
 	assert.Nil(t, db.DB.Table("http_sessions").Count(&count).Error)
 	assert.NotEqual(t, count, 0)
 	assert.NotNil(t, client.Jar)
+
+	server.Close()
 }
 
 func TestWS(t *testing.T) {
 	server := testhelpers.StartServer(wsevent.NewServer(), wsevent.NewServer())
-	defer server.Close()
 
 	steamid := strconv.Itoa(rand.Int())
 	client := testhelpers.NewClient()
@@ -71,11 +71,11 @@ func TestWS(t *testing.T) {
 		assert.NoError(t, err)
 		t.Log(string(data))
 	}
+	server.Close()
 }
 
 func BenchmarkWS(b *testing.B) {
 	server := testhelpers.StartServer(wsevent.NewServer(), wsevent.NewServer())
-	defer server.Close()
 
 	for i := 0; i < b.N; i++ {
 		steamid := strconv.Itoa(rand.Int())
@@ -100,18 +100,18 @@ func BenchmarkWS(b *testing.B) {
 		}
 
 	}
+	server.Close()
 }
 
 func TestSocketInfo(t *testing.T) {
 	server := testhelpers.StartServer(testhelpers.NewSockets())
-	defer server.Close()
 
 	client := testhelpers.NewClient()
 	testhelpers.Login(strconv.Itoa(rand.Int()), client)
 	conn, err := testhelpers.ConnectWS(client)
 	assert.NoError(t, err)
 
-	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, t)
+	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
 	assert.NoError(t, err)
 
 	args := map[string]interface{}{
@@ -127,18 +127,18 @@ func TestSocketInfo(t *testing.T) {
 	t.Logf("%v", reply)
 
 	conn.Close()
+	server.Close()
 }
 
 func TestLobbyCreate(t *testing.T) {
 	server := testhelpers.StartServer(testhelpers.NewSockets())
-	defer server.Close()
 
 	steamid := strconv.Itoa(rand.Int())
 	client := testhelpers.NewClient()
 	testhelpers.Login(steamid, client)
 	conn, err := testhelpers.ConnectWS(client)
 	assert.NoError(t, err)
-	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, t)
+	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
 	assert.NoError(t, err)
 
 	args := map[string]interface{}{
@@ -163,5 +163,43 @@ func TestLobbyCreate(t *testing.T) {
 	lobby, err := models.GetLobbyById(id)
 	assert.NoError(t, err)
 	assert.Equal(t, lobby.CreatedBySteamID, steamid)
+
 	conn.Close()
+	server.Close()
+}
+
+func TestLobbyJoin(t *testing.T) {
+	server := testhelpers.StartServer(testhelpers.NewSockets())
+
+	steamid := strconv.Itoa(rand.Int())
+	client := testhelpers.NewClient()
+	testhelpers.Login(steamid, client)
+	player, tperr := models.GetPlayerBySteamId(steamid)
+	assert.NoError(t, tperr)
+	conn, err := testhelpers.ConnectWS(client)
+	assert.NoError(t, err)
+	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
+	assert.NoError(t, err)
+
+	args := map[string]interface{}{
+		"id": "1",
+		"data": map[string]interface{}{
+			"request": "lobbyJoin",
+			"id":      1,
+			"class":   "scout1",
+			"team":    "red",
+		}}
+
+	conn.WriteJSON(args)
+
+	assert.Equal(t, testhelpers.ReadJSON(conn)["request"].(string), "lobbyJoined")
+	assert.True(t, testhelpers.ReadJSON(conn)["success"].(bool))
+	id, tperr := player.GetLobbyId()
+	assert.NoError(t, tperr)
+	if id != 1 {
+		t.Fatal("Got wrong ID")
+	}
+
+	conn.Close()
+	server.Close()
 }
