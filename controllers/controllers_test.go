@@ -222,5 +222,47 @@ func TestSpectatorJoin(t *testing.T) {
 				"id":      1,
 			},
 		})
+	testhelpers.ReadMessages(conn, 1, nil)
+	assert.True(t, testhelpers.ReadJSON(conn)["success"].(bool))
 
+	//Send ChatMessages
+	conn.WriteJSON(
+		map[string]interface{}{
+			"id": "1",
+			"data": map[string]interface{}{
+				"request": "getSocketInfo",
+			},
+		})
+
+	recv := testhelpers.ReadJSON(conn)
+	assert.Equal(t, len(recv["rooms"].([]interface{})), 2)
+}
+
+func TestChatSend(t *testing.T) {
+	server := testhelpers.StartServer(testhelpers.NewSockets())
+	defer server.Close()
+
+	steamid := strconv.Itoa(rand.Int())
+	client := testhelpers.NewClient()
+	testhelpers.Login(steamid, client)
+	conn, err := testhelpers.ConnectWS(client)
+	defer conn.Close()
+	assert.NoError(t, err)
+	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
+	assert.NoError(t, err)
+
+	conn.WriteJSON(
+		map[string]interface{}{
+			"id": "1",
+			"data": map[string]interface{}{
+				"request": "chatSend",
+				"message": "testerino",
+				"room":    0,
+			},
+		})
+
+	assert.True(t, testhelpers.ReadJSON(conn)["success"].(bool))
+
+	recv := testhelpers.ReadJSON(conn)
+	assert.Equal(t, recv["data"].(map[string]interface{})["player"].(map[string]interface{})["steamid"], steamid)
 }
