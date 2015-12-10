@@ -93,7 +93,9 @@ func StartServer(auth *wsevent.Server, noauth *wsevent.Server) *httptest.Server 
 
 	l, err := net.Listen("tcp", "localhost:8080")
 	if err != nil {
-		panic(err)
+		for err != nil {
+			l, err = net.Listen("tcp", "localhost:8080")
+		}
 	}
 
 	server := &httptest.Server{Listener: l, Config: &http.Server{Handler: mux}}
@@ -109,11 +111,36 @@ func ReadMessages(conn *websocket.Conn, n int, t *testing.T) ([][]byte, error) {
 			return messages, err
 		}
 		messages = append(messages, data)
-		t.Log(string(data))
-
+		if t != nil {
+			t.Log(string(data))
+		}
 	}
 
 	return messages, nil
+}
+
+func ReadJSON(conn *websocket.Conn) map[string]interface{} {
+	reply := make(map[string]interface{})
+
+	conn.ReadJSON(&reply)
+
+	switch reply["data"].(type) {
+	case string:
+		//reply to a request
+		data := make(map[string]interface{})
+		str, _ := strconv.Unquote(reply["data"].(string))
+
+		json.Unmarshal([]byte(str), &data)
+		return data
+
+	case map[string]interface{}:
+		//request from server
+		return reply["data"].(map[string]interface{})
+
+	default:
+		panic("Received invalid JSON")
+	}
+
 }
 
 func getEvent(data []byte) string {
