@@ -98,6 +98,10 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	// 	server.On("debugPlayerSub", handler.DebugPlayerSub)
 	// }
 
+	server.DefaultHandler = func(_ *wsevent.Server, _ *wsevent.Client, _ []byte) []byte {
+		return helpers.NewTPError("No such request.", -3).Encode()
+	}
+
 	noAuthServer.On("lobbySpectatorJoin", func(s *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		var args struct {
 			Id *uint `json:"id"`
