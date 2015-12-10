@@ -6,6 +6,7 @@ package testhelpers
 
 import (
 	"encoding/json"
+	"errors"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
@@ -51,6 +52,10 @@ func Login(steamid string, client *http.Client) (*http.Response, error) {
 func ConnectWS(client *http.Client) (*websocket.Conn, error) {
 	ws := url.URL{Scheme: "ws", Host: "localhost:8080", Path: "/websocket/"}
 	domain := &url.URL{Scheme: "http", Host: "localhost:8080"}
+
+	if len(client.Jar.Cookies(domain)) == 0 {
+		return nil, errors.New("Client cookiejar has no cookies D:")
+	}
 
 	header := http.Header{"Cookie": []string{client.Jar.Cookies(domain)[0].String()}}
 
