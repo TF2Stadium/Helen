@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/url"
 	"strconv"
+	"sync"
 	"testing"
 
 	db "github.com/TF2Stadium/Helen/database"
@@ -72,30 +73,38 @@ func TestWS(t *testing.T) {
 func BenchmarkWS(b *testing.B) {
 	server := testhelpers.StartServer(wsevent.NewServer(), wsevent.NewServer())
 	defer server.Close()
+	wg := new(sync.WaitGroup)
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		steamid := strconv.Itoa(rand.Int())
-		client := testhelpers.NewClient()
-		_, err := testhelpers.Login(steamid, client)
-		if err != nil {
-			b.Error(err)
-		}
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
 
-		addr, _ := url.Parse("http://localhost:8080/")
-		client.Jar.Cookies(addr)
-		conn, err := testhelpers.ConnectWS(client)
-		if err != nil {
-			b.Error(err)
-		}
-
-		for i := 0; i < 5; i++ {
-			_, _, err := conn.ReadMessage()
+			steamid := strconv.Itoa(rand.Int())
+			client := testhelpers.NewClient()
+			_, err := testhelpers.Login(steamid, client)
 			if err != nil {
 				b.Error(err)
+				b.FailNow()
 			}
-		}
 
+			conn, err := testhelpers.ConnectWS(client)
+			if err != nil {
+				b.Error(err)
+				b.FailNow()
+			}
+
+			for i := 0; i < 5; i++ {
+				_, _, err := conn.ReadMessage()
+				if err != nil {
+					b.Error(err)
+					b.FailNow()
+				}
+			}
+		}()
 	}
+	wg.Wait()
 }
 
 func TestSocketInfo(t *testing.T) {
