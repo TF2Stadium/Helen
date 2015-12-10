@@ -160,13 +160,11 @@ func TestLobbyCreate(t *testing.T) {
 			"mumbleRequired": true,
 		}}
 
-	reply, err := testhelpers.EmitJSONWithReply(conn, args)
-	assert.NoError(t, err)
-	assert.True(t, reply["success"].(bool))
-	id := uint(reply["data"].(map[string]interface{})["id"].(float64))
-	t.Logf("%v", reply)
+	conn.WriteJSON(args)
+	assert.True(t, testhelpers.ReadJSON(conn)["success"].(bool))
 
-	lobby, err := models.GetLobbyById(id)
+	testhelpers.ReadMessages(conn, 1, t)
+	lobby, err := models.GetLobbyById(1)
 	assert.NoError(t, err)
 	assert.Equal(t, lobby.CreatedBySteamID, steamid)
 }
