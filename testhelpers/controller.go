@@ -103,16 +103,14 @@ func StartServer(auth *wsevent.Server, noauth *wsevent.Server) *httptest.Server 
 	return server
 }
 
-func ReadMessages(conn *websocket.Conn, n int, t *testing.T) ([][]byte, error) {
-	var messages [][]byte
+func ReadMessages(conn *websocket.Conn, n int, t *testing.T) ([]map[string]interface{}, error) {
+	var messages []map[string]interface{}
 	for i := 0; i < n; i++ {
-		_, data, err := conn.ReadMessage()
-		if err != nil {
-			return messages, err
-		}
+		data := ReadJSON(conn)
 		messages = append(messages, data)
 		if t != nil {
-			t.Log(string(data))
+			bytes, _ := json.MarshalIndent(data, "", "  ")
+			t.Logf("%s", string(bytes))
 		}
 	}
 
@@ -135,6 +133,11 @@ func ReadJSON(conn *websocket.Conn) map[string]interface{} {
 
 	case map[string]interface{}:
 		//request from server
+		dataStr := reply["data"].(map[string]interface{})["data"].(string)
+		dataMap := make(map[string]interface{})
+		json.Unmarshal([]byte(dataStr), &dataMap)
+
+		reply["data"].(map[string]interface{})["data"] = dataMap
 		return reply["data"].(map[string]interface{})
 
 	default:
