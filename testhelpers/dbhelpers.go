@@ -48,7 +48,7 @@ func CleanupDB() {
 		"substitutes",
 	}
 	for _, table := range tables {
-		database.DB.Exec("TRUNCATE TABLE " + table)
+		database.DB.Exec("TRUNCATE TABLE " + table + " RESTART IDENTITY")
 	}
 
 }
