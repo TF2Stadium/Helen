@@ -17,17 +17,38 @@ import (
 
 var cleaningMutex sync.Mutex
 
+var o = new(sync.Once)
+
 func CleanupDB() {
 	cleaningMutex.Lock()
 	defer cleaningMutex.Unlock()
-	os.Setenv("DEPLOYMENT_ENV", "test")
-	config.SetupConstants()
-	database.Init()
-	authority.RegisterTypes()
-	database.DB.Exec("DROP SCHEMA public CASCADE;")
-	database.DB.Exec("CREATE SCHEMA public;")
 
-	migrations.Do()
+	o.Do(func() {
+		os.Setenv("DEPLOYMENT_ENV", "test")
+		config.SetupConstants()
+		database.Init()
+		authority.RegisterTypes()
+		migrations.Do()
+		stores.SetupStores()
+	})
 
-	stores.SetupStores()
+	tables := []string{
+		"admin_log_entries",
+		"banned_players_lobbies",
+		"chat_messages",
+		"http_sessions",
+		"lobbies",
+		"lobby_slots",
+		"player_bans",
+		"player_settings",
+		"player_stats",
+		"players",
+		"server_records",
+		"spectators_players_lobbies",
+		"substitutes",
+	}
+	for _, table := range tables {
+		database.DB.Exec("TRUNCATE TABLE " + table)
+	}
+
 }
