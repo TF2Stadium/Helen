@@ -65,7 +65,7 @@ func ConnectWS(client *http.Client) (*websocket.Conn, error) {
 
 func EmitJSONWithReply(conn *websocket.Conn, req map[string]interface{}) (map[string]interface{}, error) {
 	if err := conn.WriteJSON(req); err != nil {
-		return nil, err
+		return nil, errors.New("Error while marshing request: " + err.Error())
 	}
 
 	var resp struct {
@@ -74,14 +74,14 @@ func EmitJSONWithReply(conn *websocket.Conn, req map[string]interface{}) (map[st
 	}
 
 	if err := conn.ReadJSON(&resp); err != nil {
-		return nil, err
+		return nil, errors.New("Error while marshing response: " + err.Error())
 	}
 
 	data := make(map[string]interface{})
 	str, _ := strconv.Unquote(resp.Data)
 
 	if err := json.Unmarshal([]byte(str), &data); err != nil {
-		return nil, err
+		return nil, errors.New("Error while marshing response data: " + err.Error())
 	}
 
 	return data, nil
