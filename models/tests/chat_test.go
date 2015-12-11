@@ -28,14 +28,14 @@ func TestNewChatMessage(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		time.Sleep(time.Second)
 
-		message := models.NewChatMessage(strconv.Itoa(i), 0, player)
+		message, _ := models.NewChatMessage(strconv.Itoa(i), 0, player)
 		assert.NotNil(t, message)
 
 		err := db.DB.Save(message).Error
 		assert.Nil(t, err)
 	}
 
-	messages, err := models.GetMessages(player, 0)
+	messages, err := models.GetRoomMessages(0)
 	assert.Nil(t, err)
 	assert.Equal(t, len(messages), 3)
 
@@ -46,22 +46,22 @@ func TestNewChatMessage(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		time.Sleep(time.Second)
 
-		message := models.NewChatMessage(strconv.Itoa(i), 1, player)
+		message, _ := models.NewChatMessage(strconv.Itoa(i), 1, player)
 		assert.NotNil(t, message)
 
 		err := db.DB.Save(message).Error
 		assert.Nil(t, err)
 	}
 
-	messages, err = models.GetMessages(player, 1)
+	messages, err = models.GetPlayerMessages(player)
 	assert.Nil(t, err)
-	assert.Equal(t, len(messages), 3)
+	assert.Equal(t, len(messages), 6)
 
 	for i := 1; i < len(messages); i++ {
 		assert.True(t, messages[i].CreatedAt.Unix() > messages[i-1].CreatedAt.Unix())
 	}
 
-	messages, err = models.GetAllMessages(player)
+	messages, err = models.GetPlayerMessages(player)
 	assert.Nil(t, err)
 	assert.Equal(t, len(messages), 6)
 }

@@ -88,6 +88,8 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	server.Register(handler.Chat{})
 	//Admin Handlers
 	server.Register(handler.Admin{})
+	//Ban Handlers
+	handler.InitializeBans(server)
 	//Debugging handlers
 	// if config.Constants.ServerMockUp {
 	// 	server.On("debugLobbyFill", handler.DebugLobbyFill)
@@ -95,6 +97,10 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	// 	server.On("debugUpdateStatsFilter", handler.DebugUpdateStatsFilter)
 	// 	server.On("debugPlayerSub", handler.DebugPlayerSub)
 	// }
+
+	server.DefaultHandler = func(_ *wsevent.Server, _ *wsevent.Client, _ []byte) []byte {
+		return helpers.NewTPError("No such request.", -3).Encode()
+	}
 
 	noAuthServer.On("lobbySpectatorJoin", func(s *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 		var args struct {

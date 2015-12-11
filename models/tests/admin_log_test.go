@@ -26,7 +26,7 @@ func TestLogCreation(t *testing.T) {
 	database.DB.Model(obj).Count(&count)
 	assert.Equal(t, 0, count)
 
-	models.LogAdminAction(1, helpers.ActionBanPlayer, 2)
+	models.LogAdminAction(1, helpers.ActionBanJoin, 2)
 	models.LogCustomAdminAction(2, "test", 4)
 
 	database.DB.Model(obj).Count(&count)

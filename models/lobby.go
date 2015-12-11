@@ -276,6 +276,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 			// assign the player to a new slot
 			// try to remove them from the old slot (in case they are switching slots)
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
+			DisallowPlayer(lobby.ID, player.SteamId)
 		}
 	}
 	// try to remove them from spectators

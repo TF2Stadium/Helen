@@ -5,19 +5,21 @@
 package broadcaster
 
 import (
+	"sync"
+
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/wsevent"
 )
 
-type commonBroadcaster interface {
-	BroadcastJSON(string, interface{})
-}
+var mu = new(sync.RWMutex)
+var socketServer *wsevent.Server
+var socketServerNoLogin *wsevent.Server
 
-var socketServer commonBroadcaster
-var socketServerNoLogin commonBroadcaster
-
-func Init(server commonBroadcaster, nologin commonBroadcaster) {
+func Init(server *wsevent.Server, nologin *wsevent.Server) {
+	mu.Lock()
 	socketServer = server
 	socketServerNoLogin = nologin
+	mu.Unlock()
 }
 
 func SendMessage(steamid string, event string, content string) {
@@ -25,6 +27,9 @@ func SendMessage(steamid string, event string, content string) {
 	if !ok {
 		return
 	}
+
+	mu.RLock()
+	defer mu.RUnlock()
 	socket.EmitJSON(helpers.NewRequest(event, content))
 }
 
@@ -35,6 +40,8 @@ func SendMessageToRoom(room string, event string, content string) {
 
 	v := helpers.NewRequest(event, content)
 
+	mu.RLock()
+	defer mu.RUnlock()
 	socketServer.BroadcastJSON(room, v)
 	socketServerNoLogin.BroadcastJSON(room, v)
 }

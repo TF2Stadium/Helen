@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -25,12 +26,23 @@ func (Chat) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
+var lastChatTime = make(map[string]int64)
+
 func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
 		return reqerr.Encode()
 	}
+
+	steamid := chelpers.GetSteamId(so.Id())
+	now := time.Now().Unix()
+	if now-lastChatTime[steamid] == 0 {
+		return helpers.NewTPError("You're sending messages too quickly", -1).Encode()
+	}
+
+	player, tperr := models.GetPlayerBySteamId(steamid)
+
 	var args struct {
 		Message *string `json:"message"`
 		Room    *int    `json:"room"`
@@ -41,7 +53,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 		return helpers.NewTPErrorFromError(err).Encode()
 	}
 
-	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	lastChatTime[steamid] = now
 	if tperr != nil {
 		return tperr.Encode()
 	}
@@ -68,7 +80,10 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 		return helpers.NewTPError("Message too long", 4).Encode()
 	}
 
-	message := models.NewChatMessage(*args.Message, *args.Room, player)
+	message, tperr := models.NewChatMessage(*args.Message, *args.Room, player)
+	if tperr != nil {
+		return tperr.Encode()
+	}
 	db.DB.Save(message)
 	bytes, _ := json.Marshal(message)
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public",

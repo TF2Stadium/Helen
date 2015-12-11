@@ -20,10 +20,10 @@ import (
 type PlayerBanType int
 
 const (
-	PlayerBanJoin   = 0
-	PlayerBanCreate = 1
-	PlayerBanChat   = 2
-	PlayerBanFull   = 3
+	PlayerBanJoin PlayerBanType = iota
+	PlayerBanCreate
+	PlayerBanChat
+	PlayerBanFull
 )
 
 type PlayerBan struct {
@@ -57,11 +57,6 @@ type Player struct {
 	GameHours  int
 	Name       string             // Player name
 	Role       authority.AuthRole `sql:"default:0"` // Role is player by default
-
-	BannedCreateUntil int64 `sql:"default:0"`
-	BannedPlayUntil   int64 `sql:"default:0"`
-	BannedChatUntil   int64 `sql:"default:0"`
-	BannedFullUntil   int64 `sql:"default:0"`
 
 	Settings []PlayerSetting
 }
