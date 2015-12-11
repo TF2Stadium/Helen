@@ -129,8 +129,8 @@ func TestSocketInfo(t *testing.T) {
 
 	reply, err := testhelpers.EmitJSONWithReply(conn, args)
 	assert.NoError(t, err)
-	//assert.Equal(t, reply["rooms"].([]interface{})[0].(string), "0_public")
-	t.Logf("%v", reply)
+	assert.Equal(t, reply["rooms"].([]interface{})[0].(string), "0_public")
+	//t.Logf("%v", reply)
 
 }
 
@@ -161,9 +161,17 @@ func TestLobbyCreate(t *testing.T) {
 		}}
 
 	conn.WriteJSON(args)
-	assert.True(t, testhelpers.ReadJSON(conn)["success"].(bool))
 
-	testhelpers.ReadMessages(conn, 1, t)
+	messages, err := testhelpers.ReadMessages(conn, 2, nil)
+	for _, message := range messages {
+		_, ok := message["success"]
+		if ok {
+			assert.True(t, message["success"].(bool))
+		} else {
+			assert.Equal(t, message["request"], "lobbyListData")
+		}
+	}
+
 	lobby, err := models.GetLobbyById(1)
 	assert.NoError(t, err)
 	assert.Equal(t, lobby.CreatedBySteamID, steamid)
@@ -195,8 +203,16 @@ func TestLobbyJoin(t *testing.T) {
 
 	conn.WriteJSON(args)
 
-	assert.Equal(t, testhelpers.ReadJSON(conn)["request"].(string), "lobbyJoined")
-	assert.True(t, testhelpers.ReadJSON(conn)["success"].(bool))
+	messages, err := testhelpers.ReadMessages(conn, 2, nil)
+	for _, message := range messages {
+		_, ok := message["success"]
+		if ok {
+			assert.True(t, message["success"].(bool))
+		} else {
+			assert.Equal(t, message["request"], "lobbyJoined")
+		}
+	}
+
 	id, tperr := player.GetLobbyId()
 	assert.NoError(t, tperr)
 	if id != 1 {
@@ -268,8 +284,14 @@ func TestChatSend(t *testing.T) {
 			},
 		})
 
-	assert.True(t, testhelpers.ReadJSON(conn)["success"].(bool))
+	messages, err := testhelpers.ReadMessages(conn, 2, nil)
+	for _, message := range messages {
+		_, ok := message["success"]
+		if ok {
+			assert.True(t, message["success"].(bool))
+		} else {
+			assert.Equal(t, message["data"].(map[string]interface{})["player"].(map[string]interface{})["steamid"], steamid)
+		}
+	}
 
-	recv := testhelpers.ReadJSON(conn)
-	assert.Equal(t, recv["data"].(map[string]interface{})["player"].(map[string]interface{})["steamid"], steamid)
 }
