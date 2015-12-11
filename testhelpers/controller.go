@@ -14,10 +14,12 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/TF2Stadium/Helen/controllers"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	"github.com/TF2Stadium/Helen/controllers/socket"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/websocket"
 )
@@ -38,8 +40,18 @@ func (SuffixList) String() string {
 	return ""
 }
 
+var DefaultTransport = &http.Transport{
+	Proxy: http.ProxyFromEnvironment,
+	Dial: (&net.Dialer{
+		Timeout:   5 * time.Second,
+		KeepAlive: 5 * time.Second,
+	}).Dial,
+}
+
 func NewClient() (client *http.Client) {
 	client = new(http.Client)
+	client.Transport = DefaultTransport
+	DefaultTransport.CloseIdleConnections()
 	client.Jar, _ = cookiejar.New(options)
 	return
 }
@@ -116,6 +128,7 @@ func ReadMessages(conn *websocket.Conn, n int, t *testing.T) ([]map[string]inter
 	for i := 0; i < n; i++ {
 		data := ReadJSON(conn)
 		messages = append(messages, data)
+
 		if t != nil {
 			bytes, _ := json.MarshalIndent(data, "", "  ")
 			t.Logf("%s", string(bytes))
@@ -128,7 +141,10 @@ func ReadMessages(conn *websocket.Conn, n int, t *testing.T) ([]map[string]inter
 func ReadJSON(conn *websocket.Conn) map[string]interface{} {
 	reply := make(map[string]interface{})
 
-	conn.ReadJSON(&reply)
+	err := conn.ReadJSON(&reply)
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+	}
 
 	switch reply["data"].(type) {
 	case string:
