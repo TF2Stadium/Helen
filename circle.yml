@@ -15,7 +15,6 @@ dependencies:
 test:
   override:
       - go test -v -race ./...
-      - go test -bench=. -test.run=XXX -v -benchtime=1s ./...
 deployment:
   master:
     branch: master
