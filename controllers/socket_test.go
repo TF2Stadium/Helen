@@ -105,8 +105,6 @@ func BenchmarkLobbyCreate(b *testing.B) {
 	go func() {
 		for {
 			args := <-argsChan
-
-			wg.Add(1)
 			//helpers.Logger.Debug("%d", args.i)
 			err := conn.WriteJSON(args.args)
 			if err != nil {
@@ -129,6 +127,7 @@ func BenchmarkLobbyCreate(b *testing.B) {
 		}
 	}()
 
+	wg.Add(b.N)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		args := map[string]interface{}{
