@@ -12,7 +12,6 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"strconv"
 	"testing"
 	"time"
 
@@ -80,23 +79,13 @@ func EmitJSONWithReply(conn *websocket.Conn, req map[string]interface{}) (map[st
 		return nil, errors.New("Error while marshing request: " + err.Error())
 	}
 
-	var resp struct {
-		Id   string
-		Data string
-	}
+	resp := make(map[string]interface{})
 
 	if err := conn.ReadJSON(&resp); err != nil {
 		return nil, errors.New("Error while marshing response: " + err.Error())
 	}
 
-	data := make(map[string]interface{})
-	str, _ := strconv.Unquote(resp.Data)
-
-	if err := json.Unmarshal([]byte(str), &data); err != nil {
-		return nil, errors.New("Error while marshing response data: " + err.Error())
-	}
-
-	return data, nil
+	return resp["data"].(map[string]interface{}), nil
 }
 
 func StartServer(auth *wsevent.Server, noauth *wsevent.Server) *httptest.Server {
@@ -146,28 +135,7 @@ func ReadJSON(conn *websocket.Conn) map[string]interface{} {
 		helpers.Logger.Error(err.Error())
 	}
 
-	switch reply["data"].(type) {
-	case string:
-		//reply to a request
-		data := make(map[string]interface{})
-		str, _ := strconv.Unquote(reply["data"].(string))
-
-		json.Unmarshal([]byte(str), &data)
-		return data
-
-	case map[string]interface{}:
-		//request from server
-		dataStr := reply["data"].(map[string]interface{})["data"].(string)
-		dataMap := make(map[string]interface{})
-		json.Unmarshal([]byte(dataStr), &dataMap)
-
-		reply["data"].(map[string]interface{})["data"] = dataMap
-		return reply["data"].(map[string]interface{})
-
-	default:
-		panic("Received invalid JSON")
-	}
-
+	return reply["data"].(map[string]interface{})
 }
 
 func getEvent(data []byte) string {

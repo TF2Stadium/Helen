@@ -1,7 +1,6 @@
 package models
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -63,10 +62,7 @@ func GetSubList() []*Substitute {
 }
 
 func BroadcastSubList() {
-	allSubs := GetSubList()
-
-	bytes, _ := json.Marshal(allSubs)
-	broadcaster.SendMessageToRoom("0_public", "subListData", string(bytes))
+	broadcaster.SendMessageToRoom("0_public", "subListData", GetSubList())
 }
 
 func GetPlayerSubs(steamid string) ([]*Substitute, error) {

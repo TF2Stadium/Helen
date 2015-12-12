@@ -2,6 +2,8 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
+// +build ignore
+
 package handler
 
 import (
@@ -12,11 +14,11 @@ import (
 	"github.com/TF2Stadium/wsevent"
 )
 
-func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		return reqerr.Encode()
+		return reqerr
 	}
 
 	var args struct {
@@ -25,7 +27,7 @@ func DebugLobbyReady(server *wsevent.Server, so *wsevent.Client, data []byte) []
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		return helpers.NewTPErrorFromError(err).Encode()
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	lobby, _ := models.GetLobbyById(*args.Id)

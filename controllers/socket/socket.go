@@ -64,7 +64,7 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	noAuthServer.OnDisconnect = onDisconnect
 	noAuthServer.Extractor = getEvent
 
-	server.On("authenticationTest", func(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+	server.On("authenticationTest", func(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 		reqerr := chelpers.FilterRequest(so, 0, true)
 
 		if reqerr != nil {
@@ -72,10 +72,9 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 			return bytes
 		}
 
-		bytes, _ := json.Marshal(struct {
+		return struct {
 			Message string `json:"message"`
-		}{"authenticated"})
-		return bytes
+		}{"authenticated"}
 	})
 	//Global Handlers
 	server.Register(handler.Global{})
@@ -98,37 +97,36 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	// 	server.On("debugPlayerSub", handler.DebugPlayerSub)
 	// }
 
-	server.DefaultHandler = func(_ *wsevent.Server, _ *wsevent.Client, _ []byte) []byte {
-		return helpers.NewTPError("No such request.", -3).Encode()
+	server.DefaultHandler = func(_ *wsevent.Server, _ *wsevent.Client, _ []byte) interface{} {
+		return helpers.NewTPError("No such request.", -3)
 	}
 
-	noAuthServer.On("lobbySpectatorJoin", func(s *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+	noAuthServer.On("lobbySpectatorJoin", func(s *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 		var args struct {
 			Id *uint `json:"id"`
 		}
 
 		if err := chelpers.GetParams(data, &args); err != nil {
-			return helpers.NewTPErrorFromError(err).Encode()
+			return helpers.NewTPErrorFromError(err)
 		}
 
 		var lob *models.Lobby
 		lob, tperr := models.GetLobbyById(*args.Id)
 
 		if tperr != nil {
-			return tperr.Encode()
+			return tperr
 		}
 
 		chelpers.AfterLobbySpec(s, so, lob)
-		bytes, _ := json.Marshal(models.DecorateLobbyData(lob, true))
 
-		so.EmitJSON(helpers.NewRequest("lobbyData", string(bytes)))
+		so.EmitJSON(helpers.NewRequest("lobbyData", models.DecorateLobbyData(lob, true)))
 
 		return chelpers.EmptySuccessJS
 	})
 	noAuthServer.On("getSocketInfo", (handler.Global{}).GetSocketInfo)
 
-	noAuthServer.DefaultHandler = func(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
-		return helpers.NewTPError("Player isn't logged in.", -4).Encode()
+	noAuthServer.DefaultHandler = func(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+		return helpers.NewTPError("Player isn't logged in.", -4)
 	}
 }
 
@@ -149,7 +147,7 @@ func SocketInit(server *wsevent.Server, noauth *wsevent.Server, so *wsevent.Clie
 				"User has a cookie with but a matching player record doesn't exist: %s",
 				chelpers.GetSteamId(so.Id()))
 			chelpers.DeauthenticateSocket(so.Id())
-			so.Close()
+			chelpers.AfterConnect(noauth, so)
 			return ErrRecordNotFound
 		}
 

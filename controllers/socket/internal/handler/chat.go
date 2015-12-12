@@ -5,7 +5,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -28,17 +27,17 @@ func (Chat) Name(s string) string {
 
 var lastChatTime = make(map[string]int64)
 
-func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		return reqerr.Encode()
+		return reqerr
 	}
 
 	steamid := chelpers.GetSteamId(so.Id())
 	now := time.Now().Unix()
 	if now-lastChatTime[steamid] == 0 {
-		return helpers.NewTPError("You're sending messages too quickly", -1).Encode()
+		return helpers.NewTPError("You're sending messages too quickly", -1)
 	}
 
 	player, tperr := models.GetPlayerBySteamId(steamid)
@@ -50,12 +49,12 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		return helpers.NewTPErrorFromError(err).Encode()
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	lastChatTime[steamid] = now
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 
 	//helpers.Logger.Debug("received chat message: %s %s", *args.Message, player.Name)
@@ -66,7 +65,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 		lobbyId, tperr := player.GetLobbyId()
 
 		if tperr != nil && !spec && lobbyId != uint(*args.Room) {
-			return helpers.NewTPError("Player is not in the lobby.", 5).Encode()
+			return helpers.NewTPError("Player is not in the lobby.", 5)
 		}
 	} else {
 		// else room is the lobby list room
@@ -77,18 +76,17 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) []
 	}
 
 	if len(*args.Message) > 120 {
-		return helpers.NewTPError("Message too long", 4).Encode()
+		return helpers.NewTPError("Message too long", 4)
 	}
 
 	message, tperr := models.NewChatMessage(*args.Message, *args.Room, player)
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 	db.DB.Save(message)
-	bytes, _ := json.Marshal(message)
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public",
 		chelpers.GetLobbyRoom(uint(*args.Room))),
-		"chatReceive", string(bytes))
+		"chatReceive", message)
 
 	if strings.HasPrefix(*args.Message, "!admin") {
 		chelpers.SendToSlack(*args.Message, player.Name, player.SteamId)

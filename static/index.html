@@ -39,7 +39,7 @@ var createBox = function(so, messageName, messageFields) {
       so.Emit(params, function(response) {
         if (response != null) {
           console.log("Response to "+messageName+":");
-          console.log(JSON.parse(response));
+          console.log(response);
         }
       })
     });

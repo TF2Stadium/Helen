@@ -30,11 +30,11 @@ func (Admin) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-func (Admin) AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Admin) AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		return reqerr.Encode()
+		return reqerr
 	}
 	var args struct {
 		Steamid *string `json:"steamid"`
@@ -43,17 +43,17 @@ func (Admin) AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data []
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		return helpers.NewTPErrorFromError(err).Encode()
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	role, ok := helpers.RoleMap[*args.Role]
 	if !ok || role == helpers.RoleAdmin {
-		return helpers.NewTPError("Invalid role parameter", 0).Encode()
+		return helpers.NewTPError("Invalid role parameter", 0)
 	}
 
-	otherPlayer, err := models.GetPlayerBySteamId(*args.Steamid)
+	otherPlayer, tperr := models.GetPlayerBySteamId(*args.Steamid)
 	if err != nil {
-		return helpers.NewTPError("Player not found.", 0).Encode()
+		return tperr
 	}
 
 	currPlayer, _ := chelpers.GetPlayerSocket(so.Id())

@@ -4,10 +4,6 @@
 
 package helpers
 
-import (
-	"encoding/json"
-)
-
 type TPError struct {
 	Str  string `json:"message"`
 	Code int    `json:"code"`
@@ -33,9 +29,4 @@ func NewTPErrorFromError(e error) *TPError {
 		Str:  e.Error(),
 		Code: 0,
 	}
-}
-
-func (e *TPError) Encode() []byte {
-	bytes, _ := json.Marshal(e)
-	return bytes
 }

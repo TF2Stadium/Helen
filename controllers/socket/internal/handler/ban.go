@@ -52,10 +52,10 @@ func InitializeBans(server *wsevent.Server) {
 	}
 
 	for _, ban := range bans {
-		server.On(ban.eventName, func(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+		server.On(ban.eventName, func(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 			reqerr := chelpers.FilterRequest(so, ban.action, true)
 			if reqerr != nil {
-				return reqerr.Encode()
+				return reqerr
 			}
 
 			var args struct {
@@ -65,21 +65,21 @@ func InitializeBans(server *wsevent.Server) {
 			}
 
 			if err := chelpers.GetParams(data, &args); err != nil {
-				return helpers.NewTPErrorFromError(err).Encode()
+				return helpers.NewTPErrorFromError(err)
 			}
 
 			tperr := newBan(*args.SteamID, ban.banType, *args.Until, *args.Reason)
 			if tperr != nil {
-				return tperr.Encode()
+				return tperr
 			}
 
 			return chelpers.EmptySuccessJS
 		})
 
-		server.On("Un"+ban.eventName, func(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+		server.On("Un"+ban.eventName, func(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 			reqerr := chelpers.FilterRequest(so, ban.action, true)
 			if reqerr != nil {
-				return reqerr.Encode()
+				return reqerr
 			}
 
 			var args struct {
@@ -87,12 +87,12 @@ func InitializeBans(server *wsevent.Server) {
 			}
 
 			if err := chelpers.GetParams(data, &args); err != nil {
-				return helpers.NewTPErrorFromError(err).Encode()
+				return helpers.NewTPErrorFromError(err)
 			}
 
 			err := unban(*args.SteamID, ban.banType)
 			if err != nil {
-				return err.Encode()
+				return err
 			}
 			return chelpers.EmptySuccessJS
 		})
