@@ -22,7 +22,7 @@ func Init(server *wsevent.Server, nologin *wsevent.Server) {
 	mu.Unlock()
 }
 
-func SendMessage(steamid string, event string, content string) {
+func SendMessage(steamid string, event string, content interface{}) {
 	socket, ok := GetSocket(steamid)
 	if !ok {
 		return
@@ -33,7 +33,7 @@ func SendMessage(steamid string, event string, content string) {
 	socket.EmitJSON(helpers.NewRequest(event, content))
 }
 
-func SendMessageToRoom(room string, event string, content string) {
+func SendMessageToRoom(room string, event string, content interface{}) {
 	if socketServer == nil {
 		return
 	}

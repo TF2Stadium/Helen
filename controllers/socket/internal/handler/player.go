@@ -15,37 +15,37 @@ func (Player) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		return reqerr.Encode()
+		return reqerr
 	}
 
 	steamid := chelpers.GetSteamId(so.Id())
 	player, tperr := models.GetPlayerBySteamId(steamid)
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 
 	lobbyid, tperr := player.GetLobbyId()
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 
 	lobby, tperr := models.GetLobbyByIdServer(lobbyid)
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 
 	if lobby.State != models.LobbyStateReadyingUp {
-		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4).Encode()
+		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4)
 	}
 
 	tperr = lobby.ReadyPlayer(player)
 
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 
 	if lobby.IsEveryoneReady() {
@@ -59,49 +59,49 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
 	if reqerr != nil {
-		return reqerr.Encode()
+		return reqerr
 	}
 
 	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 
 	lobbyid, tperr := player.GetLobbyId()
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 
 	lobby, tperr := models.GetLobbyById(lobbyid)
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 
 	if lobby.State != models.LobbyStateReadyingUp {
-		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4).Encode()
+		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4)
 	}
 
 	tperr = lobby.UnreadyPlayer(player)
 	lobby.RemovePlayer(player)
 
 	if tperr != nil {
-		return tperr.Encode()
+		return tperr
 	}
 
 	lobby.UnreadyAllPlayers()
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		return reqerr.Encode()
+		return reqerr
 	}
 	var args struct {
 		Key string `json:"key"`
@@ -109,7 +109,7 @@ func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		return helpers.NewTPErrorFromError(err).Encode()
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
@@ -124,19 +124,18 @@ func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data
 	}
 
 	if err != nil {
-		return helpers.NewTPErrorFromError(err).Encode()
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	result := models.DecoratePlayerSettingsJson(settings)
-	resp, _ := chelpers.BuildSuccessJSON(result).Encode()
-	return resp
+	return chelpers.BuildSuccessJSON(result)
 }
 
-func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		return reqerr.Encode()
+		return reqerr
 	}
 	var args struct {
 		Key   string `json:"key"`
@@ -145,24 +144,24 @@ func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		return helpers.NewTPErrorFromError(err).Encode()
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 	err = player.SetSetting(args.Key, args.Value)
 	if err != nil {
-		return helpers.NewTPErrorFromError(err).Encode()
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, 0, true)
 
 	if reqerr != nil {
-		return reqerr.Encode()
+		return reqerr
 	}
 	var args struct {
 		Steamid string `json:"steamid"`
@@ -170,7 +169,7 @@ func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []b
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
-		return helpers.NewTPErrorFromError(err).Encode()
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	steamid := args.Steamid
@@ -181,10 +180,9 @@ func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []b
 	player, playErr := models.GetPlayerWithStats(steamid)
 
 	if playErr != nil {
-		return playErr.Encode()
+		return playErr
 	}
 
 	result := models.DecoratePlayerProfileJson(player)
-	resp, _ := chelpers.BuildSuccessJSON(result).Encode()
-	return resp
+	return chelpers.BuildSuccessJSON(result)
 }

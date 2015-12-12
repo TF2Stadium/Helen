@@ -19,5 +19,4 @@ func (r Response) Encode() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-var emptyBytes, _ = BuildSuccessJSON(struct{}{}).Encode()
-var EmptySuccessJS = emptyBytes
+var EmptySuccessJS = BuildSuccessJSON(struct{}{})

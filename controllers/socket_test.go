@@ -34,7 +34,8 @@ func TestSocketInfo(t *testing.T) {
 
 	reply, err := testhelpers.EmitJSONWithReply(conn, args)
 	assert.NoError(t, err)
-	assert.Equal(t, reply["rooms"].([]interface{})[0].(string), "0_public")
+	data := reply["data"].(map[string]interface{})
+	assert.Equal(t, data["rooms"].([]interface{})[0].(string), "0_public")
 	//t.Logf("%v", reply)
 
 }
@@ -119,8 +120,7 @@ func BenchmarkLobbyCreate(b *testing.B) {
 				_, ok := message["success"]
 				if ok {
 					assert.True(b, message["success"].(bool))
-				} else {
-					assert.Equal(b, message["request"], "lobbyListData")
+					break
 				}
 			}
 			wg.Done()
@@ -230,7 +230,8 @@ func TestSpectatorJoin(t *testing.T) {
 		})
 
 	recv := testhelpers.ReadJSON(conn)
-	assert.Equal(t, len(recv["rooms"].([]interface{})), 2)
+	data := recv["data"].(map[string]interface{})
+	assert.Equal(t, len(data["rooms"].([]interface{})), 2)
 }
 
 func TestChatSend(t *testing.T) {

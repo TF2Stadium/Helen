@@ -5,8 +5,6 @@
 package handler
 
 import (
-	"encoding/json"
-
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -20,12 +18,12 @@ func (Global) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-func (Global) GetConstant(_ *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Global) GetConstant(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Constant string `json:"constant"`
 	}
 	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err).Encode()
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	output := simplejson.New()
@@ -33,19 +31,17 @@ func (Global) GetConstant(_ *wsevent.Server, so *wsevent.Client, data []byte) []
 	case "lobbySettingsList":
 		output = models.LobbySettingsToJson()
 	default:
-		return helpers.NewTPError("Unknown constant.", -1).Encode()
+		return helpers.NewTPError("Unknown constant.", -1)
 	}
 
-	bytes, _ := chelpers.BuildSuccessJSON(output).Encode()
-	return bytes
+	return chelpers.BuildSuccessJSON(output)
 }
 
-func (Global) GetSocketInfo(server *wsevent.Server, so *wsevent.Client, data []byte) []byte {
+func (Global) GetSocketInfo(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	socketinfo := struct {
 		ID    string   `json:"id"`
 		Rooms []string `json:"rooms"`
 	}{so.Id(), server.RoomsJoined(so.Id())}
 
-	bytes, _ := json.Marshal(socketinfo)
-	return bytes
+	return chelpers.BuildSuccessJSON(socketinfo)
 }
