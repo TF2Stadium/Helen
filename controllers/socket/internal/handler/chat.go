@@ -72,7 +72,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 		*args.Room, _ = strconv.Atoi(config.Constants.GlobalChatRoom)
 	}
 	if (*args.Message)[0] == '\n' {
-		return helpers.NewTPError("Cannot send messages prefixed with newline", 4).Encode()
+		return helpers.NewTPError("Cannot send messages prefixed with newline", 4)
 	}
 
 	if len(*args.Message) > 120 {
