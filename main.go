@@ -56,7 +56,7 @@ func main() {
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
 	StartPaulingListener()
-	chelpers.InitDB()
+	chelpers.InitGeoIPDB()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
 	}

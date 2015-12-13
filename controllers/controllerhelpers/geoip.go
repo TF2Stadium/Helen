@@ -11,7 +11,7 @@ import (
 
 var geodb *geoip2.Reader
 
-func InitDB() {
+func InitGeoIPDB() {
 	if config.Constants.GeoIP == "" {
 		return
 	}
