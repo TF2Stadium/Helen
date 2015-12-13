@@ -133,8 +133,8 @@ func (Lobby) LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data [
 
 	lobby, tperr := models.GetLobbyById(*args.ID)
 
-	if player.SteamId != lobby.CreatedBySteamID {
-		return helpers.NewTPError("Player not authorized to close lobby.", -1)
+	if player.SteamId != lobby.CreatedBySteamID || player.Role != helpers.RoleAdmin {
+		return helpers.NewTPError("Player not authorized to reset server.", -1)
 	}
 
 	if tperr != nil {
@@ -273,7 +273,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		return tperr
 	}
 
-	if prevId, err := player.GetLobbyId(); err != nil {
+	if prevId, _ := player.GetLobbyId(); prevId != 0 && !sameLobby {
 		server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", prevId))
 		server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", prevId))
 	}

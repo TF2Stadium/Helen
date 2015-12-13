@@ -20,6 +20,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 )
 
@@ -73,6 +74,31 @@ func FilterRequest(so *wsevent.Client, action authority.AuthAction, login bool) 
 		}
 	}
 	return
+}
+
+func FilterHTTPRequest(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, err := GetSessionHTTP(r)
+		if err != nil {
+			http.Error(w, "Internal Server Error: No session found", 500)
+			return
+		}
+
+		steamid, ok := session.Values["steam_id"]
+		if !ok {
+			http.Error(w, "Player not logged in", 401)
+			return
+		}
+
+		player, _ := models.GetPlayerBySteamId(steamid.(string))
+		if !(player.Role == helpers.RoleAdmin || player.Role == helpers.RoleMod) {
+			http.Error(w, "Not authorized", 403)
+			return
+		}
+
+		f(w, r)
+	}
 }
 
 //I forgot to document this while working on it, so it might be a bit
