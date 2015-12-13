@@ -4,6 +4,10 @@
 
 package models
 
+import (
+	"github.com/TF2Stadium/Helen/database"
+)
+
 type PlayerStats struct {
 	ID                    uint `json:"-"`
 	PlayedSixesCount      int  `sql:"played_sixes_count",default:"0"`
@@ -32,4 +36,5 @@ func (ps *PlayerStats) PlayedCountIncrease(lt LobbyType) {
 	case LobbyTypeUltiduo:
 		ps.PlayedUltiduoCount += 1
 	}
+	database.DB.Save(ps)
 }
