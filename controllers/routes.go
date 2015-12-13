@@ -78,7 +78,7 @@ func SetupHTTPRoutes(server *wsevent.Server, noauth *wsevent.Server) {
 	http.HandleFunc("/openidcallback", LoginCallbackHandler)
 	http.HandleFunc("/startLogin", LoginHandler)
 	http.HandleFunc("/logout", LogoutHandler)
-	http.HandleFunc("/chatlogs/", GetChatLogs)
+	http.HandleFunc("/chatlogs/", chelpers.FilterHTTPRequest(GetChatLogs))
 	if config.Constants.MockupAuth {
 		http.HandleFunc("/startMockLogin/", MockLoginHandler)
 	}
