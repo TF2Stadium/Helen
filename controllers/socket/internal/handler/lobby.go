@@ -273,7 +273,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		return tperr
 	}
 
-	if prevId, _ := player.GetLobbyId(); prevId != 0 {
+	if prevId, _ := player.GetLobbyId(); prevId != 0 && !sameLobby {
 		server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", prevId))
 		server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", prevId))
 	}
