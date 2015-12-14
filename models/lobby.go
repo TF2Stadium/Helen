@@ -431,7 +431,7 @@ func (lobby *Lobby) Close(rpc bool) {
 	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).UpdateColumn("filled", true)
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.Delete(&lobby.ServerInfo)
-	db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
+	//db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
 	if rpc {
 		End(lobby.ID)
 	}
