@@ -175,11 +175,14 @@ func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byt
 		return helpers.NewTPError("A lobby is already using this server.", -1)
 	}
 
-	info := models.ServerRecord{
+	info := &models.ServerRecord{
 		Host:         *args.Server,
 		RconPassword: *args.Rconpwd,
 	}
-	err := models.VerifyInfo(info)
+	db.DB.Save(info)
+	defer db.DB.Where("host = ?", info.Host).Delete(models.ServerRecord{})
+
+	err := models.VerifyInfo(*info)
 	if err != nil {
 		return helpers.NewTPErrorFromError(err)
 	}
