@@ -60,11 +60,12 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 	//helpers.Logger.Debug("received chat message: %s %s", *args.Message, player.Name)
 
 	if *args.Room > 0 {
+		var count int
 		spec := player.IsSpectatingId(uint(*args.Room))
 		//Check if player has either joined, or is spectating lobby
-		lobbyId, tperr := player.GetLobbyId()
+		db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", *args.Room, player.ID).Count(&count)
 
-		if tperr != nil && !spec && lobbyId != uint(*args.Room) {
+		if !spec && count == 0 {
 			return helpers.NewTPError("Player is not in the lobby.", 5)
 		}
 	} else {
