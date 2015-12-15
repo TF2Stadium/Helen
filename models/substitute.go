@@ -30,8 +30,6 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 		return nil, err
 	}
 
-	db.DB.Table("lobby_slots").Where("player_id = ?", player.ID).UpdateColumn("need_sub", true)
-
 	//helpers.Logger.Debug("#%d: Reported player %s<%s>",
 	//	lobbyid, player.Name, player.SteamId)
 	lob, _ := GetLobbyById(lobbyid)
