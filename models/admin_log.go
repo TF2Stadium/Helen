@@ -13,10 +13,9 @@ import (
 
 type AdminLogEntry struct {
 	gorm.Model
-	PlayerID uint
-	Player   Player
-	RelID    uint   `sql:"default:0"`
-	RelText  string `sql:"default:''"`
+	PlayerID uint   //Admin responsible for action
+	RelID    uint   `sql:"default:0"`  //The targated player
+	RelText  string `sql:"default:''"` //The action text
 }
 
 func LogCustomAdminAction(playerid uint, reltext string, relid uint) error {
