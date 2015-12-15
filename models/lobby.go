@@ -247,6 +247,11 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 		if currLobbyId != lobby.ID {
 			// if the player is in a different lobby, remove them from that lobby
 			curLobby, _ := GetLobbyById(currLobbyId)
+			if curLobby.State == LobbyStateInProgress {
+				sub, _ := NewSub(curLobby.ID, player.SteamId)
+				db.DB.Save(sub)
+				BroadcastSubList()
+			}
 			curLobby.RemovePlayer(player)
 		} else {
 			// assign the player to a new slot
