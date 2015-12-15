@@ -27,6 +27,7 @@ func TestNewSub(t *testing.T) {
 	assert.Nil(t, tperr)
 
 	sub, err := models.NewSub(lobby.ID, player.SteamId)
+	lobby.RemovePlayer(player)
 	assert.Nil(t, err)
 
 	db.DB.Save(sub)
