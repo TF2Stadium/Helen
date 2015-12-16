@@ -52,6 +52,21 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 	return sub, nil
 }
 
+func SubAndRemove(lobby *Lobby, player *Player) error {
+	sub, err := NewSub(lobby.ID, player.SteamId)
+	if err != nil {
+		return err
+	}
+
+	db.DB.Save(sub)
+	if tperr := lobby.RemovePlayer(player); tperr != nil {
+		return tperr
+	}
+	BroadcastSubList()
+
+	return nil
+}
+
 func GetSubList() []*Substitute {
 	var allSubs []*Substitute
 	db.DB.Table("substitutes").Where("filled = ?", false).Find(&allSubs)
