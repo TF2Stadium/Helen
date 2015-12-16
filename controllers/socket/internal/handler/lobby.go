@@ -33,6 +33,12 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 		return reqerr
 	}
 
+	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
+		str := fmt.Sprintf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
+		return helpers.NewTPError(str, -1)
+	}
+
 	var args struct {
 		Map         *string `json:"map"`
 		Type        *string `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
@@ -47,8 +53,6 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 	if err != nil {
 		return helpers.NewTPErrorFromError(err)
 	}
-
-	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 
 	var playermap = map[string]models.LobbyType{
 		"debug":      models.LobbyTypeDebug,
@@ -238,6 +242,12 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 
 	}
 
+	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	if banned, until := player.IsBannedWithTime(models.PlayerBanJoin); banned {
+		str := fmt.Sprintf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
+		return helpers.NewTPError(str, -1)
+	}
+
 	var args struct {
 		Id    *uint   `json:"id"`
 		Class *string `json:"class"`
@@ -248,12 +258,6 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		return helpers.NewTPErrorFromError(err)
 	}
 	//helpers.Logger.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
-
-	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
-
-	if tperr != nil {
-		return tperr
-	}
 
 	lob, tperr := models.GetLobbyById(*args.Id)
 	if tperr != nil {
