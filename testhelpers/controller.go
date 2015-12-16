@@ -102,7 +102,9 @@ func StartServer(auth *wsevent.Server, noauth *wsevent.Server) *httptest.Server 
 
 	l, err := net.Listen("tcp", "localhost:8080")
 	if err != nil {
-		helpers.Logger.Fatal(err.Error())
+		for err != nil {
+			l, err = net.Listen("tcp", "localhost:8080")
+		}
 	}
 
 	server := &httptest.Server{Listener: l, Config: &http.Server{Handler: mux}}
