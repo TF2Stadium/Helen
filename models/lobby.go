@@ -60,7 +60,6 @@ type LobbySlot struct {
 	PlayerId uint
 	Slot     int
 	Ready    bool
-	NeedSub  bool
 	InGame   bool
 
 	Team  string
@@ -244,32 +243,15 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 		return badSlotError
 	}
 
-	_, err := lobby.GetPlayerIdBySlot(slot)
-	//slot is occupied
-	var substitute bool
-	if err == nil {
-		curSlot := &LobbySlot{}
-		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).First(curSlot)
-
-		if !curSlot.NeedSub {
-			return filledError
-		}
-
-		//Substituting player
-		substitute = true
-		prevPlayer := &Player{}
-		db.DB.First(prevPlayer, curSlot.PlayerId)
-		lobby.RemovePlayer(prevPlayer)
-		db.DB.Table("substitutes").Where("lobby_id = ? AND steam_id = ?", lobby.ID, prevPlayer.SteamId).UpdateColumn("filled", true)
-		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
-	} else {
-		FumbleLobbyPlayerJoined(lobby, player, slot)
-	}
-
 	if currLobbyId, err := player.GetLobbyId(); err == nil {
 		if currLobbyId != lobby.ID {
 			// if the player is in a different lobby, remove them from that lobby
 			curLobby, _ := GetLobbyById(currLobbyId)
+			if curLobby.State == LobbyStateInProgress {
+				sub, _ := NewSub(curLobby.ID, player.SteamId)
+				db.DB.Save(sub)
+				BroadcastSubList()
+			}
 			curLobby.RemovePlayer(player)
 		} else {
 			// assign the player to a new slot
@@ -278,7 +260,19 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 			DisallowPlayer(lobby.ID, player.SteamId)
 		}
 	}
-	// try to remove them from spectators
+
+	var count int
+	db.DB.Table("substitutes").Where("lobby_id = ? AND team = ? AND class = ? AND filled = ?", lobby.ID, team, class, false).Count(&count)
+	if count != 0 {
+		db.DB.Table("substitutes").Where("lobby_id = ? AND team = ? AND class = ? AND filled = ?", lobby.ID, team, class, false).UpdateColumn("filled", true)
+		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
+	} else if _, err := lobby.GetPlayerIdBySlot(slot); err == nil {
+		return filledError
+	} else {
+		FumbleLobbyPlayerJoined(lobby, player, slot)
+	}
+
+	//try to remove them from spectators
 	lobby.RemoveSpectator(player, false)
 
 	newSlotObj := &LobbySlot{
@@ -292,7 +286,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 	db.DB.Create(newSlotObj)
 
 	lobby.OnChange(true)
-	if substitute {
+	if count != 0 {
 		BroadcastSubList()
 	}
 
@@ -431,7 +425,7 @@ func (lobby *Lobby) Close(rpc bool) {
 	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).UpdateColumn("filled", true)
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.Delete(&lobby.ServerInfo)
-	db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
+	//db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
 	if rpc {
 		End(lobby.ID)
 	}

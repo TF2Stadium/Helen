@@ -21,12 +21,13 @@ func StartPaulingListener() {
 	if config.Constants.ServerMockUp {
 		return
 	}
-	var eventChanMap = make(map[string](chan map[string]interface{}))
+
+	var eventChanMap = make(map[string](chan models.Event))
 	var events = [...]string{"test", "playerDisc", "playerConn", "discFromServer",
 		"matchEnded", "playerSub"}
 
 	for _, e := range events {
-		eventChanMap[e] = make(chan map[string]interface{})
+		eventChanMap[e] = make(chan models.Event)
 	}
 
 	go eventListener(eventChanMap)
@@ -34,7 +35,7 @@ func StartPaulingListener() {
 	helpers.Logger.Debug("Listening for events on Pauling")
 }
 
-func listener(eventChanMap map[string](chan map[string]interface{})) {
+func listener(eventChanMap map[string](chan models.Event)) {
 	for {
 		event := make(models.Event)
 		err := models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &event)
@@ -50,7 +51,7 @@ func listener(eventChanMap map[string](chan map[string]interface{})) {
 	}
 }
 
-func eventListener(eventChanMap map[string](chan map[string]interface{})) {
+func eventListener(eventChanMap map[string](chan models.Event)) {
 	for {
 		select {
 		case event := <-eventChanMap["playerDisc"]:
@@ -62,18 +63,13 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 
 			lobby.SetNotInGame(player)
 
-			helpers.Logger.Debug("#%d, player %s<%s> disconnected",
-				lobby.ID, player.Name, player.SteamId)
-
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification",
 				fmt.Sprintf(`{"notification": "%s has disconected from the server."}`,
 					player.Name))
-			t := time.After(time.Minute * 2)
-			go func() {
-				<-t
-				lobby, _ := models.GetLobbyById(lobbyid)
+
+			time.AfterFunc(time.Second*10, func() {
 				ingame, err := lobby.IsPlayerInGame(player)
 				if err != nil {
 					helpers.Logger.Error(err.Error())
@@ -84,8 +80,7 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 					models.BroadcastSubList()
 					lobby.RemovePlayer(player)
 				}
-
-			}()
+			})
 
 		case event := <-eventChanMap["playerConn"]:
 			lobbyid := event["lobbyId"].(uint)
@@ -110,6 +105,9 @@ func eventListener(eventChanMap map[string](chan map[string]interface{})) {
 			models.BroadcastSubList()
 
 			player, _ := models.GetPlayerBySteamId(steamId)
+			lobby, _ := models.GetLobbyById(lobbyid)
+			lobby.RemovePlayer(player)
+
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification",

@@ -10,8 +10,12 @@ import (
 	"github.com/TF2Stadium/wsevent"
 )
 
-func newBan(steamid string, bantype models.PlayerBanType, until int64, reason string) *helpers.TPError {
-	player, tperr := models.GetPlayerBySteamId(steamid)
+func newBan(player_steamid, admin_steamid string, action authority.AuthAction, bantype models.PlayerBanType, until int64, reason string) *helpers.TPError {
+	player, tperr := models.GetPlayerBySteamId(player_steamid)
+	if tperr != nil {
+		return tperr
+	}
+	admin, tperr := models.GetPlayerBySteamId(admin_steamid)
 	if tperr != nil {
 		return tperr
 	}
@@ -21,6 +25,11 @@ func newBan(steamid string, bantype models.PlayerBanType, until int64, reason st
 
 	if err != nil {
 		tperr = helpers.NewTPErrorFromError(err)
+	}
+
+	err = models.LogAdminAction(admin.ID, action, player.ID)
+	if err != nil {
+		return helpers.NewTPErrorFromError(err)
 	}
 
 	return nil
@@ -68,7 +77,9 @@ func InitializeBans(server *wsevent.Server) {
 				return helpers.NewTPErrorFromError(err)
 			}
 
-			tperr := newBan(*args.SteamID, ban.banType, *args.Until, *args.Reason)
+			steamID := chelpers.GetSteamId(so.Id())
+
+			tperr := newBan(*args.SteamID, steamID, ban.action, ban.banType, *args.Until, *args.Reason)
 			if tperr != nil {
 				return tperr
 			}

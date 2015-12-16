@@ -99,8 +99,14 @@ func TestLobbyAdd(t *testing.T) {
 	lobby2.Save()
 
 	// try to add a player while they're in another lobby
-	err = lobby.AddPlayer(players[0], 1, "", "")
-	assert.NotNil(t, err)
+	lobby.State = models.LobbyStateInProgress
+	lobby.Save()
+	err = lobby2.AddPlayer(players[0], 1, "", "")
+	assert.Nil(t, err)
+
+	var count int
+	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Count(&count)
+	assert.Equal(t, count, 1)
 }
 
 func TestLobbyRemove(t *testing.T) {
