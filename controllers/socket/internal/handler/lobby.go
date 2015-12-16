@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -153,6 +154,8 @@ func (Lobby) LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data [
 
 }
 
+var validAddress = regexp.MustCompile(`.+\:\d+`)
+
 func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
@@ -167,6 +170,10 @@ func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byt
 
 	if err := chelpers.GetParams(data, &args); err != nil {
 		return helpers.NewTPErrorFromError(err)
+	}
+
+	if !validAddress.MatchString(*args.Server) {
+		return helpers.NewTPError("Invalid Server Address", -1)
 	}
 
 	var count int
