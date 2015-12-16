@@ -159,8 +159,9 @@ func TestLobbyJoin(t *testing.T) {
 	player, tperr := models.GetPlayerBySteamId(steamid)
 	assert.NoError(t, tperr)
 	conn, err := testhelpers.ConnectWS(client)
-	defer conn.Close()
 	assert.NoError(t, err)
+
+	defer conn.Close()
 	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
 	assert.NoError(t, err)
 
