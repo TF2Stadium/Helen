@@ -52,15 +52,19 @@ var (
 	}
 )
 
+// Represents an occupied player slot in a lobby
 type LobbySlot struct {
 	ID uint
-	// Lobby    Lobby
+	// ID of the lobby
 	LobbyId uint
-	// Player   Player
+	// ID of the player occupying the slot
 	PlayerId uint
-	Slot     int
-	Ready    bool
-	InGame   bool
+	// Slot number
+	Slot int
+	// Denotes if the player is ready
+	Ready bool
+	// Denotes if the player is in game
+	InGame bool
 
 	Team  string
 	Class string
@@ -74,33 +78,47 @@ type ServerRecord struct {
 }
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
+// Represents a Lobby
 type Lobby struct {
 	gorm.Model
-	Mode    string
+	// Game Mode
+	Mode string
+	// Map Name
 	MapName string
 	State   LobbyState
 	Type    LobbyType
-	League  string
+	// League config used
+	League string
 
+	// Region Code ("na", "eu", etc)
 	RegionCode string
+	// Region Name ("North America", "Europe", etc)
 	RegionName string
 
+	// Whether mumble is required
 	Mumble bool
 
+	// List of occupied slots
 	Slots []LobbySlot
 
+	// TF2 Server Info
 	ServerInfo   ServerRecord
 	ServerInfoID uint
 
+	// whitelist.tf ID
 	Whitelist int //whitelist.tf ID
 
+	// List of spectators
 	Spectators []Player `gorm:"many2many:spectators_players_lobbies"`
 
+	// List of Banned Players
 	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`
 
+	// SteamID of the lobby leader/creator
 	CreatedBySteamID string
 
-	ReadyUpTimestamp int64 //Stores the timestamp at which the ready up timeout started
+	// Timestamp at which the ready up timeout started
+	ReadyUpTimestamp int64
 }
 
 func getGamemode(mapName string, lobbyType LobbyType) string {
@@ -136,6 +154,7 @@ func getGamemode(mapName string, lobbyType LobbyType) string {
 	return "unknown"
 }
 
+// Returns a new lobby object with the given parameters
 func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int, mumble bool) *Lobby {
 	lobby := &Lobby{
 		Mode:       getGamemode(mapName, lobbyType),
@@ -153,6 +172,7 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 	return lobby
 }
 
+// Given a player, returns the slot object if the player occupies a slot in the lobby
 func (lobby *Lobby) GetPlayerSlotObj(player *Player) (*LobbySlot, error) {
 	slotObj := &LobbySlot{}
 
@@ -161,12 +181,14 @@ func (lobby *Lobby) GetPlayerSlotObj(player *Player) (*LobbySlot, error) {
 	return slotObj, err
 }
 
+// Given a player, returns the slot number if the player occupies a slot int eh lobby
 func (lobby *Lobby) GetPlayerSlot(player *Player) (int, error) {
 	slotObj, err := lobby.GetPlayerSlotObj(player)
 
 	return slotObj.Slot, err
 }
 
+// Returns the ID of the player occupying the slot number
 func (lobby *Lobby) GetPlayerIdBySlot(slot int) (uint, error) {
 	slotObj := &LobbySlot{}
 
@@ -175,6 +197,7 @@ func (lobby *Lobby) GetPlayerIdBySlot(slot int) (uint, error) {
 	return uint(slotObj.PlayerId), err
 }
 
+// Save changes made to lobby object
 func (lobby *Lobby) Save() error {
 	var err error
 	if db.DB.NewRecord(lobby) {
@@ -187,6 +210,7 @@ func (lobby *Lobby) Save() error {
 	return err
 }
 
+// Get the lobby object, plus the ServerInfo object inside it
 func GetLobbyByIdServer(id uint) (*Lobby, *helpers.TPError) {
 	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
 
@@ -200,6 +224,7 @@ func GetLobbyByIdServer(id uint) (*Lobby, *helpers.TPError) {
 	return lob, nil
 }
 
+// Get the lobby object, without the ServerInfo object inside it.
 func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
 	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
 
@@ -213,7 +238,9 @@ func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
 	return lob, nil
 }
 
-// //Add player to lobby
+// Add player to lobby.
+// If the player occupies a slot in the lobby already, switch slots
+// If the player is in another lobby, remove them from that lobby before adding them
 func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *helpers.TPError {
 	/* Possible errors while joining
 	 * Slot has been filled
@@ -261,6 +288,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 		}
 	}
 
+	// Check if player is a substitute
 	var count int
 	db.DB.Table("substitutes").Where("lobby_id = ? AND team = ? AND class = ? AND filled = ?", lobby.ID, team, class, false).Count(&count)
 	if count != 0 {
@@ -293,6 +321,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 	return nil
 }
 
+// Remove a player from the lobby
 func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{}).Error
 	if err != nil {
@@ -309,6 +338,7 @@ func (lobby *Lobby) BanPlayer(player *Player) {
 	db.DB.Model(lobby).Association("BannedPlayers").Append(player)
 }
 
+// Ready up a player, used when lobby.State == LobbyStateWaiting
 func (lobby *Lobby) ReadyPlayer(player *Player) *helpers.TPError {
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).UpdateColumn("ready", true).Error
 	if err != nil {
@@ -318,6 +348,7 @@ func (lobby *Lobby) ReadyPlayer(player *Player) *helpers.TPError {
 	return nil
 }
 
+// Unreadies a player, used when lobby.State == LobbyStateWaiting
 func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).UpdateColumn("ready", false).Error
 	if err != nil {
@@ -328,12 +359,14 @@ func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
 	return nil
 }
 
+// Removes players which haven't readied up
 func (lobby *Lobby) RemoveUnreadyPlayers() error {
 	err := db.DB.Where("lobby_id = ? AND ready = ?", lobby.ID, false).Delete(&LobbySlot{}).Error
 	lobby.OnChange(true)
 	return err
 }
 
+// Returns true if the player is in-game
 func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
 	var ingame []bool
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("in_game", &ingame).Error
@@ -344,6 +377,7 @@ func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
 	return (len(ingame) != 0 && ingame[0]), err
 }
 
+// Return true if the player is ready
 func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
 	var ready []bool
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("ready", &ready).Error
@@ -353,6 +387,7 @@ func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
 	return (len(ready) != 0 && ready[0]), nil
 }
 
+// Unreadies all players
 func (lobby *Lobby) UnreadyAllPlayers() error {
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).UpdateColumn("ready", false).Error
 
@@ -360,10 +395,13 @@ func (lobby *Lobby) UnreadyAllPlayers() error {
 	return err
 }
 
+// Returns the amount of time left to ready up before a player is kicked.
+// Used when a player reconnects while lobby.State == LobbyStateReadyingUp and the player isn't ready
 func (lobby *Lobby) ReadyUpTimeLeft() int64 {
 	return int64(lobby.ReadyUpTimestamp - time.Now().Unix())
 }
 
+// Returns true if all players have readied up.
 func (lobby *Lobby) IsEveryoneReady() bool {
 	readyPlayers := 0
 	db.DB.Table("lobby_slots").Where("lobby_id = ? AND ready = ?", lobby.ID, true).Count(&readyPlayers)
@@ -371,6 +409,7 @@ func (lobby *Lobby) IsEveryoneReady() bool {
 	return readyPlayers == 2*NumberOfClassesMap[lobby.Type]
 }
 
+// Adds a player as a lobby spectator
 func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
 	err := db.DB.Model(lobby).Association("Spectators").Append(player).Error
 	if err != nil {
@@ -391,6 +430,7 @@ func (lobby *Lobby) RemoveSpectator(player *Player, broadcast bool) *helpers.TPE
 	return nil
 }
 
+// Get number of occupeid slots in the lobby
 func (lobby *Lobby) GetPlayerNumber() int {
 	count := 0
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Count(&count).Error
@@ -400,10 +440,12 @@ func (lobby *Lobby) GetPlayerNumber() int {
 	return count
 }
 
+// Returns true if all lobby spots have been filled
 func (lobby *Lobby) IsFull() bool {
-	return lobby.GetPlayerNumber() >= 2*NumberOfClassesMap[lobby.Type]
+	return lobby.GetPlayerNumber() == 2*NumberOfClassesMap[lobby.Type]
 }
 
+// Returns true if the given slot (by number) is occupied by a player
 func (lobby *Lobby) IsSlotFilled(slot int) bool {
 	_, err := lobby.GetPlayerIdBySlot(slot)
 	if err != nil {
@@ -412,6 +454,7 @@ func (lobby *Lobby) IsSlotFilled(slot int) bool {
 	return true
 }
 
+// Setup the TF2 server for the lobby
 func (lobby *Lobby) SetupServer() error {
 	if lobby.State == LobbyStateEnded {
 		return nil
@@ -421,6 +464,11 @@ func (lobby *Lobby) SetupServer() error {
 	return err
 }
 
+// Close the lobby.
+// Sets lobby.Sate to LobbyStateClosed
+// Marks all unfilled substitutes for the lobby as "filled" (so they don't appear in the frontend)
+// Delete the TF2 Server Info
+// Broadcast the change to all users
 func (lobby *Lobby) Close(rpc bool) {
 	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).UpdateColumn("filled", true)
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
@@ -439,6 +487,7 @@ func (lobby *Lobby) Close(rpc bool) {
 	BroadcastLobby(lobby)
 }
 
+// Update stats (lobbies played count) for
 func (lobby *Lobby) UpdateStats() {
 	var slots []LobbySlot
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
@@ -488,6 +537,7 @@ func (lobby *Lobby) OnChange(base bool) {
 	}
 }
 
+// Broadcasts the lobby to the lobby public room
 func BroadcastLobby(lobby *Lobby) {
 	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
 	room := strconv.FormatUint(uint64(lobby.ID), 10)
@@ -495,11 +545,13 @@ func BroadcastLobby(lobby *Lobby) {
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public", room), "lobbyData", DecorateLobbyData(lobby, true))
 }
 
+// Broadcastst the lobby to the user
 func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
 	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
 	broadcaster.SendMessage(steamid, "lobbyData", DecorateLobbyData(lobby, true))
 }
 
+// Broadcasts the lobby list to all users
 func BroadcastLobbyList() {
 	var lobbies []Lobby
 	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)

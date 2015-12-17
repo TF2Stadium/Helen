@@ -4,28 +4,32 @@ import (
 	"time"
 
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/helpers"
 )
 
+// ChatMessage Represents a chat mesasge sent by a particular player
 type ChatMessage struct {
+	// Message ID
 	ID        uint      `json:"id"`
 	CreatedAt time.Time `json:"-"`
 
+	// Because the frontend needs the unix timestamp for the message. Not stored in the DB
 	Timestamp int64 `sql:"-" json:"timestamp"`
 
-	PlayerID uint          `json:"-"`
-	Player   PlayerSummary `json:"player" sql:"-"`
+	// ID of the player who sent the message
+	PlayerID uint `json:"-"`
+	// Not in the DB, used by frontend to retrieve player information
+	Player PlayerSummary `json:"player" sql:"-"`
 
-	Room    int    `json:"room"`
+	// Room to which the message was sent
+	Room int `json:"room"`
+	// The actual Message, limited to 120 characters
 	Message string `json:"message" sql:"type:varchar(120)"`
-	Deleted bool   `json:"-"`
+	// True if the message has been deleted by a moderator
+	Deleted bool `json:"-"`
 }
 
-func NewChatMessage(message string, room int, player *Player) (*ChatMessage, *helpers.TPError) {
-	if banned, _ := player.IsBannedWithTime(PlayerBanChat); banned {
-		return nil, helpers.NewTPError("Player has been chat-banned.", 2)
-	}
-
+// Return a new ChatMessage sent from specficied player
+func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	record := &ChatMessage{
 		Timestamp: time.Now().Unix(),
 
@@ -36,9 +40,10 @@ func NewChatMessage(message string, room int, player *Player) (*ChatMessage, *he
 		Message: message,
 	}
 
-	return record, nil
+	return record
 }
 
+// Return a list of ChatMessages spoken in room
 func GetRoomMessages(room int) ([]*ChatMessage, error) {
 	var messages []*ChatMessage
 
@@ -47,7 +52,7 @@ func GetRoomMessages(room int) ([]*ChatMessage, error) {
 	return messages, err
 }
 
-//Get all messages sent by player in a specfified room
+// Return all messages sent by player to room
 func GetPlayerMessages(player *Player) ([]*ChatMessage, error) {
 	var messages []*ChatMessage
 
@@ -57,6 +62,7 @@ func GetPlayerMessages(player *Player) ([]*ChatMessage, error) {
 
 }
 
+// Get a list of last 20 messages sent to room, used by frontend for displaying the chat history/scrollback
 func GetScrollback(room int) ([]*ChatMessage, error) {
 	var messages []*ChatMessage
 
