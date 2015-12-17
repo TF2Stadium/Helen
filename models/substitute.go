@@ -40,7 +40,7 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 	sub := &Substitute{}
 
 	sub.LobbyID = lob.ID
-	sub.Format = FormatMap[lob.Type]
+	sub.Format = formatMap[lob.Type]
 	sub.SteamID = player.SteamId
 	sub.MapName = lob.MapName
 	sub.Region = lob.RegionName
@@ -50,6 +50,21 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 	sub.Class = slot.Class
 
 	return sub, nil
+}
+
+func SubAndRemove(lobby *Lobby, player *Player) error {
+	sub, err := NewSub(lobby.ID, player.SteamId)
+	if err != nil {
+		return err
+	}
+
+	db.DB.Save(sub)
+	if tperr := lobby.RemovePlayer(player); tperr != nil {
+		return tperr
+	}
+	BroadcastSubList()
+
+	return nil
 }
 
 func GetSubList() []*Substitute {

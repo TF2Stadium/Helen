@@ -34,7 +34,6 @@ func GetRegion(server string) (string, string) {
 	if err != nil {
 		helpers.Logger.Error(err.Error())
 		return "", ""
-
 	}
 
 	record, err := geodb.Country(addr.IP)

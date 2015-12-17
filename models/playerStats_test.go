@@ -9,8 +9,8 @@ import (
 
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/TF2Stadium/Helen/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,17 +18,18 @@ func init() {
 	helpers.InitLogger()
 }
 
-func TestLogCreation(t *testing.T) {
+func TestLobbiesPlayed(t *testing.T) {
 	testhelpers.CleanupDB()
+	stats1 := &models.PlayerStats{}
 
-	var obj = models.AdminLogEntry{}
-	count := 5
-	database.DB.Model(obj).Count(&count)
-	assert.Equal(t, 0, count)
+	stats1.PlayedCountIncrease(models.LobbyTypeSixes) // sixes: 0 -> 1
 
-	models.LogAdminAction(1, helpers.ActionBanJoin, 2)
-	models.LogCustomAdminAction(2, "test", 4)
+	database.DB.Save(stats1)
 
-	database.DB.Model(obj).Count(&count)
-	assert.Equal(t, 2, count)
+	// can load the record
+	var stats2 models.PlayerStats
+	err := database.DB.First(&stats2, stats1.ID).Error
+	assert.Nil(t, err)
+
+	assert.Equal(t, 1, stats2.PlayedSixesCount)
 }

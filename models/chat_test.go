@@ -7,8 +7,8 @@ import (
 
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/TF2Stadium/Helen/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +28,7 @@ func TestNewChatMessage(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		time.Sleep(time.Second)
 
-		message, _ := models.NewChatMessage(strconv.Itoa(i), 0, player)
+		message := models.NewChatMessage(strconv.Itoa(i), 0, player)
 		assert.NotNil(t, message)
 
 		err := db.DB.Save(message).Error
@@ -46,7 +46,7 @@ func TestNewChatMessage(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		time.Sleep(time.Second)
 
-		message, _ := models.NewChatMessage(strconv.Itoa(i), 1, player)
+		message := models.NewChatMessage(strconv.Itoa(i), 1, player)
 		assert.NotNil(t, message)
 
 		err := db.DB.Save(message).Error

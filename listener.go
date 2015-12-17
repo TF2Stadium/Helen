@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -37,16 +36,7 @@ func StartPaulingListener() {
 
 func listener(eventChanMap map[string](chan models.Event)) {
 	for {
-		event := make(models.Event)
-		err := models.Pauling.Call("Pauling.GetEvent", &models.Args{}, &event)
-
-		if err != nil {
-			if err == io.ErrUnexpectedEOF {
-				models.PaulingReconnect()
-				continue
-			}
-			helpers.Logger.Fatal(err)
-		}
+		event := models.GetEvent()
 		eventChanMap[event["name"].(string)] <- event
 	}
 }
@@ -69,7 +59,7 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 				fmt.Sprintf(`{"notification": "%s has disconected from the server."}`,
 					player.Name))
 
-			time.AfterFunc(time.Second*10, func() {
+			time.AfterFunc(time.Minute*2, func() {
 				ingame, err := lobby.IsPlayerInGame(player)
 				if err != nil {
 					helpers.Logger.Error(err.Error())
@@ -142,25 +132,25 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 			broadcaster.SendMessageToRoom(room,
 				"sendNotification", `{"notification": ""Lobby Ended."}`)
 
-		case <-eventChanMap["getServers"]:
-			var lobbies []*models.Lobby
-			var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
-			db.DB.Preload("ServerInfo").Model(&models.Lobby{}).Where("state IN (?)", activeStates).Find(&lobbies)
-			for _, lobby := range lobbies {
-				info := models.ServerBootstrap{
-					LobbyId: lobby.ID,
-					Info:    lobby.ServerInfo,
-				}
-				for _, player := range lobby.BannedPlayers {
-					info.BannedPlayers = append(info.BannedPlayers, player.SteamId)
-				}
-				for _, slot := range lobby.Slots {
-					var player = &models.Player{}
-					db.DB.Find(player, slot.PlayerId)
-					info.Players = append(info.Players, player.SteamId)
-				}
-				models.Pauling.Call("Pauling.SetupVerifier", &info, &struct{}{})
-			}
+			// case <-eventChanMap["getServers"]:
+			// 	var lobbies []*models.Lobby
+			// 	var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}
+			// 	db.DB.Preload("ServerInfo").Model(&models.Lobby{}).Where("state IN (?)", activeStates).Find(&lobbies)
+			// 	for _, lobby := range lobbies {
+			// 		info := models.ServerBootstrap{
+			// 			LobbyId: lobby.ID,
+			// 			Info:    lobby.ServerInfo,
+			// 		}
+			// 		for _, player := range lobby.BannedPlayers {
+			// 			info.BannedPlayers = append(info.BannedPlayers, player.SteamId)
+			// 		}
+			// 		for _, slot := range lobby.Slots {
+			// 			var player = &models.Player{}
+			// 			db.DB.Find(player, slot.PlayerId)
+			// 			info.Players = append(info.Players, player.SteamId)
+			// 		}
+			// 		models.Pauling.Call("Pauling.SetupVerifier", &info, &struct{}{})
+			// 	}
 		}
 	}
 }

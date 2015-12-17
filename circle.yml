@@ -35,3 +35,4 @@ deployment:
       - cp binaries/helen-dev $CIRCLE_ARTIFACTS/helen
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_DEV
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_DEV
+      - sh -ex cover.sh

@@ -7,6 +7,8 @@ Helen is the backend server component for the tf2stadium.com project written in 
 [![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat-square)](https://raw.githubusercontent.com/TF2Stadium/Helen/master/COPYING)
 [![Stories in Ready](https://badge.waffle.io/TF2Stadium/Helen.png?label=ready&title=Ready)](http://waffle.io/TF2Stadium/Helen)
 
+[Coverage Status](https://tf2stadium.github.io/coverage/)
+
 ### Setup
 The project uses postgres as a database. Default development account data can be found at  [database/setup.md](../master/database/setup.md).
 
