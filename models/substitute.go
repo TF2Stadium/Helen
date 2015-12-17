@@ -40,7 +40,7 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 	sub := &Substitute{}
 
 	sub.LobbyID = lob.ID
-	sub.Format = FormatMap[lob.Type]
+	sub.Format = formatMap[lob.Type]
 	sub.SteamID = player.SteamId
 	sub.MapName = lob.MapName
 	sub.Region = lob.RegionName

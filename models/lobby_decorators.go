@@ -107,7 +107,7 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyJs := LobbyData{
 		ID:      lobby.ID,
 		Mode:    lobby.Mode,
-		Type:    FormatMap[lobby.Type],
+		Type:    formatMap[lobby.Type],
 		Players: lobby.GetPlayerNumber(),
 		Map:     lobby.MapName,
 		League:  lobby.League,
@@ -117,7 +117,7 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyJs.Region.Name = lobby.RegionName
 	lobbyJs.Region.Code = lobby.RegionCode
 
-	var classList = TypeClassList[lobby.Type]
+	var classList = typeClassList[lobby.Type]
 
 	classes := make([]ClassDetails, len(classList))
 	lobbyJs.MaxPlayers = NumberOfClassesMap[lobby.Type] * 2

@@ -59,7 +59,7 @@ var foursClassMap = map[string]int{
 }
 var foursClassList = []string{"scout", "soldier", "demoman", "medic"}
 
-var TypeClassMap = map[LobbyType]map[string]int{
+var typeClassMap = map[LobbyType]map[string]int{
 	LobbyTypeHighlander: hlClassMap,
 	LobbyTypeSixes:      sixesClassMap,
 	LobbyTypeFours:      foursClassMap,
@@ -68,7 +68,7 @@ var TypeClassMap = map[LobbyType]map[string]int{
 	LobbyTypeDebug:      debugClassMap,
 }
 
-var TypeClassList = map[LobbyType][]string{
+var typeClassList = map[LobbyType][]string{
 	LobbyTypeHighlander: hlClassList,
 	LobbyTypeSixes:      sixesClassList,
 	LobbyTypeFours:      foursClassList,
@@ -92,7 +92,7 @@ func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (i
 		return -1, helpers.NewTPError("Invalid team", -1)
 	}
 
-	class, ok := TypeClassMap[lobbytype][classStr]
+	class, ok := typeClassMap[lobbytype][classStr]
 	if !ok {
 		return -1, helpers.NewTPError("Invalid class", -1)
 	}
@@ -101,7 +101,7 @@ func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (i
 }
 
 func LobbyGetSlotInfoString(lobbytype LobbyType, slot int) (string, string, *helpers.TPError) {
-	classList := TypeClassList[lobbytype]
+	classList := typeClassList[lobbytype]
 
 	team, class, err := LobbyGetSlotInfo(lobbytype, slot)
 	if err == nil {
@@ -111,7 +111,7 @@ func LobbyGetSlotInfoString(lobbytype LobbyType, slot int) (string, string, *hel
 }
 
 func LobbyGetSlotInfo(lobbytype LobbyType, slot int) (int, int, *helpers.TPError) {
-	classList := TypeClassList[lobbytype]
+	classList := typeClassList[lobbytype]
 
 	if slot < len(classList) {
 		return 0, slot, nil

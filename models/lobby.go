@@ -27,9 +27,7 @@ const (
 	LobbyTypeUltiduo    LobbyType = 3
 	LobbyTypeBball      LobbyType = 2
 	LobbyTypeDebug      LobbyType = 1
-)
 
-const (
 	LobbyStateInitializing LobbyState = 0
 	LobbyStateWaiting      LobbyState = 1
 	LobbyStateReadyingUp   LobbyState = 2
@@ -37,20 +35,22 @@ const (
 	LobbyStateEnded        LobbyState = 5
 )
 
-var stateString = map[LobbyState]string{
-	LobbyStateWaiting:    "Waiting For Players",
-	LobbyStateInProgress: "Lobby in Progress",
-	LobbyStateEnded:      "Lobby Ended",
-}
+var (
+	stateString = map[LobbyState]string{
+		LobbyStateWaiting:    "Waiting For Players",
+		LobbyStateInProgress: "Lobby in Progress",
+		LobbyStateEnded:      "Lobby Ended",
+	}
 
-var FormatMap = map[LobbyType]string{
-	LobbyTypeSixes:      "6s",
-	LobbyTypeHighlander: "Highlander",
-	LobbyTypeFours:      "4v4",
-	LobbyTypeUltiduo:    "Ultiduo",
-	LobbyTypeBball:      "Bball",
-	LobbyTypeDebug:      "Debug",
-}
+	formatMap = map[LobbyType]string{
+		LobbyTypeSixes:      "6s",
+		LobbyTypeHighlander: "Highlander",
+		LobbyTypeFours:      "4v4",
+		LobbyTypeUltiduo:    "Ultiduo",
+		LobbyTypeBball:      "Bball",
+		LobbyTypeDebug:      "Debug",
+	}
+)
 
 type LobbySlot struct {
 	ID uint
