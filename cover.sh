@@ -12,5 +12,4 @@ cd coverage
 git config --global user.email "this@is.bot"
 git config --global user.name "circleci deploy"
 git add models.html handler.html
-git commit -m "Update coverage"
-git push -f
+git commit -m "Update coverage" && git push -f

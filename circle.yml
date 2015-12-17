@@ -16,7 +16,6 @@ test:
   override:
       - go test -v -race ./...
       - go test -v -test.run=XXX -bench=. -benchmem -race ./...
-      - sh -ex cover.sh
 deployment:
   master:
     branch: master
