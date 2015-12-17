@@ -5,16 +5,16 @@
 package models_test
 
 import (
+	"log"
 	"testing"
+	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/TF2Stadium/Helen/testhelpers"
 	"github.com/stretchr/testify/assert"
-	"log"
-	"time"
 )
 
 func init() {
