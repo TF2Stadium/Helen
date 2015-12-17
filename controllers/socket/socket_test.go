@@ -1,4 +1,4 @@
-package controllers_test
+package socket_test
 
 import (
 	"math/rand"
