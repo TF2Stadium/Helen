@@ -1,4 +1,4 @@
-package socket_test
+package handler_test
 
 import (
 	"math/rand"
@@ -6,41 +6,19 @@ import (
 	"sync"
 	"testing"
 
-	//"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSocketInfo(t *testing.T) {
-	server := testhelpers.StartServer(testhelpers.NewSockets())
-	defer server.Close()
-
-	client := testhelpers.NewClient()
-	testhelpers.Login(strconv.Itoa(rand.Int()), client)
-	conn, err := testhelpers.ConnectWS(client)
-	defer conn.Close()
-	assert.NoError(t, err)
-
-	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
-	assert.NoError(t, err)
-
-	args := map[string]interface{}{
-		"id": "1",
-		"data": map[string]interface{}{
-			"request": "getSocketInfo",
-		},
-	}
-
-	reply, err := testhelpers.EmitJSONWithReply(conn, args)
-	assert.NoError(t, err)
-	data := reply["data"].(map[string]interface{})
-	assert.Equal(t, data["rooms"].([]interface{})[0].(string), "0_public")
-	//t.Logf("%v", reply)
-
+func init() {
+	helpers.InitLogger()
+	testhelpers.CleanupDB()
 }
 
 func TestLobbyCreate(t *testing.T) {
+	testhelpers.CleanupDB()
 	server := testhelpers.StartServer(testhelpers.NewSockets())
 	defer server.Close()
 
@@ -89,6 +67,7 @@ type newLobby struct {
 }
 
 func BenchmarkLobbyCreate(b *testing.B) {
+	testhelpers.CleanupDB()
 	server := testhelpers.StartServer(testhelpers.NewSockets())
 	defer server.Close()
 
@@ -150,6 +129,7 @@ func BenchmarkLobbyCreate(b *testing.B) {
 }
 
 func TestLobbyJoin(t *testing.T) {
+	testhelpers.CleanupDB()
 	server := testhelpers.StartServer(testhelpers.NewSockets())
 	defer server.Close()
 
@@ -162,10 +142,27 @@ func TestLobbyJoin(t *testing.T) {
 	assert.NoError(t, err)
 
 	defer conn.Close()
+
 	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
 	assert.NoError(t, err)
 
 	args := map[string]interface{}{
+		"id": "1",
+		"data": map[string]interface{}{
+			"request":        "lobbyCreate",
+			"map":            "cp_badlands",
+			"type":           "6s",
+			"league":         "etf2l",
+			"server":         "testerino",
+			"rconpwd":        "testerino",
+			"whitelistID":    123,
+			"mumbleRequired": true,
+		}}
+
+	conn.WriteJSON(args)
+	testhelpers.ReadMessages(conn, 2, nil)
+
+	args = map[string]interface{}{
 		"id": "1",
 		"data": map[string]interface{}{
 			"request": "lobbyJoin",
@@ -228,6 +225,7 @@ func TestLobbyJoin(t *testing.T) {
 }
 
 func TestSpectatorJoin(t *testing.T) {
+	testhelpers.CleanupDB()
 	server := testhelpers.StartServer(testhelpers.NewSockets())
 	defer server.Close()
 
@@ -239,6 +237,22 @@ func TestSpectatorJoin(t *testing.T) {
 	assert.NoError(t, err)
 	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
 	assert.NoError(t, err)
+
+	args := map[string]interface{}{
+		"id": "1",
+		"data": map[string]interface{}{
+			"request":        "lobbyCreate",
+			"map":            "cp_badlands",
+			"type":           "6s",
+			"league":         "etf2l",
+			"server":         "testerino",
+			"rconpwd":        "testerino",
+			"whitelistID":    123,
+			"mumbleRequired": true,
+		}}
+
+	conn.WriteJSON(args)
+	testhelpers.ReadMessages(conn, 2, nil)
 
 	conn.WriteJSON(
 		map[string]interface{}{
@@ -265,44 +279,9 @@ func TestSpectatorJoin(t *testing.T) {
 	assert.Equal(t, len(data["rooms"].([]interface{})), 2)
 }
 
-func TestChatSend(t *testing.T) {
-	server := testhelpers.StartServer(testhelpers.NewSockets())
-	defer server.Close()
-
-	steamid := strconv.Itoa(rand.Int())
-	client := testhelpers.NewClient()
-	testhelpers.Login(steamid, client)
-	conn, err := testhelpers.ConnectWS(client)
-	defer conn.Close()
-	assert.NoError(t, err)
-	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
-	assert.NoError(t, err)
-
-	conn.WriteJSON(
-		map[string]interface{}{
-			"id": "1",
-			"data": map[string]interface{}{
-				"request": "chatSend",
-				"message": "testerino",
-				"room":    0,
-			},
-		})
-
-	messages, err := testhelpers.ReadMessages(conn, 2, nil)
-	for _, message := range messages {
-		_, ok := message["success"]
-		if ok {
-			assert.True(t, message["success"].(bool))
-		} else {
-			assert.Equal(t, message["request"], "chatReceive")
-			assert.Equal(t, message["data"].(map[string]interface{})["player"].(map[string]interface{})["steamid"], steamid)
-		}
-	}
-
-}
-
 //Send LobbySpectatorJoin AND LobbyJoin, the way the frontend does it
 func TestActualLobbyJoin(t *testing.T) {
+	testhelpers.CleanupDB()
 	server := testhelpers.StartServer(testhelpers.NewSockets())
 	defer server.Close()
 
@@ -377,18 +356,3 @@ func TestActualLobbyJoin(t *testing.T) {
 		}
 	}
 }
-
-// func BenchmarkChatSend(b *testing.B) {
-// 	server := testhelpers.StartServer(testhelpers.NewSockets())
-// 	defer server.Close()
-
-// 	steamid := strconv.Itoa(rand.Int())
-// 	client := testhelpers.NewClient()
-// 	testhelpers.Login(steamid, client)
-// 	conn, err := testhelpers.ConnectWS(client)
-// 	defer conn.Close()
-// 	assert.NoError(t, err)
-// 	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
-// 	assert.NoError(t, err)
-
-// }
