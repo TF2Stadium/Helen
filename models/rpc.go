@@ -5,6 +5,7 @@
 package models
 
 import (
+	"io"
 	"net/rpc"
 	"sync"
 	"time"
@@ -32,18 +33,18 @@ type Args struct {
 	Slot      string
 }
 
-var PaulingLock = new(sync.RWMutex)
-var Pauling *rpc.Client
+var mu = new(sync.RWMutex)
+var pauling *rpc.Client
 
 type Event map[string]interface{}
 
-func PaulingReconnect() {
+func paulingReconnect() {
 	if config.Constants.ServerMockUp {
 		return
 	}
 
-	PaulingLock.Lock()
-	defer PaulingLock.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	helpers.Logger.Debug("Reconnecting to Pauling on port %s", config.Constants.PaulingPort)
 	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
 	for err != nil {
@@ -52,7 +53,7 @@ func PaulingReconnect() {
 		client, err = rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
 	}
 
-	Pauling = client
+	pauling = client
 	helpers.Logger.Debug("Connected!")
 }
 
@@ -61,8 +62,8 @@ func PaulingConnect() {
 		return
 	}
 
-	PaulingLock.Lock()
-	defer PaulingLock.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 
 	helpers.Logger.Debug("Connecting to Pauling on port %s", config.Constants.PaulingPort)
 	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
@@ -70,7 +71,7 @@ func PaulingConnect() {
 		helpers.Logger.Fatal(err)
 	}
 
-	Pauling = client
+	pauling = client
 	helpers.Logger.Debug("Connected!")
 }
 
@@ -79,10 +80,10 @@ func AllowPlayer(lobbyId uint, steamId string, slot string) error {
 		return nil
 	}
 
-	PaulingLock.RLock()
-	defer PaulingLock.RUnlock()
+	mu.RLock()
+	defer mu.RUnlock()
 
-	return Pauling.Call("Pauling.AllowPlayer", &Args{Id: lobbyId, SteamId: steamId, Slot: slot}, &Args{})
+	return pauling.Call("Pauling.AllowPlayer", &Args{Id: lobbyId, SteamId: steamId, Slot: slot}, &Args{})
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {
@@ -90,10 +91,10 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 		return nil
 	}
 
-	PaulingLock.RLock()
-	defer PaulingLock.RUnlock()
+	mu.RLock()
+	defer mu.RUnlock()
 
-	return Pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
+	return pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
 }
 
 func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
@@ -102,8 +103,8 @@ func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league st
 		return nil
 	}
 
-	PaulingLock.RLock()
-	defer PaulingLock.RUnlock()
+	mu.RLock()
+	defer mu.RUnlock()
 
 	args := &Args{
 		Id:        lobbyId,
@@ -112,7 +113,7 @@ func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league st
 		League:    league,
 		Whitelist: whitelist,
 		Map:       mapName}
-	return Pauling.Call("Pauling.SetupServer", args, &Args{})
+	return pauling.Call("Pauling.SetupServer", args, &Args{})
 }
 
 func ReExecConfig(lobbyId uint) error {
@@ -120,7 +121,7 @@ func ReExecConfig(lobbyId uint) error {
 		return nil
 	}
 
-	return Pauling.Call("Pauling.ReExecConfig", &Args{Id: lobbyId}, &Args{})
+	return pauling.Call("Pauling.ReExecConfig", &Args{Id: lobbyId}, &Args{})
 }
 
 func VerifyInfo(info ServerRecord) error {
@@ -128,10 +129,10 @@ func VerifyInfo(info ServerRecord) error {
 		return nil
 	}
 
-	PaulingLock.RLock()
-	defer PaulingLock.RUnlock()
+	mu.RLock()
+	defer mu.RUnlock()
 
-	return Pauling.Call("Pauling.VerifyInfo", &info, &Args{})
+	return pauling.Call("Pauling.VerifyInfo", &info, &Args{})
 }
 
 func IsPlayerInServer(steamid string) (reply bool) {
@@ -139,13 +140,28 @@ func IsPlayerInServer(steamid string) (reply bool) {
 		return false
 	}
 
-	PaulingLock.RLock()
-	defer PaulingLock.RUnlock()
+	mu.RLock()
+	defer mu.RUnlock()
 
 	args := &Args{SteamId: steamid}
-	Pauling.Call("Pauling.IsPlayerInServer", &args, &reply)
+	pauling.Call("Pauling.IsPlayerInServer", &args, &reply)
 
 	return
+}
+
+func GetEvent() Event {
+	event := make(Event)
+
+	err := pauling.Call("Pauling.GetEvent", &Args{}, &event)
+	if err != nil {
+		if err == io.ErrUnexpectedEOF {
+			paulingReconnect()
+			return GetEvent()
+		}
+		helpers.Logger.Fatal(err.Error())
+	}
+
+	return event
 }
 
 func End(lobbyId uint) {
@@ -153,8 +169,8 @@ func End(lobbyId uint) {
 		return
 	}
 
-	PaulingLock.RLock()
-	defer PaulingLock.RUnlock()
+	mu.RLock()
+	defer mu.RUnlock()
 
-	Pauling.Call("Pauling.End", &Args{Id: lobbyId}, &Args{})
+	pauling.Call("Pauling.End", &Args{Id: lobbyId}, &Args{})
 }
