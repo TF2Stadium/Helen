@@ -80,7 +80,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 		return helpers.NewTPError("Message too long", 4)
 	}
 
-	message, tperr := models.NewChatMessage(*args.Message, *args.Room, player)
+	message := models.NewChatMessage(*args.Message, *args.Room, player)
 	if tperr != nil {
 		return tperr
 	}
