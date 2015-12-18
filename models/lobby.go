@@ -54,17 +54,12 @@ var (
 
 // Represents an occupied player slot in a lobby
 type LobbySlot struct {
-	ID uint
-	// ID of the lobby
-	LobbyId uint
-	// ID of the player occupying the slot
-	PlayerId uint
-	// Slot number
-	Slot int
-	// Denotes if the player is ready
-	Ready bool
-	// Denotes if the player is in game
-	InGame bool
+	ID       uint // ID of the lobby
+	LobbyId  uint // ID of the player occupying the slot
+	PlayerId uint // Slot number
+	Slot     int  // Denotes if the player is ready
+	Ready    bool // Denotes if the player is in game
+	InGame   bool // true if the player is in the game server
 
 	Team  string
 	Class string
@@ -73,8 +68,8 @@ type LobbySlot struct {
 type ServerRecord struct {
 	ID             uint
 	Host           string
-	ServerPassword string
-	RconPassword   string
+	ServerPassword string // sv_password
+	RconPassword   string // rcon_password
 }
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
@@ -82,44 +77,33 @@ type ServerRecord struct {
 // Represents a Lobby
 type Lobby struct {
 	gorm.Model
-	// Game Mode
-	Mode string
-	// Map Name
-	MapName string
-	State   LobbyState
-	Type    LobbyType
-	// League config used
-	League string
+	State LobbyState
 
-	// Region Code ("na", "eu", etc)
-	RegionCode string
-	// Region Name ("North America", "Europe", etc)
-	RegionName string
+	Mode    string    // Game Mode
+	MapName string    // Map Name
+	Type    LobbyType // League config used
+	League  string
 
-	// Whether mumble is required
-	Mumble bool
+	RegionCode string // Region Code ("na", "eu", etc)
+	RegionName string // Region Name ("North America", "Europe", etc)
 
-	// List of occupied slots
-	Slots []LobbySlot
+	Mumble bool // Whether mumble is required
+
+	Slots []LobbySlot // List of occupied slots
 
 	// TF2 Server Info
 	ServerInfo   ServerRecord
 	ServerInfoID uint
 
-	// whitelist.tf ID
 	Whitelist int //whitelist.tf ID
 
-	// List of spectators
-	Spectators []Player `gorm:"many2many:spectators_players_lobbies"`
+	Spectators []Player `gorm:"many2many:spectators_players_lobbies"` // List of spectators
 
-	// List of Banned Players
-	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`
+	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"` // List of Banned Players
 
-	// SteamID of the lobby leader/creator
-	CreatedBySteamID string
+	CreatedBySteamID string // SteamID of the lobby leader/creator
 
-	// Timestamp at which the ready up timeout started
-	ReadyUpTimestamp int64
+	ReadyUpTimestamp int64 // (Unix) Timestamp at which the ready up timeout started
 }
 
 func getGamemode(mapName string, lobbyType LobbyType) string {
