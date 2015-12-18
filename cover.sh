@@ -1,10 +1,10 @@
 #!/bin/sh
 
-go test -coverprofile=handler.out ./controllers/socket/internal/handler/
-go tool cover -html=handler.out -o handler.html
+go get github.com/axw/gocov/gocov
+go get gopkg.in/matm/v1/gocov-html
 
-go test -coverprofile=models.out ./models/
-go tool cover -html=models.out -o models.html
+gocov test ./controllers/socket/internal/handler | gocov-html > handler.html
+gocov test ./models/ | gocov-html > models.html
 
 git clone git@github.com:TF2Stadium/coverage.git
 cp handler.html models.html ./coverage/
