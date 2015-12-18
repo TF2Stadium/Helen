@@ -277,6 +277,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 	db.DB.Table("substitutes").Where("lobby_id = ? AND team = ? AND class = ? AND filled = ?", lobby.ID, team, class, false).Count(&count)
 	if count != 0 {
 		db.DB.Table("substitutes").Where("lobby_id = ? AND team = ? AND class = ? AND filled = ?", lobby.ID, team, class, false).UpdateColumn("filled", true)
+		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamId))
 		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
 	} else if _, err := lobby.GetPlayerIdBySlot(slot); err == nil {
 		return filledError
