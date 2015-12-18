@@ -31,6 +31,7 @@ type Args struct {
 	SteamId   string
 	SteamId2  string
 	Slot      string
+	Text      string
 }
 
 var mu = new(sync.RWMutex)
@@ -173,4 +174,15 @@ func End(lobbyId uint) {
 	defer mu.RUnlock()
 
 	pauling.Call("Pauling.End", &Args{Id: lobbyId}, &Args{})
+}
+
+func Say(lobbyId uint, text string) {
+	if config.Constants.ServerMockUp {
+		return
+	}
+
+	mu.RLock()
+	defer mu.RUnlock()
+
+	pauling.Call("Pauling.Say", &Args{Id: lobbyId, Text: text}, &Args{})
 }
