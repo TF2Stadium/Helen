@@ -6,6 +6,7 @@ import (
 	"sync"
 	"testing"
 
+	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -264,6 +265,9 @@ func TestSpectatorJoin(t *testing.T) {
 		})
 	testhelpers.ReadMessages(conn, 1, nil)
 	assert.True(t, testhelpers.ReadJSON(conn)["success"].(bool))
+	var spec int
+	db.DB.Table("spectators_players_lobbies").Where("lobby_id = 1").Count(&spec)
+	assert.Equal(t, spec, 1)
 
 	//Send ChatMessages
 	conn.WriteJSON(
@@ -320,7 +324,6 @@ func TestActualLobbyJoin(t *testing.T) {
 		},
 	}
 	conn.WriteJSON(args)
-
 	testhelpers.ReadMessages(conn, 2, nil)
 
 	args = map[string]interface{}{
@@ -334,6 +337,9 @@ func TestActualLobbyJoin(t *testing.T) {
 	}
 	conn.WriteJSON(args)
 	testhelpers.ReadMessages(conn, 4, nil)
+	var spec int
+	db.DB.Table("spectators_players_lobbies").Where("lobby_id = 1").Count(&spec)
+	assert.Equal(t, spec, 0)
 
 	args = map[string]interface{}{
 		"id": "1",
