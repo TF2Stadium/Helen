@@ -263,8 +263,15 @@ func TestSpectatorJoin(t *testing.T) {
 				"id":      1,
 			},
 		})
-	testhelpers.ReadMessages(conn, 1, nil)
-	assert.True(t, testhelpers.ReadJSON(conn)["success"].(bool))
+	messages, _ := testhelpers.ReadMessages(conn, 2, nil)
+	for _, message := range messages {
+		success, ok := message["success"]
+		if ok {
+			assert.True(t, success.(bool))
+			continue
+		}
+		assert.Equal(t, message["request"].(string), "lobbyData")
+	}
 	var spec int
 	db.DB.Table("spectators_players_lobbies").Where("lobby_id = 1").Count(&spec)
 	assert.Equal(t, spec, 1)
@@ -278,9 +285,21 @@ func TestSpectatorJoin(t *testing.T) {
 			},
 		})
 
-	recv := testhelpers.ReadJSON(conn)
-	data := recv["data"].(map[string]interface{})
+	messages, err = testhelpers.ReadMessages(conn, 1, nil)
+	assert.NoError(t, err)
+	data := messages[0]["data"].(map[string]interface{})
 	assert.Equal(t, len(data["rooms"].([]interface{})), 2)
+
+	conn.WriteJSON(
+		map[string]interface{}{
+			"id": "1",
+			"data": map[string]interface{}{
+				"request": "lobbySpectatorLeave",
+				"id":      1,
+			},
+		})
+	messages, err = testhelpers.ReadMessages(conn, 2, nil)
+	assert.NoError(t, err)
 }
 
 //Send LobbySpectatorJoin AND LobbyJoin, the way the frontend does it
@@ -361,4 +380,74 @@ func TestActualLobbyJoin(t *testing.T) {
 			t.Fail()
 		}
 	}
+}
+
+func TestLobbyClose(t *testing.T) {
+	testhelpers.CleanupDB()
+	server := testhelpers.StartServer(testhelpers.NewSockets())
+	defer server.Close()
+
+	steamid := strconv.Itoa(rand.Int())
+	client := testhelpers.NewClient()
+	testhelpers.Login(steamid, client)
+	conn, err := testhelpers.ConnectWS(client)
+	defer conn.Close()
+	assert.NoError(t, err)
+	_, err = testhelpers.ReadMessages(conn, testhelpers.InitMessages, nil)
+	assert.NoError(t, err)
+
+	testhelpers.SocketCreateLobby(conn)
+	testhelpers.SocketJoinLobby(conn)
+
+	args := map[string]interface{}{
+		"id": "1",
+		"data": map[string]interface{}{
+			"request": "lobbyClose",
+			"id":      1,
+		},
+	}
+	conn.WriteJSON(args)
+	messages, err := testhelpers.ReadMessages(conn, 5, nil)
+	assert.NoError(t, err)
+
+	for _, message := range messages {
+		success, ok := message["success"]
+		if ok {
+			assert.True(t, success.(bool))
+			continue
+		}
+		switch message["request"].(string) {
+		case "lobbyLeft", "lobbyClosed", "lobbyData", "lobbyListData":
+			continue
+		default:
+			t.Fatalf("Shouldn't be getting request %s: %v", message["request"].(string), message)
+		}
+	}
+
+	args = map[string]interface{}{
+		"id": "1",
+		"data": map[string]interface{}{
+			"request": "lobbyLeave",
+			"id":      1,
+		},
+	}
+	conn.WriteJSON(args)
+	messages, _ = testhelpers.ReadMessages(conn, 1, nil)
+	assert.Equal(t, len(messages), 1)
+	assert.False(t, messages[0]["success"].(bool))
+
+	args = map[string]interface{}{
+		"id": "1",
+		"data": map[string]interface{}{
+			"request": "lobbyJoin",
+			"id":      1,
+			"team":    "red",
+			"class":   "scout1",
+		},
+	}
+	conn.WriteJSON(args)
+	messages, _ = testhelpers.ReadMessages(conn, 1, nil)
+	assert.Equal(t, len(messages), 1)
+	assert.False(t, messages[0]["success"].(bool))
+
 }
