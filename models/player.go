@@ -15,38 +15,42 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// BANS
-
+// Stores types of bans
 type PlayerBanType int
 
 const (
+	// Ban player from joining lobbies
 	PlayerBanJoin PlayerBanType = iota
+	// Ban player from creating lobbies
 	PlayerBanCreate
+	// Ban player from sending chat messages
 	PlayerBanChat
+	// Complete player ban
 	PlayerBanFull
 )
 
+// Represents a player ban
 type PlayerBan struct {
 	gorm.Model
-	PlayerID uint
-	Type     PlayerBanType
-	Until    time.Time
-	Reason   string
-	Active   bool `sql:"default:true"`
+	PlayerID uint          // ID of the player banned
+	Type     PlayerBanType // Ban type
+	Until    time.Time     // Time until which the ban is valid
+	Reason   string        // Reason for the ban
+	Active   bool          `sql:"default:true"` // Whether the ban is active
 }
 
-// SETTINGS
-
+// Represents a stored player setting
 type PlayerSetting struct {
 	ID       uint
-	Key      string
-	Value    string `sql:"size:65535"`
 	PlayerID uint
+
+	Key   string // Setting key
+	Value string `sql:"size:65535"` // Setting value
 }
 
 type Player struct {
 	gorm.Model
-	Debug   bool   //true if player is a dummy one.
+	Debug   bool   // true if player is a dummy one.
 	SteamId string `sql:"unique"` // Players steam ID
 	Stats   PlayerStats
 	StatsID uint
@@ -61,6 +65,8 @@ type Player struct {
 	Settings []PlayerSetting
 }
 
+// Create a new player with the given steam id.
+// Use (*Player).Save() to save the player object.
 func NewPlayer(steamId string) (*Player, error) {
 	player := &Player{SteamId: steamId}
 
@@ -78,6 +84,7 @@ func NewPlayer(steamId string) (*Player, error) {
 	return player, nil
 }
 
+// Save any changes made to the player object
 func (player *Player) Save() error {
 	var err error
 	if db.DB.NewRecord(player) {
@@ -88,6 +95,7 @@ func (player *Player) Save() error {
 	return err
 }
 
+// Get a player object by it's Steam id
 func GetPlayerBySteamId(steamid string) (*Player, *helpers.TPError) {
 	var player = Player{}
 	err := db.DB.Where("steam_id = ?", steamid).First(&player).Error
@@ -97,6 +105,7 @@ func GetPlayerBySteamId(steamid string) (*Player, *helpers.TPError) {
 	return &player, nil
 }
 
+// Get a player object by it's Steam ID, with the Stats field
 func GetPlayerWithStats(steamid string) (*Player, *helpers.TPError) {
 	var player = Player{}
 	err := db.DB.Where("steam_id = ?", steamid).Preload("Stats").First(&player).Error
@@ -106,6 +115,7 @@ func GetPlayerWithStats(steamid string) (*Player, *helpers.TPError) {
 	return &player, nil
 }
 
+// Get the ID of the lobby the player occupies a slot in. Only works for lobbies which aren't closed (LobbyStateEnded)
 func (player *Player) GetLobbyId() (uint, *helpers.TPError) {
 	playerSlot := &LobbySlot{}
 	err := db.DB.Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").
@@ -120,6 +130,7 @@ func (player *Player) GetLobbyId() (uint, *helpers.TPError) {
 	return playerSlot.LobbyId, nil
 }
 
+// Return true if player is spectating a lobby with the given lobby ID
 func (player *Player) IsSpectatingId(lobbyid uint) bool {
 	count := 0
 	err := db.DB.Table("spectators_players_lobbies").Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Count(&count).Error
@@ -129,6 +140,7 @@ func (player *Player) IsSpectatingId(lobbyid uint) bool {
 	return count != 0
 }
 
+//Get ID(s) of lobbies (which aren't clsoed) the player is spectating
 func (player *Player) GetSpectatingIds() ([]uint, *helpers.TPError) {
 	var ids []uint
 	err := db.DB.Model(&Lobby{}).
@@ -143,6 +155,7 @@ func (player *Player) GetSpectatingIds() ([]uint, *helpers.TPError) {
 	return ids, nil
 }
 
+//Retrieve the player's details using the Steam API. The object needs to be saved after this.
 func (player *Player) UpdatePlayerInfo() error {
 	if config.Constants.SteamApiMockUp {
 		return nil

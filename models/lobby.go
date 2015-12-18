@@ -78,6 +78,7 @@ type ServerRecord struct {
 }
 
 //Given Lobby IDs are unique, we'll use them for mumble channel names
+//
 // Represents a Lobby
 type Lobby struct {
 	gorm.Model
@@ -238,9 +239,8 @@ func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
 	return lob, nil
 }
 
-// Add player to lobby.
-// If the player occupies a slot in the lobby already, switch slots
-// If the player is in another lobby, remove them from that lobby before adding them
+// Add player to lobby, If the player occupies a slot in the lobby already, switch slots.
+// If the player is in another lobby, remove them from that lobby before adding them.
 func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *helpers.TPError {
 	/* Possible errors while joining
 	 * Slot has been filled
