@@ -5,9 +5,9 @@
 package helpers
 
 import (
+	"fmt"
 	"os"
 
-	"fmt"
 	"github.com/op/go-logging"
 )
 
@@ -20,7 +20,7 @@ func (f FakeLogger) Print(v ...interface{}) {
 var Logger = logging.MustGetLogger("main")
 
 var format = logging.MustStringFormatter(
-	`%{time:15:04:05} %{color} [%{level:.4s}] %{shortfunc}() : %{message} %{color:reset}`)
+	`%{time:15:04:05} %{color} [%{level:.4s}] %{shortfile} %{shortfunc}() : %{message} %{color:reset}`)
 
 // Sample usage
 // Logger.Debug("debug %s", Password("secret"))
