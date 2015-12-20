@@ -48,14 +48,16 @@ func TestChatSend(t *testing.T) {
 	args := map[string]interface{}{
 		"id": "1",
 		"data": map[string]interface{}{
-			"request":        "lobbyCreate",
-			"map":            "cp_badlands",
-			"type":           "6s",
-			"league":         "etf2l",
-			"server":         "testerino",
-			"rconpwd":        "testerino",
-			"whitelistID":    123,
-			"mumbleRequired": true,
+			"request":             "lobbyCreate",
+			"map":                 "cp_badlands",
+			"type":                "6s",
+			"league":              "etf2l",
+			"server":              "testerino",
+			"rconpwd":             "testerino",
+			"whitelistID":         123,
+			"mumbleRequired":      true,
+			"password":            nil,
+			"steamGroupWhitelist": nil,
 		}}
 
 	conn.WriteJSON(args)
