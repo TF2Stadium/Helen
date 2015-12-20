@@ -91,15 +91,17 @@ type Lobby struct {
 
 	Slots []LobbySlot // List of occupied slots
 
+	SlotPassword    string // Slot password, if any
+	PlayerWhitelist string // URL of steam group
+
 	// TF2 Server Info
 	ServerInfo   ServerRecord
 	ServerInfoID uint
 
 	Whitelist int //whitelist.tf ID
 
-	Spectators []Player `gorm:"many2many:spectators_players_lobbies"` // List of spectators
-
-	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"` // List of Banned Players
+	Spectators    []Player `gorm:"many2many:spectators_players_lobbies"` // List of spectators
+	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`     // List of Banned Players
 
 	CreatedBySteamID string // SteamID of the lobby leader/creator
 
@@ -140,16 +142,18 @@ func getGamemode(mapName string, lobbyType LobbyType) string {
 }
 
 // Returns a new lobby object with the given parameters
-func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int, mumble bool) *Lobby {
+func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int, mumble bool, whitelistGroup, password string) *Lobby {
 	lobby := &Lobby{
-		Mode:       getGamemode(mapName, lobbyType),
-		Type:       lobbyType,
-		State:      LobbyStateInitializing,
-		League:     league,
-		MapName:    mapName,
-		Whitelist:  whitelist, // that's a strange line
-		Mumble:     mumble,
-		ServerInfo: serverInfo,
+		Mode:            getGamemode(mapName, lobbyType),
+		Type:            lobbyType,
+		State:           LobbyStateInitializing,
+		League:          league,
+		MapName:         mapName,
+		Whitelist:       whitelist, // that's a strange line
+		Mumble:          mumble,
+		ServerInfo:      serverInfo,
+		PlayerWhitelist: whitelistGroup,
+		SlotPassword:    password,
 	}
 
 	// Must specify CreatedBy manually if the lobby is created by a player
@@ -223,18 +227,26 @@ func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
 	return lob, nil
 }
 
+var (
+	LobbyBanErr        = helpers.NewTPError("The player has been banned from this lobby", 4)
+	BadSlotErr         = helpers.NewTPError("This slot does not exist", 3)
+	FilledErr          = helpers.NewTPError("This slot has been filled", 2)
+	NotWhitelistedErr  = helpers.NewTPError("You aren't allowed in this lobby", 3)
+	InvalidPasswordErr = helpers.NewTPError("Invalid slot password", 3)
+)
+
 // Add player to lobby, If the player occupies a slot in the lobby already, switch slots.
 // If the player is in another lobby, remove them from that lobby before adding them.
-func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *helpers.TPError {
+func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class, password string) *helpers.TPError {
 	/* Possible errors while joining
 	 * Slot has been filled
 	 * Player has already joined a lobby
 	 * anything else?
 	 */
 
-	lobbyBanError := helpers.NewTPError("The player has been banned from this lobby.", 4)
-	badSlotError := helpers.NewTPError("This slot does not exist.", 3)
-	filledError := helpers.NewTPError("This slot has been filled.", 2)
+	if lobby.SlotPassword != "" && lobby.SlotPassword != password {
+		return InvalidPasswordErr
+	}
 
 	if player.ID == 0 {
 		return helpers.NewTPError("Player not in the database", -1)
@@ -247,12 +259,14 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 		Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).
 		Count(&num).Error; num > 0 || err != nil {
 		//helpers.Logger.Debug(fmt.Sprint(err))
-		return lobbyBanError
+		return LobbyBanErr
 	}
 
 	if slot >= 2*NumberOfClassesMap[lobby.Type] || slot < 0 {
-		return badSlotError
+		return BadSlotErr
 	}
+
+	var changeSlot bool
 
 	if currLobbyId, err := player.GetLobbyId(); err == nil {
 		if currLobbyId != lobby.ID {
@@ -269,6 +283,14 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 			// try to remove them from the old slot (in case they are switching slots)
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
 			DisallowPlayer(lobby.ID, player.SteamId)
+			changeSlot = true
+		}
+	}
+
+	url := fmt.Sprintf(`http://steamcommunity.com/groups/%s/memberslistxml/?xml=1`, lobby.PlayerWhitelist)
+	if !changeSlot {
+		if lobby.PlayerWhitelist != "" && !helpers.IsWhitelisted(player.SteamId, url) {
+			return NotWhitelistedErr
 		}
 	}
 
@@ -280,7 +302,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class string) *hel
 		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamId))
 		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
 	} else if _, err := lobby.GetPlayerIdBySlot(slot); err == nil {
-		return filledError
+		return FilledErr
 	} else {
 		FumbleLobbyPlayerJoined(lobby, player, slot)
 	}
