@@ -65,13 +65,6 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	noAuthServer.Extractor = getEvent
 
 	server.On("authenticationTest", func(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-		reqerr := chelpers.FilterRequest(so, 0, true)
-
-		if reqerr != nil {
-			bytes, _ := json.Marshal(reqerr)
-			return bytes
-		}
-
 		return struct {
 			Message string `json:"message"`
 		}{"authenticated"}
