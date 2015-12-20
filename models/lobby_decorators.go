@@ -116,8 +116,8 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		League:  lobby.League,
 		Mumble:  lobby.Mumble,
 
-		Whitelisted: lobby.PlayerWhitelist != "",
-		Password:    lobby.SlotPassword != "",
+		PlayerWhitelist: lobby.PlayerWhitelist != "",
+		Password:        lobby.SlotPassword != "",
 	}
 
 	lobbyData.Region.Name = lobby.RegionName
