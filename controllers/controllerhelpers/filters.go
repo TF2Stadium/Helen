@@ -24,14 +24,18 @@ import (
 	"github.com/TF2Stadium/wsevent"
 )
 
-var whitelistLock = new(sync.RWMutex)
-var whitelistSteamID map[string]bool
+var (
+	whitelistLock    = new(sync.RWMutex)
+	whitelistSteamID map[string]bool
+)
 
 func WhitelistListener() {
 	ticker := time.NewTicker(time.Minute * 5)
 	for {
 		resp, err := http.Get(config.Constants.SteamIDWhitelist)
+
 		if err != nil {
+			helpers.Logger.Error(err.Error())
 			continue
 		}
 
@@ -120,7 +124,7 @@ outer:
 		fieldPtrValue := stValue.Field(i)             //The pointer field
 		fieldValue := reflect.Indirect(fieldPtrValue) //The value to which the pointer points too
 
-		if field.Type.Kind() != reflect.String {
+		if fieldPtrValue.Type().Elem().Kind() != reflect.String {
 			if fieldPtrValue.IsNil() {
 				emptyTag := field.Tag.Get("empty")
 				if emptyTag == "" {
@@ -135,8 +139,6 @@ outer:
 						panic(err.Error())
 					}
 					fieldPtrValue.Set(reflect.ValueOf(&num))
-				case reflect.String:
-					fieldPtrValue.Set(reflect.ValueOf(&emptyTag))
 				case reflect.Bool:
 					b, ok := map[string]bool{
 						"true":  true,
@@ -150,9 +152,15 @@ outer:
 				}
 				continue
 			}
-		} else if fieldValue.String() == "" && field.Tag.Get("empty") == "" {
-			return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
-				strings.ToLower(field.Name)))
+		} else if fieldPtrValue.IsNil() {
+			empty := field.Tag.Get("empty")
+			if empty == "-" {
+				empty = ""
+			} else {
+				return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
+					strings.ToLower(field.Name)))
+			}
+			fieldPtrValue.Set(reflect.ValueOf(&empty))
 		}
 
 		validTag := field.Tag.Get("valid")

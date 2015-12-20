@@ -40,6 +40,9 @@ type LobbyData struct {
 	Mumble     bool   `json:"mumbleRequired"`
 	MaxPlayers int    `json:"maxPlayers"`
 
+	PlayerWhitelist bool `json:"whitelisted"`
+	Password        bool `json:"password"`
+
 	Region struct {
 		Name string `json:"name"`
 		Code string `json:"code"`
@@ -104,7 +107,7 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 }
 
 func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
-	lobbyJs := LobbyData{
+	lobbyData := LobbyData{
 		ID:      lobby.ID,
 		Mode:    lobby.Mode,
 		Type:    formatMap[lobby.Type],
@@ -112,15 +115,18 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		Map:     lobby.MapName,
 		League:  lobby.League,
 		Mumble:  lobby.Mumble,
+
+		PlayerWhitelist: lobby.PlayerWhitelist != "",
+		Password:        lobby.SlotPassword != "",
 	}
 
-	lobbyJs.Region.Name = lobby.RegionName
-	lobbyJs.Region.Code = lobby.RegionCode
+	lobbyData.Region.Name = lobby.RegionName
+	lobbyData.Region.Code = lobby.RegionCode
 
 	var classList = typeClassList[lobby.Type]
 
 	classes := make([]ClassDetails, len(classList))
-	lobbyJs.MaxPlayers = NumberOfClassesMap[lobby.Type] * 2
+	lobbyData.MaxPlayers = NumberOfClassesMap[lobby.Type] * 2
 
 	for slot, className := range classList {
 		class := ClassDetails{
@@ -132,19 +138,19 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		classes[slot] = class
 	}
 
-	lobbyJs.Classes = classes
+	lobbyData.Classes = classes
 
 	if !includeDetails {
-		return lobbyJs
+		return lobbyData
 	}
 
 	var leader Player
 	db.DB.Where("steam_id = ?", lobby.CreatedBySteamID).First(&leader)
 
-	lobbyJs.Leader = DecoratePlayerSummary(&leader)
-	lobbyJs.CreatedAt = lobby.CreatedAt.Unix()
-	lobbyJs.State = int(lobby.State)
-	lobbyJs.WhitelistID = lobby.Whitelist
+	lobbyData.Leader = DecoratePlayerSummary(&leader)
+	lobbyData.CreatedAt = lobby.CreatedAt.Unix()
+	lobbyData.State = int(lobby.State)
+	lobbyData.WhitelistID = lobby.Whitelist
 
 	var specIDs []uint
 	db.DB.Table("spectators_players_lobbies").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &specIDs)
@@ -163,9 +169,9 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		spectators[i] = specJs
 	}
 
-	lobbyJs.Spectators = spectators
+	lobbyData.Spectators = spectators
 
-	return lobbyJs
+	return lobbyData
 }
 
 func DecorateLobbyListData(lobbies []Lobby) LobbyListData {

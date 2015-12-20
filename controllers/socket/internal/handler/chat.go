@@ -72,7 +72,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 		// else room is the lobby list room
 		*args.Room, _ = strconv.Atoi(config.Constants.GlobalChatRoom)
 	}
-	if (*args.Message)[0] == '\n' {
+	if len(*args.Message) != 0 && (*args.Message)[0] == '\n' {
 		return helpers.NewTPError("Cannot send messages prefixed with newline", 4)
 	}
 

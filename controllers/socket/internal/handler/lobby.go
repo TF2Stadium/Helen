@@ -27,6 +27,8 @@ func (Lobby) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
+var rSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
+
 func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
 
@@ -48,11 +50,22 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 		RconPwd     *string `json:"rconpwd"`
 		WhitelistID *uint   `json:"whitelistID"`
 		Mumble      *bool   `json:"mumbleRequired"`
+
+		Password            *string `json:"password" empty:"-"`
+		SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
 	}
 
 	err := chelpers.GetParams(data, &args)
 	if err != nil {
 		return helpers.NewTPErrorFromError(err)
+	}
+
+	var steamGroup string
+
+	if *args.SteamGroupWhitelist != "" && !rSteamGroup.MatchString(*args.SteamGroupWhitelist) {
+		return helpers.NewTPError("Invalid Steam group URL", -1)
+	} else if rSteamGroup.MatchString(*args.SteamGroupWhitelist) {
+		steamGroup = rSteamGroup.FindStringSubmatch(*args.SteamGroupWhitelist)[1]
 	}
 
 	var playermap = map[string]models.LobbyType{
@@ -87,7 +100,7 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 	// 	return string(bytes)
 	// }
 
-	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, int(*args.WhitelistID), *args.Mumble)
+	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, int(*args.WhitelistID), *args.Mumble, steamGroup, *args.Password)
 	lob.CreatedBySteamID = player.SteamId
 	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP != "" {
@@ -256,9 +269,10 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	}
 
 	var args struct {
-		Id    *uint   `json:"id"`
-		Class *string `json:"class"`
-		Team  *string `json:"team" valid:"red,blu"`
+		Id       *uint   `json:"id"`
+		Class    *string `json:"class"`
+		Team     *string `json:"team" valid:"red,blu"`
+		Password *string `json:"password" empty:"-"`
 	}
 
 	if err := chelpers.GetParams(data, &args); err != nil {
@@ -292,7 +306,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", prevId))
 	}
 
-	tperr = lob.AddPlayer(player, slot, *args.Team, *args.Class)
+	tperr = lob.AddPlayer(player, slot, *args.Team, *args.Class, *args.Password)
 
 	if tperr != nil {
 		return tperr
@@ -307,36 +321,29 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		lob.ReadyUpTimestamp = time.Now().Unix() + 30
 		lob.Save()
 
-		tick := time.After(time.Second * 30)
-		id := lob.ID
-		stop := make(chan struct{})
+		time.AfterFunc(time.Second*30, func() {
+			lobby := &models.Lobby{}
+			db.DB.First(lobby, lob.ID)
 
-		go func() {
-			select {
-			case <-tick:
-				lobby := &models.Lobby{}
-				db.DB.First(lobby, id)
-
-				if lobby.State != models.LobbyStateInProgress {
-					err := lobby.RemoveUnreadyPlayers()
-					if err != nil {
-						helpers.Logger.Error("RemoveUnreadyPlayers: ", err.Error())
-						err = nil
-					}
-
-					err = lobby.UnreadyAllPlayers()
-					if err != nil {
-						helpers.Logger.Error("UnreadyAllPlayers: ", err.Error())
-					}
-
-					lobby.State = models.LobbyStateWaiting
-					lobby.Save()
+			//if all player's haven't readied up,
+			//remove unreadied players and unready the
+			//rest.
+			if lobby.State != models.LobbyStateInProgress {
+				err := lobby.RemoveUnreadyPlayers()
+				if err != nil {
+					helpers.Logger.Error("RemoveUnreadyPlayers: ", err.Error())
+					err = nil
 				}
 
-			case <-stop:
-				return
+				err = lobby.UnreadyAllPlayers()
+				if err != nil {
+					helpers.Logger.Error("UnreadyAllPlayers: ", err.Error())
+				}
+
+				lobby.State = models.LobbyStateWaiting
+				lobby.Save()
 			}
-		}()
+		})
 
 		room := fmt.Sprintf("%s_private",
 			chelpers.GetLobbyRoom(lob.ID))

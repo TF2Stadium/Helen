@@ -24,10 +24,10 @@ func init() {
 func TestIsSpectating(t *testing.T) {
 	testhelpers.CleanupDB()
 
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1, false)
+	lobby := testhelpers.CreateLobby()
 	database.DB.Save(lobby)
 
-	lobby2 := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1, false)
+	lobby2 := testhelpers.CreateLobby()
 	database.DB.Save(lobby2)
 
 	player, _ := models.NewPlayer("asdf")
@@ -61,7 +61,7 @@ func TestGetSpectatingIds(t *testing.T) {
 	assert.Equal(t, len(specIds), 0)
 	//assert.Equal(t, []uint{lobby.ID, lobby2.ID}, specIds)
 
-	lobby1 := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1, false)
+	lobby1 := testhelpers.CreateLobby()
 	database.DB.Save(lobby1)
 	lobby1.AddSpectator(player)
 
@@ -69,7 +69,7 @@ func TestGetSpectatingIds(t *testing.T) {
 	assert.Nil(t, specErr)
 	assert.Equal(t, specIds[0], lobby1.ID)
 
-	lobby2 := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "ugc", models.ServerRecord{}, 1, false)
+	lobby2 := testhelpers.CreateLobby()
 	database.DB.Save(lobby2)
 	lobby2.AddSpectator(player)
 
@@ -145,10 +145,9 @@ func TestPlayerBanning(t *testing.T) {
 	player, _ := models.NewPlayer("76561197999073985")
 	player.Save()
 
-	assert.False(t, player.IsBanned(models.PlayerBanJoin))
-	assert.False(t, player.IsBanned(models.PlayerBanCreate))
-	assert.False(t, player.IsBanned(models.PlayerBanChat))
-	assert.False(t, player.IsBanned(models.PlayerBanFull))
+	for ban := models.PlayerBanJoin; ban != models.PlayerBanFull; ban++ {
+		assert.False(t, player.IsBanned(ban))
+	}
 
 	past := time.Now().Add(time.Second * -10)
 	player.BanUntil(past, models.PlayerBanJoin, "they suck")
@@ -186,8 +185,7 @@ func TestPlayerBanning(t *testing.T) {
 	player2.Unban(models.PlayerBanJoin)
 	player2.Unban(models.PlayerBanFull)
 
-	assert.False(t, player2.IsBanned(models.PlayerBanJoin))
-	assert.False(t, player2.IsBanned(models.PlayerBanCreate))
-	assert.False(t, player2.IsBanned(models.PlayerBanChat))
-	assert.False(t, player2.IsBanned(models.PlayerBanFull))
+	for ban := models.PlayerBanJoin; ban != models.PlayerBanFull; ban++ {
+		assert.False(t, player2.IsBanned(ban))
+	}
 }
