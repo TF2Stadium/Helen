@@ -69,7 +69,9 @@ func IsSteamIDWhitelisted(steamid string) bool {
 	return whitelisted && exists
 }
 
-func FilterRequest(so *wsevent.Client, action authority.AuthAction, login bool) (err *helpers.TPError) {
+// shitlord
+func CheckPrivilege(so *wsevent.Client, action authority.AuthAction) (err *helpers.TPError) {
+	//Checks if the client has the neccesary authority to perform action
 	if int(action) != 0 {
 		var role, _ = GetPlayerRole(so.Id())
 		can := role.Can(action)

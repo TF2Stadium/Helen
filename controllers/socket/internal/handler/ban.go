@@ -62,7 +62,7 @@ func InitializeBans(server *wsevent.Server) {
 
 	for _, ban := range bans {
 		server.On(ban.eventName, func(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-			reqerr := chelpers.FilterRequest(so, ban.action, true)
+			reqerr := chelpers.CheckPrivilege(so, ban.action)
 			if reqerr != nil {
 				return reqerr
 			}
@@ -88,7 +88,7 @@ func InitializeBans(server *wsevent.Server) {
 		})
 
 		server.On("Un"+ban.eventName, func(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-			reqerr := chelpers.FilterRequest(so, ban.action, true)
+			reqerr := chelpers.CheckPrivilege(so, ban.action)
 			if reqerr != nil {
 				return reqerr
 			}

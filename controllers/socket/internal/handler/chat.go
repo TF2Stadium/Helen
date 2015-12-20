@@ -28,12 +28,6 @@ func (Chat) Name(s string) string {
 var lastChatTime = make(map[string]int64)
 
 func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, 0, true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	steamid := chelpers.GetSteamId(so.Id())
 	now := time.Now().Unix()
 	if now-lastChatTime[steamid] == 0 {

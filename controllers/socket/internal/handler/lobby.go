@@ -16,7 +16,6 @@ import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 )
@@ -30,12 +29,6 @@ func (Lobby) Name(s string) string {
 var rSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
 
 func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
 		str := fmt.Sprintf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
@@ -130,12 +123,6 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 }
 
 func (Lobby) LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	var args struct {
 		ID *uint `json:"id"`
 	}
@@ -174,12 +161,6 @@ func (Lobby) LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data [
 var validAddress = regexp.MustCompile(`.+\:\d+`)
 
 func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	var args struct {
 		Server  *string `json:"server"`
 		Rconpwd *string `json:"rconpwd"`
@@ -215,12 +196,6 @@ func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byt
 }
 
 func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	var args struct {
 		Id *uint `json:"id"`
 	}
@@ -255,13 +230,6 @@ func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte)
 }
 
 func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-
-	}
-
 	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
 	if banned, until := player.IsBannedWithTime(models.PlayerBanJoin); banned {
 		str := fmt.Sprintf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
@@ -367,12 +335,6 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 }
 
 func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	var args struct {
 		Id *uint `json:"id"`
 	}
@@ -472,12 +434,6 @@ func playerCanKick(lobbyId uint, steamId string) (bool, *helpers.TPError) {
 }
 
 func (Lobby) LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	var args struct {
 		Id      *uint   `json:"id"`
 		Steamid *string `json:"steamid"`
@@ -512,12 +468,6 @@ func (Lobby) LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) 
 }
 
 func (Lobby) LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	var args struct {
 		Id      *uint   `json:"id"`
 		Steamid *string `json:"steamid"`
@@ -554,12 +504,6 @@ func (Lobby) LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) i
 }
 
 func (Lobby) LobbyLeave(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	var args struct {
 		Id *uint `json:"id"`
 	}
@@ -580,12 +524,6 @@ func (Lobby) LobbyLeave(server *wsevent.Server, so *wsevent.Client, data []byte)
 }
 
 func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	var args struct {
 		Id *uint `json:"id"`
 	}

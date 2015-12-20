@@ -31,7 +31,7 @@ func (Admin) Name(s string) string {
 }
 
 func (Admin) AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, 0, true)
+	reqerr := chelpers.CheckPrivilege(so, helpers.ActionChangeRole)
 
 	if reqerr != nil {
 		return reqerr
