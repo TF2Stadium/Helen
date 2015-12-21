@@ -23,7 +23,7 @@ func TestNewSub(t *testing.T) {
 	player := testhelpers.CreatePlayer()
 	player.Save()
 
-	tperr := lobby.AddPlayer(player, 0, "red", "scout1", "")
+	tperr := lobby.AddPlayer(player, 0, "")
 	assert.Nil(t, tperr)
 
 	sub, err := NewSub(lobby.ID, player.SteamID)
@@ -39,7 +39,7 @@ func TestNewSub(t *testing.T) {
 
 	player2 := testhelpers.CreatePlayer()
 	player2.Save()
-	tperr = lobby.AddPlayer(player2, 0, "red", "scout1", "")
+	tperr = lobby.AddPlayer(player2, 0, "")
 	assert.Nil(t, tperr)
 
 	err = db.DB.Where("lobby_id = ? AND steam_id = ?", lobby.ID, player.SteamID).First(sub).Error

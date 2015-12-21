@@ -274,7 +274,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", prevId))
 	}
 
-	tperr = lob.AddPlayer(player, slot, *args.Team, *args.Class, *args.Password)
+	tperr = lob.AddPlayer(player, slot, *args.Password)
 
 	if tperr != nil {
 		return tperr
