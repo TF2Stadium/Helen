@@ -78,7 +78,8 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
 		if err == nil {
 			if lobby.State == models.LobbyStateInProgress && !models.IsPlayerInServer(player.SteamID) {
-				broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, slot.Class))
+				_, class, _ := models.LobbyGetSlotInfoString(lobby.Type, slot.Slot)
+				broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, class))
 			} else if lobby.State == models.LobbyStateReadyingUp && !slot.Ready {
 				data := struct {
 					Timeout int64 `json:"timeout"`
@@ -115,6 +116,7 @@ func BroadcastLobbyStart(lobby *models.Lobby) {
 		var player models.Player
 		db.DB.First(&player, slot.PlayerID)
 
-		broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, slot.Class))
+		_, class, _ := models.LobbyGetSlotInfoString(lobby.Type, slot.Slot)
+		broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, class))
 	}
 }

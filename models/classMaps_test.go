@@ -16,7 +16,7 @@ func init() {
 	helpers.InitLogger()
 }
 
-func TestUgcHighlander(t *testing.T) {
+func TestClassMaps(t *testing.T) {
 	res, err := LobbyGetPlayerSlot(LobbyTypeSixes, "red", "scout1")
 	assert.Equal(t, 0, res)
 	assert.Nil(t, err)
@@ -30,4 +30,21 @@ func TestUgcHighlander(t *testing.T) {
 
 	res, err = LobbyGetPlayerSlot(LobbyTypeSixes, "ylw", "demoman")
 	assert.NotNil(t, err)
+
+	slots := []struct {
+		n     int
+		class string
+	}{
+		{0, "scout1"},
+		{1, "scout2"},
+		{2, "roamer"},
+		{3, "pocket"},
+		{4, "demoman"},
+		{5, "medic"}}
+	for _, slot := range slots {
+		team, class, err := LobbyGetSlotInfoString(LobbyTypeSixes, slot.n)
+		assert.NoError(t, err)
+		assert.Equal(t, slot.class, class)
+		assert.Equal(t, team, "red")
+	}
 }

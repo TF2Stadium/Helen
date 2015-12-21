@@ -20,8 +20,10 @@ type Substitute struct {
 	Region  string `json:"region"`
 	Mumble  bool   `json:"mumbleRequired"`
 
-	Team  string `json:"team"`
-	Class string `json:"class"`
+	Slot int `json:"-"`
+	// JSON stuff
+	Team  string `slot:"-" json:"team"`
+	Class string `slot:"-" json:"class"`
 }
 
 func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
@@ -30,6 +32,8 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 		return nil, err
 	}
 
+	lobby := &Lobby{}
+	db.DB.First(lobby, lobbyid)
 	//helpers.Logger.Debug("#%d: Reported player %s<%s>",
 	//	lobbyid, player.Name, player.SteamId)
 	lob, _ := GetLobbyByID(lobbyid)
@@ -46,8 +50,8 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 	sub.Region = lob.RegionName
 	sub.Mumble = lob.Mumble
 
-	sub.Team = slot.Team
-	sub.Class = slot.Class
+	sub.Slot = slot.Slot
+	//sub.Team, sub.Class, _ = LobbyGetSlotInfoString(lobby.Type, slot.Slot)
 
 	return sub, nil
 }

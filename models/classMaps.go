@@ -111,14 +111,15 @@ func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (i
 	return team*NumberOfClassesMap[lobbytype] + class, nil
 }
 
-func LobbyGetSlotInfoString(lobbytype LobbyType, slot int) (string, string, *helpers.TPError) {
+// team, class
+func LobbyGetSlotInfoString(lobbytype LobbyType, slot int) (team, class string, err *helpers.TPError) {
 	classList := typeClassList[lobbytype]
 
-	team, class, err := LobbyGetSlotInfo(lobbytype, slot)
+	teamI, classI, err := LobbyGetSlotInfo(lobbytype, slot)
 	if err == nil {
-		return teamList[team], classList[class], nil
+		team, class, err = teamList[teamI], classList[classI], nil
 	}
-	return "", "", err
+	return
 }
 
 func LobbyGetSlotInfo(lobbytype LobbyType, slot int) (int, int, *helpers.TPError) {

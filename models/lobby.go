@@ -60,9 +60,6 @@ type LobbySlot struct {
 	Slot     int  // Denotes if the player is ready
 	Ready    bool // Denotes if the player is in game
 	InGame   bool // true if the player is in the game server
-
-	Team  string
-	Class string
 }
 
 type ServerRecord struct {
@@ -296,9 +293,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class, password st
 
 	// Check if player is a substitute
 	var count int
-	db.DB.Table("substitutes").Where("lobby_id = ? AND team = ? AND class = ? AND filled = ?", lobby.ID, team, class, false).Count(&count)
+	db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).Count(&count)
 	if count != 0 {
-		db.DB.Table("substitutes").Where("lobby_id = ? AND team = ? AND class = ? AND filled = ?", lobby.ID, team, class, false).UpdateColumn("filled", true)
+		db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).UpdateColumn("filled", true)
 		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
 		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
 	} else if _, err := lobby.GetPlayerIDBySlot(slot); err == nil {
@@ -314,8 +311,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class, password st
 		PlayerID: player.ID,
 		LobbyID:  lobby.ID,
 		Slot:     slot,
-		Team:     team,
-		Class:    class,
 	}
 
 	db.DB.Create(newSlotObj)
