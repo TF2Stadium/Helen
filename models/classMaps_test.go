@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
+	. "github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,17 +17,17 @@ func init() {
 }
 
 func TestUgcHighlander(t *testing.T) {
-	res, err := models.LobbyGetPlayerSlot(models.LobbyTypeSixes, "red", "scout1")
+	res, err := LobbyGetPlayerSlot(LobbyTypeSixes, "red", "scout1")
 	assert.Equal(t, 0, res)
 	assert.Nil(t, err)
 
-	res, err = models.LobbyGetPlayerSlot(models.LobbyTypeHighlander, "blu", "heavy")
+	res, err = LobbyGetPlayerSlot(LobbyTypeHighlander, "blu", "heavy")
 	assert.Equal(t, 13, res)
 	assert.Nil(t, err)
 
-	res, err = models.LobbyGetPlayerSlot(models.LobbyTypeHighlander, "blu", "garbageman")
+	res, err = LobbyGetPlayerSlot(LobbyTypeHighlander, "blu", "garbageman")
 	assert.NotNil(t, err)
 
-	res, err = models.LobbyGetPlayerSlot(models.LobbyTypeSixes, "ylw", "demoman")
+	res, err = LobbyGetPlayerSlot(LobbyTypeSixes, "ylw", "demoman")
 	assert.NotNil(t, err)
 }
