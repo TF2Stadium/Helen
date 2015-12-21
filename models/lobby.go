@@ -375,7 +375,7 @@ func (lobby *Lobby) RemoveUnreadyPlayers() error {
 
 // Returns true if the player is in-game
 func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
-	var ingame []bool
+	ingame := []bool{}
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("in_game", &ingame).Error
 	if err != nil {
 		return false, err
@@ -386,7 +386,7 @@ func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
 
 // Return true if the player is ready
 func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
-	var ready []bool
+	ready := []bool{}
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("ready", &ready).Error
 	if err != nil {
 		return false, helpers.NewTPError("Player is not in the lobby.", 5)
@@ -496,7 +496,7 @@ func (lobby *Lobby) Close(rpc bool) {
 
 // Update stats (lobbies played count) for
 func (lobby *Lobby) UpdateStats() {
-	var slots []LobbySlot
+	slots := []LobbySlot{}
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
 
 	for _, slot := range slots {
@@ -560,7 +560,7 @@ func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
 
 // Broadcasts the lobby list to all users
 func BroadcastLobbyList() {
-	var lobbies []Lobby
+	lobbies := []Lobby{}
 	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	broadcaster.SendMessageToRoom(
 		fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom),
