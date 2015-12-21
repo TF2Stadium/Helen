@@ -234,7 +234,7 @@ var (
 
 // Add player to lobby, If the player occupies a slot in the lobby already, switch slots.
 // If the player is in another lobby, remove them from that lobby before adding them.
-func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class, password string) *helpers.TPError {
+func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helpers.TPError {
 	/* Possible errors while joining
 	 * Slot has been filled
 	 * Player has already joined a lobby
@@ -296,6 +296,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class, password st
 	db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).Count(&count)
 	if count != 0 {
 		db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).UpdateColumn("filled", true)
+		class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
 		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
 		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
 	} else if _, err := lobby.GetPlayerIDBySlot(slot); err == nil {
