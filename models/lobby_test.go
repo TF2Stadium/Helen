@@ -44,7 +44,7 @@ func TestLobbyClose(t *testing.T) {
 	lobby.Save()
 	lobby.Close(true)
 
-	lobby, _ = models.GetLobbyById(lobby.ID)
+	lobby, _ = models.GetLobbyByID(lobby.ID)
 	assert.Equal(t, lobby.State, models.LobbyStateEnded)
 }
 
@@ -71,7 +71,7 @@ func TestLobbyAdd(t *testing.T) {
 	assert.Equal(t, slot, 0)
 	assert.Nil(t, err2)
 
-	id, err3 := lobby.GetPlayerIdBySlot(0)
+	id, err3 := lobby.GetPlayerIDBySlot(0)
 	assert.Equal(t, id, players[0].ID)
 	assert.Nil(t, err3)
 
@@ -84,7 +84,7 @@ func TestLobbyAdd(t *testing.T) {
 	assert.Nil(t, err2)
 
 	// this should be empty now
-	id, err3 = lobby.GetPlayerIdBySlot(0)
+	id, err3 = lobby.GetPlayerIDBySlot(0)
 	assert.NotNil(t, err3)
 
 	// try to add a second player to the same slot
@@ -127,7 +127,7 @@ func TestLobbyRemove(t *testing.T) {
 	assert.Nil(t, err)
 
 	// this should be empty now
-	_, err2 := lobby.GetPlayerIdBySlot(0)
+	_, err2 := lobby.GetPlayerIDBySlot(0)
 	assert.NotNil(t, err2)
 
 	// can add player again
@@ -277,7 +277,7 @@ func TestSpectators(t *testing.T) {
 	specs = nil
 	db.DB.Model(lobby).Association("Spectators").Find(&specs)
 	assert.Equal(t, 2, len(specs))
-	assert.Equal(t, true, specs[0].IsSpectatingId(lobby.ID))
+	assert.Equal(t, true, specs[0].IsSpectatingID(lobby.ID))
 
 	err = lobby.RemoveSpectator(player, false)
 	assert.Nil(t, err)
@@ -335,7 +335,7 @@ func TestRemoveUnreadyPlayers(t *testing.T) {
 	assert.Nil(t, err)
 
 	for i := 0; i < 12; i++ {
-		_, err := lobby.GetPlayerIdBySlot(i)
+		_, err := lobby.GetPlayerIDBySlot(i)
 		assert.NotNil(t, err)
 	}
 }

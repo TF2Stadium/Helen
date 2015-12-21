@@ -51,7 +51,7 @@ type PlayerSetting struct {
 type Player struct {
 	gorm.Model
 	Debug   bool   // true if player is a dummy one.
-	SteamId string `sql:"unique"` // Players steam ID
+	SteamID string `sql:"unique"` // Players steam ID
 	Stats   PlayerStats
 	StatsID uint
 
@@ -68,7 +68,7 @@ type Player struct {
 // Create a new player with the given steam id.
 // Use (*Player).Save() to save the player object.
 func NewPlayer(steamId string) (*Player, error) {
-	player := &Player{SteamId: steamId}
+	player := &Player{SteamID: steamId}
 
 	if !config.Constants.SteamApiMockUp {
 		player.Stats = NewPlayerStats()
@@ -96,7 +96,7 @@ func (player *Player) Save() error {
 }
 
 // Get a player object by it's Steam id
-func GetPlayerBySteamId(steamid string) (*Player, *helpers.TPError) {
+func GetPlayerBySteamID(steamid string) (*Player, *helpers.TPError) {
 	var player = Player{}
 	err := db.DB.Where("steam_id = ?", steamid).First(&player).Error
 	if err != nil {
@@ -116,7 +116,7 @@ func GetPlayerWithStats(steamid string) (*Player, *helpers.TPError) {
 }
 
 // Get the ID of the lobby the player occupies a slot in. Only works for lobbies which aren't closed (LobbyStateEnded)
-func (player *Player) GetLobbyId() (uint, *helpers.TPError) {
+func (player *Player) GetLobbyID() (uint, *helpers.TPError) {
 	playerSlot := &LobbySlot{}
 	err := db.DB.Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").
 		Where("lobby_slots.player_id = ? AND lobbies.state <> ?", player.ID, LobbyStateEnded).
@@ -127,11 +127,11 @@ func (player *Player) GetLobbyId() (uint, *helpers.TPError) {
 		return 0, helpers.NewTPError("Player not in any lobby", 1)
 	}
 
-	return playerSlot.LobbyId, nil
+	return playerSlot.LobbyID, nil
 }
 
 // Return true if player is spectating a lobby with the given lobby ID
-func (player *Player) IsSpectatingId(lobbyid uint) bool {
+func (player *Player) IsSpectatingID(lobbyid uint) bool {
 	count := 0
 	err := db.DB.Table("spectators_players_lobbies").Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Count(&count).Error
 	if err != nil {
@@ -162,20 +162,20 @@ func (player *Player) UpdatePlayerInfo() error {
 	}
 
 	scraper.SetSteamApiKey(config.Constants.SteamDevApiKey)
-	p, _ := GetPlayerBySteamId(player.SteamId)
+	p, _ := GetPlayerBySteamID(player.SteamID)
 
 	if p != nil {
 		*player = *p
 	}
 
-	playerInfo, infoErr := scraper.GetPlayerInfo(player.SteamId)
+	playerInfo, infoErr := scraper.GetPlayerInfo(player.SteamID)
 	if infoErr != nil {
 		return infoErr
 	}
 
 	// profile state is 1 when the player have a steam community profile
 	if playerInfo.Profilestate == 1 && playerInfo.Visibility == "public" {
-		pHours, hErr := scraper.GetTF2Hours(player.SteamId)
+		pHours, hErr := scraper.GetTF2Hours(player.SteamID)
 
 		if hErr != nil {
 			return hErr

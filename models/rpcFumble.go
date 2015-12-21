@@ -110,9 +110,9 @@ func FumbleLobbyStarted(lob_ *Lobby) {
 		team, class, _ := LobbyGetSlotInfoString(lob.Type, slot.Slot)
 
 		var player Player
-		db.DB.First(&player, slot.PlayerId)
+		db.DB.First(&player, slot.PlayerID)
 
-		if _, ok := broadcaster.GetSocket(player.SteamId); ok {
+		if _, ok := broadcaster.GetSocket(player.SteamID); ok {
 			/*var userIp string
 			if userIpParts := strings.Split(so.Request().RemoteAddr, ":"); len(userIpParts) == 2 {
 				userIp = userIpParts[0]
@@ -121,7 +121,7 @@ func FumbleLobbyStarted(lob_ *Lobby) {
 			}*/
 			FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, strings.ToUpper(team))
 		} else {
-			helpers.Logger.Warning("Socket for player with steamid[%d] not found.", player.SteamId)
+			helpers.Logger.Warning("Socket for player with steamid[%d] not found.", player.SteamID)
 		}
 	}
 }

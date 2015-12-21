@@ -113,7 +113,7 @@ func TestSettingsLoad(t *testing.T) {
 
 		// TODO write more tests, pls
 
-		output, err := models.LobbySettingsToJson().Encode()
+		output, err := models.LobbySettingsToJSON().Encode()
 		if assert.Nil(err) {
 			fmt.Println(string(output))
 		}

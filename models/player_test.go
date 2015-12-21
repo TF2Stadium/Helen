@@ -33,20 +33,20 @@ func TestIsSpectating(t *testing.T) {
 	player, _ := models.NewPlayer("asdf")
 	database.DB.Save(player)
 
-	isSpectating := player.IsSpectatingId(lobby.ID)
+	isSpectating := player.IsSpectatingID(lobby.ID)
 	assert.False(t, isSpectating)
 
 	lobby.AddSpectator(player)
 
-	isSpectating = player.IsSpectatingId(lobby.ID)
+	isSpectating = player.IsSpectatingID(lobby.ID)
 	assert.True(t, isSpectating)
 
 	lobby2.AddSpectator(player)
-	isSpectating2 := player.IsSpectatingId(lobby2.ID)
+	isSpectating2 := player.IsSpectatingID(lobby2.ID)
 	assert.True(t, isSpectating2)
 
 	lobby.RemoveSpectator(player, false)
-	isSpectating = player.IsSpectatingId(lobby.ID)
+	isSpectating = player.IsSpectatingID(lobby.ID)
 	assert.False(t, isSpectating)
 }
 
@@ -102,7 +102,7 @@ func TestPlayerInfoFetching(t *testing.T) {
 
 	database.DB.Save(player)
 
-	player2, err := models.GetPlayerWithStats(player.SteamId)
+	player2, err := models.GetPlayerWithStats(player.SteamID)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 2, player2.Stats.PlayedSixesCount)
@@ -157,7 +157,7 @@ func TestPlayerBanning(t *testing.T) {
 	player.BanUntil(future, models.PlayerBanJoin, "they suck")
 	player.BanUntil(future, models.PlayerBanFull, "they suck")
 
-	player2, _ := models.GetPlayerBySteamId(player.SteamId)
+	player2, _ := models.GetPlayerBySteamID(player.SteamID)
 	assert.False(t, player2.IsBanned(models.PlayerBanCreate))
 	assert.False(t, player2.IsBanned(models.PlayerBanChat))
 	isBannedFull, untilFull := player2.IsBannedWithTime(models.PlayerBanFull)

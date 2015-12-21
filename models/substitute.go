@@ -25,14 +25,14 @@ type Substitute struct {
 }
 
 func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
-	player, err := GetPlayerBySteamId(steamid)
+	player, err := GetPlayerBySteamID(steamid)
 	if err != nil {
 		return nil, err
 	}
 
 	//helpers.Logger.Debug("#%d: Reported player %s<%s>",
 	//	lobbyid, player.Name, player.SteamId)
-	lob, _ := GetLobbyById(lobbyid)
+	lob, _ := GetLobbyByID(lobbyid)
 	slot := &LobbySlot{}
 
 	db.DB.Where("lobby_id = ? AND player_id = ?", lobbyid, player.ID).First(slot)
@@ -41,7 +41,7 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 
 	sub.LobbyID = lob.ID
 	sub.Format = formatMap[lob.Type]
-	sub.SteamID = player.SteamId
+	sub.SteamID = player.SteamID
 	sub.MapName = lob.MapName
 	sub.Region = lob.RegionName
 	sub.Mumble = lob.Mumble
@@ -53,7 +53,7 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 }
 
 func SubAndRemove(lobby *Lobby, player *Player) error {
-	sub, err := NewSub(lobby.ID, player.SteamId)
+	sub, err := NewSub(lobby.ID, player.SteamID)
 	if err != nil {
 		return err
 	}

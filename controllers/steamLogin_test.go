@@ -40,10 +40,10 @@ func TestLogin(t *testing.T) {
 	bytes, _ := ioutil.ReadAll(resp.Body)
 	t.Log(string(bytes))
 
-	player, tperr := models.GetPlayerBySteamId(steamid)
+	player, tperr := models.GetPlayerBySteamID(steamid)
 	assert.NoError(t, tperr)
 	assert.NotNil(t, player)
-	assert.Equal(t, player.SteamId, steamid)
+	assert.Equal(t, player.SteamID, steamid)
 
 	assert.Nil(t, db.DB.Table("http_sessions").Count(&count).Error)
 	assert.NotEqual(t, count, 0)

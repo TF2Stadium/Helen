@@ -34,7 +34,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 		return helpers.NewTPError("You're sending messages too quickly", -1)
 	}
 
-	player, tperr := models.GetPlayerBySteamId(steamid)
+	player, tperr := models.GetPlayerBySteamID(steamid)
 
 	var args struct {
 		Message *string `json:"message"`
@@ -55,7 +55,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 
 	if *args.Room > 0 {
 		var count int
-		spec := player.IsSpectatingId(uint(*args.Room))
+		spec := player.IsSpectatingID(uint(*args.Room))
 		//Check if player has either joined, or is spectating lobby
 		db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", *args.Room, player.ID).Count(&count)
 
@@ -84,7 +84,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 		"chatReceive", message)
 
 	if strings.HasPrefix(*args.Message, "!admin") {
-		chelpers.SendToSlack(*args.Message, player.Name, player.SteamId)
+		chelpers.SendToSlack(*args.Message, player.Name, player.SteamID)
 	}
 
 	return chelpers.EmptySuccessJS

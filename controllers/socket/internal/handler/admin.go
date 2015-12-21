@@ -51,7 +51,7 @@ func (Admin) AdminChangeRole(server *wsevent.Server, so *wsevent.Client, data []
 		return helpers.NewTPError("Invalid role parameter", 0)
 	}
 
-	otherPlayer, tperr := models.GetPlayerBySteamId(*args.Steamid)
+	otherPlayer, tperr := models.GetPlayerBySteamID(*args.Steamid)
 	if err != nil {
 		return tperr
 	}

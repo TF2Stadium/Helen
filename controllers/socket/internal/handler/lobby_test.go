@@ -59,7 +59,7 @@ func TestLobbyCreate(t *testing.T) {
 		}
 	}
 
-	lobby, err := models.GetLobbyById(1)
+	lobby, err := models.GetLobbyByID(1)
 	assert.NoError(t, err)
 	assert.Equal(t, lobby.CreatedBySteamID, steamid)
 }
@@ -140,7 +140,7 @@ func TestLobbyJoin(t *testing.T) {
 	steamid := strconv.Itoa(rand.Int())
 	client := testhelpers.NewClient()
 	testhelpers.Login(steamid, client)
-	player, tperr := models.GetPlayerBySteamId(steamid)
+	player, tperr := models.GetPlayerBySteamID(steamid)
 	assert.NoError(t, tperr)
 	conn, err := testhelpers.ConnectWS(client)
 	assert.NoError(t, err)
@@ -195,13 +195,13 @@ func TestLobbyJoin(t *testing.T) {
 		}
 	}
 
-	id, tperr := player.GetLobbyId()
+	id, tperr := player.GetLobbyID()
 	assert.NoError(t, tperr)
 	if id != 1 {
 		t.Fatal("Got wrong ID")
 	}
 
-	lobby, tperr := models.GetLobbyById(1)
+	lobby, tperr := models.GetLobbyByID(1)
 	assert.NoError(t, tperr)
 	assert.Equal(t, lobby.GetPlayerNumber(), 1)
 

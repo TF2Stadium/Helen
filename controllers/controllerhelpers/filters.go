@@ -7,7 +7,6 @@ package controllerhelpers
 import (
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -97,7 +96,7 @@ func FilterHTTPRequest(f func(http.ResponseWriter, *http.Request)) func(http.Res
 			return
 		}
 
-		player, _ := models.GetPlayerBySteamId(steamid.(string))
+		player, _ := models.GetPlayerBySteamID(steamid.(string))
 		if !(player.Role == helpers.RoleAdmin || player.Role == helpers.RoleMod) {
 			http.Error(w, "Not authorized", 403)
 			return
@@ -130,8 +129,7 @@ outer:
 			if fieldPtrValue.IsNil() {
 				emptyTag := field.Tag.Get("empty")
 				if emptyTag == "" {
-					return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
-						strings.ToLower(field.Name)))
+					return fmt.Errorf(`Field "%s" cannot be null`, strings.ToLower(field.Name))
 				}
 
 				switch fieldPtrValue.Type().Elem().Kind() {
@@ -146,7 +144,7 @@ outer:
 						"true":  true,
 						"false": false}[emptyTag]
 					if !ok {
-						panic(fmt.Sprintf(
+						panic(fmt.Errorf(
 							"%s is not a valid boolean literal string",
 							emptyTag))
 					}
@@ -159,8 +157,7 @@ outer:
 			if empty == "-" {
 				empty = ""
 			} else {
-				return errors.New(fmt.Sprintf(`Field "%s" cannot be null`,
-					strings.ToLower(field.Name)))
+				return fmt.Errorf(`Field "%s" cannot be null`, strings.ToLower(field.Name))
 			}
 			fieldPtrValue.Set(reflect.ValueOf(&empty))
 		}
@@ -178,7 +175,7 @@ outer:
 			case reflect.Uint:
 				num, err := strconv.ParseUint(validVal, 2, 32)
 				if err != nil {
-					panic(fmt.Sprintf("Error while parsing struct tag: %s",
+					panic(fmt.Errorf("Error while parsing struct tag: %s",
 						err.Error()))
 				}
 
@@ -194,7 +191,7 @@ outer:
 			}
 		}
 		if !valid {
-			return errors.New(fmt.Sprintf("Field %s isn't valid.", field.Name))
+			return fmt.Errorf("Field %s isn't valid.", field.Name)
 		}
 	}
 

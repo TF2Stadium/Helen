@@ -11,11 +11,11 @@ import (
 )
 
 func newBan(player_steamid, admin_steamid string, action authority.AuthAction, bantype models.PlayerBanType, until int64, reason string) *helpers.TPError {
-	player, tperr := models.GetPlayerBySteamId(player_steamid)
+	player, tperr := models.GetPlayerBySteamID(player_steamid)
 	if tperr != nil {
 		return tperr
 	}
-	admin, tperr := models.GetPlayerBySteamId(admin_steamid)
+	admin, tperr := models.GetPlayerBySteamID(admin_steamid)
 	if tperr != nil {
 		return tperr
 	}
@@ -36,7 +36,7 @@ func newBan(player_steamid, admin_steamid string, action authority.AuthAction, b
 }
 
 func unban(steamid string, bantype models.PlayerBanType) *helpers.TPError {
-	player, tperr := models.GetPlayerBySteamId(steamid)
+	player, tperr := models.GetPlayerBySteamID(steamid)
 	if tperr != nil {
 		return tperr
 	}
