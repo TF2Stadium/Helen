@@ -3,7 +3,6 @@ package handler_test
 import (
 	"math/rand"
 	"strconv"
-	"sync"
 	"testing"
 
 	db "github.com/TF2Stadium/Helen/database"
