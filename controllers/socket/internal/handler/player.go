@@ -4,7 +4,6 @@ import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 )
@@ -16,19 +15,13 @@ func (Player) Name(s string) string {
 }
 
 func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
 	steamid := chelpers.GetSteamId(so.Id())
-	player, tperr := models.GetPlayerBySteamId(steamid)
+	player, tperr := models.GetPlayerBySteamID(steamid)
 	if tperr != nil {
 		return tperr
 	}
 
-	lobbyid, tperr := player.GetLobbyId()
+	lobbyid, tperr := player.GetLobbyID()
 	if tperr != nil {
 		return tperr
 	}
@@ -60,24 +53,18 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 }
 
 func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, authority.AuthAction(0), true)
-
-	if reqerr != nil {
-		return reqerr
-	}
-
-	player, tperr := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 
 	if tperr != nil {
 		return tperr
 	}
 
-	lobbyid, tperr := player.GetLobbyId()
+	lobbyid, tperr := player.GetLobbyID()
 	if tperr != nil {
 		return tperr
 	}
 
-	lobby, tperr := models.GetLobbyById(lobbyid)
+	lobby, tperr := models.GetLobbyByID(lobbyid)
 	if tperr != nil {
 		return tperr
 	}
@@ -98,11 +85,6 @@ func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte)
 }
 
 func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, 0, true)
-
-	if reqerr != nil {
-		return reqerr
-	}
 	var args struct {
 		Key string `json:"key"`
 	}
@@ -112,7 +94,7 @@ func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 
 	var settings []models.PlayerSetting
 	var setting models.PlayerSetting
@@ -132,11 +114,6 @@ func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data
 }
 
 func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, 0, true)
-
-	if reqerr != nil {
-		return reqerr
-	}
 	var args struct {
 		Key   string `json:"key"`
 		Value string `json:"value"`
@@ -147,7 +124,7 @@ func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	player, _ := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 
 	err = player.SetSetting(args.Key, args.Value)
 	if err != nil {
@@ -158,11 +135,6 @@ func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data
 }
 
 func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	reqerr := chelpers.FilterRequest(so, 0, true)
-
-	if reqerr != nil {
-		return reqerr
-	}
 	var args struct {
 		Steamid string `json:"steamid"`
 	}

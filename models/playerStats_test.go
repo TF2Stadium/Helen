@@ -10,7 +10,7 @@ import (
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
-	"github.com/TF2Stadium/Helen/models"
+	. "github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,14 +20,14 @@ func init() {
 
 func TestLobbiesPlayed(t *testing.T) {
 	testhelpers.CleanupDB()
-	stats1 := &models.PlayerStats{}
+	stats1 := &PlayerStats{}
 
-	stats1.PlayedCountIncrease(models.LobbyTypeSixes) // sixes: 0 -> 1
+	stats1.PlayedCountIncrease(LobbyTypeSixes) // sixes: 0 -> 1
 
 	database.DB.Save(stats1)
 
 	// can load the record
-	var stats2 models.PlayerStats
+	var stats2 PlayerStats
 	err := database.DB.First(&stats2, stats1.ID).Error
 	assert.Nil(t, err)
 

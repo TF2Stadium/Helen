@@ -48,8 +48,8 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 			lobbyid := event["lobbyId"].(uint)
 			steamId := event["steamId"].(string)
 
-			player, _ := models.GetPlayerBySteamId(steamId)
-			lobby, _ := models.GetLobbyById(lobbyid)
+			player, _ := models.GetPlayerBySteamID(steamId)
+			lobby, _ := models.GetLobbyByID(lobbyid)
 
 			lobby.SetNotInGame(player)
 
@@ -65,7 +65,7 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 					helpers.Logger.Error(err.Error())
 				}
 				if !ingame {
-					sub, _ := models.NewSub(lobby.ID, player.SteamId)
+					sub, _ := models.NewSub(lobby.ID, player.SteamID)
 					db.DB.Save(sub)
 					models.BroadcastSubList()
 					lobby.RemovePlayer(player)
@@ -76,8 +76,8 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 			lobbyid := event["lobbyId"].(uint)
 			steamId := event["steamId"].(string)
 
-			player, _ := models.GetPlayerBySteamId(steamId)
-			lobby, _ := models.GetLobbyById(lobbyid)
+			player, _ := models.GetPlayerBySteamID(steamId)
+			lobby, _ := models.GetLobbyByID(lobbyid)
 
 			lobby.SetInGame(player)
 
@@ -94,8 +94,8 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 
 			models.BroadcastSubList()
 
-			player, _ := models.GetPlayerBySteamId(steamId)
-			lobby, _ := models.GetLobbyById(lobbyid)
+			player, _ := models.GetPlayerBySteamID(steamId)
+			lobby, _ := models.GetLobbyByID(lobbyid)
 			lobby.RemovePlayer(player)
 
 			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))

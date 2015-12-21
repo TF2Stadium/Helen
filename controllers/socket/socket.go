@@ -24,7 +24,7 @@ func onDisconnect(id string) {
 	if chelpers.IsLoggedInSocket(id) {
 		steamid := chelpers.GetSteamId(id)
 		broadcaster.RemoveSocket(steamid)
-		player, tperr := models.GetPlayerBySteamId(steamid)
+		player, tperr := models.GetPlayerBySteamID(steamid)
 		if tperr != nil || player == nil {
 			helpers.Logger.Error(tperr.Error())
 			return
@@ -37,7 +37,7 @@ func onDisconnect(id string) {
 		}
 
 		for _, id := range ids {
-			lobby, _ := models.GetLobbyById(id)
+			lobby, _ := models.GetLobbyByID(id)
 			err := lobby.RemoveSpectator(player, true)
 			if err != nil {
 				helpers.Logger.Error(err.Error())
@@ -65,13 +65,6 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 	noAuthServer.Extractor = getEvent
 
 	server.On("authenticationTest", func(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-		reqerr := chelpers.FilterRequest(so, 0, true)
-
-		if reqerr != nil {
-			bytes, _ := json.Marshal(reqerr)
-			return bytes
-		}
-
 		return struct {
 			Message string `json:"message"`
 		}{"authenticated"}
@@ -111,7 +104,7 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 		}
 
 		var lob *models.Lobby
-		lob, tperr := models.GetLobbyById(*args.Id)
+		lob, tperr := models.GetLobbyByID(*args.Id)
 
 		if tperr != nil {
 			return tperr
@@ -141,7 +134,7 @@ func SocketInit(server *wsevent.Server, noauth *wsevent.Server, so *wsevent.Clie
 	if loggedIn {
 		chelpers.AfterConnect(server, so)
 
-		player, err := models.GetPlayerBySteamId(chelpers.GetSteamId(so.Id()))
+		player, err := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 		if err != nil {
 			helpers.Logger.Warning(
 				"User has a cookie with but a matching player record doesn't exist: %s",

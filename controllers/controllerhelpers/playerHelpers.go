@@ -29,7 +29,7 @@ func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 	room := fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID))
 	server.AddClient(so, room)
 
-	broadcaster.SendMessage(player.SteamId, "lobbyJoined", models.DecorateLobbyData(lobby, false))
+	broadcaster.SendMessage(player.SteamID, "lobbyJoined", models.DecorateLobbyData(lobby, false))
 }
 
 func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby, player *models.Player) {
@@ -38,7 +38,7 @@ func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.L
 	// bytes, _ := json.Marshal(models.DecorateLobbyData(lobby, true))
 	// broadcaster.SendMessageToRoom(pub, "lobbyData", string(bytes))
 
-	broadcaster.SendMessage(player.SteamId, "lobbyLeft", models.DecorateLobbyLeave(lobby))
+	broadcaster.SendMessage(player.SteamID, "lobbyLeft", models.DecorateLobbyLeave(lobby))
 
 	server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
 }
@@ -68,7 +68,7 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 }
 
 func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *models.Player) {
-	lobbyIdPlaying, err := player.GetLobbyId()
+	lobbyIdPlaying, err := player.GetLobbyID()
 	if err == nil {
 		lobby, _ := models.GetLobbyByIdServer(lobbyIdPlaying)
 		AfterLobbyJoin(server, so, lobby, player)
@@ -77,26 +77,27 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 		slot := &models.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
 		if err == nil {
-			if lobby.State == models.LobbyStateInProgress && !models.IsPlayerInServer(player.SteamId) {
-				broadcaster.SendMessage(player.SteamId, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, slot.Class))
+			if lobby.State == models.LobbyStateInProgress && !models.IsPlayerInServer(player.SteamID) {
+				_, class, _ := models.LobbyGetSlotInfoString(lobby.Type, slot.Slot)
+				broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, class))
 			} else if lobby.State == models.LobbyStateReadyingUp && !slot.Ready {
 				data := struct {
 					Timeout int64 `json:"timeout"`
 				}{lobby.ReadyUpTimeLeft()}
 
-				broadcaster.SendMessage(player.SteamId, "lobbyReadyUp", data)
+				broadcaster.SendMessage(player.SteamID, "lobbyReadyUp", data)
 			}
 		}
 	}
 
 	settings, err2 := player.GetSettings()
 	if err2 == nil {
-		broadcaster.SendMessage(player.SteamId, "playerSettings", models.DecoratePlayerSettingsJson(settings))
+		broadcaster.SendMessage(player.SteamID, "playerSettings", models.DecoratePlayerSettingsJson(settings))
 	}
 
-	profilePlayer, err3 := models.GetPlayerWithStats(player.SteamId)
+	profilePlayer, err3 := models.GetPlayerWithStats(player.SteamID)
 	if err3 == nil {
-		broadcaster.SendMessage(player.SteamId, "playerProfile", models.DecoratePlayerProfileJson(profilePlayer))
+		broadcaster.SendMessage(player.SteamID, "playerProfile", models.DecoratePlayerProfileJson(profilePlayer))
 	}
 
 }
@@ -113,8 +114,9 @@ func BroadcastLobbyStart(lobby *models.Lobby) {
 
 	for _, slot := range slots {
 		var player models.Player
-		db.DB.First(&player, slot.PlayerId)
+		db.DB.First(&player, slot.PlayerID)
 
-		broadcaster.SendMessage(player.SteamId, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, slot.Class))
+		_, class, _ := models.LobbyGetSlotInfoString(lobby.Type, slot.Slot)
+		broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, class))
 	}
 }

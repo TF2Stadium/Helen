@@ -66,7 +66,7 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	s.Sixes = p.Stats.PlayedHighlanderCount
 	s.Highlander = p.Stats.PlayedSixesCount
 	var subCount int
-	db.DB.Table("substitutes").Where("steam_id = ?", p.SteamId).Count(&subCount)
+	db.DB.Table("substitutes").Where("steam_id = ?", p.SteamID).Count(&subCount)
 	s.Substitutes = subCount
 
 	profile.Stats = s
@@ -74,7 +74,7 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	// info
 	profile.CreatedAt = p.CreatedAt.Unix()
 	profile.GameHours = p.GameHours
-	profile.SteamID = p.SteamId
+	profile.SteamID = p.SteamID
 	profile.Avatar = p.Avatar
 	profile.Name = p.Name
 	profile.Role = helpers.RoleNames[p.Role]
@@ -90,7 +90,7 @@ func DecoratePlayerSummary(p *Player) PlayerSummary {
 		GameHours:     p.GameHours,
 		ProfileURL:    p.Profileurl,
 		LobbiesPlayed: p.Stats.PlayedHighlanderCount + p.Stats.PlayedSixesCount,
-		SteamID:       p.SteamId,
+		SteamID:       p.SteamID,
 		Name:          p.Name,
 		Tags:          decoratePlayerTags(p),
 		Role:          helpers.RoleNames[p.Role],

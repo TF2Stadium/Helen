@@ -126,7 +126,7 @@ func InitializeLobbySettings(fileName string) {
 		helpers.Logger.Fatal(err.Error())
 		return
 	}
-	
+
 	err = LoadLobbySettingsFromFile(realPath)
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
@@ -267,7 +267,7 @@ func LoadLobbySettings(data []byte) error {
 	return nil
 }
 
-func LobbySettingsToJson() *simplejson.Json {
+func LobbySettingsToJSON() *simplejson.Json {
 	j := simplejson.New()
 
 	// formats

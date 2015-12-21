@@ -55,14 +55,11 @@ var (
 // Represents an occupied player slot in a lobby
 type LobbySlot struct {
 	ID       uint // ID of the lobby
-	LobbyId  uint // ID of the player occupying the slot
-	PlayerId uint // Slot number
+	LobbyID  uint // ID of the player occupying the slot
+	PlayerID uint // Slot number
 	Slot     int  // Denotes if the player is ready
 	Ready    bool // Denotes if the player is in game
 	InGame   bool // true if the player is in the game server
-
-	Team  string
-	Class string
 }
 
 type ServerRecord struct {
@@ -178,12 +175,12 @@ func (lobby *Lobby) GetPlayerSlot(player *Player) (int, error) {
 }
 
 // Returns the ID of the player occupying the slot number
-func (lobby *Lobby) GetPlayerIdBySlot(slot int) (uint, error) {
+func (lobby *Lobby) GetPlayerIDBySlot(slot int) (uint, error) {
 	slotObj := &LobbySlot{}
 
 	err := db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).First(slotObj).Error
 
-	return uint(slotObj.PlayerId), err
+	return uint(slotObj.PlayerID), err
 }
 
 // Save changes made to lobby object
@@ -214,7 +211,7 @@ func GetLobbyByIdServer(id uint) (*Lobby, *helpers.TPError) {
 }
 
 // Get the lobby object, without the ServerInfo object inside it.
-func GetLobbyById(id uint) (*Lobby, *helpers.TPError) {
+func GetLobbyByID(id uint) (*Lobby, *helpers.TPError) {
 	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
 
 	lob := &Lobby{}
@@ -237,7 +234,7 @@ var (
 
 // Add player to lobby, If the player occupies a slot in the lobby already, switch slots.
 // If the player is in another lobby, remove them from that lobby before adding them.
-func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class, password string) *helpers.TPError {
+func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helpers.TPError {
 	/* Possible errors while joining
 	 * Slot has been filled
 	 * Player has already joined a lobby
@@ -268,12 +265,12 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class, password st
 
 	var changeSlot bool
 
-	if currLobbyId, err := player.GetLobbyId(); err == nil {
+	if currLobbyId, err := player.GetLobbyID(); err == nil {
 		if currLobbyId != lobby.ID {
 			// if the player is in a different lobby, remove them from that lobby
-			curLobby, _ := GetLobbyById(currLobbyId)
+			curLobby, _ := GetLobbyByID(currLobbyId)
 			if curLobby.State == LobbyStateInProgress {
-				sub, _ := NewSub(curLobby.ID, player.SteamId)
+				sub, _ := NewSub(curLobby.ID, player.SteamID)
 				db.DB.Save(sub)
 				BroadcastSubList()
 			}
@@ -282,26 +279,27 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class, password st
 			// assign the player to a new slot
 			// try to remove them from the old slot (in case they are switching slots)
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
-			DisallowPlayer(lobby.ID, player.SteamId)
+			DisallowPlayer(lobby.ID, player.SteamID)
 			changeSlot = true
 		}
 	}
 
 	url := fmt.Sprintf(`http://steamcommunity.com/groups/%s/memberslistxml/?xml=1`, lobby.PlayerWhitelist)
 	if !changeSlot {
-		if lobby.PlayerWhitelist != "" && !helpers.IsWhitelisted(player.SteamId, url) {
+		if lobby.PlayerWhitelist != "" && !helpers.IsWhitelisted(player.SteamID, url) {
 			return NotWhitelistedErr
 		}
 	}
 
 	// Check if player is a substitute
 	var count int
-	db.DB.Table("substitutes").Where("lobby_id = ? AND team = ? AND class = ? AND filled = ?", lobby.ID, team, class, false).Count(&count)
+	db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).Count(&count)
 	if count != 0 {
-		db.DB.Table("substitutes").Where("lobby_id = ? AND team = ? AND class = ? AND filled = ?", lobby.ID, team, class, false).UpdateColumn("filled", true)
-		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamId))
+		db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).UpdateColumn("filled", true)
+		class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
+		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
 		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
-	} else if _, err := lobby.GetPlayerIdBySlot(slot); err == nil {
+	} else if _, err := lobby.GetPlayerIDBySlot(slot); err == nil {
 		return FilledErr
 	} else {
 		FumbleLobbyPlayerJoined(lobby, player, slot)
@@ -311,11 +309,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, team, class, password st
 	lobby.RemoveSpectator(player, false)
 
 	newSlotObj := &LobbySlot{
-		PlayerId: player.ID,
-		LobbyId:  lobby.ID,
+		PlayerID: player.ID,
+		LobbyID:  lobby.ID,
 		Slot:     slot,
-		Team:     team,
-		Class:    class,
 	}
 
 	db.DB.Create(newSlotObj)
@@ -335,13 +331,13 @@ func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
 		return helpers.NewTPError(err.Error(), -1)
 	}
 
-	DisallowPlayer(lobby.ID, player.SteamId)
+	DisallowPlayer(lobby.ID, player.SteamID)
 	lobby.OnChange(true)
 	return nil
 }
 
 func (lobby *Lobby) BanPlayer(player *Player) {
-	DisallowPlayer(lobby.ID, player.SteamId)
+	DisallowPlayer(lobby.ID, player.SteamID)
 	db.DB.Model(lobby).Association("BannedPlayers").Append(player)
 }
 
@@ -375,7 +371,7 @@ func (lobby *Lobby) RemoveUnreadyPlayers() error {
 
 // Returns true if the player is in-game
 func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
-	var ingame []bool
+	ingame := []bool{}
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("in_game", &ingame).Error
 	if err != nil {
 		return false, err
@@ -386,7 +382,7 @@ func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
 
 // Return true if the player is ready
 func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
-	var ready []bool
+	ready := []bool{}
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("ready", &ready).Error
 	if err != nil {
 		return false, helpers.NewTPError("Player is not in the lobby.", 5)
@@ -454,7 +450,7 @@ func (lobby *Lobby) IsFull() bool {
 
 // Returns true if the given slot (by number) is occupied by a player
 func (lobby *Lobby) IsSlotFilled(slot int) bool {
-	_, err := lobby.GetPlayerIdBySlot(slot)
+	_, err := lobby.GetPlayerIDBySlot(slot)
 	if err != nil {
 		return false
 	}
@@ -496,17 +492,17 @@ func (lobby *Lobby) Close(rpc bool) {
 
 // Update stats (lobbies played count) for
 func (lobby *Lobby) UpdateStats() {
-	var slots []LobbySlot
+	slots := []LobbySlot{}
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
 
 	for _, slot := range slots {
 		player := &Player{}
-		err := db.DB.First(player, slot.PlayerId).Error
+		err := db.DB.First(player, slot.PlayerID).Error
 		if err != nil {
 			helpers.Logger.Critical("%s", err.Error())
 			return
 		}
-		db.DB.Preload("Stats").First(player, slot.PlayerId)
+		db.DB.Preload("Stats").First(player, slot.PlayerID)
 		player.Stats.PlayedCountIncrease(lobby.Type)
 		player.Save()
 	}
@@ -560,7 +556,7 @@ func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
 
 // Broadcasts the lobby list to all users
 func BroadcastLobbyList() {
-	var lobbies []Lobby
+	lobbies := []Lobby{}
 	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	broadcaster.SendMessageToRoom(
 		fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom),

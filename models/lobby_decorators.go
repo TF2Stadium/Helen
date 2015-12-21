@@ -85,7 +85,7 @@ type LobbyEvent struct {
 }
 
 func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetails {
-	playerId, err := lobby.GetPlayerIdBySlot(slot)
+	playerId, err := lobby.GetPlayerIDBySlot(slot)
 	j := SlotDetails{Filled: err == nil}
 
 	if err == nil && includeDetails {
@@ -163,7 +163,7 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 
 		specJs := SpecDetails{
 			Name:    specPlayer.Name,
-			SteamID: specPlayer.SteamId,
+			SteamID: specPlayer.SteamID,
 		}
 
 		spectators[i] = specJs

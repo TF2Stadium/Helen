@@ -33,7 +33,7 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 			steamid = steamid[:index]
 		}
 
-		player, tperr := models.GetPlayerBySteamId(steamid)
+		player, tperr := models.GetPlayerBySteamID(steamid)
 		if tperr != nil {
 			http.Error(w, tperr.Error(), 400)
 			return
@@ -115,11 +115,11 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		db.DB.First(&player, message.PlayerID)
 
 		if steamid != -1 {
-			logs += fmt.Sprintf(format, message.CreatedAt.Format(time.RFC822), player.SteamId, player.Name, html.EscapeString(message.Message))
+			logs += fmt.Sprintf(format, message.CreatedAt.Format(time.RFC822), player.SteamID, player.Name, html.EscapeString(message.Message))
 			continue
 		}
 
-		logs += fmt.Sprintf(format, message.CreatedAt.Format(time.RFC822), player.SteamId, player.Name, html.EscapeString(message.Message))
+		logs += fmt.Sprintf(format, message.CreatedAt.Format(time.RFC822), player.SteamID, player.Name, html.EscapeString(message.Message))
 	}
 
 	logs += "</body>"

@@ -13,7 +13,7 @@ import (
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
-	"github.com/TF2Stadium/Helen/models"
+	. "github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,30 +30,30 @@ func TestIsSpectating(t *testing.T) {
 	lobby2 := testhelpers.CreateLobby()
 	database.DB.Save(lobby2)
 
-	player, _ := models.NewPlayer("asdf")
+	player, _ := NewPlayer("asdf")
 	database.DB.Save(player)
 
-	isSpectating := player.IsSpectatingId(lobby.ID)
+	isSpectating := player.IsSpectatingID(lobby.ID)
 	assert.False(t, isSpectating)
 
 	lobby.AddSpectator(player)
 
-	isSpectating = player.IsSpectatingId(lobby.ID)
+	isSpectating = player.IsSpectatingID(lobby.ID)
 	assert.True(t, isSpectating)
 
 	lobby2.AddSpectator(player)
-	isSpectating2 := player.IsSpectatingId(lobby2.ID)
+	isSpectating2 := player.IsSpectatingID(lobby2.ID)
 	assert.True(t, isSpectating2)
 
 	lobby.RemoveSpectator(player, false)
-	isSpectating = player.IsSpectatingId(lobby.ID)
+	isSpectating = player.IsSpectatingID(lobby.ID)
 	assert.False(t, isSpectating)
 }
 
 func TestGetSpectatingIds(t *testing.T) {
 	testhelpers.CleanupDB()
 
-	player, _ := models.NewPlayer("asdf")
+	player, _ := NewPlayer("asdf")
 	database.DB.Save(player)
 
 	specIds, specErr := player.GetSpectatingIds()
@@ -88,7 +88,7 @@ func TestPlayerInfoFetching(t *testing.T) {
 	// disable mock mode because we're actually testing it
 	config.Constants.SteamApiMockUp = false
 
-	player, playErr := models.NewPlayer("76561197999073985")
+	player, playErr := NewPlayer("76561197999073985")
 	assert.Nil(t, playErr)
 
 	assert.Equal(t, "http://steamcommunity.com/id/nonagono/", player.Profileurl)
@@ -96,13 +96,13 @@ func TestPlayerInfoFetching(t *testing.T) {
 
 	assert.True(t, player.GameHours >= 3000)
 
-	player.Stats.PlayedCountIncrease(models.LobbyTypeSixes)
-	player.Stats.PlayedCountIncrease(models.LobbyTypeHighlander)
-	player.Stats.PlayedCountIncrease(models.LobbyTypeSixes) // sixes: 1 -> 2
+	player.Stats.PlayedCountIncrease(LobbyTypeSixes)
+	player.Stats.PlayedCountIncrease(LobbyTypeHighlander)
+	player.Stats.PlayedCountIncrease(LobbyTypeSixes) // sixes: 1 -> 2
 
 	database.DB.Save(player)
 
-	player2, err := models.GetPlayerWithStats(player.SteamId)
+	player2, err := GetPlayerWithStats(player.SteamID)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 2, player2.Stats.PlayedSixesCount)
@@ -113,7 +113,7 @@ func TestPlayerInfoFetching(t *testing.T) {
 func TestPlayerSettings(t *testing.T) {
 	testhelpers.CleanupDB()
 
-	player, _ := models.NewPlayer("76561197999073985")
+	player, _ := NewPlayer("76561197999073985")
 
 	settings, err := player.GetSettings()
 
@@ -142,38 +142,38 @@ func TestPlayerSettings(t *testing.T) {
 
 func TestPlayerBanning(t *testing.T) {
 	testhelpers.CleanupDB()
-	player, _ := models.NewPlayer("76561197999073985")
+	player, _ := NewPlayer("76561197999073985")
 	player.Save()
 
-	for ban := models.PlayerBanJoin; ban != models.PlayerBanFull; ban++ {
+	for ban := PlayerBanJoin; ban != PlayerBanFull; ban++ {
 		assert.False(t, player.IsBanned(ban))
 	}
 
 	past := time.Now().Add(time.Second * -10)
-	player.BanUntil(past, models.PlayerBanJoin, "they suck")
-	assert.False(t, player.IsBanned(models.PlayerBanJoin))
+	player.BanUntil(past, PlayerBanJoin, "they suck")
+	assert.False(t, player.IsBanned(PlayerBanJoin))
 
 	future := time.Now().Add(time.Second * 10)
-	player.BanUntil(future, models.PlayerBanJoin, "they suck")
-	player.BanUntil(future, models.PlayerBanFull, "they suck")
+	player.BanUntil(future, PlayerBanJoin, "they suck")
+	player.BanUntil(future, PlayerBanFull, "they suck")
 
-	player2, _ := models.GetPlayerBySteamId(player.SteamId)
-	assert.False(t, player2.IsBanned(models.PlayerBanCreate))
-	assert.False(t, player2.IsBanned(models.PlayerBanChat))
-	isBannedFull, untilFull := player2.IsBannedWithTime(models.PlayerBanFull)
+	player2, _ := GetPlayerBySteamID(player.SteamID)
+	assert.False(t, player2.IsBanned(PlayerBanCreate))
+	assert.False(t, player2.IsBanned(PlayerBanChat))
+	isBannedFull, untilFull := player2.IsBannedWithTime(PlayerBanFull)
 	assert.True(t, isBannedFull)
 	assert.True(t, future.Sub(untilFull) < time.Second)
 	assert.True(t, untilFull.Sub(future) < time.Second)
 	log.Println(future.Sub(untilFull))
 
-	isBannedJoin, untilJoin := player2.IsBannedWithTime(models.PlayerBanJoin)
+	isBannedJoin, untilJoin := player2.IsBannedWithTime(PlayerBanJoin)
 	assert.True(t, isBannedJoin)
 	assert.True(t, future.Sub(untilJoin) < time.Second)
 	assert.True(t, untilJoin.Sub(future) < time.Second)
 
 	future2 := time.Now().Add(time.Second * 20)
-	player2.BanUntil(future2, models.PlayerBanJoin, "they suck")
-	isBannedJoin2, untilJoin2 := player2.IsBannedWithTime(models.PlayerBanJoin)
+	player2.BanUntil(future2, PlayerBanJoin, "they suck")
+	isBannedJoin2, untilJoin2 := player2.IsBannedWithTime(PlayerBanJoin)
 	assert.True(t, isBannedJoin2)
 	assert.True(t, future2.Sub(untilJoin2) < time.Second)
 	assert.True(t, untilJoin.Sub(future2) < time.Second)
@@ -182,10 +182,10 @@ func TestPlayerBanning(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(bans))
 
-	player2.Unban(models.PlayerBanJoin)
-	player2.Unban(models.PlayerBanFull)
+	player2.Unban(PlayerBanJoin)
+	player2.Unban(PlayerBanFull)
 
-	for ban := models.PlayerBanJoin; ban != models.PlayerBanFull; ban++ {
+	for ban := PlayerBanJoin; ban != PlayerBanFull; ban++ {
 		assert.False(t, player2.IsBanned(ban))
 	}
 }

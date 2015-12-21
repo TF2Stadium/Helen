@@ -10,7 +10,7 @@ import (
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
-	"github.com/TF2Stadium/Helen/models"
+	. "github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,13 +21,13 @@ func init() {
 func TestLogCreation(t *testing.T) {
 	testhelpers.CleanupDB()
 
-	var obj = models.AdminLogEntry{}
+	var obj = AdminLogEntry{}
 	count := 5
 	database.DB.Model(obj).Count(&count)
 	assert.Equal(t, 0, count)
 
-	models.LogAdminAction(1, helpers.ActionBanJoin, 2)
-	models.LogCustomAdminAction(2, "test", 4)
+	LogAdminAction(1, helpers.ActionBanJoin, 2)
+	LogCustomAdminAction(2, "test", 4)
 
 	database.DB.Model(obj).Count(&count)
 	assert.Equal(t, 2, count)

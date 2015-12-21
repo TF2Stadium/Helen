@@ -29,7 +29,7 @@ func (Global) GetConstant(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 	output := simplejson.New()
 	switch args.Constant {
 	case "lobbySettingsList":
-		output = models.LobbySettingsToJson()
+		output = models.LobbySettingsToJSON()
 	default:
 		return helpers.NewTPError("Unknown constant.", -1)
 	}

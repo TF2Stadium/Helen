@@ -12,7 +12,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
-	"github.com/TF2Stadium/Helen/models"
+	. "github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +25,7 @@ func TestLobbyCreation(t *testing.T) {
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
 
-	lobby2, _ := models.GetLobbyByIdServer(lobby.ID)
+	lobby2, _ := GetLobbyByIdServer(lobby.ID)
 
 	assert.Equal(t, lobby.ID, lobby2.ID)
 	assert.Equal(t, lobby.ServerInfo.Host, lobby2.ServerInfo.Host)
@@ -44,8 +44,8 @@ func TestLobbyClose(t *testing.T) {
 	lobby.Save()
 	lobby.Close(true)
 
-	lobby, _ = models.GetLobbyById(lobby.ID)
-	assert.Equal(t, lobby.State, models.LobbyStateEnded)
+	lobby, _ = GetLobbyByID(lobby.ID)
+	assert.Equal(t, lobby.State, LobbyStateEnded)
 }
 
 func TestLobbyAdd(t *testing.T) {
@@ -53,10 +53,10 @@ func TestLobbyAdd(t *testing.T) {
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
 
-	var players []*models.Player
+	var players []*Player
 
 	for i := 0; i < 12; i++ {
-		player, playErr := models.NewPlayer("p" + fmt.Sprint(i))
+		player, playErr := NewPlayer("p" + fmt.Sprint(i))
 		assert.Nil(t, playErr)
 
 		player.Save()
@@ -64,19 +64,19 @@ func TestLobbyAdd(t *testing.T) {
 	}
 
 	// add player
-	err := lobby.AddPlayer(players[0], 0, "", "", "")
+	err := lobby.AddPlayer(players[0], 0, "")
 	assert.Nil(t, err)
 
 	slot, err2 := lobby.GetPlayerSlot(players[0])
 	assert.Equal(t, slot, 0)
 	assert.Nil(t, err2)
 
-	id, err3 := lobby.GetPlayerIdBySlot(0)
+	id, err3 := lobby.GetPlayerIDBySlot(0)
 	assert.Equal(t, id, players[0].ID)
 	assert.Nil(t, err3)
 
 	// try to switch slots
-	err = lobby.AddPlayer(players[0], 1, "", "", "")
+	err = lobby.AddPlayer(players[0], 1, "")
 	assert.Nil(t, err)
 
 	slot, err2 = lobby.GetPlayerSlot(players[0])
@@ -84,24 +84,24 @@ func TestLobbyAdd(t *testing.T) {
 	assert.Nil(t, err2)
 
 	// this should be empty now
-	id, err3 = lobby.GetPlayerIdBySlot(0)
+	id, err3 = lobby.GetPlayerIDBySlot(0)
 	assert.NotNil(t, err3)
 
 	// try to add a second player to the same slot
-	err = lobby.AddPlayer(players[1], 1, "", "", "")
+	err = lobby.AddPlayer(players[1], 1, "")
 	assert.NotNil(t, err)
 
 	// try to add a player to a wrong slot slot
-	err = lobby.AddPlayer(players[2], 55, "", "", "")
+	err = lobby.AddPlayer(players[2], 55, "")
 	assert.NotNil(t, err)
 
 	lobby2 := testhelpers.CreateLobby()
 	lobby2.Save()
 
 	// try to add a player while they're in another lobby
-	lobby.State = models.LobbyStateInProgress
+	lobby.State = LobbyStateInProgress
 	lobby.Save()
-	err = lobby2.AddPlayer(players[0], 1, "", "", "")
+	err = lobby2.AddPlayer(players[0], 1, "")
 	assert.Nil(t, err)
 
 	var count int
@@ -114,12 +114,12 @@ func TestLobbyRemove(t *testing.T) {
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
 
-	player, playErr := models.NewPlayer("1235")
+	player, playErr := NewPlayer("1235")
 	assert.Nil(t, playErr)
 	player.Save()
 
 	// add player
-	err := lobby.AddPlayer(player, 0, "", "", "")
+	err := lobby.AddPlayer(player, 0, "")
 	assert.Nil(t, err)
 
 	// remove player
@@ -127,11 +127,11 @@ func TestLobbyRemove(t *testing.T) {
 	assert.Nil(t, err)
 
 	// this should be empty now
-	_, err2 := lobby.GetPlayerIdBySlot(0)
+	_, err2 := lobby.GetPlayerIDBySlot(0)
 	assert.NotNil(t, err2)
 
 	// can add player again
-	err = lobby.AddPlayer(player, 0, "", "", "")
+	err = lobby.AddPlayer(player, 0, "")
 	assert.Nil(t, err)
 }
 
@@ -140,12 +140,12 @@ func TestLobbyBan(t *testing.T) {
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
 
-	player, playErr := models.NewPlayer("1235")
+	player, playErr := NewPlayer("1235")
 	assert.Nil(t, playErr)
 	player.Save()
 
 	// add player
-	err := lobby.AddPlayer(player, 0, "", "", "")
+	err := lobby.AddPlayer(player, 0, "")
 	assert.Nil(t, err)
 
 	// ban player
@@ -154,19 +154,19 @@ func TestLobbyBan(t *testing.T) {
 	assert.Nil(t, err)
 
 	// should not be able to add again
-	err = lobby.AddPlayer(player, 5, "", "", "")
+	err = lobby.AddPlayer(player, 5, "")
 	assert.NotNil(t, err)
 }
 
 func TestReadyPlayer(t *testing.T) {
 	testhelpers.CleanupDB()
-	player, playErr := models.NewPlayer("testing")
+	player, playErr := NewPlayer("testing")
 	assert.Nil(t, playErr)
 
 	player.Save()
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
-	lobby.AddPlayer(player, 0, "", "", "")
+	lobby.AddPlayer(player, 0, "")
 
 	lobby.ReadyPlayer(player)
 	ready, err := lobby.IsPlayerReady(player)
@@ -182,12 +182,12 @@ func TestReadyPlayer(t *testing.T) {
 
 func TestSetInGame(t *testing.T) {
 	testhelpers.CleanupDB()
-	player, _ := models.NewPlayer("0")
+	player, _ := NewPlayer("0")
 	player.Save()
 
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
-	lobby.AddPlayer(player, 0, "", "", "")
+	lobby.AddPlayer(player, 0, "")
 	lobby.SetInGame(player)
 
 	slot, err := lobby.GetPlayerSlotObj(player)
@@ -197,12 +197,12 @@ func TestSetInGame(t *testing.T) {
 
 func TestSetNotInGame(t *testing.T) {
 	testhelpers.CleanupDB()
-	player, _ := models.NewPlayer("0")
+	player, _ := NewPlayer("0")
 	player.Save()
 
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
-	lobby.AddPlayer(player, 0, "", "", "")
+	lobby.AddPlayer(player, 0, "")
 	lobby.SetInGame(player)
 	lobby.SetNotInGame(player)
 
@@ -212,21 +212,21 @@ func TestSetNotInGame(t *testing.T) {
 }
 func TestIsEveryoneReady(t *testing.T) {
 	testhelpers.CleanupDB()
-	player, playErr := models.NewPlayer("0")
+	player, playErr := NewPlayer("0")
 	assert.Nil(t, playErr)
 
 	player.Save()
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
-	lobby.AddPlayer(player, 0, "", "", "")
+	lobby.AddPlayer(player, 0, "")
 	lobby.ReadyPlayer(player)
 	assert.Equal(t, lobby.IsEveryoneReady(), false)
 
 	for i := 1; i < 12; i++ {
-		player, playErr = models.NewPlayer(strconv.Itoa(i))
+		player, playErr = NewPlayer(strconv.Itoa(i))
 		assert.Nil(t, playErr)
 		player.Save()
-		lobby.AddPlayer(player, i, "", "", "")
+		lobby.AddPlayer(player, i, "")
 		lobby.ReadyPlayer(player)
 	}
 	assert.Equal(t, lobby.IsEveryoneReady(), true)
@@ -234,13 +234,13 @@ func TestIsEveryoneReady(t *testing.T) {
 
 func TestUnreadyPlayer(t *testing.T) {
 	testhelpers.CleanupDB()
-	player, playErr := models.NewPlayer("testing")
+	player, playErr := NewPlayer("testing")
 	assert.Nil(t, playErr)
 
 	player.Save()
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
-	lobby.AddPlayer(player, 0, "", "", "")
+	lobby.AddPlayer(player, 0, "")
 
 	lobby.ReadyPlayer(player)
 	lobby.UnreadyPlayer(player)
@@ -252,12 +252,12 @@ func TestUnreadyPlayer(t *testing.T) {
 func TestSpectators(t *testing.T) {
 	testhelpers.CleanupDB()
 
-	player, playErr := models.NewPlayer("apple")
+	player, playErr := NewPlayer("apple")
 	assert.Nil(t, playErr)
 
 	player.Save()
 
-	player2, playErr2 := models.NewPlayer("testing1")
+	player2, playErr2 := NewPlayer("testing1")
 	assert.Nil(t, playErr2)
 	player2.Save()
 
@@ -267,7 +267,7 @@ func TestSpectators(t *testing.T) {
 	err := lobby.AddSpectator(player)
 	assert.Nil(t, err)
 
-	var specs []models.Player
+	var specs []Player
 	db.DB.Model(lobby).Association("Spectators").Find(&specs)
 	assert.Equal(t, 1, len(specs))
 
@@ -277,7 +277,7 @@ func TestSpectators(t *testing.T) {
 	specs = nil
 	db.DB.Model(lobby).Association("Spectators").Find(&specs)
 	assert.Equal(t, 2, len(specs))
-	assert.Equal(t, true, specs[0].IsSpectatingId(lobby.ID))
+	assert.Equal(t, true, specs[0].IsSpectatingID(lobby.ID))
 
 	err = lobby.RemoveSpectator(player, false)
 	assert.Nil(t, err)
@@ -293,7 +293,7 @@ func TestSpectators(t *testing.T) {
 	assert.Equal(t, 1, len(specs))
 
 	// adding a player should remove them from spectators
-	lobby.AddPlayer(player2, 11, "", "", "")
+	lobby.AddPlayer(player2, 11, "")
 	specs = nil
 	db.DB.Model(lobby).Association("Spectators").Find(&specs)
 	assert.Equal(t, 0, len(specs))
@@ -306,10 +306,10 @@ func TestUnreadyAllPlayers(t *testing.T) {
 	lobby.Save()
 
 	for i := 0; i < 12; i++ {
-		player, playErr := models.NewPlayer(strconv.Itoa(i))
+		player, playErr := NewPlayer(strconv.Itoa(i))
 		assert.Nil(t, playErr)
 		player.Save()
-		lobby.AddPlayer(player, i, "", "", "")
+		lobby.AddPlayer(player, i, "")
 		lobby.ReadyPlayer(player)
 	}
 
@@ -325,17 +325,17 @@ func TestRemoveUnreadyPlayers(t *testing.T) {
 	lobby.Save()
 
 	for i := 0; i < 12; i++ {
-		player, playErr := models.NewPlayer(strconv.Itoa(i))
+		player, playErr := NewPlayer(strconv.Itoa(i))
 		assert.Nil(t, playErr)
 		player.Save()
-		lobby.AddPlayer(player, i, "", "", "")
+		lobby.AddPlayer(player, i, "")
 	}
 
 	err := lobby.RemoveUnreadyPlayers()
 	assert.Nil(t, err)
 
 	for i := 0; i < 12; i++ {
-		_, err := lobby.GetPlayerIdBySlot(i)
+		_, err := lobby.GetPlayerIDBySlot(i)
 		assert.NotNil(t, err)
 	}
 }
@@ -343,13 +343,13 @@ func TestRemoveUnreadyPlayers(t *testing.T) {
 func TestUpdateStats(t *testing.T) {
 	testhelpers.CleanupDB()
 	lobby := testhelpers.CreateLobby()
-	var players []*models.Player
+	var players []*Player
 
 	for i := 0; i < 6; i++ {
 		players = append(players, testhelpers.CreatePlayer())
 	}
 	for i, player := range players {
-		err := lobby.AddPlayer(player, i, "", "", "")
+		err := lobby.AddPlayer(player, i, "")
 		assert.NoError(t, err)
 	}
 

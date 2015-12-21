@@ -62,7 +62,7 @@ func GetSteamId(socketid string) string {
 
 func GetPlayerSocket(socketid string) (*models.Player, error) {
 	steamid := GetSteamId(socketid)
-	return models.GetPlayerBySteamId(steamid)
+	return models.GetPlayerBySteamID(steamid)
 }
 
 func GetPlayerRole(socketid string) (authority.AuthRole, error) {
