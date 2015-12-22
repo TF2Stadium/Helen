@@ -126,7 +126,7 @@ func TestLobbyJoin(t *testing.T) {
 		}
 	}
 
-	id, tperr := player.GetLobbyID()
+	id, tperr := player.GetLobbyID(false)
 	assert.NoError(t, tperr)
 	if id != 1 {
 		t.Fatal("Got wrong ID")
