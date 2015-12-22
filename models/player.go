@@ -115,11 +115,17 @@ func GetPlayerWithStats(steamid string) (*Player, *helpers.TPError) {
 	return &player, nil
 }
 
-// Get the ID of the lobby the player occupies a slot in. Only works for lobbies which aren't closed (LobbyStateEnded)
-func (player *Player) GetLobbyID() (uint, *helpers.TPError) {
+// Get the ID of the lobby the player occupies a slot in. Only works for lobbies which aren't closed (LobbyStateEnded).
+//If inProrgess, exclude lobbies which are in progress
+func (player *Player) GetLobbyID(inProgress bool) (uint, *helpers.TPError) {
 	playerSlot := &LobbySlot{}
+	states := []LobbyState{LobbyStateEnded}
+	if inProgress {
+		states = append(states, LobbyStateInProgress)
+	}
+
 	err := db.DB.Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").
-		Where("lobby_slots.player_id = ? AND lobbies.state <> ?", player.ID, LobbyStateEnded).
+		Where("lobby_slots.player_id = ? AND lobbies.state <> (?)", player.ID, states).
 		Find(playerSlot).Error
 
 	// if the player is not in any lobby, return error

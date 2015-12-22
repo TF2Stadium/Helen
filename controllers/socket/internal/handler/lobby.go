@@ -260,7 +260,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 
 	//Check if player is in the same lobby
 	var sameLobby bool
-	if id, err := player.GetLobbyID(); err == nil && id == *args.Id {
+	if id, err := player.GetLobbyID(false); err == nil && id == *args.Id {
 		sameLobby = true
 	}
 
@@ -269,7 +269,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		return tperr
 	}
 
-	if prevId, _ := player.GetLobbyID(); prevId != 0 && !sameLobby {
+	if prevId, _ := player.GetLobbyID(false); prevId != 0 && !sameLobby {
 		server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", prevId))
 		server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", prevId))
 	}
@@ -374,7 +374,7 @@ func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data
 
 	// If the player is already in the lobby (either joined a slot or is spectating), don't add them.
 	// Just Broadcast the lobby to them, so the frontend displays it.
-	if id, _ := player.GetLobbyID(); id != *args.Id && !specSameLobby {
+	if id, _ := player.GetLobbyID(false); id != *args.Id && !specSameLobby {
 		tperr = lob.AddSpectator(player)
 
 		if tperr != nil {
@@ -543,7 +543,7 @@ func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, dat
 	}
 
 	if !player.IsSpectatingID(lob.ID) {
-		if id, _ := player.GetLobbyID(); id == *args.Id {
+		if id, _ := player.GetLobbyID(false); id == *args.Id {
 			chelpers.AfterLobbySpecLeave(server, so, lob)
 			return chelpers.EmptySuccessJS
 		}

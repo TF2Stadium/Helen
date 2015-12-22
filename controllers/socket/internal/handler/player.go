@@ -20,7 +20,7 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 		return tperr
 	}
 
-	lobbyid, tperr := player.GetLobbyID()
+	lobbyid, tperr := player.GetLobbyID(false)
 	if tperr != nil {
 		return tperr
 	}
@@ -58,7 +58,7 @@ func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte)
 		return tperr
 	}
 
-	lobbyid, tperr := player.GetLobbyID()
+	lobbyid, tperr := player.GetLobbyID(false)
 	if tperr != nil {
 		return tperr
 	}
