@@ -138,7 +138,7 @@ func OnDisconnect(socketID string) {
 				}
 
 				lobby := &models.Lobby{}
-				db.DB.First(id, lobby)
+				db.DB.First(lobby, id)
 				lobby.RemovePlayer(player)
 			}
 		})
