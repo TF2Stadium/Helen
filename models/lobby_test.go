@@ -325,19 +325,25 @@ func TestRemoveUnreadyPlayers(t *testing.T) {
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
 
+	var players []*Player
 	for i := 0; i < 12; i++ {
 		player, playErr := NewPlayer(strconv.Itoa(i))
 		assert.Nil(t, playErr)
 		player.Save()
 		lobby.AddPlayer(player, i, "")
+		players = append(players, player)
 	}
 
-	err := lobby.RemoveUnreadyPlayers()
+	err := lobby.RemoveUnreadyPlayers(true)
 	assert.Nil(t, err)
 
 	for i := 0; i < 12; i++ {
+		var count int
 		_, err := lobby.GetPlayerIDBySlot(i)
-		assert.NotNil(t, err)
+		assert.Error(t, err)
+
+		db.DB.Table("spectators_players_lobbies").Where("lobby_id = ? AND player_id = ?", lobby.ID, players[i].ID).Count(&count)
+		assert.Equal(t, count, 1)
 	}
 }
 
