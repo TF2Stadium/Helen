@@ -11,8 +11,8 @@ type Substitute struct {
 	ID        uint      `gorm:"primary_key"json:"-"`
 	CreatedAt time.Time `json:"-"`
 
-	SteamID string `json:"-"`
-	Filled  bool   `json:"-"`
+	PlayerID uint `json:"-"`
+	Filled   bool `json:"-"`
 
 	LobbyID uint   `json:"id"`
 	Format  string `json:"type"`
@@ -22,12 +22,13 @@ type Substitute struct {
 
 	Slot int `json:"-"`
 	// JSON stuff
-	Team  string `slot:"-" json:"team"`
-	Class string `slot:"-" json:"class"`
+	Team  string `sql:"-" json:"team"`
+	Class string `sql:"-" json:"class"`
 }
 
-func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
-	player, err := GetPlayerBySteamID(steamid)
+func NewSub(lobbyid, playerid uint) (*Substitute, error) {
+	player := &Player{}
+	err := db.DB.First(player, playerid).Error
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +46,7 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 
 	sub.LobbyID = lob.ID
 	sub.Format = formatMap[lob.Type]
-	sub.SteamID = player.SteamID
+	sub.PlayerID = player.ID
 	sub.MapName = lob.MapName
 	sub.Region = lob.RegionName
 	sub.Mumble = lob.Mumble
@@ -56,8 +57,12 @@ func NewSub(lobbyid uint, steamid string) (*Substitute, error) {
 	return sub, nil
 }
 
+func (s *Substitute) Save() {
+	db.DB.Save(s)
+}
+
 func SubAndRemove(lobby *Lobby, player *Player) error {
-	sub, err := NewSub(lobby.ID, player.SteamID)
+	sub, err := NewSub(lobby.ID, player.ID)
 	if err != nil {
 		return err
 	}
@@ -71,21 +76,32 @@ func SubAndRemove(lobby *Lobby, player *Player) error {
 	return nil
 }
 
-func GetSubList() []*Substitute {
+func GetAllSubs() []*Substitute {
 	var allSubs []*Substitute
 	db.DB.Table("substitutes").Where("filled = ?", false).Find(&allSubs)
+	for _, sub := range allSubs {
+		lobby, _ := GetLobbyByID(sub.LobbyID)
+
+		sub.Team, sub.Class, _ = LobbyGetSlotInfoString(lobby.Type, sub.Slot)
+	}
 
 	return allSubs
 }
 
 func BroadcastSubList() {
-	broadcaster.SendMessageToRoom("0_public", "subListData", GetSubList())
+	broadcaster.SendMessageToRoom("0_public", "subListData", GetAllSubs())
 }
 
-func GetPlayerSubs(steamid string) ([]*Substitute, error) {
+func GetPlayerSubs(player *Player) ([]*Substitute, error) {
 	var subs []*Substitute
 
-	err := db.DB.Table("substitutes").Where("steam_id = ?", steamid).Find(&subs).Error
+	err := db.DB.Table("substitutes").Where("player_id = ?", player.ID).Find(&subs).Error
+
+	for _, sub := range subs {
+		lobby, _ := GetLobbyByID(sub.LobbyID)
+
+		sub.Team, sub.Class, _ = LobbyGetSlotInfoString(lobby.Type, sub.Slot)
+	}
 
 	return subs, err
 }

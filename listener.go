@@ -65,7 +65,7 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 					helpers.Logger.Error(err.Error())
 				}
 				if !ingame {
-					sub, _ := models.NewSub(lobby.ID, player.SteamID)
+					sub, _ := models.NewSub(lobby.ID, player.ID)
 					db.DB.Save(sub)
 					models.BroadcastSubList()
 					lobby.RemovePlayer(player)
@@ -85,7 +85,8 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 			lobbyid := event["lobbyId"].(uint)
 			steamId := event["steamId"].(string)
 
-			sub, err := models.NewSub(lobbyid, steamId)
+			player, _ := models.GetPlayerBySteamID(steamId)
+			sub, err := models.NewSub(lobbyid, player.ID)
 			if err != nil {
 				helpers.Logger.Error(err.Error())
 				continue
@@ -94,7 +95,6 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 
 			models.BroadcastSubList()
 
-			player, _ := models.GetPlayerBySteamID(steamId)
 			lobby, _ := models.GetLobbyByID(lobbyid)
 			lobby.RemovePlayer(player)
 
