@@ -297,7 +297,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 			//remove unreadied players and unready the
 			//rest.
 			if lobby.State != models.LobbyStateInProgress {
-				err := lobby.RemoveUnreadyPlayers()
+				err := lobby.RemoveUnreadyPlayers(true)
 				if err != nil {
 					helpers.Logger.Error("RemoveUnreadyPlayers: ", err.Error())
 					err = nil
