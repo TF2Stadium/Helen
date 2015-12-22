@@ -26,23 +26,31 @@ func TestNewSub(t *testing.T) {
 	tperr := lobby.AddPlayer(player, 0, "")
 	assert.Nil(t, tperr)
 
-	sub, err := NewSub(lobby.ID, player.SteamID)
+	sub, err := NewSub(lobby.ID, player.ID)
 	lobby.RemovePlayer(player)
 	assert.Nil(t, err)
 
 	db.DB.Save(sub)
 
-	subs, err := GetPlayerSubs(player.SteamID)
+	subs, err := GetPlayerSubs(player)
 	assert.Nil(t, err)
 	assert.Equal(t, len(subs), 1)
 	assert.Equal(t, subs[0].LobbyID, lobby.ID)
+	assert.Equal(t, subs[0].Team, "red")
+	assert.Equal(t, subs[0].Class, "scout1")
+
+	subs = GetAllSubs()
+	assert.Equal(t, len(subs), 1)
+	assert.Equal(t, subs[0].LobbyID, lobby.ID)
+	assert.Equal(t, subs[0].Team, "red")
+	assert.Equal(t, subs[0].Class, "scout1")
 
 	player2 := testhelpers.CreatePlayer()
 	player2.Save()
 	tperr = lobby.AddPlayer(player2, 0, "")
 	assert.Nil(t, tperr)
 
-	err = db.DB.Where("lobby_id = ? AND steam_id = ?", lobby.ID, player.SteamID).First(sub).Error
+	err = db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(sub).Error
 	assert.Nil(t, err)
 	assert.True(t, sub.Filled)
 }
