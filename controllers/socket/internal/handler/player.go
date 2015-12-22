@@ -42,7 +42,7 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 	}
 
 	if lobby.IsEveryoneReady() {
-		db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", models.LobbyStateInProgress)
+		lobby.Start()
 
 		chelpers.BroadcastLobbyStart(lobby)
 		models.BroadcastLobbyList()

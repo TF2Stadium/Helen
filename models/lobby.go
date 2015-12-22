@@ -362,9 +362,25 @@ func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
 	return nil
 }
 
-// Removes players which haven't readied up
-func (lobby *Lobby) RemoveUnreadyPlayers() error {
+// Remove players who haven't removed. If spec == true, move them to spectators
+func (lobby *Lobby) RemoveUnreadyPlayers(spec bool) error {
+	playerids := []uint{}
+
+	if spec {
+		err := db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &playerids).Error
+		if err != nil {
+			return err
+		}
+	}
+
 	err := db.DB.Where("lobby_id = ? AND ready = ?", lobby.ID, false).Delete(&LobbySlot{}).Error
+	if spec {
+		for _, id := range playerids {
+			player := &Player{}
+			db.DB.First(player, id)
+			lobby.AddSpectator(player)
+		}
+	}
 	lobby.OnChange(true)
 	return err
 }
@@ -492,7 +508,7 @@ func (lobby *Lobby) Close(rpc bool) {
 
 // Update stats (lobbies played count) for
 func (lobby *Lobby) UpdateStats() {
-	slots := []LobbySlot{}
+	slots := [](*LobbySlot){}
 	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
 
 	for _, slot := range slots {
@@ -545,6 +561,12 @@ func (lobby *Lobby) SubNotInGamePlayers() {
 	lobby.OnChange(true)
 	BroadcastSubList()
 	return
+}
+
+// Set lobby.State to LobbyStateInProgress, remove and sub players not-in game after 2 minutes
+func (lobby *Lobby) Start() {
+	db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", LobbyStateInProgress)
+	time.AfterFunc(time.Minute*2, lobby.SubNotInGamePlayers)
 }
 
 // manually called. Should be called after the change to lobby actually takes effect.
