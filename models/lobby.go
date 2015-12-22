@@ -270,8 +270,8 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 			// if the player is in a different lobby, remove them from that lobby
 			curLobby, _ := GetLobbyByID(currLobbyId)
 			if curLobby.State == LobbyStateInProgress {
-				sub, _ := NewSub(curLobby.ID, player.SteamID)
-				db.DB.Save(sub)
+				sub, _ := NewSub(curLobby.ID, player.ID)
+				sub.Save()
 				BroadcastSubList()
 			}
 			curLobby.RemovePlayer(player)
@@ -522,6 +522,29 @@ func (lobby *Lobby) SetInGame(player *Player) error {
 
 func (lobby *Lobby) SetNotInGame(player *Player) error {
 	return lobby.setInGameStatus(player, false)
+}
+
+// Substitute and Remove players not in the game
+func (lobby *Lobby) SubNotInGamePlayers() {
+	playerids := []uint{}
+	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ?", lobby.ID, false).Pluck("player_id", &playerids).Error
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+		return
+	}
+
+	for _, id := range playerids {
+		sub, err := NewSub(lobby.ID, id)
+		if err != nil {
+			helpers.Logger.Error(err.Error())
+			continue
+		}
+		sub.Save()
+	}
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ?", lobby.ID, false).Delete(&LobbySlot{})
+	lobby.OnChange(true)
+	BroadcastSubList()
+	return
 }
 
 // manually called. Should be called after the change to lobby actually takes effect.
