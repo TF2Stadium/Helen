@@ -7,6 +7,7 @@ package controllerhelpers
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -98,6 +99,49 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 	profilePlayer, err3 := models.GetPlayerWithStats(player.SteamID)
 	if err3 == nil {
 		broadcaster.SendMessage(player.SteamID, "playerProfile", models.DecoratePlayerProfileJson(profilePlayer))
+	}
+
+}
+
+func OnDisconnect(socketID string) {
+	defer DeauthenticateSocket(socketID)
+	if IsLoggedInSocket(socketID) {
+		steamid := GetSteamId(socketID)
+		broadcaster.RemoveSocket(steamid)
+		player, tperr := models.GetPlayerBySteamID(steamid)
+		if tperr != nil || player == nil {
+			helpers.Logger.Error(tperr.Error())
+			return
+		}
+
+		ids, tperr := player.GetSpectatingIds()
+		if tperr != nil {
+			helpers.Logger.Error(tperr.Error())
+			return
+		}
+
+		for _, id := range ids {
+			lobby, _ := models.GetLobbyByID(id)
+			err := lobby.RemoveSpectator(player, true)
+			if err != nil {
+				helpers.Logger.Error(err.Error())
+				continue
+			}
+			//helpers.Logger.Debug("removing %s from %d", player.SteamId, id)
+		}
+
+		time.AfterFunc(time.Second*30, func() {
+			if !broadcaster.IsConnected(player.SteamID) {
+				id, err := player.GetLobbyID()
+				if err != nil {
+					return
+				}
+
+				lobby := &models.Lobby{}
+				db.DB.First(lobby, id)
+				lobby.RemovePlayer(player)
+			}
+		})
 	}
 
 }
