@@ -265,7 +265,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 
 	var changeSlot bool
 
-	if currLobbyId, err := player.GetLobbyID(); err == nil {
+	if currLobbyId, err := player.GetLobbyID(false); err == nil {
 		if currLobbyId != lobby.ID {
 			// if the player is in a different lobby, remove them from that lobby
 			curLobby, _ := GetLobbyByID(currLobbyId)
@@ -367,7 +367,7 @@ func (lobby *Lobby) RemoveUnreadyPlayers(spec bool) error {
 	playerids := []uint{}
 
 	if spec {
-		err := db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &playerids).Error
+		err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND ready = ?", lobby.ID, false).Pluck("player_id", &playerids).Error
 		if err != nil {
 			return err
 		}

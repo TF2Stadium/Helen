@@ -6,7 +6,6 @@ package helpers
 
 import (
 	"fmt"
-	"log/syslog"
 	"os"
 
 	"github.com/op/go-logging"
@@ -28,14 +27,7 @@ func InitLogger() {
 	backendFormatter := logging.NewBackendFormatter(backend, format)
 
 	if addr := os.Getenv("PAPERTRAIL_ADDR"); addr != "" {
-		writer, err := syslog.Dial("udp4", addr, syslog.LOG_EMERG, "Helen")
-		if err != nil {
-			Logger.Fatal(err.Error())
-		}
-
-		format = logging.MustStringFormatter(`[%{level:.4s}] %{shortfile} %{shortfunc}() : %{message}`)
-		syslogBackend := logging.NewBackendFormatter(&logging.SyslogBackend{Writer: writer}, format)
-		logging.SetBackend(backendFormatter, syslogBackend)
+		setupPapertrail(addr, backendFormatter)
 	} else {
 		logging.SetBackend(backendFormatter)
 	}

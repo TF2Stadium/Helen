@@ -69,7 +69,7 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 }
 
 func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *models.Player) {
-	lobbyIdPlaying, err := player.GetLobbyID()
+	lobbyIdPlaying, err := player.GetLobbyID(false)
 	if err == nil {
 		lobby, _ := models.GetLobbyByIdServer(lobbyIdPlaying)
 		AfterLobbyJoin(server, so, lobby, player)
@@ -132,7 +132,7 @@ func OnDisconnect(socketID string) {
 
 		time.AfterFunc(time.Second*30, func() {
 			if !broadcaster.IsConnected(player.SteamID) {
-				id, err := player.GetLobbyID()
+				id, err := player.GetLobbyID(true)
 				if err != nil {
 					return
 				}
