@@ -33,7 +33,8 @@ func InitLogger() {
 			Logger.Fatal(err.Error())
 		}
 
-		syslogBackend := &logging.SyslogBackend{Writer: writer}
+		format = logging.MustStringFormatter(`[%{level:.4s}] %{shortfile} %{shortfunc}() : %{message}`)
+		syslogBackend := logging.NewBackendFormatter(&logging.SyslogBackend{Writer: writer}, format)
 		logging.SetBackend(backendFormatter, syslogBackend)
 	} else {
 		logging.SetBackend(backendFormatter)
