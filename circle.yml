@@ -14,7 +14,7 @@ dependencies:
       - go version
 test:
   override:
-      - case $CIRCLE_NODE_INDEX in 0) go test ./controllers/... -v -race ;; 1) go test -v -race ./models/... ./database/... ./helpers/... ./config/... esac:
+      - case $CIRCLE_NODE_INDEX in 0) go test ./controllers/... -v -race ;; 1) go test -v -race ./models/... ./database/... ./helpers/... ./config/... ;; esac:
           parallel: true
 deployment:
   master:
