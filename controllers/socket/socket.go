@@ -18,37 +18,6 @@ import (
 
 var ErrRecordNotFound = errors.New("Player record for found.")
 
-func onDisconnect(id string) {
-	//defer helpers.Logger.Debug("Disconnected from Socket")
-	defer chelpers.DeauthenticateSocket(id)
-	if chelpers.IsLoggedInSocket(id) {
-		steamid := chelpers.GetSteamId(id)
-		broadcaster.RemoveSocket(steamid)
-		player, tperr := models.GetPlayerBySteamID(steamid)
-		if tperr != nil || player == nil {
-			helpers.Logger.Error(tperr.Error())
-			return
-		}
-
-		ids, tperr := player.GetSpectatingIds()
-		if tperr != nil {
-			helpers.Logger.Error(tperr.Error())
-			return
-		}
-
-		for _, id := range ids {
-			lobby, _ := models.GetLobbyByID(id)
-			err := lobby.RemoveSpectator(player, true)
-			if err != nil {
-				helpers.Logger.Error(err.Error())
-				continue
-			}
-			//helpers.Logger.Debug("removing %s from %d", player.SteamId, id)
-		}
-
-	}
-}
-
 func getEvent(data []byte) string {
 	var js struct {
 		Request string
@@ -58,10 +27,10 @@ func getEvent(data []byte) string {
 }
 
 func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
-	server.OnDisconnect = onDisconnect
+	server.OnDisconnect = chelpers.OnDisconnect
 	server.Extractor = getEvent
 
-	noAuthServer.OnDisconnect = onDisconnect
+	noAuthServer.OnDisconnect = chelpers.OnDisconnect
 	noAuthServer.Extractor = getEvent
 
 	server.On("authenticationTest", func(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
