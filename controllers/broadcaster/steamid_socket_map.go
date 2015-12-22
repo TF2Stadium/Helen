@@ -30,3 +30,8 @@ func GetSocket(steamid string) (so *wsevent.Client, success bool) {
 	so, success = steamIdSocketMap[steamid]
 	return
 }
+
+func IsConnected(steamid string) bool {
+	_, ok := GetSocket(steamid)
+	return ok
+}
