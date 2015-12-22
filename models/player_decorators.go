@@ -66,7 +66,7 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	s.Sixes = p.Stats.PlayedHighlanderCount
 	s.Highlander = p.Stats.PlayedSixesCount
 	var subCount int
-	db.DB.Table("substitutes").Where("steam_id = ?", p.SteamID).Count(&subCount)
+	db.DB.Table("substitutes").Where("player_id = ?", p.ID).Count(&subCount)
 	s.Substitutes = subCount
 
 	profile.Stats = s

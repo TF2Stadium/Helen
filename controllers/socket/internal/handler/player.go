@@ -2,7 +2,6 @@ package handler
 
 import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
-	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
@@ -42,7 +41,7 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 	}
 
 	if lobby.IsEveryoneReady() {
-		db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", models.LobbyStateInProgress)
+		lobby.Start()
 
 		chelpers.BroadcastLobbyStart(lobby)
 		models.BroadcastLobbyList()
@@ -86,7 +85,7 @@ func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte)
 
 func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	var args struct {
-		Key string `json:"key"`
+		Key *string `json:"key"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -98,10 +97,10 @@ func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data
 
 	var settings []models.PlayerSetting
 	var setting models.PlayerSetting
-	if args.Key == "*" {
+	if *args.Key == "*" {
 		settings, err = player.GetSettings()
 	} else {
-		setting, err = player.GetSetting(args.Key)
+		setting, err = player.GetSetting(*args.Key)
 		settings = append(settings, setting)
 	}
 
@@ -115,8 +114,8 @@ func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data
 
 func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	var args struct {
-		Key   string `json:"key"`
-		Value string `json:"value"`
+		Key   *string `json:"key"`
+		Value *string `json:"value"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -126,7 +125,7 @@ func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data
 
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 
-	err = player.SetSetting(args.Key, args.Value)
+	err = player.SetSetting(*args.Key, *args.Value)
 	if err != nil {
 		return helpers.NewTPErrorFromError(err)
 	}
@@ -136,7 +135,7 @@ func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data
 
 func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	var args struct {
-		Steamid string `json:"steamid"`
+		Steamid *string `json:"steamid"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -144,7 +143,7 @@ func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []b
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	steamid := args.Steamid
+	steamid := *args.Steamid
 	if steamid == "" {
 		steamid = chelpers.GetSteamId(so.Id())
 	}
