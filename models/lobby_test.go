@@ -6,6 +6,7 @@ package models_test
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"testing"
 
@@ -358,4 +359,30 @@ func TestUpdateStats(t *testing.T) {
 		db.DB.Preload("Stats").First(player, player.ID)
 		assert.Equal(t, player.Stats.PlayedSixesCount, 1)
 	}
+}
+
+func TestNotInGameSub(t *testing.T) {
+	testhelpers.CleanupDB()
+	lobby := testhelpers.CreateLobby()
+	var players []*Player
+	var ingame int
+
+	for i := 0; i < 12; i++ {
+		players = append(players, testhelpers.CreatePlayer())
+	}
+	for i, player := range players {
+		err := lobby.AddPlayer(player, i, "")
+		assert.NoError(t, err)
+		if rand.Intn(2) == 1 {
+			ingame++
+			lobby.SetInGame(player)
+		}
+	}
+
+	lobby.SubNotInGamePlayers()
+	assert.Equal(t, lobby.GetPlayerNumber(), ingame)
+
+	var subcount int
+	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Count(&subcount)
+	assert.Equal(t, subcount, 12-ingame)
 }
