@@ -14,7 +14,7 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 )
 
-func StartPaulingListener() {
+func startPaulingListener() {
 	if config.Constants.ServerMockUp {
 		return
 	}
