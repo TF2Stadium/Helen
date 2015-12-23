@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/controllers/broadcaster"
-	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -53,12 +51,7 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 
 			lobby.SetNotInGame(player)
 
-			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
-			broadcaster.SendMessageToRoom(room,
-				"sendNotification",
-				fmt.Sprintf(`{"notification": "%s has disconected from the server."}`,
-					player.Name))
-
+			models.SendNotification(fmt.Sprintf("%s has disconected from the server.", player.Name), int(lobby.ID))
 			time.AfterFunc(time.Minute*2, func() {
 				ingame, err := lobby.IsPlayerInGame(player)
 				if err != nil {
@@ -80,6 +73,7 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 			lobby, _ := models.GetLobbyByID(lobbyid)
 
 			lobby.SetInGame(player)
+			models.SendNotification(fmt.Sprintf("%s has connected to the server.", player.Name), int(lobby.ID))
 
 		case event := <-eventChanMap["playerSub"]:
 			lobbyid := event["lobbyId"].(uint)
@@ -98,12 +92,7 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 			lobby, _ := models.GetLobbyByID(lobbyid)
 			lobby.RemovePlayer(player)
 
-			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
-			broadcaster.SendMessageToRoom(room,
-				"sendNotification",
-				fmt.Sprintf(`{"notification": "%s has been reported."}`,
-					player.Name))
-
+			models.SendNotification(fmt.Sprintf("%s has been reported.", player.Name), int(lobby.ID))
 			//helpers.Logger.Debug("#%d: Reported player %s<%s>",
 			//	lobbyid, player.Name, player.SteamId)
 
@@ -115,9 +104,7 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 			helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
 			lobby.Close(false)
-			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
-			broadcaster.SendMessageToRoom(room,
-				"sendNotification", `{"notification": "Lobby Closed (Connection to server lost)."}`)
+			models.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
 
 		case event := <-eventChanMap["matchEnded"]:
 			lobbyid := event["lobbyId"].(uint)
@@ -128,10 +115,7 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 
 			lobby.UpdateStats()
 			lobby.Close(false)
-			room := fmt.Sprintf("%s_public", chelpers.GetLobbyRoom(lobbyid))
-			broadcaster.SendMessageToRoom(room,
-				"sendNotification", `{"notification": ""Lobby Ended."}`)
-
+			models.SendNotification("Lobby Ended.", int(lobby.ID))
 			// case <-eventChanMap["getServers"]:
 			// 	var lobbies []*models.Lobby
 			// 	var activeStates = []models.LobbyState{models.LobbyStateWaiting, models.LobbyStateInProgress}

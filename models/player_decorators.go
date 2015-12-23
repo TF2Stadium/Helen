@@ -5,7 +5,6 @@
 package models
 
 import (
-	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/bitly/go-simplejson"
 )
@@ -21,19 +20,8 @@ type PlayerSummary struct {
 	Role          string   `json:"role"`
 }
 
-type Stats struct {
-	LobbiesPlayed int `json:"lobbiesPlayed"`
-
-	Sixes      int `json:"playedSixesCount"`
-	Highlander int `json:"playedHighlanderCount"`
-	// Fours      int `json:"playedFoursCount"`
-	// Ultiduo    int `json:"playedUltiduoCount"`
-	// Bball      int `json:"playedBballCount"`
-	Substitutes int `json:"substitutes"`
-}
-
 type PlayerProfile struct {
-	Stats Stats `json:"stats"`
+	Stats PlayerStats `json:"stats"`
 
 	CreatedAt int64  `json:"createdAt"`
 	GameHours int    `json:"gameHours"`
@@ -62,13 +50,9 @@ func decoratePlayerTags(p *Player) []string {
 func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	profile := PlayerProfile{}
 
-	s := Stats{}
-	s.Sixes = p.Stats.PlayedHighlanderCount
-	s.Highlander = p.Stats.PlayedSixesCount
-	var subCount int
-	db.DB.Table("substitutes").Where("player_id = ?", p.ID).Count(&subCount)
-	s.Substitutes = subCount
+	s := PlayerStats{}
 
+	s.Total = s.PlayedSixesCount + s.PlayedHighlanderCount + s.PlayedFoursCount + s.PlayedUltiduoCount + s.PlayedBballCount
 	profile.Stats = s
 
 	// info

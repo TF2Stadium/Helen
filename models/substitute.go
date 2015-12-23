@@ -28,7 +28,7 @@ type Substitute struct {
 
 func NewSub(lobbyid, playerid uint) (*Substitute, error) {
 	player := &Player{}
-	err := db.DB.First(player, playerid).Error
+	err := db.DB.Preload("Stats").First(player, playerid).Error
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func NewSub(lobbyid, playerid uint) (*Substitute, error) {
 
 	sub.Slot = slot.Slot
 	//sub.Team, sub.Class, _ = LobbyGetSlotInfoString(lobby.Type, slot.Slot)
-
+	player.Stats.IncreaseSubCount()
 	return sub, nil
 }
 
