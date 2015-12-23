@@ -48,7 +48,7 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 }
 
 func NewBotMessage(message string, room int) *ChatMessage {
-	return &ChatMessage{
+	m := &ChatMessage{
 		Timestamp: time.Now().Unix(),
 
 		Player:  PlayerSummary{Name: "TF2Stadium"},
@@ -57,6 +57,9 @@ func NewBotMessage(message string, room int) *ChatMessage {
 
 		Bot: true,
 	}
+
+	db.DB.Save(m)
+	return m
 }
 
 func SendNotification(message string, room int) {
