@@ -125,7 +125,7 @@ func (player *Player) GetLobbyID(inProgress bool) (uint, *helpers.TPError) {
 	}
 
 	err := db.DB.Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").
-		Where("lobby_slots.player_id = ? AND lobbies.state <> (?)", player.ID, states).
+		Where("lobby_slots.player_id = ? AND lobbies.state NOT IN (?)", player.ID, states).
 		Find(playerSlot).Error
 
 	// if the player is not in any lobby, return error
