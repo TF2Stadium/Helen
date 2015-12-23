@@ -1,8 +1,10 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 )
 
@@ -26,6 +28,8 @@ type ChatMessage struct {
 	Message string `json:"message" sql:"type:varchar(120)"`
 	// True if the message has been deleted by a moderator
 	Deleted bool `json:"-"`
+	// true if the message is sent by a bot
+	Bot bool `json:"bot"`
 }
 
 // Return a new ChatMessage sent from specficied player
@@ -41,6 +45,23 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	}
 
 	return record
+}
+
+func NewBotMessage(message string, room int) *ChatMessage {
+	return &ChatMessage{
+		Timestamp: time.Now().Unix(),
+
+		Player:  PlayerSummary{Name: "TF2Stadium"},
+		Room:    room,
+		Message: message,
+
+		Bot: true,
+	}
+}
+
+func SendNotification(message string, room int) {
+	pub := fmt.Sprintf("%d_public", room)
+	broadcaster.SendMessageToRoom(pub, "chatReceive", NewBotMessage(message, room))
 }
 
 // Return a list of ChatMessages spoken in room
