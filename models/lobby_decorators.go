@@ -194,7 +194,7 @@ func DecorateLobbyListData(lobbies []Lobby) LobbyListData {
 func sanitize(name string) string {
 	var final string
 	for _, c := range name {
-		if c >= ' ' && c <= '~' {
+		if c >= 'A' && c <= 'z' {
 			final += string(c)
 		}
 	}
