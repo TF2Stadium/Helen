@@ -9,12 +9,16 @@ import (
 )
 
 type PlayerStats struct {
-	ID                    uint `json:"-"`
-	PlayedSixesCount      int  `sql:"played_sixes_count",default:"0"`
-	PlayedHighlanderCount int  `sql:"played_highlander_count",default:"0"`
-	PlayedFoursCount      int  `sql:"played_fours_count",json:"playedFoursCount"`
-	PlayedUltiduoCount    int  `sql:"played_ultiduo_count",json:"playedUltiduoCount"`
-	PlayedBballCount      int  `sql:"played_bball_count",json:"playedBballCount"`
+	ID uint `json:"-"`
+
+	Total                 int `sql:"-" json:"lobbiesPlayed"`
+	PlayedSixesCount      int `sql:"played_sixes_count",default:"0" json:"playedSixesCount"`
+	PlayedHighlanderCount int `sql:"played_highlander_count",default:"0" json:"playedHighlanderCount"`
+	PlayedFoursCount      int `sql:"played_fours_count",json:"playedFoursCount" `
+	PlayedUltiduoCount    int `sql:"played_ultiduo_count",json:"playedUltiduoCount"`
+	PlayedBballCount      int `sql:"played_bball_count",json:"playedBballCount"`
+
+	Substitutes int `json:"substitutes"`
 }
 
 func NewPlayerStats() PlayerStats {
@@ -26,15 +30,20 @@ func NewPlayerStats() PlayerStats {
 func (ps *PlayerStats) PlayedCountIncrease(lt LobbyType) {
 	switch lt {
 	case LobbyTypeSixes:
-		ps.PlayedSixesCount += 1
+		ps.PlayedSixesCount++
 	case LobbyTypeHighlander:
-		ps.PlayedHighlanderCount += 1
+		ps.PlayedHighlanderCount++
 	case LobbyTypeFours:
-		ps.PlayedFoursCount += 1
+		ps.PlayedFoursCount++
 	case LobbyTypeBball:
-		ps.PlayedBballCount += 1
+		ps.PlayedBballCount++
 	case LobbyTypeUltiduo:
-		ps.PlayedUltiduoCount += 1
+		ps.PlayedUltiduoCount++
 	}
+	database.DB.Save(ps)
+}
+
+func (ps *PlayerStats) IncreaseSubCount() {
+	ps.Substitutes++
 	database.DB.Save(ps)
 }

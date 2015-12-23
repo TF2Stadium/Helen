@@ -189,3 +189,38 @@ func TestPlayerBanning(t *testing.T) {
 		assert.False(t, player2.IsBanned(ban))
 	}
 }
+
+func TestGetLobbyID(t *testing.T) {
+	testhelpers.CleanupDB()
+	lobby := testhelpers.CreateLobby()
+	lobby.Save()
+
+	player := testhelpers.CreatePlayer()
+	player.Save()
+
+	lobby.AddPlayer(player, 0, "123")
+	lobby.Save()
+
+	id, err := player.GetLobbyID(false)
+	assert.NoError(t, err)
+	assert.Equal(t, id, uint(1))
+
+	lobby.State = LobbyStateEnded
+	lobby.Save()
+	id, err = player.GetLobbyID(false)
+	assert.Error(t, err)
+	assert.Equal(t, id, uint(0))
+
+	lobby.State = LobbyStateInProgress
+	lobby.Save()
+
+	//Exclude lobbies in progress
+	id, err = player.GetLobbyID(true)
+	assert.Error(t, err)
+	assert.Equal(t, id, uint(0))
+
+	//Include lobbies in progress
+	id, err = player.GetLobbyID(false)
+	assert.NoError(t, err)
+	assert.Equal(t, id, uint(1))
+}

@@ -55,7 +55,7 @@ func main() {
 	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
-	StartPaulingListener()
+	startPaulingListener()
 	chelpers.InitGeoIPDB()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
