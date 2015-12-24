@@ -76,17 +76,6 @@ func PaulingConnect() {
 	helpers.Logger.Debug("Connected!")
 }
 
-func AllowPlayer(lobbyId uint, steamId string, slot string) error {
-	if config.Constants.ServerMockUp {
-		return nil
-	}
-
-	mu.RLock()
-	defer mu.RUnlock()
-
-	return pauling.Call("Pauling.AllowPlayer", &Args{Id: lobbyId, SteamId: steamId, Slot: slot}, &Args{})
-}
-
 func DisallowPlayer(lobbyId uint, steamId string) error {
 	if config.Constants.ServerMockUp {
 		return nil
