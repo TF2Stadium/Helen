@@ -94,8 +94,12 @@ func GetScrollback(room int) ([]*ChatMessage, error) {
 
 	for _, message := range messages {
 		var player Player
-		db.DB.First(&player, message.PlayerID)
-		message.Player = DecoratePlayerSummary(&player)
+		if message.Bot {
+			message.Player = PlayerSummary{Name: "TF2Stadium"}
+		} else {
+			db.DB.First(&player, message.PlayerID)
+			message.Player = DecoratePlayerSummary(&player)
+		}
 		message.Timestamp = message.CreatedAt.Unix()
 	}
 	return messages, err
