@@ -366,9 +366,9 @@ func TestLobbyClose(t *testing.T) {
 		},
 	}
 	conn.WriteJSON(args)
-	messages, _ = testhelpers.ReadMessages(conn, 1, nil)
-	assert.Equal(t, len(messages), 1)
-	assert.False(t, messages[0]["success"].(bool))
+	messages, _ = testhelpers.ReadMessages(conn, 2, nil)
+	assert.Equal(t, len(messages), 2)
+	assert.False(t, messages[1]["success"].(bool))
 
 	args = map[string]interface{}{
 		"id": "1",
