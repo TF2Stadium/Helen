@@ -43,11 +43,11 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 	for {
 		select {
 		case event := <-eventChanMap["playerDisc"]:
-			lobbyid := event["lobbyId"].(uint)
-			steamId := event["steamId"].(string)
+			lobbyID := event["lobbyID"].(uint)
+			playerID := event["playerID"].(uint)
 
-			player, _ := models.GetPlayerBySteamID(steamId)
-			lobby, _ := models.GetLobbyByID(lobbyid)
+			player, _ := models.GetPlayerByID(playerID)
+			lobby, _ := models.GetLobbyByID(lobbyID)
 
 			lobby.SetNotInGame(player)
 
@@ -66,21 +66,21 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 			})
 
 		case event := <-eventChanMap["playerConn"]:
-			lobbyid := event["lobbyId"].(uint)
-			steamId := event["steamId"].(string)
+			lobbyID := event["lobbyID"].(uint)
+			playerID := event["playerID"].(uint)
 
-			player, _ := models.GetPlayerBySteamID(steamId)
-			lobby, _ := models.GetLobbyByID(lobbyid)
+			player, _ := models.GetPlayerByID(playerID)
+			lobby, _ := models.GetLobbyByID(lobbyID)
 
 			lobby.SetInGame(player)
 			models.SendNotification(fmt.Sprintf("%s has connected to the server.", player.Name), int(lobby.ID))
 
 		case event := <-eventChanMap["playerSub"]:
-			lobbyid := event["lobbyId"].(uint)
-			steamId := event["steamId"].(string)
+			lobbyID := event["lobbyID"].(uint)
+			playerID := event["playerID"].(uint)
 
-			player, _ := models.GetPlayerBySteamID(steamId)
-			sub, err := models.NewSub(lobbyid, player.ID)
+			player, _ := models.GetPlayerByID(playerID)
+			sub, err := models.NewSub(lobbyID, player.ID)
 			if err != nil {
 				helpers.Logger.Error(err.Error())
 				continue
@@ -89,17 +89,17 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 
 			models.BroadcastSubList()
 
-			lobby, _ := models.GetLobbyByID(lobbyid)
+			lobby, _ := models.GetLobbyByID(lobbyID)
 			lobby.RemovePlayer(player)
 
 			models.SendNotification(fmt.Sprintf("%s has been reported.", player.Name), int(lobby.ID))
 			//helpers.Logger.Debug("#%d: Reported player %s<%s>",
-			//	lobbyid, player.Name, player.SteamId)
+			//	lobbyID, player.Name, player.SteamId)
 
 		case event := <-eventChanMap["discFromServer"]:
-			lobbyid := event["lobbyId"].(uint)
+			lobbyID := event["lobbyID"].(uint)
 
-			lobby, _ := models.GetLobbyByIdServer(lobbyid)
+			lobby, _ := models.GetLobbyByIdServer(lobbyID)
 
 			helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
@@ -107,11 +107,11 @@ func eventListener(eventChanMap map[string](chan models.Event)) {
 			models.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
 
 		case event := <-eventChanMap["matchEnded"]:
-			lobbyid := event["lobbyId"].(uint)
+			lobbyID := event["lobbyID"].(uint)
 
-			lobby, _ := models.GetLobbyByIdServer(lobbyid)
+			lobby, _ := models.GetLobbyByIdServer(lobbyID)
 
-			helpers.Logger.Debug("#%d: Match Ended", lobbyid)
+			helpers.Logger.Debug("#%d: Match Ended", lobbyID)
 
 			lobby.UpdateStats()
 			lobby.Close(false)
