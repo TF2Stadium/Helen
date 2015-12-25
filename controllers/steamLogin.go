@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -82,7 +83,7 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) error {
 		return err
 	}
 
-	session.Values["id"] = fmt.Sprint(player.ID)
+	session.Values["id"] = strconv.FormatUint(uint64(player.ID), 10)
 	session.Values["role"] = player.Role
 
 	session.Options.Domain = config.Constants.CookieDomain
