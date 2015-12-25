@@ -226,6 +226,9 @@ func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte)
 	lob.Close(true)
 	models.BroadcastLobbyList() // has to be done manually for now
 
+	notify := fmt.Sprintf("Lobby closed by %s", player.Name)
+	models.SendNotification(notify, int(lob.ID))
+
 	return chelpers.EmptySuccessJS
 }
 
