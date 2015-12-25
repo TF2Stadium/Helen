@@ -95,6 +95,17 @@ func (player *Player) Save() error {
 	return err
 }
 
+// Get a player by it's ID
+func GetPlayerByID(ID uint) (*Player, error) {
+	player := &Player{}
+
+	if err := db.DB.First(player, ID).Error; err != nil {
+		return nil, err
+	}
+
+	return player, nil
+}
+
 // Get a player object by it's Steam id
 func GetPlayerBySteamID(steamid string) (*Player, *helpers.TPError) {
 	var player = Player{}
