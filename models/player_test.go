@@ -21,6 +21,15 @@ func init() {
 	helpers.InitLogger()
 }
 
+func TestGetPlayer(t *testing.T) {
+	testhelpers.CleanupDB()
+
+	player := testhelpers.CreatePlayer()
+	player2, err := GetPlayerByID(player.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, player.ID, player2.ID)
+}
+
 func TestIsSpectating(t *testing.T) {
 	testhelpers.CleanupDB()
 
