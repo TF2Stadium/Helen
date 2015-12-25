@@ -48,7 +48,7 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 }
 
 func NewBotMessage(message string, room int) *ChatMessage {
-	return &ChatMessage{
+	m := &ChatMessage{
 		Timestamp: time.Now().Unix(),
 
 		Player:  PlayerSummary{Name: "TF2Stadium"},
@@ -57,6 +57,9 @@ func NewBotMessage(message string, room int) *ChatMessage {
 
 		Bot: true,
 	}
+
+	db.DB.Save(m)
+	return m
 }
 
 func SendNotification(message string, room int) {
@@ -91,8 +94,12 @@ func GetScrollback(room int) ([]*ChatMessage, error) {
 
 	for _, message := range messages {
 		var player Player
-		db.DB.First(&player, message.PlayerID)
-		message.Player = DecoratePlayerSummary(&player)
+		if message.Bot {
+			message.Player = PlayerSummary{Name: "TF2Stadium"}
+		} else {
+			db.DB.First(&player, message.PlayerID)
+			message.Player = DecoratePlayerSummary(&player)
+		}
 		message.Timestamp = message.CreatedAt.Unix()
 	}
 	return messages, err

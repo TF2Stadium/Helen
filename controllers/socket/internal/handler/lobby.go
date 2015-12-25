@@ -322,11 +322,6 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		models.BroadcastLobbyList()
 	}
 
-	err := models.AllowPlayer(*args.Id, player.SteamID, *args.Team+*args.Class)
-	if err != nil {
-		helpers.Logger.Error(err.Error())
-	}
-
 	if lob.State == models.LobbyStateInProgress {
 		broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lob, player.Name, *args.Class))
 	}

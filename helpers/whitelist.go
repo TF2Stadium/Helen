@@ -30,7 +30,7 @@ func GetGroupMembers(url string) ([]string, error) {
 
 	//	Logger.Debug(string(bytes))
 	xml.Unmarshal(bytes, &groupXML)
-	Logger.Debug("%v", groupXML.Members)
+	//Logger.Debug("%v", groupXML.Members)
 
 	return groupXML.Members, nil
 }
@@ -39,7 +39,7 @@ func IsWhitelisted(steamid, url string) bool {
 	whitelist, _ := GetGroupMembers(url)
 
 	for _, steamID := range whitelist {
-		Logger.Debug("%s %s", steamid, steamID)
+		//Logger.Debug("%s %s", steamid, steamID)
 		if steamid == steamID {
 			return true
 		}
