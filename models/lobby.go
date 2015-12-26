@@ -242,7 +242,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	 */
 
 	if lobby.SlotPassword != "" && lobby.SlotPassword != password {
-		return InvalidPasswordErr
+		if lobby.PlayerWhitelist == "" && password != "" {
+			return InvalidPasswordErr
+		}
 	}
 
 	if player.ID == 0 {
@@ -263,8 +265,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 		return BadSlotErr
 	}
 
-	var changeSlot bool
-
 	if currLobbyId, err := player.GetLobbyID(false); err == nil {
 		if currLobbyId != lobby.ID {
 			// if the player is in a different lobby, remove them from that lobby
@@ -275,19 +275,18 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 				BroadcastSubList()
 			}
 			curLobby.RemovePlayer(player)
+			url := fmt.Sprintf(`http://steamcommunity.com/groups/%s/memberslistxml/?xml=1`,
+				lobby.PlayerWhitelist)
+
+			if lobby.PlayerWhitelist != "" && !helpers.IsWhitelisted(player.SteamID, url) {
+				return NotWhitelistedErr
+			}
+
 		} else {
 			// assign the player to a new slot
 			// try to remove them from the old slot (in case they are switching slots)
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
 			DisallowPlayer(lobby.ID, player.SteamID)
-			changeSlot = true
-		}
-	}
-
-	url := fmt.Sprintf(`http://steamcommunity.com/groups/%s/memberslistxml/?xml=1`, lobby.PlayerWhitelist)
-	if !changeSlot {
-		if lobby.PlayerWhitelist != "" && !helpers.IsWhitelisted(player.SteamID, url) {
-			return NotWhitelistedErr
 		}
 	}
 
