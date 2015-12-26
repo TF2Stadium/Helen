@@ -82,6 +82,9 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public",
 		chelpers.GetLobbyRoom(uint(*args.Room))),
 		"chatReceive", message)
+	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_private",
+		chelpers.GetLobbyRoom(uint(*args.Room))),
+		"chatReceive", message)
 
 	if strings.HasPrefix(*args.Message, "!admin") {
 		chelpers.SendToSlack(*args.Message, player.Name, player.SteamID)
