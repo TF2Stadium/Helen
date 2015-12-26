@@ -6,6 +6,7 @@ package main
 
 import (
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"strings"
 	"time"
@@ -25,8 +26,8 @@ import (
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
+	"github.com/gorilla/context"
 	"github.com/rs/cors"
-	_ "net/http/pprof"
 )
 
 func main() {
@@ -83,7 +84,7 @@ func main() {
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   config.Constants.AllowedCorsOrigins,
 		AllowCredentials: true,
-	}).Handler(http.DefaultServeMux)
+	}).Handler(context.ClearHandler(http.DefaultServeMux))
 
 	// start the server
 	helpers.Logger.Debug("Serving at %s", config.Constants.Domain)
