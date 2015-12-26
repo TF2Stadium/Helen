@@ -47,6 +47,15 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	return record
 }
 
+func (m *ChatMessage) Save() { db.DB.Save(m) }
+
+func (m *ChatMessage) Send(room int) {
+	broadcaster.SendMessageToRoom(fmt.Sprintf("%d_public", room), "chatReceive", m)
+	if room != 0 {
+		broadcaster.SendMessageToRoom(fmt.Sprintf("%d_private", room), "chatReceive", m)
+	}
+}
+
 func NewBotMessage(message string, room int) *ChatMessage {
 	m := &ChatMessage{
 		Timestamp: time.Now().Unix(),
@@ -58,7 +67,7 @@ func NewBotMessage(message string, room int) *ChatMessage {
 		Bot: true,
 	}
 
-	db.DB.Save(m)
+	m.Save()
 	return m
 }
 
