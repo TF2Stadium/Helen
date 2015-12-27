@@ -545,8 +545,6 @@ func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, dat
 			chelpers.AfterLobbySpecLeave(server, so, lob)
 			return chelpers.EmptySuccessJS
 		}
-
-		return helpers.NewTPError("Player is not spectating", -1)
 	}
 
 	lob.RemoveSpectator(player, true)
