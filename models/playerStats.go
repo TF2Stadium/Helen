@@ -27,6 +27,10 @@ func NewPlayerStats() PlayerStats {
 	return stats
 }
 
+func (ps *PlayerStats) TotalLobbies() int {
+	return ps.PlayedSixesCount + ps.PlayedHighlanderCount + ps.PlayedFoursCount + ps.PlayedUltiduoCount + ps.PlayedBballCount
+}
+
 func (ps *PlayerStats) PlayedCountIncrease(lt LobbyType) {
 	switch lt {
 	case LobbyTypeSixes:
