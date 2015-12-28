@@ -121,11 +121,11 @@ type Requirement struct {
 	ID      uint `json:"-"`
 	LobbyID uint `json:"-"`
 
-	Slot int `json:"-" sql:"default:0"` // if -1, applies to all slots
+	Slot int `json:"-"` // if -1, applies to all slots
 
-	Hours       int     `sql:"default:0"` // minimum hours needed
-	Lobbies     int     `sql:"default:0"` // minimum lobbies played
-	Reliability float64 `sql:"default:0"` // minimum reliability needed
+	Hours       int     // minimum hours needed
+	Lobbies     int     // minimum lobbies played
+	Reliability float64 // minimum reliability needed
 }
 
 func NewRequirement(lobbyID uint, slot int, hours int, lobbies int) *Requirement {
@@ -597,6 +597,7 @@ func (lobby *Lobby) Close(rpc bool) {
 	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).UpdateColumn("filled", true)
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.Delete(&lobby.ServerInfo)
+	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Delete(&Requirement{})
 	//db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
 	if rpc {
 		End(lobby.ID)
