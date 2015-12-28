@@ -51,6 +51,17 @@ var (
 		LobbyTypeDebug:      "Debug",
 	}
 )
+var (
+	LobbyBanErr        = helpers.NewTPError("You have been banned from this lobby", 4)
+	BadSlotErr         = helpers.NewTPError("This slot does not exist", 3)
+	FilledErr          = helpers.NewTPError("This slot has been filled", 2)
+	NotWhitelistedErr  = helpers.NewTPError("You aren't allowed in this lobby", 3)
+	InvalidPasswordErr = helpers.NewTPError("Invalid slot password", 3)
+
+	ReqHoursErr       = helpers.NewTPError("You don't have sufficient hours to join this lobby", 3)
+	ReqLobbiesErr     = helpers.NewTPError("You haven't played sufficient lobbies to join this lobby", 3)
+	ReqReliabilityErr = helpers.NewTPError("You have insufficient reliability to join this lobby", 3)
+)
 
 // Represents an occupied player slot in a lobby
 type LobbySlot struct {
@@ -103,6 +114,95 @@ type Lobby struct {
 	CreatedBySteamID string // SteamID of the lobby leader/creator
 
 	ReadyUpTimestamp int64 // (Unix) Timestamp at which the ready up timeout started
+}
+
+// Requirement stores a requirement for a particular slot in a lobby
+type Requirement struct {
+	ID      uint `json:"-"`
+	LobbyID uint `json:"-"`
+
+	Slot int `json:"-" sql:"default:0"` // if -1, applies to all slots
+
+	Hours       int     `sql:"default:0"` // minimum hours needed
+	Lobbies     int     `sql:"default:0"` // minimum lobbies played
+	Reliability float64 `sql:"default:0"` // minimum reliability needed
+}
+
+func NewRequirement(lobbyID uint, slot int, hours int, lobbies int) *Requirement {
+	r := &Requirement{
+		LobbyID: lobbyID,
+		Slot:    slot,
+		Hours:   hours,
+		Lobbies: lobbies}
+	db.DB.Save(r)
+
+	return r
+}
+
+func (r *Requirement) Save() { db.DB.Save(r) }
+
+// GetGlobalRequirement returns the global requirement for the lobby l
+func (lobby *Lobby) GetGlobalRequirement() (*Requirement, error) {
+	requirement := &Requirement{}
+	err := db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, -1).First(requirement).Error
+
+	return requirement, err
+}
+
+func (lobby *Lobby) GetSlotRequirement(slot int) (*Requirement, error) {
+	req := &Requirement{}
+	err := db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, slot).First(req).Error
+
+	return req, err
+}
+
+// HasRequirements returns true if the given slot has a requirement
+func (lobby *Lobby) HasRequirements(slot int) bool {
+	var count int
+
+	// check for general requirements
+	db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, -1).Count(&count)
+	if count != 0 {
+		return true
+	}
+
+	// check for slot sepfic requirements
+	db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Count(&count)
+	return count != 0
+}
+
+func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPError) {
+	requirements := []*Requirement{}
+
+	player.UpdatePlayerInfo()
+	player.Save()
+
+	global, err := l.GetGlobalRequirement()
+	if err == nil {
+		requirements = append(requirements, global)
+	}
+
+	slotReq, err := l.GetSlotRequirement(slot)
+	if err == nil {
+		requirements = append(requirements, slotReq)
+	}
+
+	stats := PlayerStats{}
+	db.DB.First(&stats, player.StatsID)
+
+	for _, req := range requirements {
+		if player.GameHours < req.Hours {
+			return false, ReqHoursErr
+		}
+
+		if stats.TotalLobbies() < req.Lobbies {
+			return false, ReqLobbiesErr
+		}
+
+		//BUG(vibhavp): FitsRequirements doesn't check reliability
+	}
+
+	return true, nil
 }
 
 func getGamemode(mapName string, lobbyType LobbyType) string {
@@ -224,14 +324,6 @@ func GetLobbyByID(id uint) (*Lobby, *helpers.TPError) {
 	return lob, nil
 }
 
-var (
-	LobbyBanErr        = helpers.NewTPError("The player has been banned from this lobby", 4)
-	BadSlotErr         = helpers.NewTPError("This slot does not exist", 3)
-	FilledErr          = helpers.NewTPError("This slot has been filled", 2)
-	NotWhitelistedErr  = helpers.NewTPError("You aren't allowed in this lobby", 3)
-	InvalidPasswordErr = helpers.NewTPError("Invalid slot password", 3)
-)
-
 // Add player to lobby, If the player occupies a slot in the lobby already, switch slots.
 // If the player is in another lobby, remove them from that lobby before adding them.
 func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helpers.TPError {
@@ -265,28 +357,42 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 		return BadSlotErr
 	}
 
+	var slotChange bool
 	if currLobbyId, err := player.GetLobbyID(false); err == nil {
+
 		if currLobbyId != lobby.ID {
 			// if the player is in a different lobby, remove them from that lobby
 			curLobby, _ := GetLobbyByID(currLobbyId)
+
 			if curLobby.State == LobbyStateInProgress {
 				sub, _ := NewSub(curLobby.ID, player.ID)
 				sub.Save()
 				BroadcastSubList()
 			}
-			curLobby.RemovePlayer(player)
-			url := fmt.Sprintf(`http://steamcommunity.com/groups/%s/memberslistxml/?xml=1`,
-				lobby.PlayerWhitelist)
 
-			if lobby.PlayerWhitelist != "" && !helpers.IsWhitelisted(player.SteamID, url) {
-				return NotWhitelistedErr
-			}
+			curLobby.RemovePlayer(player)
 
 		} else {
 			// assign the player to a new slot
 			// try to remove them from the old slot (in case they are switching slots)
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
 			DisallowPlayer(lobby.ID, player.SteamID)
+			slotChange = true
+		}
+	}
+
+	if !slotChange {
+		url := fmt.Sprintf(`http://steamcommunity.com/groups/%s/memberslistxml/?xml=1`,
+			lobby.PlayerWhitelist)
+
+		if lobby.PlayerWhitelist != "" && !helpers.IsWhitelisted(player.SteamID, url) {
+			return NotWhitelistedErr
+		}
+
+		if lobby.HasRequirements(slot) {
+			if ok, err := lobby.FitsRequirements(player, slot); !ok {
+				return err
+			}
 		}
 	}
 

@@ -392,3 +392,62 @@ func TestNotInGameSub(t *testing.T) {
 	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Count(&subcount)
 	assert.Equal(t, subcount, 12-ingame)
 }
+
+func TestSlotRequirements(t *testing.T) {
+	testhelpers.CleanupDB()
+	lobby := testhelpers.CreateLobby()
+	player := testhelpers.CreatePlayer()
+	req := &Requirement{
+		LobbyID: lobby.ID,
+		Slot:    0,
+		Hours:   1,
+		Lobbies: 1,
+	}
+	req.Save()
+
+	err := lobby.AddPlayer(player, 0, "")
+	assert.Error(t, err)
+	assert.Equal(t, err, ReqHoursErr)
+
+	player.GameHours = 2
+	player.Save()
+
+	err = lobby.AddPlayer(player, 0, "")
+	assert.Equal(t, err, ReqLobbiesErr)
+
+	player, _ = GetPlayerWithStats(player.SteamID)
+	player.Stats.PlayedCountIncrease(lobby.Type)
+
+	err = lobby.AddPlayer(player, 0, "")
+	assert.NoError(t, err)
+
+	//Adding a player to another slot shouldn't return any errors
+	// req = &Requirement{
+	// 	LobbyID: lobby.ID,
+	// 	Slot:    -1,
+	// 	Hours:   1,
+	// 	Lobbies: 1,
+	// }
+	player2 := testhelpers.CreatePlayer()
+	err = lobby.AddPlayer(player2, 1, "")
+	assert.NoError(t, err)
+}
+
+func TestGeneralRequirements(t *testing.T) {
+	testhelpers.CleanupDB()
+	lobby := testhelpers.CreateLobby()
+	player := testhelpers.CreatePlayer()
+	req := &Requirement{
+		LobbyID: lobby.ID,
+		Slot:    -1,
+		Hours:   1,
+		Lobbies: 1,
+	}
+	req.Save()
+
+	err := lobby.AddPlayer(player, 0, "")
+	assert.Equal(t, err, ReqHoursErr)
+
+	err = lobby.AddPlayer(player, 3, "")
+	assert.Equal(t, err, ReqHoursErr)
+}

@@ -28,6 +28,31 @@ func (Lobby) Name(s string) string {
 
 var rSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
 
+type requirement struct {
+	Hours      int `json:"hours"`
+	Lobbies    int `json:"lobbies"`
+	Restricted struct {
+		Red bool `json:"red,omitempty"`
+		Blu bool `json:"blu,omitempty"`
+	} `json:"restricted"`
+}
+
+func newRequirement(team, class string, requirement requirement, lobby *models.Lobby) *helpers.TPError {
+	slot, err := models.LobbyGetPlayerSlot(lobby.Type, team, class)
+	if err != nil {
+		return err
+	}
+	slotReq := &models.Requirement{
+		LobbyID: lobby.ID,
+		Slot:    slot,
+		Hours:   requirement.Hours,
+		Lobbies: requirement.Lobbies,
+	}
+	slotReq.Save()
+
+	return nil
+}
+
 func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
@@ -46,6 +71,11 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 
 		Password            *string `json:"password" empty:"-"`
 		SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
+
+		Requirements *struct {
+			Classes map[string]requirement `json:"classes,omitempty"`
+			General requirement            `json:"general,omitempty"`
+		} `json:"requirements" empty:"-"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -116,6 +146,29 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 
 	models.FumbleLobbyCreated(lob)
 
+	if args.Requirements != nil {
+		for class, requirement := range (*args.Requirements).Classes {
+			if requirement.Restricted.Blu {
+				err := newRequirement("blu", class, requirement, lob)
+				if err != nil {
+					return err
+				}
+			}
+			if requirement.Restricted.Red {
+				err := newRequirement("red", class, requirement, lob)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		general := &models.Requirement{
+			LobbyID: lob.ID,
+			Hours:   args.Requirements.General.Hours,
+			Lobbies: args.Requirements.General.Lobbies,
+			Slot:    -1,
+		}
+		general.Save()
+	}
 	return chelpers.BuildSuccessJSON(
 		struct {
 			ID uint `json:"id"`

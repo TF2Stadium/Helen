@@ -23,4 +23,5 @@ func Do() {
 	database.DB.Model(&models.PlayerSetting{}).AddUniqueIndex("idx_player_id_key", "player_id", "key")
 	database.DB.AutoMigrate(&models.Substitute{})
 	database.DB.AutoMigrate(&models.ChatMessage{})
+	database.DB.AutoMigrate(&models.Requirement{})
 }
