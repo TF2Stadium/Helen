@@ -32,6 +32,11 @@ type ChatMessage struct {
 	Bot bool `json:"bot"`
 }
 
+var botSummary = PlayerSummary{
+	Name: "TF2Stadium",
+	Tags: []string{"tf2stadium"},
+}
+
 // Return a new ChatMessage sent from specficied player
 func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	record := &ChatMessage{
@@ -60,7 +65,7 @@ func NewBotMessage(message string, room int) *ChatMessage {
 	m := &ChatMessage{
 		Timestamp: time.Now().Unix(),
 
-		Player:  PlayerSummary{Name: "TF2Stadium"},
+		Player:  botSummary,
 		Room:    room,
 		Message: message,
 
@@ -104,7 +109,7 @@ func GetScrollback(room int) ([]*ChatMessage, error) {
 	for _, message := range messages {
 		var player Player
 		if message.Bot {
-			message.Player = PlayerSummary{Name: "TF2Stadium"}
+			message.Player = botSummary
 		} else {
 			db.DB.First(&player, message.PlayerID)
 			message.Player = DecoratePlayerSummary(&player)
