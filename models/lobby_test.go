@@ -43,7 +43,15 @@ func TestLobbyClose(t *testing.T) {
 	testhelpers.CleanupDB()
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
+
+	req := &Requirement{
+		LobbyID: lobby.ID,
+	}
+	req.Save()
 	lobby.Close(true)
+	var count int
+	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Count(&count)
+	assert.Zero(t, count)
 
 	lobby, _ = GetLobbyByID(lobby.ID)
 	assert.Equal(t, lobby.State, LobbyStateEnded)
@@ -69,7 +77,7 @@ func TestLobbyAdd(t *testing.T) {
 	assert.Nil(t, err)
 
 	slot, err2 := lobby.GetPlayerSlot(players[0])
-	assert.Equal(t, slot, 0)
+	assert.Zero(t, slot)
 	assert.Nil(t, err2)
 
 	id, err3 := lobby.GetPlayerIDBySlot(0)
@@ -297,7 +305,7 @@ func TestSpectators(t *testing.T) {
 	lobby.AddPlayer(player2, 11, "")
 	specs = nil
 	db.DB.Model(lobby).Association("Spectators").Find(&specs)
-	assert.Equal(t, 0, len(specs))
+	assert.Zero(t, len(specs))
 }
 
 func TestUnreadyAllPlayers(t *testing.T) {
@@ -405,8 +413,8 @@ func TestSlotRequirements(t *testing.T) {
 	}
 	req.Save()
 
+	assert.True(t, lobby.HasRequirements(0))
 	err := lobby.AddPlayer(player, 0, "")
-	assert.Error(t, err)
 	assert.Equal(t, err, ReqHoursErr)
 
 	player.GameHours = 2
