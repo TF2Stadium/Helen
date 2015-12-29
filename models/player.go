@@ -41,8 +41,9 @@ type PlayerBan struct {
 
 // Represents a stored player setting
 type PlayerSetting struct {
-	ID       uint
-	PlayerID uint
+	ID        uint
+	CreatedAt time.Time
+	PlayerID  uint
 
 	Key   string // Setting key
 	Value string `sql:"size:65535"` // Setting value
