@@ -28,16 +28,17 @@ func (Lobby) Name(s string) string {
 
 var rSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
 
-type requirement struct {
-	Hours      int `json:"hours"`
-	Lobbies    int `json:"lobbies"`
-	Restricted struct {
-		Red bool `json:"red,omitempty"`
-		Blu bool `json:"blu,omitempty"`
-	} `json:"restricted"`
+type Restriction struct {
+	Red bool `json:"red,omitempty"`
+	Blu bool `json:"blu,omitempty"`
+}
+type Requirement struct {
+	Hours      int         `json:"hours"`
+	Lobbies    int         `json:"lobbies"`
+	Restricted Restriction `json:"restricted"`
 }
 
-func newRequirement(team, class string, requirement requirement, lobby *models.Lobby) *helpers.TPError {
+func newRequirement(team, class string, requirement Requirement, lobby *models.Lobby) *helpers.TPError {
 	slot, err := models.LobbyGetPlayerSlot(lobby.Type, team, class)
 	if err != nil {
 		return err
@@ -73,8 +74,8 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 		SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
 
 		Requirements *struct {
-			Classes map[string]requirement `json:"classes,omitempty"`
-			General requirement            `json:"general,omitempty"`
+			Classes map[string]Requirement `json:"classes,omitempty"`
+			General Requirement            `json:"general,omitempty"`
 		} `json:"requirements" empty:"-"`
 	}
 
