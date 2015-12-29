@@ -10,6 +10,8 @@ import (
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/TF2Stadium/Helen/controllers/socket/internal/handler"
 )
 
 func init() {
@@ -61,6 +63,53 @@ func TestLobbyCreate(t *testing.T) {
 	lobby, err := models.GetLobbyByID(1)
 	assert.NoError(t, err)
 	assert.Equal(t, lobby.CreatedBySteamID, steamid)
+}
+
+func TestLobbyCreateWithRequirements(t *testing.T) {
+	testhelpers.CleanupDB()
+	server := testhelpers.StartServer(testhelpers.NewSockets())
+	defer server.Close()
+
+	_, conn, _, err := testhelpers.LoginAndConnectWS()
+	assert.NoError(t, err)
+
+	args := map[string]interface{}{
+		"id": "1",
+		"data": map[string]interface{}{
+			"request":             "lobbyCreate",
+			"map":                 "cp_badlands",
+			"type":                "6s",
+			"league":              "etf2l",
+			"server":              "testerino",
+			"rconpwd":             "testerino",
+			"whitelistID":         123,
+			"mumbleRequired":      true,
+			"password":            "",
+			"steamGroupWhitelist": nil,
+			"requirements": map[string]interface{}{
+				"classes": map[string]handler.Requirement{
+					"scout1": {
+						Hours:      1,
+						Restricted: handler.Restriction{Red: true},
+					},
+				},
+				"general": handler.Requirement{Lobbies: 1},
+			},
+		}}
+
+	conn.WriteJSON(args)
+
+	messages, err := testhelpers.ReadMessages(conn, 2, nil)
+	assert.NoError(t, err)
+	assert.Len(t, messages, 2)
+
+	var count int
+	db.DB.Table("requirements").Where("lobby_id = 1 AND slot = 0").Count(&count)
+	assert.Equal(t, count, 1)
+
+	count = 0
+	db.DB.Table("requirements").Where("lobby_id = 1 AND slot = -1").Count(&count)
+	assert.Equal(t, count, 1)
 }
 
 func TestLobbyJoin(t *testing.T) {
