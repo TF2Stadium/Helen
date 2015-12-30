@@ -67,7 +67,7 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 		League      *string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
 		Server      *string `json:"server"`
 		RconPwd     *string `json:"rconpwd"`
-		WhitelistID *uint   `json:"whitelistID"`
+		WhitelistID *string `json:"whitelistID"`
 		Mumble      *bool   `json:"mumbleRequired"`
 
 		Password            *string `json:"password" empty:"-"`
@@ -124,7 +124,7 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 	// 	return string(bytes)
 	// }
 
-	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, int(*args.WhitelistID), *args.Mumble, steamGroup, *args.Password)
+	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, *args.WhitelistID, *args.Mumble, steamGroup, *args.Password)
 	lob.CreatedBySteamID = player.SteamID
 	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP != "" {

@@ -106,7 +106,7 @@ type Lobby struct {
 	ServerInfo   ServerRecord
 	ServerInfoID uint
 
-	Whitelist int //whitelist.tf ID
+	Whitelist string //whitelist.tf ID
 
 	Spectators    []Player `gorm:"many2many:spectators_players_lobbies"` // List of spectators
 	BannedPlayers []Player `gorm:"many2many:banned_players_lobbies"`     // List of Banned Players
@@ -241,7 +241,7 @@ func getGamemode(mapName string, lobbyType LobbyType) string {
 }
 
 // Returns a new lobby object with the given parameters
-func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist int, mumble bool, whitelistGroup, password string) *Lobby {
+func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist string, mumble bool, whitelistGroup, password string) *Lobby {
 	lobby := &Lobby{
 		Mode:            getGamemode(mapName, lobbyType),
 		Type:            lobbyType,

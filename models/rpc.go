@@ -26,7 +26,7 @@ type Args struct {
 	Info      ServerRecord
 	Type      LobbyType
 	League    string
-	Whitelist int
+	Whitelist string
 	Map       string
 	SteamId   string
 	SteamId2  string
@@ -88,7 +88,7 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 }
 
 func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
-	whitelist int, mapName string) error {
+	whitelist string, mapName string) error {
 	if config.Constants.ServerMockUp {
 		return nil
 	}

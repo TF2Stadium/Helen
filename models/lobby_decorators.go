@@ -54,7 +54,7 @@ type LobbyData struct {
 	Leader      PlayerSummary `json:"leader"`
 	CreatedAt   int64         `json:"createdAt"`
 	State       int           `json:"state"`
-	WhitelistID int           `json:"whitelistId"`
+	WhitelistID string        `json:"whitelistId"`
 
 	Spectators []SpecDetails `json:"spectators,omitempty"`
 }
