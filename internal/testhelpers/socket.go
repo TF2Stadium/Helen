@@ -15,7 +15,7 @@ func SocketCreateLobby(conn *websocket.Conn) {
 			"league":         "etf2l",
 			"server":         "testerino",
 			"rconpwd":        "testerino",
-			"whitelistID":    123,
+			"whitelistID":    "123",
 			"mumbleRequired": true,
 		}}
 	conn.WriteJSON(args)
