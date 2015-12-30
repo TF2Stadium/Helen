@@ -13,10 +13,11 @@ import (
 )
 
 type SlotDetails struct {
-	Filled bool           `json:"filled"`
-	Player *PlayerSummary `json:"player,omitempty"`
-	Ready  *bool          `json:"ready,omitempty"`
-	InGame *bool          `json:"ingame,omitempty"`
+	Filled       bool           `json:"filled"`
+	Player       *PlayerSummary `json:"player,omitempty"`
+	Ready        *bool          `json:"ready,omitempty"`
+	InGame       *bool          `json:"ingame,omitempty"`
+	Requirements *Requirement   `json:"requirements,omitempty"`
 }
 
 type ClassDetails struct {
@@ -101,6 +102,12 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 
 		ingame, _ := lobby.IsPlayerInGame(&player)
 		j.InGame = &ingame
+
+		if lobby.HasSlotRequirement(slot) {
+			j.Requirements, _ = lobby.GetSlotRequirement(slot)
+		} else if lobby.HasGeneralRequirement() {
+			j.Requirements, _ = lobby.GetGeneralRequirement()
+		}
 	}
 
 	return j
