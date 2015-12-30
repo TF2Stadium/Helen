@@ -16,7 +16,6 @@ import (
 
 func init() {
 	helpers.InitLogger()
-	testhelpers.CleanupDB()
 }
 
 func TestLobbyCreate(t *testing.T) {
@@ -86,11 +85,12 @@ func TestLobbyCreateWithRequirements(t *testing.T) {
 			"mumbleRequired":      true,
 			"password":            "",
 			"steamGroupWhitelist": nil,
+
 			"requirements": map[string]interface{}{
 				"classes": map[string]handler.Requirement{
 					"scout1": {
 						Hours:      1,
-						Restricted: handler.Restriction{Red: true},
+						Restricted: handler.Restriction{Red: true, Blu: true},
 					},
 				},
 				"general": handler.Requirement{Lobbies: 1},
@@ -103,13 +103,18 @@ func TestLobbyCreateWithRequirements(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, messages, 2)
 
-	var count int
-	db.DB.Table("requirements").Where("lobby_id = 1 AND slot = 0").Count(&count)
-	assert.Equal(t, count, 1)
+	lobby, err := models.GetLobbyByID(1)
+	assert.NoError(t, err)
 
-	count = 0
-	db.DB.Table("requirements").Where("lobby_id = 1 AND slot = -1").Count(&count)
-	assert.Equal(t, count, 1)
+	req, err := lobby.GetSlotRequirement(0)
+	assert.NoError(t, err)
+	assert.Equal(t, req.Hours, 1)
+	assert.Equal(t, req.Lobbies, 0)
+
+	req, err = lobby.GetGeneralRequirement()
+	assert.NoError(t, err)
+	assert.Equal(t, req.Lobbies, 1)
+	assert.Equal(t, req.Hours, 0)
 }
 
 func TestLobbyJoin(t *testing.T) {
