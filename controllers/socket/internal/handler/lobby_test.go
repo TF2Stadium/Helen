@@ -41,7 +41,7 @@ func TestLobbyCreate(t *testing.T) {
 			"league":              "etf2l",
 			"server":              "testerino",
 			"rconpwd":             "testerino",
-			"whitelistID":         123,
+			"whitelistID":         "123",
 			"mumbleRequired":      true,
 			"password":            "",
 			"steamGroupWhitelist": nil,
@@ -81,7 +81,7 @@ func TestLobbyCreateWithRequirements(t *testing.T) {
 			"league":              "etf2l",
 			"server":              "testerino",
 			"rconpwd":             "testerino",
-			"whitelistID":         123,
+			"whitelistID":         "123",
 			"mumbleRequired":      true,
 			"password":            "",
 			"steamGroupWhitelist": nil,
@@ -144,7 +144,7 @@ func TestLobbyJoin(t *testing.T) {
 			"league":         "etf2l",
 			"server":         "testerino",
 			"rconpwd":        "testerino",
-			"whitelistID":    123,
+			"whitelistID":    "123",
 			"mumbleRequired": true,
 		}}
 
@@ -236,7 +236,7 @@ func TestSpectatorJoin(t *testing.T) {
 			"league":         "etf2l",
 			"server":         "testerino",
 			"rconpwd":        "testerino",
-			"whitelistID":    123,
+			"whitelistID":    "123",
 			"mumbleRequired": true,
 		}}
 
@@ -316,7 +316,7 @@ func TestActualLobbyJoin(t *testing.T) {
 			"league":         "etf2l",
 			"server":         "testerino",
 			"rconpwd":        "testerino",
-			"whitelistID":    123,
+			"whitelistID":    "123",
 			"mumbleRequired": true,
 		}}
 	conn.WriteJSON(args)
