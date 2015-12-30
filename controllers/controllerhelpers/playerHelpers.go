@@ -69,6 +69,11 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 }
 
 func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *models.Player) {
+	if time.Since(player.UpdatedAt) >= time.Hour*1 {
+		player.UpdatePlayerInfo()
+		player.Save()
+	}
+
 	lobbyIdPlaying, err := player.GetLobbyID(false)
 	if err == nil {
 		lobby, _ := models.GetLobbyByIdServer(lobbyIdPlaying)
