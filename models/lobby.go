@@ -142,7 +142,7 @@ func NewRequirement(lobbyID uint, slot int, hours int, lobbies int) *Requirement
 func (r *Requirement) Save() { db.DB.Save(r) }
 
 // GetGlobalRequirement returns the global requirement for the lobby l
-func (lobby *Lobby) GetGlobalRequirement() (*Requirement, error) {
+func (lobby *Lobby) GetGeneralRequirement() (*Requirement, error) {
 	requirement := &Requirement{}
 	err := db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, -1).First(requirement).Error
 
@@ -156,19 +156,21 @@ func (lobby *Lobby) GetSlotRequirement(slot int) (*Requirement, error) {
 	return req, err
 }
 
-// HasRequirements returns true if the given slot has a requirement
-func (lobby *Lobby) HasRequirements(slot int) bool {
+func (lobby *Lobby) HasSlotRequirement(slot int) bool {
 	var count int
-
-	// check for general requirements
-	db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, -1).Count(&count)
-	if count != 0 {
-		return true
-	}
-
-	// check for slot sepfic requirements
 	db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Count(&count)
 	return count != 0
+}
+
+func (lobby *Lobby) HasGeneralRequirement() bool {
+	var count int
+	db.DB.Table("requirements").Where("lobby_id = ? AND slot = -1", lobby.ID).Count(&count)
+	return count != 0
+}
+
+// HasRequirements returns true if the given slot has a requirement
+func (lobby *Lobby) HasRequirements(slot int) bool {
+	return lobby.HasSlotRequirement(slot) || lobby.HasGeneralRequirement()
 }
 
 func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPError) {
@@ -177,7 +179,7 @@ func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPErr
 	player.UpdatePlayerInfo()
 	player.Save()
 
-	global, err := l.GetGlobalRequirement()
+	global, err := l.GetGeneralRequirement()
 	if err == nil {
 		requirements = append(requirements, global)
 	}
