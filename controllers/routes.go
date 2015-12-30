@@ -10,6 +10,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/websocket"
 )
@@ -57,6 +58,7 @@ func (s Sockets) SocketHandler(w http.ResponseWriter, r *http.Request) {
 		var estr = "Couldn't create WebSocket connection."
 		//estr = err.Error()
 
+		helpers.Logger.Error(err.Error())
 		http.Error(w, estr, 500)
 		return
 	}
