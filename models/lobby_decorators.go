@@ -146,6 +146,8 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	}
 
 	lobbyData.Classes = classes
+	lobbyData.WhitelistID = lobby.Whitelist
+	fmt.Println(lobbyData.WhitelistID)
 
 	if !includeDetails {
 		return lobbyData
@@ -157,7 +159,6 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyData.Leader = DecoratePlayerSummary(&leader)
 	lobbyData.CreatedAt = lobby.CreatedAt.Unix()
 	lobbyData.State = int(lobby.State)
-	lobbyData.WhitelistID = lobby.Whitelist
 
 	var specIDs []uint
 	db.DB.Table("spectators_players_lobbies").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &specIDs)
