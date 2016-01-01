@@ -147,7 +147,6 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 
 	lobbyData.Classes = classes
 	lobbyData.WhitelistID = lobby.Whitelist
-	fmt.Println(lobbyData.WhitelistID)
 
 	if !includeDetails {
 		return lobbyData
