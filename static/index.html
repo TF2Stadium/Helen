@@ -26,8 +26,7 @@ var createBox = function(so, messageName, messageFields) {
       params = {};
       messageFields.forEach(function(field) {
         var val = $("#"+messageName+"_"+field).val();
-        if ((field.toLowerCase() !== "steamid" && field.endsWith("id")) || field == "room" || field == "whitelistID"
-            || field == "role") {
+        if ((field.toLowerCase() !== "steamid" && field.endsWith("id")) || field == "room" || field == "role") {
           val = parseInt(val);
         } else if (field == "mumbleRequired" || field == "ban") {
           val = (val == "true")
