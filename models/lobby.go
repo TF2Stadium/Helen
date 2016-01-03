@@ -715,3 +715,7 @@ func BroadcastLobbyList() {
 		fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom),
 		"lobbyListData", DecorateLobbyListData(lobbies))
 }
+
+func (l *Lobby) LobbyData(include bool) LobbyData {
+	return DecorateLobbyData(l, include)
+}
