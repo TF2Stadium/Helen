@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 )
 
@@ -179,6 +180,14 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyData.Spectators = spectators
 
 	return lobbyData
+}
+
+func (l LobbyData) Send() {
+	broadcaster.SendMessageToRoom(fmt.Sprintf("%d_public", l.ID), "lobbyData", l)
+}
+
+func (l LobbyData) SendToPlayer(steamid string) {
+	broadcaster.SendMessage(steamid, "lobbyData", l)
 }
 
 func DecorateLobbyListData(lobbies []Lobby) LobbyListData {
