@@ -130,6 +130,17 @@ func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data
 		return helpers.NewTPErrorFromError(err)
 	}
 
+	if *args.Key == "siteAlias" {
+		profile := models.DecoratePlayerProfileJson(player)
+		so.EmitJSON(helpers.NewRequest("playerProfile", profile))
+
+		if lobbyID, _ := player.GetLobbyID(true); lobbyID != 0 {
+			lobby, _ := models.GetLobbyByID(lobbyID)
+			lobbyData := lobby.LobbyData(true)
+			lobbyData.Send()
+		}
+	}
+
 	return chelpers.EmptySuccessJS
 }
 
