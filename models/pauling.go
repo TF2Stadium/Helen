@@ -41,18 +41,19 @@ func paulingReconnect() {
 		return
 	}
 
+	var err error
 	mu.Lock()
 	defer mu.Unlock()
 	helpers.Logger.Debug("Reconnecting to Pauling on port %s", config.Constants.PaulingPort)
-	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
+	pauling, err = rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
 	for err != nil {
 		helpers.Logger.Critical("%s", err.Error())
 		time.Sleep(1 * time.Second)
-		client, err = rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
+		pauling, err = rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
 	}
 
-	pauling = client
 	helpers.Logger.Debug("Connected!")
+	pauling.Call("Pauling.Connect", config.Constants.RPCPort, struct{}{})
 }
 
 func PaulingConnect() {
