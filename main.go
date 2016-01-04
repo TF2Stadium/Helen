@@ -25,6 +25,7 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/rpc"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/context"
 	"github.com/rs/cors"
@@ -56,6 +57,7 @@ func main() {
 	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
+	go rpc.StartRPC()
 	startPaulingListener()
 	chelpers.InitGeoIPDB()
 	if config.Constants.SteamIDWhitelist != "" {
