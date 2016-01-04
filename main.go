@@ -34,6 +34,7 @@ import (
 func main() {
 	helpers.InitLogger()
 	config.SetupConstants()
+	go rpc.StartRPC()
 
 	if config.Constants.ProfilerEnable {
 		address := "localhost:" + config.Constants.ProfilerPort
@@ -57,8 +58,6 @@ func main() {
 	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
-	go rpc.StartRPC()
-	startPaulingListener()
 	chelpers.InitGeoIPDB()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
