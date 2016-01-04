@@ -33,7 +33,9 @@ func getPlayerID(steamID string) uint {
 
 func StartRPC() {
 	helen := new(Helen)
+	event := new(Event)
 	rpc.Register(helen)
+	rpc.Register(event)
 	rpc.HandleHTTP()
 
 	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", config.Constants.RPCPort))
