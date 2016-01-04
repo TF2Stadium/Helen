@@ -75,14 +75,14 @@ func (s Sockets) SocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SetupHTTPRoutes(server *wsevent.Server, noauth *wsevent.Server) {
-	http.HandleFunc("/", MainHandler)
-	http.HandleFunc("/openidcallback", LoginCallbackHandler)
-	http.HandleFunc("/startLogin", LoginHandler)
-	http.HandleFunc("/logout", LogoutHandler)
-	http.HandleFunc("/chatlogs/", chelpers.FilterHTTPRequest(GetChatLogs))
+func SetupHTTPRoutes(mux *http.ServeMux, server *wsevent.Server, noauth *wsevent.Server) {
+	mux.HandleFunc("/", MainHandler)
+	mux.HandleFunc("/openidcallback", LoginCallbackHandler)
+	mux.HandleFunc("/startLogin", LoginHandler)
+	mux.HandleFunc("/logout", LogoutHandler)
+	mux.HandleFunc("/chatlogs/", chelpers.FilterHTTPRequest(GetChatLogs))
 	if config.Constants.MockupAuth {
-		http.HandleFunc("/startMockLogin/", MockLoginHandler)
+		mux.HandleFunc("/startMockLogin/", MockLoginHandler)
 	}
-	http.HandleFunc("/websocket/", Sockets{server, noauth}.SocketHandler)
+	mux.HandleFunc("/websocket/", Sockets{server, noauth}.SocketHandler)
 }

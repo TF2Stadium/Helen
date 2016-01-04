@@ -73,7 +73,8 @@ func main() {
 
 	broadcaster.Init(server, nologin)
 	socket.ServerInit(server, nologin)
-	controllers.SetupHTTPRoutes(server, nologin)
+	mux := http.NewServeMux()
+	controllers.SetupHTTPRoutes(mux, server, nologin)
 
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
 		// init static FileServer
@@ -85,7 +86,7 @@ func main() {
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   config.Constants.AllowedCorsOrigins,
 		AllowCredentials: true,
-	}).Handler(context.ClearHandler(http.DefaultServeMux))
+	}).Handler(context.ClearHandler(mux))
 
 	// start the server
 	helpers.Logger.Debug("Serving at %s", config.Constants.Domain)
