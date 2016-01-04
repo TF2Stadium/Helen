@@ -79,7 +79,7 @@ func main() {
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
 		// init static FileServer
 		// TODO be careful to set this to correct location when deploying
-		http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, r.URL.Path[1:])
 		})
 	}
