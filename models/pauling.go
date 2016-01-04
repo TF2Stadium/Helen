@@ -5,7 +5,6 @@
 package models
 
 import (
-	"io"
 	"net/rpc"
 	"sync"
 	"time"
@@ -37,8 +36,6 @@ type Args struct {
 var mu = new(sync.RWMutex)
 var pauling *rpc.Client
 
-type Event map[string]interface{}
-
 func paulingReconnect() {
 	if config.Constants.ServerMockUp {
 		return
@@ -66,14 +63,15 @@ func PaulingConnect() {
 	mu.Lock()
 	defer mu.Unlock()
 
+	var err error
 	helpers.Logger.Debug("Connecting to Pauling on port %s", config.Constants.PaulingPort)
-	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
+	pauling, err = rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
 	if err != nil {
 		helpers.Logger.Fatal(err)
 	}
 
-	pauling = client
 	helpers.Logger.Debug("Connected!")
+	pauling.Call("Pauling.Connect", config.Constants.RPCPort, struct{}{})
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {
@@ -137,21 +135,6 @@ func IsPlayerInServer(steamid string) (reply bool) {
 	pauling.Call("Pauling.IsPlayerInServer", &args, &reply)
 
 	return
-}
-
-func GetEvent() Event {
-	event := make(Event)
-
-	err := pauling.Call("Pauling.GetEvent", &Args{}, &event)
-	if err != nil {
-		if err == io.ErrUnexpectedEOF {
-			paulingReconnect()
-			return GetEvent()
-		}
-		helpers.Logger.Fatal(err.Error())
-	}
-
-	return event
 }
 
 func End(lobbyId uint) {
