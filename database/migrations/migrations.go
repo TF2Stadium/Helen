@@ -5,9 +5,13 @@
 package migrations
 
 import (
+	"sync"
+
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
 )
+
+var once = new(sync.Once)
 
 func Do() {
 	database.DB.AutoMigrate(&models.Player{})
@@ -24,4 +28,7 @@ func Do() {
 	database.DB.AutoMigrate(&models.Substitute{})
 	database.DB.AutoMigrate(&models.ChatMessage{})
 	database.DB.AutoMigrate(&models.Requirement{})
+	database.DB.AutoMigrate(&Constant{})
+
+	once.Do(checkSchema)
 }
