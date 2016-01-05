@@ -54,7 +54,6 @@ func main() {
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()
-	models.PaulingConnect()
 	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
