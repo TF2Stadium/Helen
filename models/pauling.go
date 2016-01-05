@@ -72,7 +72,7 @@ func PaulingConnect() {
 	}
 
 	helpers.Logger.Debug("Connected!")
-	pauling.Call("Pauling.Connect", config.Constants.RPCPort, struct{}{})
+	pauling.Call("Pauling.Connect", config.Constants.RPCPort, &struct{}{})
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {
