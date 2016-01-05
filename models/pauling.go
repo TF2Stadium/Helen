@@ -5,6 +5,8 @@
 package models
 
 import (
+	"io"
+	"net"
 	"net/rpc"
 	"sync"
 	"time"
@@ -36,7 +38,7 @@ type Args struct {
 var mu = new(sync.RWMutex)
 var pauling *rpc.Client
 
-func paulingReconnect() {
+func reconnect() {
 	if config.Constants.ServerMockUp {
 		return
 	}
@@ -53,7 +55,7 @@ func paulingReconnect() {
 	}
 
 	helpers.Logger.Debug("Connected!")
-	pauling.Call("Pauling.Connect", config.Constants.RPCPort, struct{}{})
+	pauling.Call("Pauling.Connect", config.Constants.RPCPort, &struct{}{})
 }
 
 func PaulingConnect() {
@@ -73,6 +75,34 @@ func PaulingConnect() {
 
 	helpers.Logger.Debug("Connected!")
 	pauling.Call("Pauling.Connect", config.Constants.RPCPort, &struct{}{})
+	go keepAlive()
+}
+
+func disconnected(err error) bool {
+	if _, ok := err.(*net.OpError); ok {
+		return true
+	}
+
+	if err == rpc.ErrShutdown || err == io.ErrUnexpectedEOF {
+		return true
+	}
+
+	return false
+}
+
+func keepAlive() {
+	ticker := time.NewTicker(10 * time.Microsecond)
+	for {
+		<-ticker.C
+		err := pauling.Call("Pauling.KeepAlive", struct{}{}, &struct{}{})
+		if disconnected(err) {
+			ticker.Stop()
+			reconnect()
+			ticker = time.NewTicker(10 * time.Microsecond)
+		} else if err != nil {
+			helpers.Logger.Fatal(err)
+		}
+	}
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {
