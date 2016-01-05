@@ -5,11 +5,13 @@
 package database
 
 import (
+	"net/url"
+	"sync"
+
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
-	"sync"
 )
 
 // we'll use Test() to set this
@@ -19,7 +21,7 @@ var IsTest bool = false
 var DB gorm.DB
 var dbMutex sync.Mutex
 var initialized = false
-var DbUrl string
+var DBUrl url.URL
 
 // we'll connect to the database through this function
 func Init() {
@@ -30,24 +32,19 @@ func Init() {
 		return
 	}
 
-	helpers.Logger.Debug("[DB]: DB name -> [" + config.Constants.DbDatabase + "]")
-	helpers.Logger.Debug("[DB]: DB user -> [" + config.Constants.DbUsername + "]")
-	helpers.Logger.Debug("[DB]: Connecting to database -> [" + config.Constants.DbDatabase + "]")
-
-	var passwordArg string
-	if config.Constants.DbPassword == "" {
-		passwordArg = ""
-	} else {
-		passwordArg = ":" + config.Constants.DbPassword
+	DBUrl = url.URL{
+		Scheme:   "postgres",
+		Host:     config.Constants.DbHost,
+		Path:     config.Constants.DbDatabase,
+		RawQuery: "sslmode=disable",
 	}
 
-	DbUrl = "postgres://" + config.Constants.DbUsername +
-		passwordArg + "@" +
-		config.Constants.DbHost + "/" +
-		config.Constants.DbDatabase + "?sslmode=disable"
+	helpers.Logger.Info("Connecting to DB on %s", DBUrl.String())
+
+	DBUrl.User = url.UserPassword(config.Constants.DbUsername, config.Constants.DbPassword)
 
 	var err error
-	DB, err = gorm.Open("postgres", DbUrl)
+	DB, err = gorm.Open("postgres", DBUrl.String())
 	//	DB, err := gorm.Open("sqlite3", "/tmp/gorm.db")
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
@@ -55,6 +52,6 @@ func Init() {
 
 	DB.SetLogger(helpers.FakeLogger{})
 
-	helpers.Logger.Debug("[DB]: Connected!")
+	helpers.Logger.Info("Connected!")
 	initialized = true
 }

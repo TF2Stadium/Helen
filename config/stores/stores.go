@@ -24,7 +24,7 @@ var socketAuthStore = make(map[string]*sessions.Session)
 func SetupStores() {
 	if SessionStore == nil {
 		sessionStoreMutex.Lock()
-		SessionStore = pgstore.NewPGStore(database.DbUrl, []byte(config.Constants.SessionName))
+		SessionStore = pgstore.NewPGStore(database.DBUrl.String(), []byte(config.Constants.SessionName))
 		SessionStore.Options.HttpOnly = true
 		sessionStoreMutex.Unlock()
 	}
