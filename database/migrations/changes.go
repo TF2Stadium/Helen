@@ -29,18 +29,13 @@ func getCurrConstants() *Constant {
 }
 
 func writeConstants() {
-	db.DB.Save(&Constant{
-		SchemaVersion: schemaVersion.String(),
-	})
-}
-
-func printConstants() {
-	helpers.Logger.Info("Current Schema Version: v%s", getCurrConstants().SchemaVersion)
+	db.DB.Exec("UPDATE constants SET schema_version = ?", schemaVersion.String())
+	helpers.Logger.Info("Current Schema Version: %s", getCurrConstants().SchemaVersion)
 }
 
 func checkSchema() {
 	var count int
-	defer printConstants()
+	defer writeConstants()
 
 	db.DB.Table("constants").Where("schema_version = ?", schemaVersion.String()).Count(&count)
 
@@ -50,16 +45,18 @@ func checkSchema() {
 
 	currStr := getCurrConstants().SchemaVersion
 	if currStr == "" {
+		db.DB.Save(&Constant{
+			schemaVersion.String(),
+		})
 		//Initial database migration
 		whitelist_id_string()
 		//Write current schema version
-		writeConstants()
 		return
 	}
 
 	if v, _ := semver.Parse(currStr); v.Major < schemaVersion.Major {
-		helpers.Logger.Info("Incompatible schema change detected (%s), attempting to migrate to (%s).", currStr, schemaVersion.String())
-		f := migrationsRoutines[schemaVersion.Major]
+		helpers.Logger.Warning("Incompatible schema change detected (%s), attempting to migrate to (%s).", currStr, schemaVersion.String())
+		f := migrationRoutines[schemaVersion.Major]
 		f()
 	}
 }

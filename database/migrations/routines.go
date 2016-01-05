@@ -11,7 +11,8 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 )
 
-var migrationsRoutines = map[uint64]func(){}
+// major ver -> migration routine
+var migrationRoutines = map[uint64]func(){}
 
 func whitelist_id_string() {
 	var count int
@@ -33,7 +34,7 @@ func whitelist_id_string() {
 
 	db.DB.Table("lobbies").Order("id").Pluck("id", &lobbyIDs)
 
-	db.DB.Model(&models.Lobby{}).DropColumn("whitelist")
+	db.DB.Exec("ALTER TABLE lobbies DROP whitelist")
 	db.DB.Exec("ALTER TABLE lobbies ADD whitelist varchar(255)")
 
 	for i, lobbyID := range lobbyIDs {
