@@ -124,8 +124,6 @@ outer:
 		field := stType.Field(i)
 		fieldPtrValue := stValue.Field(i) //The pointer field
 
-		fmt.Println(fieldPtrValue.Type().Elem().Kind())
-
 		if fieldPtrValue.Type().Elem().Kind() != reflect.String {
 			if fieldPtrValue.IsNil() && field.Tag.Get("empty") == "" {
 				return fmt.Errorf(`Field "%s" cannot be null`, strings.ToLower(field.Name))
