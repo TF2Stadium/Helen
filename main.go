@@ -41,7 +41,7 @@ func main() {
 		go func() {
 			graceful.Run(address, 1*time.Second, nil)
 		}()
-		helpers.Logger.Debug("Running Profiler at %s", address)
+		helpers.Logger.Info("Running Profiler at %s", address)
 	}
 
 	pid := &pid.Instance{}
@@ -63,7 +63,6 @@ func main() {
 		go chelpers.WhitelistListener()
 	}
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
-	helpers.Logger.Debug("Starting the server")
 
 	// init http server
 
@@ -89,6 +88,6 @@ func main() {
 	}).Handler(context.ClearHandler(mux))
 
 	// start the server
-	helpers.Logger.Debug("Serving at %s", config.Constants.Domain)
+	helpers.Logger.Info("Serving at %s", config.Constants.Domain)
 	graceful.Run(":"+config.Constants.Port, 1*time.Second, corsHandler)
 }
