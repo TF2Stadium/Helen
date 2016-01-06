@@ -79,7 +79,7 @@ func (Helen) GetSteamIDFromSlot(args Args, steamID *string) error {
 		helpers.Logger.Error(err.Error())
 	}
 
-	err = db.DB.DB().QueryRow("SELECT steam_id FROM players WHERE id = $1", playerID).Scan(&steamID)
+	err = db.DB.DB().QueryRow("SELECT steam_id FROM players WHERE id = $1", playerID).Scan(steamID)
 	if err != nil {
 		helpers.Logger.Error(err.Error())
 	}
