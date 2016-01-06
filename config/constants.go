@@ -93,7 +93,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.DbDatabase, "DATABASE_NAME", true)
 	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME", true)
 	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD", true)
-	overrideFromEnv(&Constants.RPCPort, "RPC_PORT", true)
+	overrideFromEnv(&Constants.RPCPort, "RPC_PORT", false)
 	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT", false)
 	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN", false)
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM", false)
