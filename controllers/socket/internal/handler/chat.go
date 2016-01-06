@@ -87,7 +87,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 		return chelpers.EmptySuccessJS
 	}
 
-	message.Send(*args.Room)
+	message.Send()
 
 	return chelpers.EmptySuccessJS
 }
