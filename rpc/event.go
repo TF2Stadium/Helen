@@ -22,6 +22,7 @@ const (
 	PlayerDisconnected string = "playerDisc"
 	PlayerSubstituted  string = "playerSub"
 	PlayerConnected    string = "playerConn"
+	PlayerChat         string = "playerChat"
 
 	DisconnectedFromServer string = "discFromServer"
 	MatchEnded             string = "matchEnded"
@@ -90,6 +91,15 @@ func playerSub(playerID, lobbyID uint) {
 	lobby.RemovePlayer(player)
 
 	models.SendNotification(fmt.Sprintf("%s has been reported.", player.Name), int(lobby.ID))
+}
+
+func playerChat(lobbyID uint, playerID uint, message string) {
+	lobby, _ := models.GetLobbyByIdServer(lobbyID)
+	player, _ := models.GetPlayerByID(playerID)
+
+	chatMessage := models.NewInGameChatMessage(lobby, player, message)
+	chatMessage.Save()
+	chatMessage.Send()
 }
 
 func disconnectedFromServer(lobbyID uint) {
