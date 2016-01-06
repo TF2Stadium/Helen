@@ -13,7 +13,7 @@ import (
 //follows semantic versioning scheme
 var schemaVersion = semver.Version{
 	Major: 1,
-	Minor: 0,
+	Minor: 1,
 	Patch: 0,
 }
 
