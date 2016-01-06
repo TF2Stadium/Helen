@@ -6,7 +6,6 @@ package main
 
 import (
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"strings"
 	"time"
@@ -28,6 +27,7 @@ import (
 	"github.com/TF2Stadium/Helen/rpc"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/context"
+	_ "github.com/rakyll/gom/http"
 	"github.com/rs/cors"
 )
 
