@@ -30,6 +30,8 @@ type ChatMessage struct {
 	Deleted bool `json:"-"`
 	// true if the message is sent by a bot
 	Bot bool `json:"bot"`
+	// true if the message is in-game
+	InGame bool `json:"ingame"`
 }
 
 var botSummary = PlayerSummary{
@@ -52,12 +54,25 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	return record
 }
 
+func NewInGameChatMessage(lobby *Lobby, player *Player, message string) *ChatMessage {
+	return &ChatMessage{
+		Timestamp: time.Now().Unix(),
+
+		PlayerID: player.ID,
+		Player:   DecoratePlayerSummary(player),
+
+		Room:    int(lobby.ID),
+		Message: message,
+		InGame:  true,
+	}
+}
+
 func (m *ChatMessage) Save() { db.DB.Save(m) }
 
-func (m *ChatMessage) Send(room int) {
-	broadcaster.SendMessageToRoom(fmt.Sprintf("%d_public", room), "chatReceive", m)
-	if room != 0 {
-		broadcaster.SendMessageToRoom(fmt.Sprintf("%d_private", room), "chatReceive", m)
+func (m *ChatMessage) Send() {
+	broadcaster.SendMessageToRoom(fmt.Sprintf("%d_public", m.Room), "chatReceive", m)
+	if m.Room != 0 {
+		broadcaster.SendMessageToRoom(fmt.Sprintf("%d_private", m.Room), "chatReceive", m)
 	}
 }
 
