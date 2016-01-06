@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/helpers"
 )
 
 type ServerBootstrap struct {
@@ -47,6 +48,15 @@ func call(method string, args, reply interface{}) error {
 	err = client.Call(method, args, reply)
 	client.Close()
 	return err
+}
+
+func CheckConnection() {
+	err := call("Pauling.Test", struct{}{}, &struct{}{})
+	if err != nil {
+		helpers.Logger.Fatal(err.Error())
+	}
+
+	helpers.Logger.Debug("Able to connect to Pauling")
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {
