@@ -12,6 +12,11 @@ import (
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
 	if controllerhelpers.IsLoggedInHTTP(r) {
 		session, _ := controllerhelpers.GetSessionHTTP(r)
 		var steamid = session.Values["steam_id"].(string)
