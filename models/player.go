@@ -41,8 +41,9 @@ type PlayerBan struct {
 
 // Represents a stored player setting
 type PlayerSetting struct {
-	ID       uint
-	PlayerID uint
+	ID        uint
+	CreatedAt time.Time
+	PlayerID  uint
 
 	Key   string // Setting key
 	Value string `sql:"size:65535"` // Setting value
@@ -93,6 +94,17 @@ func (player *Player) Save() error {
 		err = db.DB.Save(player).Error
 	}
 	return err
+}
+
+// Get a player by it's ID
+func GetPlayerByID(ID uint) (*Player, error) {
+	player := &Player{}
+
+	if err := db.DB.First(player, ID).Error; err != nil {
+		return nil, err
+	}
+
+	return player, nil
 }
 
 // Get a player object by it's Steam id

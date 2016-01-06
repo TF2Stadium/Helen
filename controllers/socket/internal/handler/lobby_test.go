@@ -10,11 +10,12 @@ import (
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/TF2Stadium/Helen/controllers/socket/internal/handler"
 )
 
 func init() {
 	helpers.InitLogger()
-	testhelpers.CleanupDB()
 }
 
 func TestLobbyCreate(t *testing.T) {
@@ -40,7 +41,7 @@ func TestLobbyCreate(t *testing.T) {
 			"league":              "etf2l",
 			"server":              "testerino",
 			"rconpwd":             "testerino",
-			"whitelistID":         123,
+			"whitelistID":         "123",
 			"mumbleRequired":      true,
 			"password":            "",
 			"steamGroupWhitelist": nil,
@@ -61,6 +62,59 @@ func TestLobbyCreate(t *testing.T) {
 	lobby, err := models.GetLobbyByID(1)
 	assert.NoError(t, err)
 	assert.Equal(t, lobby.CreatedBySteamID, steamid)
+}
+
+func TestLobbyCreateWithRequirements(t *testing.T) {
+	testhelpers.CleanupDB()
+	server := testhelpers.StartServer(testhelpers.NewSockets())
+	defer server.Close()
+
+	_, conn, _, err := testhelpers.LoginAndConnectWS()
+	assert.NoError(t, err)
+
+	args := map[string]interface{}{
+		"id": "1",
+		"data": map[string]interface{}{
+			"request":             "lobbyCreate",
+			"map":                 "cp_badlands",
+			"type":                "6s",
+			"league":              "etf2l",
+			"server":              "testerino",
+			"rconpwd":             "testerino",
+			"whitelistID":         "123",
+			"mumbleRequired":      true,
+			"password":            "",
+			"steamGroupWhitelist": nil,
+
+			"requirements": map[string]interface{}{
+				"classes": map[string]handler.Requirement{
+					"scout1": {
+						Hours:      1,
+						Restricted: handler.Restriction{Red: true, Blu: true},
+					},
+				},
+				"general": handler.Requirement{Lobbies: 1},
+			},
+		}}
+
+	conn.WriteJSON(args)
+
+	messages, err := testhelpers.ReadMessages(conn, 2, nil)
+	assert.NoError(t, err)
+	assert.Len(t, messages, 2)
+
+	lobby, err := models.GetLobbyByID(1)
+	assert.NoError(t, err)
+
+	req, err := lobby.GetSlotRequirement(0)
+	assert.NoError(t, err)
+	assert.Equal(t, req.Hours, 1)
+	assert.Equal(t, req.Lobbies, 0)
+
+	req, err = lobby.GetGeneralRequirement()
+	assert.NoError(t, err)
+	assert.Equal(t, req.Lobbies, 1)
+	assert.Equal(t, req.Hours, 0)
 }
 
 func TestLobbyJoin(t *testing.T) {
@@ -90,7 +144,7 @@ func TestLobbyJoin(t *testing.T) {
 			"league":         "etf2l",
 			"server":         "testerino",
 			"rconpwd":        "testerino",
-			"whitelistID":    123,
+			"whitelistID":    "123",
 			"mumbleRequired": true,
 		}}
 
@@ -182,7 +236,7 @@ func TestSpectatorJoin(t *testing.T) {
 			"league":         "etf2l",
 			"server":         "testerino",
 			"rconpwd":        "testerino",
-			"whitelistID":    123,
+			"whitelistID":    "123",
 			"mumbleRequired": true,
 		}}
 
@@ -262,7 +316,7 @@ func TestActualLobbyJoin(t *testing.T) {
 			"league":         "etf2l",
 			"server":         "testerino",
 			"rconpwd":        "testerino",
-			"whitelistID":    123,
+			"whitelistID":    "123",
 			"mumbleRequired": true,
 		}}
 	conn.WriteJSON(args)
@@ -366,9 +420,9 @@ func TestLobbyClose(t *testing.T) {
 		},
 	}
 	conn.WriteJSON(args)
-	messages, _ = testhelpers.ReadMessages(conn, 1, nil)
-	assert.Equal(t, len(messages), 1)
-	assert.False(t, messages[0]["success"].(bool))
+	messages, _ = testhelpers.ReadMessages(conn, 2, nil)
+	assert.Equal(t, len(messages), 2)
+	assert.False(t, messages[1]["success"].(bool))
 
 	args = map[string]interface{}{
 		"id": "1",

@@ -122,35 +122,11 @@ func GetParams(data []byte, v interface{}) error {
 outer:
 	for i := 0; i < stType.NumField(); i++ {
 		field := stType.Field(i)
-		fieldPtrValue := stValue.Field(i)             //The pointer field
-		fieldValue := reflect.Indirect(fieldPtrValue) //The value to which the pointer points too
+		fieldPtrValue := stValue.Field(i) //The pointer field
 
 		if fieldPtrValue.Type().Elem().Kind() != reflect.String {
-			if fieldPtrValue.IsNil() {
-				emptyTag := field.Tag.Get("empty")
-				if emptyTag == "" {
-					return fmt.Errorf(`Field "%s" cannot be null`, strings.ToLower(field.Name))
-				}
-
-				switch fieldPtrValue.Type().Elem().Kind() {
-				case reflect.Uint:
-					num, err := strconv.ParseUint(emptyTag, 2, 32)
-					if err != nil {
-						panic(err.Error())
-					}
-					fieldPtrValue.Set(reflect.ValueOf(&num))
-				case reflect.Bool:
-					b, ok := map[string]bool{
-						"true":  true,
-						"false": false}[emptyTag]
-					if !ok {
-						panic(fmt.Errorf(
-							"%s is not a valid boolean literal string",
-							emptyTag))
-					}
-					fieldPtrValue.Set(reflect.ValueOf(&b))
-				}
-				continue
+			if fieldPtrValue.IsNil() && field.Tag.Get("empty") == "" {
+				return fmt.Errorf(`Field "%s" cannot be null`, strings.ToLower(field.Name))
 			}
 		} else if fieldPtrValue.IsNil() {
 			empty := field.Tag.Get("empty")
@@ -167,10 +143,11 @@ outer:
 			continue
 		}
 
-		arr := strings.Split(validTag, ",")
+		fieldValue := reflect.Indirect(fieldPtrValue) //The value to which the pointer points too
+		validValues := strings.Split(validTag, ",")
 		var valid bool
 
-		for _, validVal := range arr {
+		for _, validVal := range validValues {
 			switch fieldValue.Kind() {
 			case reflect.Uint:
 				num, err := strconv.ParseUint(validVal, 2, 32)

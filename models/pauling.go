@@ -5,7 +5,6 @@
 package models
 
 import (
-	"io"
 	"net/rpc"
 	"sync"
 	"time"
@@ -26,7 +25,7 @@ type Args struct {
 	Info      ServerRecord
 	Type      LobbyType
 	League    string
-	Whitelist int
+	Whitelist string
 	Map       string
 	SteamId   string
 	SteamId2  string
@@ -37,43 +36,27 @@ type Args struct {
 var mu = new(sync.RWMutex)
 var pauling *rpc.Client
 
-type Event map[string]interface{}
-
-func paulingReconnect() {
-	if config.Constants.ServerMockUp {
-		return
-	}
-
-	mu.Lock()
-	defer mu.Unlock()
-	helpers.Logger.Debug("Reconnecting to Pauling on port %s", config.Constants.PaulingPort)
-	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
-	for err != nil {
-		helpers.Logger.Critical("%s", err.Error())
-		time.Sleep(1 * time.Second)
-		client, err = rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
-	}
-
-	pauling = client
-	helpers.Logger.Debug("Connected!")
-}
-
-func PaulingConnect() {
-	if config.Constants.ServerMockUp {
-		return
-	}
-
-	mu.Lock()
-	defer mu.Unlock()
-
-	helpers.Logger.Debug("Connecting to Pauling on port %s", config.Constants.PaulingPort)
+func call(method string, args, reply interface{}) error {
 	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
 	if err != nil {
-		helpers.Logger.Fatal(err)
+		for err != nil {
+			time.Sleep(1 * time.Second)
+			client, err = rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
+		}
 	}
 
-	pauling = client
-	helpers.Logger.Debug("Connected!")
+	err = client.Call(method, args, reply)
+	client.Close()
+	return err
+}
+
+func CheckConnection() {
+	err := call("Pauling.Test", struct{}{}, &struct{}{})
+	if err != nil {
+		helpers.Logger.Fatal(err.Error())
+	}
+
+	helpers.Logger.Debug("Able to connect to Pauling")
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {
@@ -84,11 +67,11 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	return pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
+	return call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
 }
 
 func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
-	whitelist int, mapName string) error {
+	whitelist string, mapName string) error {
 	if config.Constants.ServerMockUp {
 		return nil
 	}
@@ -103,7 +86,7 @@ func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league st
 		League:    league,
 		Whitelist: whitelist,
 		Map:       mapName}
-	return pauling.Call("Pauling.SetupServer", args, &Args{})
+	return call("Pauling.SetupServer", args, &Args{})
 }
 
 func ReExecConfig(lobbyId uint) error {
@@ -111,7 +94,7 @@ func ReExecConfig(lobbyId uint) error {
 		return nil
 	}
 
-	return pauling.Call("Pauling.ReExecConfig", &Args{Id: lobbyId}, &Args{})
+	return call("Pauling.ReExecConfig", &Args{Id: lobbyId}, &Args{})
 }
 
 func VerifyInfo(info ServerRecord) error {
@@ -122,7 +105,7 @@ func VerifyInfo(info ServerRecord) error {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	return pauling.Call("Pauling.VerifyInfo", &info, &Args{})
+	return call("Pauling.VerifyInfo", &info, &Args{})
 }
 
 func IsPlayerInServer(steamid string) (reply bool) {
@@ -134,24 +117,9 @@ func IsPlayerInServer(steamid string) (reply bool) {
 	defer mu.RUnlock()
 
 	args := &Args{SteamId: steamid}
-	pauling.Call("Pauling.IsPlayerInServer", &args, &reply)
+	call("Pauling.IsPlayerInServer", &args, &reply)
 
 	return
-}
-
-func GetEvent() Event {
-	event := make(Event)
-
-	err := pauling.Call("Pauling.GetEvent", &Args{}, &event)
-	if err != nil {
-		if err == io.ErrUnexpectedEOF {
-			paulingReconnect()
-			return GetEvent()
-		}
-		helpers.Logger.Fatal(err.Error())
-	}
-
-	return event
 }
 
 func End(lobbyId uint) {
@@ -162,7 +130,7 @@ func End(lobbyId uint) {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	pauling.Call("Pauling.End", &Args{Id: lobbyId}, &Args{})
+	call("Pauling.End", &Args{Id: lobbyId}, &Args{})
 }
 
 func Say(lobbyId uint, text string) {
@@ -173,5 +141,5 @@ func Say(lobbyId uint, text string) {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	pauling.Call("Pauling.Say", &Args{Id: lobbyId, Text: text}, &Args{})
+	call("Pauling.Say", &Args{Id: lobbyId, Text: text}, &Args{})
 }

@@ -7,11 +7,13 @@ package testhelpers
 import (
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -72,6 +74,25 @@ func ConnectWS(client *http.Client) (*websocket.Conn, error) {
 
 	conn, _, err := websocket.DefaultDialer.Dial(ws.String(), header)
 	return conn, err
+}
+
+func LoginAndConnectWS() (string, *websocket.Conn, *http.Client, error) {
+	steamid := strconv.Itoa(rand.Int())
+	client := NewClient()
+
+	_, err := Login(steamid, client)
+	if err != nil {
+		return "", nil, nil, err
+	}
+
+	conn, err := ConnectWS(client)
+	if err != nil {
+		return "", nil, nil, err
+	}
+
+	_, err = ReadMessages(conn, InitMessages, nil)
+
+	return steamid, conn, client, err
 }
 
 func EmitJSONWithReply(conn *websocket.Conn, req map[string]interface{}) (map[string]interface{}, error) {

@@ -46,6 +46,7 @@ func CleanupDB() {
 		"server_records",
 		"spectators_players_lobbies",
 		"substitutes",
+		"requirements",
 	}
 	for _, table := range tables {
 		database.DB.Exec("TRUNCATE TABLE " + table + " RESTART IDENTITY")

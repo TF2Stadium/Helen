@@ -21,6 +21,7 @@ type constants struct {
 	CookieStoreSecret  string
 	StaticFileLocation string
 	SessionName        string
+	RPCPort            string
 	PaulingPort        string
 	FumblePort         string
 	MumbleAddr         string
@@ -72,11 +73,9 @@ func overrideBoolFromEnv(constant *bool, name string) {
 	}
 }
 
-var Constants constants
+var Constants = constants{}
 
 func SetupConstants() {
-	Constants = constants{}
-
 	setupDevelopmentConstants()
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) == "production" {
 		setupProductionConstants()
@@ -94,6 +93,7 @@ func SetupConstants() {
 	overrideFromEnv(&Constants.DbDatabase, "DATABASE_NAME", true)
 	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME", true)
 	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD", true)
+	overrideFromEnv(&Constants.RPCPort, "RPC_PORT", false)
 	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT", false)
 	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN", false)
 	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM", false)
@@ -123,6 +123,7 @@ func SetupConstants() {
 func setupDevelopmentConstants() {
 	Constants.GlobalChatRoom = "0"
 	Constants.Port = "8080"
+	Constants.RPCPort = "8081"
 	Constants.Domain = "http://localhost:8080"
 	Constants.OpenIDRealm = "http://localhost:8080"
 	Constants.CookieDomain = ""

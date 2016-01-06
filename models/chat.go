@@ -30,6 +30,13 @@ type ChatMessage struct {
 	Deleted bool `json:"-"`
 	// true if the message is sent by a bot
 	Bot bool `json:"bot"`
+	// true if the message is in-game
+	InGame bool `json:"ingame"`
+}
+
+var botSummary = PlayerSummary{
+	Name: "TF2Stadium",
+	Tags: []string{"tf2stadium"},
 }
 
 // Return a new ChatMessage sent from specficied player
@@ -47,18 +54,40 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	return record
 }
 
+func NewInGameChatMessage(lobby *Lobby, player *Player, message string) *ChatMessage {
+	return &ChatMessage{
+		Timestamp: time.Now().Unix(),
+
+		PlayerID: player.ID,
+		Player:   DecoratePlayerSummary(player),
+
+		Room:    int(lobby.ID),
+		Message: message,
+		InGame:  true,
+	}
+}
+
+func (m *ChatMessage) Save() { db.DB.Save(m) }
+
+func (m *ChatMessage) Send() {
+	broadcaster.SendMessageToRoom(fmt.Sprintf("%d_public", m.Room), "chatReceive", m)
+	if m.Room != 0 {
+		broadcaster.SendMessageToRoom(fmt.Sprintf("%d_private", m.Room), "chatReceive", m)
+	}
+}
+
 func NewBotMessage(message string, room int) *ChatMessage {
 	m := &ChatMessage{
 		Timestamp: time.Now().Unix(),
 
-		Player:  PlayerSummary{Name: "TF2Stadium"},
+		Player:  botSummary,
 		Room:    room,
 		Message: message,
 
 		Bot: true,
 	}
 
-	db.DB.Save(m)
+	m.Save()
 	return m
 }
 
@@ -95,7 +124,7 @@ func GetScrollback(room int) ([]*ChatMessage, error) {
 	for _, message := range messages {
 		var player Player
 		if message.Bot {
-			message.Player = PlayerSummary{Name: "TF2Stadium"}
+			message.Player = botSummary
 		} else {
 			db.DB.First(&player, message.PlayerID)
 			message.Player = DecoratePlayerSummary(&player)

@@ -49,13 +49,18 @@ func decoratePlayerTags(p *Player) []string {
 
 func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	profile := PlayerProfile{}
+	alias, _ := p.GetSetting("siteAlias")
 
 	s := PlayerStats{}
 
-	s.Total = s.PlayedSixesCount + s.PlayedHighlanderCount + s.PlayedFoursCount + s.PlayedUltiduoCount + s.PlayedBballCount
+	s.Total = s.TotalLobbies()
 	profile.Stats = s
 
 	// info
+	if alias.Value != "" {
+		profile.Name = alias.Value
+	}
+
 	profile.CreatedAt = p.CreatedAt.Unix()
 	profile.GameHours = p.GameHours
 	profile.SteamID = p.SteamID
@@ -69,7 +74,7 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 }
 
 func DecoratePlayerSummary(p *Player) PlayerSummary {
-	return PlayerSummary{
+	summary := PlayerSummary{
 		Avatar:        p.Avatar,
 		GameHours:     p.GameHours,
 		ProfileURL:    p.Profileurl,
@@ -79,4 +84,11 @@ func DecoratePlayerSummary(p *Player) PlayerSummary {
 		Tags:          decoratePlayerTags(p),
 		Role:          helpers.RoleNames[p.Role],
 	}
+
+	alias, _ := p.GetSetting("siteAlias")
+	if alias.Value != "" {
+		summary.Name = alias.Value
+	}
+
+	return summary
 }

@@ -5,13 +5,11 @@
 package handler
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -66,11 +64,14 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 		// else room is the lobby list room
 		*args.Room, _ = strconv.Atoi(config.Constants.GlobalChatRoom)
 	}
-	if len(*args.Message) != 0 && (*args.Message)[0] == '\n' {
-		return helpers.NewTPError("Cannot send messages prefixed with newline", 4)
-	}
+	switch {
+	case len(*args.Message) == 0:
+		return helpers.NewTPError("Cannot send an empty message", 4)
 
-	if len(*args.Message) > 120 {
+	case (*args.Message)[0] == '\n':
+		return helpers.NewTPError("Cannot send messages prefixed with newline", 4)
+
+	case len(*args.Message) > 120:
 		return helpers.NewTPError("Message too long", 4)
 	}
 
@@ -78,14 +79,15 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 	if tperr != nil {
 		return tperr
 	}
-	db.DB.Save(message)
-	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public",
-		chelpers.GetLobbyRoom(uint(*args.Room))),
-		"chatReceive", message)
+
+	message.Save()
 
 	if strings.HasPrefix(*args.Message, "!admin") {
 		chelpers.SendToSlack(*args.Message, player.Name, player.SteamID)
+		return chelpers.EmptySuccessJS
 	}
+
+	message.Send()
 
 	return chelpers.EmptySuccessJS
 }

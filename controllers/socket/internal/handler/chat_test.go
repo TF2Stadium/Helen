@@ -54,7 +54,7 @@ func TestChatSend(t *testing.T) {
 			"league":              "etf2l",
 			"server":              "testerino",
 			"rconpwd":             "testerino",
-			"whitelistID":         123,
+			"whitelistID":         "123",
 			"mumbleRequired":      true,
 			"password":            nil,
 			"steamGroupWhitelist": nil,

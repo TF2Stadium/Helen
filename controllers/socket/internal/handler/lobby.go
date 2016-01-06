@@ -28,6 +28,32 @@ func (Lobby) Name(s string) string {
 
 var rSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
 
+type Restriction struct {
+	Red bool `json:"red,omitempty"`
+	Blu bool `json:"blu,omitempty"`
+}
+type Requirement struct {
+	Hours      int         `json:"hours"`
+	Lobbies    int         `json:"lobbies"`
+	Restricted Restriction `json:"restricted"`
+}
+
+func newRequirement(team, class string, requirement Requirement, lobby *models.Lobby) *helpers.TPError {
+	slot, err := models.LobbyGetPlayerSlot(lobby.Type, team, class)
+	if err != nil {
+		return err
+	}
+	slotReq := &models.Requirement{
+		LobbyID: lobby.ID,
+		Slot:    slot,
+		Hours:   requirement.Hours,
+		Lobbies: requirement.Lobbies,
+	}
+	slotReq.Save()
+
+	return nil
+}
+
 func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
@@ -41,11 +67,16 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 		League      *string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
 		Server      *string `json:"server"`
 		RconPwd     *string `json:"rconpwd"`
-		WhitelistID *uint   `json:"whitelistID"`
+		WhitelistID *string `json:"whitelistID"`
 		Mumble      *bool   `json:"mumbleRequired"`
 
 		Password            *string `json:"password" empty:"-"`
 		SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
+
+		Requirements *struct {
+			Classes map[string]Requirement `json:"classes,omitempty"`
+			General Requirement            `json:"general,omitempty"`
+		} `json:"requirements" empty:"-"`
 	}
 
 	err := chelpers.GetParams(data, &args)
@@ -93,7 +124,7 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 	// 	return string(bytes)
 	// }
 
-	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, int(*args.WhitelistID), *args.Mumble, steamGroup, *args.Password)
+	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, *args.WhitelistID, *args.Mumble, steamGroup, *args.Password)
 	lob.CreatedBySteamID = player.SteamID
 	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP != "" {
@@ -116,6 +147,29 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 
 	models.FumbleLobbyCreated(lob)
 
+	if args.Requirements != nil {
+		for class, requirement := range (*args.Requirements).Classes {
+			if requirement.Restricted.Blu {
+				err := newRequirement("blu", class, requirement, lob)
+				if err != nil {
+					return err
+				}
+			}
+			if requirement.Restricted.Red {
+				err := newRequirement("red", class, requirement, lob)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		general := &models.Requirement{
+			LobbyID: lob.ID,
+			Hours:   args.Requirements.General.Hours,
+			Lobbies: args.Requirements.General.Lobbies,
+			Slot:    -1,
+		}
+		general.Save()
+	}
 	return chelpers.BuildSuccessJSON(
 		struct {
 			ID uint `json:"id"`
@@ -225,6 +279,9 @@ func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte)
 
 	lob.Close(true)
 	models.BroadcastLobbyList() // has to be done manually for now
+
+	notify := fmt.Sprintf("Lobby closed by %s", player.Name)
+	models.SendNotification(notify, int(lob.ID))
 
 	return chelpers.EmptySuccessJS
 }
@@ -542,8 +599,6 @@ func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, dat
 			chelpers.AfterLobbySpecLeave(server, so, lob)
 			return chelpers.EmptySuccessJS
 		}
-
-		return helpers.NewTPError("Player is not spectating", -1)
 	}
 
 	lob.RemoveSpectator(player, true)

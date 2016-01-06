@@ -24,21 +24,24 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/rpc"
 	"github.com/TF2Stadium/wsevent"
+	"github.com/gorilla/context"
+	_ "github.com/rakyll/gom/http"
 	"github.com/rs/cors"
-	_ "net/http/pprof"
 )
 
 func main() {
 	helpers.InitLogger()
 	config.SetupConstants()
+	go rpc.StartRPC()
 
 	if config.Constants.ProfilerEnable {
 		address := "localhost:" + config.Constants.ProfilerPort
 		go func() {
 			graceful.Run(address, 1*time.Second, nil)
 		}()
-		helpers.Logger.Debug("Running Profiler at %s", address)
+		helpers.Logger.Info("Running Profiler at %s", address)
 	}
 
 	pid := &pid.Instance{}
@@ -51,17 +54,18 @@ func main() {
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()
-	models.PaulingConnect()
 	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
-	startPaulingListener()
+	if !config.Constants.ServerMockUp {
+		models.CheckConnection()
+	}
+
 	chelpers.InitGeoIPDB()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
 	}
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
-	helpers.Logger.Debug("Starting the server")
 
 	// init http server
 
@@ -71,21 +75,22 @@ func main() {
 
 	broadcaster.Init(server, nologin)
 	socket.ServerInit(server, nologin)
-	controllers.SetupHTTPRoutes(server, nologin)
+	mux := http.NewServeMux()
+	controllers.SetupHTTPRoutes(mux, server, nologin)
 
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
 		// init static FileServer
 		// TODO be careful to set this to correct location when deploying
-		http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, r.URL.Path[1:])
 		})
 	}
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   config.Constants.AllowedCorsOrigins,
 		AllowCredentials: true,
-	}).Handler(http.DefaultServeMux)
+	}).Handler(context.ClearHandler(mux))
 
 	// start the server
-	helpers.Logger.Debug("Serving at %s", config.Constants.Domain)
+	helpers.Logger.Info("Serving at %s", config.Constants.Domain)
 	graceful.Run(":"+config.Constants.Port, 1*time.Second, corsHandler)
 }

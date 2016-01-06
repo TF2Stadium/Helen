@@ -43,7 +43,15 @@ func TestLobbyClose(t *testing.T) {
 	testhelpers.CleanupDB()
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
+
+	req := &Requirement{
+		LobbyID: lobby.ID,
+	}
+	req.Save()
 	lobby.Close(true)
+	var count int
+	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Count(&count)
+	assert.Zero(t, count)
 
 	lobby, _ = GetLobbyByID(lobby.ID)
 	assert.Equal(t, lobby.State, LobbyStateEnded)
@@ -69,7 +77,7 @@ func TestLobbyAdd(t *testing.T) {
 	assert.Nil(t, err)
 
 	slot, err2 := lobby.GetPlayerSlot(players[0])
-	assert.Equal(t, slot, 0)
+	assert.Zero(t, slot)
 	assert.Nil(t, err2)
 
 	id, err3 := lobby.GetPlayerIDBySlot(0)
@@ -297,7 +305,7 @@ func TestSpectators(t *testing.T) {
 	lobby.AddPlayer(player2, 11, "")
 	specs = nil
 	db.DB.Model(lobby).Association("Spectators").Find(&specs)
-	assert.Equal(t, 0, len(specs))
+	assert.Zero(t, len(specs))
 }
 
 func TestUnreadyAllPlayers(t *testing.T) {
@@ -391,4 +399,63 @@ func TestNotInGameSub(t *testing.T) {
 	var subcount int
 	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Count(&subcount)
 	assert.Equal(t, subcount, 12-ingame)
+}
+
+func TestSlotRequirements(t *testing.T) {
+	testhelpers.CleanupDB()
+	lobby := testhelpers.CreateLobby()
+	player := testhelpers.CreatePlayer()
+	req := &Requirement{
+		LobbyID: lobby.ID,
+		Slot:    0,
+		Hours:   1,
+		Lobbies: 1,
+	}
+	req.Save()
+
+	assert.True(t, lobby.HasRequirements(0))
+	err := lobby.AddPlayer(player, 0, "")
+	assert.Equal(t, err, ReqHoursErr)
+
+	player.GameHours = 2
+	player.Save()
+
+	err = lobby.AddPlayer(player, 0, "")
+	assert.Equal(t, err, ReqLobbiesErr)
+
+	player, _ = GetPlayerWithStats(player.SteamID)
+	player.Stats.PlayedCountIncrease(lobby.Type)
+
+	err = lobby.AddPlayer(player, 0, "")
+	assert.NoError(t, err)
+
+	//Adding a player to another slot shouldn't return any errors
+	// req = &Requirement{
+	// 	LobbyID: lobby.ID,
+	// 	Slot:    -1,
+	// 	Hours:   1,
+	// 	Lobbies: 1,
+	// }
+	player2 := testhelpers.CreatePlayer()
+	err = lobby.AddPlayer(player2, 1, "")
+	assert.NoError(t, err)
+}
+
+func TestGeneralRequirements(t *testing.T) {
+	testhelpers.CleanupDB()
+	lobby := testhelpers.CreateLobby()
+	player := testhelpers.CreatePlayer()
+	req := &Requirement{
+		LobbyID: lobby.ID,
+		Slot:    -1,
+		Hours:   1,
+		Lobbies: 1,
+	}
+	req.Save()
+
+	err := lobby.AddPlayer(player, 0, "")
+	assert.Equal(t, err, ReqHoursErr)
+
+	err = lobby.AddPlayer(player, 3, "")
+	assert.Equal(t, err, ReqHoursErr)
 }

@@ -45,7 +45,7 @@ func CreatePlayerAdmin() *models.Player {
 }
 
 func CreateLobby() *models.Lobby {
-	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "etf2l", models.ServerRecord{}, 0, false, "", "")
+	lobby := models.NewLobby("cp_badlands", models.LobbyTypeSixes, "etf2l", models.ServerRecord{}, "0", false, "", "")
 	lobby.Save()
 	return lobby
 }
