@@ -24,6 +24,10 @@ type Args struct {
 	Team, Class string
 }
 
+func (Helen) Test(struct{}, *struct{}) error {
+	return nil
+}
+
 func getPlayerID(steamID string) uint {
 	var id uint
 
