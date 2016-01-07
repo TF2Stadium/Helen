@@ -5,27 +5,19 @@
 package testhelpers
 
 import (
-	"math/rand"
-	"time"
+	"crypto/rand"
+	"encoding/base64"
 
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 )
 
-// taken from http://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-func RandSeq(n int) string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
 func CreatePlayer() *models.Player {
-	player, _ := models.NewPlayer(RandSeq(4))
+	bytes := make([]byte, 10)
+	rand.Read(bytes)
+	steamID := base64.URLEncoding.EncodeToString(bytes)
+
+	player, _ := models.NewPlayer(steamID)
 	player.Save()
 	return player
 }
