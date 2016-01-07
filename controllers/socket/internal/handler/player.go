@@ -51,7 +51,7 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Player) PlayerNotReady(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 
 	if tperr != nil {
@@ -74,6 +74,7 @@ func (Player) PlayerNotReady(_ *wsevent.Server, so *wsevent.Client, data []byte)
 
 	tperr = lobby.UnreadyPlayer(player)
 	lobby.RemovePlayer(player)
+	chelpers.AfterLobbyLeave(server, so, lobby, player)
 
 	if tperr != nil {
 		return tperr
