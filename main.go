@@ -23,6 +23,7 @@ import (
 	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
+	"github.com/TF2Stadium/Helen/internal/profile"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/rpc"
 	"github.com/TF2Stadium/wsevent"
@@ -30,6 +31,16 @@ import (
 	_ "github.com/rakyll/gom/http"
 	"github.com/rs/cors"
 )
+
+var (
+	server  = wsevent.NewServer()
+	nologin = wsevent.NewServer()
+)
+
+func init() {
+	http.HandleFunc("/wsevent/auth/server", profile.Profile(server))
+	http.HandleFunc("/wsevent/noauth/server", profile.Profile(nologin))
+}
 
 func main() {
 	helpers.InitLogger()
@@ -66,12 +77,6 @@ func main() {
 		go chelpers.WhitelistListener()
 	}
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
-
-	// init http server
-
-	// init socket.io server
-	server := wsevent.NewServer()
-	nologin := wsevent.NewServer()
 
 	broadcaster.Init(server, nologin)
 	socket.ServerInit(server, nologin)

@@ -85,6 +85,18 @@ func NewPlayer(steamId string) (*Player, error) {
 	return player, nil
 }
 
+//if the player has an alias, return that. Else, return their steam name
+func (p *Player) Alias() string {
+	alias, err := p.GetSetting("siteAlias")
+	if err != nil {
+		return p.Name
+	}
+	if alias.Value != "" {
+		return alias.Value
+	}
+	return p.Name
+}
+
 // Save any changes made to the player object
 func (player *Player) Save() error {
 	var err error
