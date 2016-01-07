@@ -663,6 +663,8 @@ func (lobby *Lobby) SubNotInGamePlayers() {
 			continue
 		}
 		sub.Save()
+		player, _ := GetPlayerByID(id)
+		SendNotification(fmt.Sprintf("%s has been removed for not joining the game.", player.Alias()), int(lobby.ID))
 	}
 	db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ?", lobby.ID, false).Delete(&LobbySlot{})
 	lobby.OnChange(true)
@@ -673,7 +675,7 @@ func (lobby *Lobby) SubNotInGamePlayers() {
 // Set lobby.State to LobbyStateInProgress, remove and sub players not-in game after 2 minutes
 func (lobby *Lobby) Start() {
 	db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", LobbyStateInProgress)
-	time.AfterFunc(time.Minute*2, lobby.SubNotInGamePlayers)
+	time.AfterFunc(time.Minute*5, lobby.SubNotInGamePlayers)
 }
 
 // manually called. Should be called after the change to lobby actually takes effect.
