@@ -354,16 +354,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 			//remove unreadied players and unready the
 			//rest.
 			if lobby.State != models.LobbyStateInProgress {
-				err := lobby.RemoveUnreadyPlayers(true)
-				if err != nil {
-					helpers.Logger.Error("RemoveUnreadyPlayers: ", err.Error())
-					err = nil
-				}
-
-				err = lobby.UnreadyAllPlayers()
-				if err != nil {
-					helpers.Logger.Error("UnreadyAllPlayers: ", err.Error())
-				}
+				removeUnreadyPlayers(server, lobby)
 
 				lobby.State = models.LobbyStateWaiting
 				lobby.Save()
@@ -384,6 +375,20 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	}
 
 	return chelpers.EmptySuccessJS
+}
+
+func removeUnreadyPlayers(server *wsevent.Server, lobby *models.Lobby) {
+	var steamIDs []string
+
+	db.DB.Table("players").Select("players.steam_id").Joins("INNER JOIN lobby_slots ON lobby_slots.player_id = players.id").Where("lobby_slots.lobby_id = ? AND lobby_slots.ready = ?", lobby.ID, false).Find(&steamIDs)
+	lobby.RemoveUnreadyPlayers(true)
+
+	for _, steamID := range steamIDs {
+		so, ok := broadcaster.GetSocket(steamID)
+		if ok {
+			server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", lobby.ID))
+		}
+	}
 }
 
 func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
