@@ -16,11 +16,11 @@ import (
 
 func init() {
 	helpers.InitLogger()
+	testhelpers.CleanupDB()
 }
 
 func TestLogCreation(t *testing.T) {
-	testhelpers.CleanupDB()
-
+	t.Parallel()
 	var obj = AdminLogEntry{}
 	count := 5
 	database.DB.Model(obj).Count(&count)

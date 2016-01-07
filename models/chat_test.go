@@ -14,12 +14,13 @@ import (
 
 func init() {
 	helpers.InitLogger()
+	testhelpers.CleanupDB()
 }
 
 func TestNewChatMessage(t *testing.T) {
-	testhelpers.CleanupDB()
-
+	t.Parallel()
 	lobby := testhelpers.CreateLobby()
+	defer lobby.Close(false)
 	lobby.Save()
 
 	player := testhelpers.CreatePlayer()
