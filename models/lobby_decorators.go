@@ -170,7 +170,7 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		db.DB.First(specPlayer, spectatorID)
 
 		specJs := SpecDetails{
-			Name:    specPlayer.Name,
+			Name:    specPlayer.Alias(),
 			SteamID: specPlayer.SteamID,
 		}
 
