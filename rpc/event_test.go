@@ -6,6 +6,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/rpc"
 	"github.com/stretchr/testify/assert"
 )
@@ -52,4 +53,17 @@ func TestPlayerConn(t *testing.T) {
 	var count int
 	db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ? AND in_game = ?", lobby.ID, player.ID, true).Count(&count)
 	assert.Equal(t, count, 1)
+}
+
+func TestDisconnectedFromServer(t *testing.T) {
+	t.Parallel()
+	lobby := testhelpers.CreateLobby()
+
+	e := rpc.Event{
+		Name:    rpc.DisconnectedFromServer,
+		LobbyID: lobby.ID,
+	}
+
+	e.Handle(e, &struct{}{})
+	assert.Equal(t, lobby.CurrentState(), models.LobbyStateEnded)
 }
