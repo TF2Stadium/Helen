@@ -73,7 +73,7 @@ func playerConn(playerID, lobbyID uint) {
 	lobby, _ := models.GetLobbyByID(lobbyID)
 
 	lobby.SetInGame(player)
-	models.SendNotification(fmt.Sprintf("%s has connected to the server.", player.Name), int(lobby.ID))
+	models.SendNotification(fmt.Sprintf("%s has connected to the server.", player.Alias()), int(lobby.ID))
 }
 
 func playerSub(playerID, lobbyID uint) {
