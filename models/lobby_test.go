@@ -26,7 +26,7 @@ func TestLobbyCreation(t *testing.T) {
 	defer lobby.Close(false)
 	lobby.Save()
 
-	lobby2, _ := GetLobbyByIdServer(lobby.ID)
+	lobby2, _ := GetLobbyByIDServer(lobby.ID)
 
 	assert.Equal(t, lobby.ID, lobby2.ID)
 	assert.Equal(t, lobby.ServerInfo.Host, lobby2.ServerInfo.Host)

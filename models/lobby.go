@@ -302,7 +302,7 @@ func (lobby *Lobby) Save() error {
 }
 
 //GetLobbyByIdServer returns the lobby object, plus the ServerInfo object inside it
-func GetLobbyByIdServer(id uint) (*Lobby, *helpers.TPError) {
+func GetLobbyByIDServer(id uint) (*Lobby, *helpers.TPError) {
 	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
 
 	lob := &Lobby{}

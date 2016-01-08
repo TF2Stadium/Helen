@@ -261,7 +261,7 @@ func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte)
 
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 
-	lob, tperr := models.GetLobbyByIdServer(uint(*args.Id))
+	lob, tperr := models.GetLobbyByIDServer(uint(*args.Id))
 	if tperr != nil {
 		return tperr
 	}

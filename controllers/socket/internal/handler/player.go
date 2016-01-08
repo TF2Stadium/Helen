@@ -25,7 +25,7 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 		return tperr
 	}
 
-	lobby, tperr := models.GetLobbyByIdServer(lobbyid)
+	lobby, tperr := models.GetLobbyByIDServer(lobbyid)
 	if tperr != nil {
 		return tperr
 	}
