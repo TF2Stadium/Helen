@@ -110,7 +110,7 @@ func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data
 	}
 
 	result := models.DecoratePlayerSettingsJson(settings)
-	return chelpers.BuildSuccessJSON(result)
+	return chelpers.NewResponse(result)
 }
 
 func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
@@ -167,5 +167,5 @@ func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []b
 	}
 
 	result := models.DecoratePlayerProfileJson(player)
-	return chelpers.BuildSuccessJSON(result)
+	return chelpers.NewResponse(result)
 }

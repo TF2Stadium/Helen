@@ -170,7 +170,7 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 		}
 		general.Save()
 	}
-	return chelpers.BuildSuccessJSON(
+	return chelpers.NewResponse(
 		struct {
 			ID uint `json:"id"`
 		}{lob.ID})

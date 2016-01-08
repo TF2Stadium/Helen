@@ -6,12 +6,13 @@ package controllerhelpers
 
 import "encoding/json"
 
+//Response stores a successful response to a RPC call
 type Response struct {
 	Success bool        `json:"success"`
 	Data    interface{} `json:"data"`
 }
 
-func BuildSuccessJSON(data interface{}) Response {
+func NewResponse(data interface{}) Response {
 	return Response{true, data}
 }
 
@@ -19,4 +20,4 @@ func (r Response) Encode() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-var EmptySuccessJS = BuildSuccessJSON(struct{}{})
+var EmptySuccessJS = NewResponse(struct{}{})
