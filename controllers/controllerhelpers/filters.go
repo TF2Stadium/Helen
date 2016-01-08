@@ -29,7 +29,7 @@ var (
 )
 
 func WhitelistListener() {
-	ticker := time.NewTicker(time.Minute * 5)
+	ticker := time.NewTicker(time.Minute * 1)
 	for {
 		resp, err := http.Get(config.Constants.SteamIDWhitelist)
 

@@ -19,11 +19,11 @@ import (
 
 func init() {
 	helpers.InitLogger()
+	testhelpers.CleanupDB()
 }
 
 func TestGetPlayer(t *testing.T) {
-	testhelpers.CleanupDB()
-
+	t.Parallel()
 	player := testhelpers.CreatePlayer()
 	player2, err := GetPlayerByID(player.ID)
 	assert.NoError(t, err)
@@ -31,7 +31,7 @@ func TestGetPlayer(t *testing.T) {
 }
 
 func TestIsSpectating(t *testing.T) {
-	testhelpers.CleanupDB()
+	t.Parallel()
 
 	lobby := testhelpers.CreateLobby()
 	database.DB.Save(lobby)
@@ -39,8 +39,7 @@ func TestIsSpectating(t *testing.T) {
 	lobby2 := testhelpers.CreateLobby()
 	database.DB.Save(lobby2)
 
-	player, _ := NewPlayer("asdf")
-	database.DB.Save(player)
+	player := testhelpers.CreatePlayer()
 
 	isSpectating := player.IsSpectatingID(lobby.ID)
 	assert.False(t, isSpectating)
@@ -60,10 +59,9 @@ func TestIsSpectating(t *testing.T) {
 }
 
 func TestGetSpectatingIds(t *testing.T) {
-	testhelpers.CleanupDB()
+	t.Parallel()
 
-	player, _ := NewPlayer("asdf")
-	database.DB.Save(player)
+	player := testhelpers.CreatePlayer()
 
 	specIds, specErr := player.GetSpectatingIds()
 	assert.Nil(t, specErr)
@@ -84,11 +82,13 @@ func TestGetSpectatingIds(t *testing.T) {
 
 	specIds, specErr = player.GetSpectatingIds()
 	assert.Nil(t, specErr)
-	assert.Equal(t, []uint{lobby1.ID, lobby2.ID}, specIds)
+	for _, specID := range specIds {
+		assert.True(t, lobby1.ID == specID || lobby2.ID == specID)
+	}
 }
 
 func TestPlayerInfoFetching(t *testing.T) {
-	testhelpers.CleanupDB()
+	t.Parallel()
 
 	if config.Constants.SteamDevApiKey == "your steam dev api key" {
 		return
@@ -120,9 +120,9 @@ func TestPlayerInfoFetching(t *testing.T) {
 }
 
 func TestPlayerSettings(t *testing.T) {
-	testhelpers.CleanupDB()
+	t.Parallel()
 
-	player, _ := NewPlayer("76561197999073985")
+	player := testhelpers.CreatePlayer()
 
 	settings, err := player.GetSettings()
 
@@ -150,9 +150,8 @@ func TestPlayerSettings(t *testing.T) {
 }
 
 func TestPlayerBanning(t *testing.T) {
-	testhelpers.CleanupDB()
-	player, _ := NewPlayer("76561197999073985")
-	player.Save()
+	t.Parallel()
+	player := testhelpers.CreatePlayer()
 
 	for ban := PlayerBanJoin; ban != PlayerBanFull; ban++ {
 		assert.False(t, player.IsBanned(ban))
@@ -200,19 +199,19 @@ func TestPlayerBanning(t *testing.T) {
 }
 
 func TestGetLobbyID(t *testing.T) {
-	testhelpers.CleanupDB()
+	t.Parallel()
 	lobby := testhelpers.CreateLobby()
 	lobby.Save()
 
 	player := testhelpers.CreatePlayer()
 	player.Save()
 
-	lobby.AddPlayer(player, 0, "123")
+	lobby.AddPlayer(player, 0, "")
 	lobby.Save()
 
 	id, err := player.GetLobbyID(false)
 	assert.NoError(t, err)
-	assert.Equal(t, id, uint(1))
+	assert.Equal(t, id, lobby.ID)
 
 	lobby.State = LobbyStateEnded
 	lobby.Save()
@@ -231,5 +230,5 @@ func TestGetLobbyID(t *testing.T) {
 	//Include lobbies in progress
 	id, err = player.GetLobbyID(false)
 	assert.NoError(t, err)
-	assert.Equal(t, id, uint(1))
+	assert.Equal(t, id, lobby.ID)
 }

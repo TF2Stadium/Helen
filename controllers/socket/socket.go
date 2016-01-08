@@ -10,6 +10,7 @@ import (
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/controllers/socket/internal/handler"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -27,10 +28,10 @@ func getEvent(data []byte) string {
 }
 
 func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
-	server.OnDisconnect = chelpers.OnDisconnect
+	server.OnDisconnect = hooks.OnDisconnect
 	server.Extractor = getEvent
 
-	noAuthServer.OnDisconnect = chelpers.OnDisconnect
+	noAuthServer.OnDisconnect = hooks.OnDisconnect
 	noAuthServer.Extractor = getEvent
 
 	server.On("authenticationTest", func(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
@@ -79,7 +80,7 @@ func ServerInit(server *wsevent.Server, noAuthServer *wsevent.Server) {
 			return tperr
 		}
 
-		chelpers.AfterLobbySpec(s, so, lob)
+		hooks.AfterLobbySpec(s, so, lob)
 
 		so.EmitJSON(helpers.NewRequest("lobbyData", models.DecorateLobbyData(lob, true)))
 
@@ -101,7 +102,7 @@ func SocketInit(server *wsevent.Server, noauth *wsevent.Server, so *wsevent.Clie
 	}
 
 	if loggedIn {
-		chelpers.AfterConnect(server, so)
+		hooks.AfterConnect(server, so)
 
 		player, err := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 		if err != nil {
@@ -109,13 +110,13 @@ func SocketInit(server *wsevent.Server, noauth *wsevent.Server, so *wsevent.Clie
 				"User has a cookie with but a matching player record doesn't exist: %s",
 				chelpers.GetSteamId(so.Id()))
 			chelpers.DeauthenticateSocket(so.Id())
-			chelpers.AfterConnect(noauth, so)
+			hooks.AfterConnect(noauth, so)
 			return ErrRecordNotFound
 		}
 
-		chelpers.AfterConnectLoggedIn(server, so, player)
+		hooks.AfterConnectLoggedIn(server, so, player)
 	} else {
-		chelpers.AfterConnect(noauth, so)
+		hooks.AfterConnect(noauth, so)
 		so.EmitJSON(helpers.NewRequest("playerSettings", "{}"))
 		so.EmitJSON(helpers.NewRequest("playerProfile", "{}"))
 	}

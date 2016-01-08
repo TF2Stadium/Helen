@@ -94,7 +94,7 @@ func playerSub(playerID, lobbyID uint) {
 }
 
 func playerChat(lobbyID uint, playerID uint, message string) {
-	lobby, _ := models.GetLobbyByIdServer(lobbyID)
+	lobby, _ := models.GetLobbyByIDServer(lobbyID)
 	player, _ := models.GetPlayerByID(playerID)
 
 	chatMessage := models.NewInGameChatMessage(lobby, player, message)
@@ -103,7 +103,7 @@ func playerChat(lobbyID uint, playerID uint, message string) {
 }
 
 func disconnectedFromServer(lobbyID uint) {
-	lobby, _ := models.GetLobbyByIdServer(lobbyID)
+	lobby, _ := models.GetLobbyByIDServer(lobbyID)
 
 	helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
@@ -112,7 +112,7 @@ func disconnectedFromServer(lobbyID uint) {
 }
 
 func matchEnded(lobbyID uint) {
-	lobby, _ := models.GetLobbyByIdServer(lobbyID)
+	lobby, _ := models.GetLobbyByIDServer(lobbyID)
 
 	helpers.Logger.Debug("#%d: Match Ended", lobbyID)
 

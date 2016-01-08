@@ -16,10 +16,11 @@ import (
 
 func init() {
 	helpers.InitLogger()
+	testhelpers.CleanupDB()
 }
 
 func TestLobbiesPlayed(t *testing.T) {
-	testhelpers.CleanupDB()
+	t.Parallel()
 	stats1 := &PlayerStats{}
 
 	stats1.PlayedCountIncrease(LobbyTypeSixes) // sixes: 0 -> 1

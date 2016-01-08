@@ -34,7 +34,7 @@ func (Global) GetConstant(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 		return helpers.NewTPError("Unknown constant.", -1)
 	}
 
-	return chelpers.BuildSuccessJSON(output)
+	return chelpers.NewResponse(output)
 }
 
 func (Global) GetSocketInfo(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
@@ -43,5 +43,5 @@ func (Global) GetSocketInfo(server *wsevent.Server, so *wsevent.Client, data []b
 		Rooms []string `json:"rooms"`
 	}{so.Id(), server.RoomsJoined(so.Id())}
 
-	return chelpers.BuildSuccessJSON(socketinfo)
+	return chelpers.NewResponse(socketinfo)
 }

@@ -16,8 +16,8 @@ func init() {
 
 func TestNewSub(t *testing.T) {
 	testhelpers.CleanupDB()
-
 	lobby := testhelpers.CreateLobby()
+	defer lobby.Close(false)
 	lobby.Save()
 
 	player := testhelpers.CreatePlayer()
