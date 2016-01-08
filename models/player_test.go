@@ -82,7 +82,9 @@ func TestGetSpectatingIds(t *testing.T) {
 
 	specIds, specErr = player.GetSpectatingIds()
 	assert.Nil(t, specErr)
-	assert.Equal(t, []uint{lobby1.ID, lobby2.ID}, specIds)
+	for _, specID := range specIds {
+		assert.True(t, lobby1.ID == specID || lobby2.ID == specID)
+	}
 }
 
 func TestPlayerInfoFetching(t *testing.T) {
