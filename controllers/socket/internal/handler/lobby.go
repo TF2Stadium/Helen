@@ -14,6 +14,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -338,7 +339,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	}
 
 	if !sameLobby {
-		chelpers.AfterLobbyJoin(server, so, lob, player)
+		hooks.AfterLobbyJoin(server, so, lob, player)
 	}
 
 	if lob.IsFull() {
@@ -362,7 +363,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		})
 
 		room := fmt.Sprintf("%s_private",
-			chelpers.GetLobbyRoom(lob.ID))
+			hooks.GetLobbyRoom(lob.ID))
 		broadcaster.SendMessageToRoom(room, "lobbyReadyUp",
 			struct {
 				Timeout int `json:"timeout"`
@@ -439,7 +440,7 @@ func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data
 		}
 	}
 
-	chelpers.AfterLobbySpec(server, so, lob)
+	hooks.AfterLobbySpec(server, so, lob)
 	models.BroadcastLobbyToUser(lob, player.SteamID)
 	return chelpers.EmptySuccessJS
 }
@@ -516,7 +517,7 @@ func (Lobby) LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	}
 
 	so, _ = broadcaster.GetSocket(player.SteamID)
-	chelpers.AfterLobbyLeave(server, so, lob, player)
+	hooks.AfterLobbyLeave(server, so, lob, player)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
@@ -552,7 +553,7 @@ func (Lobby) LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) i
 	lob.BanPlayer(player)
 
 	so, _ = broadcaster.GetSocket(player.SteamID)
-	chelpers.AfterLobbyLeave(server, so, lob, player)
+	hooks.AfterLobbyLeave(server, so, lob, player)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
@@ -575,7 +576,7 @@ func (Lobby) LobbyLeave(server *wsevent.Server, so *wsevent.Client, data []byte)
 		return tperr
 	}
 
-	chelpers.AfterLobbyLeave(server, so, lob, player)
+	hooks.AfterLobbyLeave(server, so, lob, player)
 
 	return chelpers.EmptySuccessJS
 }
@@ -601,13 +602,13 @@ func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, dat
 
 	if !player.IsSpectatingID(lob.ID) {
 		if id, _ := player.GetLobbyID(false); id == *args.Id {
-			chelpers.AfterLobbySpecLeave(server, so, lob)
+			hooks.AfterLobbySpecLeave(server, so, lob)
 			return chelpers.EmptySuccessJS
 		}
 	}
 
 	lob.RemoveSpectator(player, true)
-	chelpers.AfterLobbySpecLeave(server, so, lob)
+	hooks.AfterLobbySpecLeave(server, so, lob)
 
 	return chelpers.EmptySuccessJS
 }

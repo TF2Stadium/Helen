@@ -2,6 +2,7 @@ package handler
 
 import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
@@ -43,7 +44,7 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 	if lobby.IsEveryoneReady() {
 		lobby.Start()
 
-		chelpers.BroadcastLobbyStart(lobby)
+		hooks.BroadcastLobbyStart(lobby)
 		models.BroadcastLobbyList()
 		models.FumbleLobbyStarted(lobby)
 	}
@@ -74,7 +75,7 @@ func (Player) PlayerNotReady(server *wsevent.Server, so *wsevent.Client, data []
 
 	tperr = lobby.UnreadyPlayer(player)
 	lobby.RemovePlayer(player)
-	chelpers.AfterLobbyLeave(server, so, lobby, player)
+	hooks.AfterLobbyLeave(server, so, lobby, player)
 
 	if tperr != nil {
 		return tperr

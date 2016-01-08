@@ -12,6 +12,7 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
+//Create a new response
 func NewResponse(data interface{}) Response {
 	return Response{true, data}
 }
@@ -20,4 +21,5 @@ func (r Response) Encode() ([]byte, error) {
 	return json.Marshal(r)
 }
 
+//EmptySuccessJS is the empty success response
 var EmptySuccessJS = NewResponse(struct{}{})
