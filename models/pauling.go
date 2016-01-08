@@ -6,7 +6,6 @@ package models
 
 import (
 	"net/rpc"
-	"sync"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -32,9 +31,6 @@ type Args struct {
 	Slot      string
 	Text      string
 }
-
-var mu = new(sync.RWMutex)
-var pauling *rpc.Client
 
 func call(method string, args, reply interface{}) error {
 	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.PaulingPort)
@@ -64,9 +60,6 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 		return nil
 	}
 
-	mu.RLock()
-	defer mu.RUnlock()
-
 	return call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
 }
 
@@ -75,9 +68,6 @@ func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league st
 	if config.Constants.ServerMockUp {
 		return nil
 	}
-
-	mu.RLock()
-	defer mu.RUnlock()
 
 	args := &Args{
 		Id:        lobbyId,
@@ -102,9 +92,6 @@ func VerifyInfo(info ServerRecord) error {
 		return nil
 	}
 
-	mu.RLock()
-	defer mu.RUnlock()
-
 	return call("Pauling.VerifyInfo", &info, &Args{})
 }
 
@@ -112,9 +99,6 @@ func IsPlayerInServer(steamid string) (reply bool) {
 	if config.Constants.ServerMockUp {
 		return false
 	}
-
-	mu.RLock()
-	defer mu.RUnlock()
 
 	args := &Args{SteamId: steamid}
 	call("Pauling.IsPlayerInServer", &args, &reply)
@@ -127,9 +111,6 @@ func End(lobbyId uint) {
 		return
 	}
 
-	mu.RLock()
-	defer mu.RUnlock()
-
 	call("Pauling.End", &Args{Id: lobbyId}, &Args{})
 }
 
@@ -137,9 +118,6 @@ func Say(lobbyId uint, text string) {
 	if config.Constants.ServerMockUp {
 		return
 	}
-
-	mu.RLock()
-	defer mu.RUnlock()
 
 	call("Pauling.Say", &Args{Id: lobbyId, Text: text}, &Args{})
 }
