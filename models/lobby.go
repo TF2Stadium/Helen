@@ -21,12 +21,12 @@ type LobbyType int
 type LobbyState int
 
 const (
-	LobbyTypeSixes      LobbyType = 6
-	LobbyTypeHighlander LobbyType = 9
-	LobbyTypeFours      LobbyType = 4
-	LobbyTypeUltiduo    LobbyType = 3
-	LobbyTypeBball      LobbyType = 2
-	LobbyTypeDebug      LobbyType = 1
+	LobbyTypeSixes LobbyType = iota
+	LobbyTypeHighlander
+	LobbyTypeFours
+	LobbyTypeUltiduo
+	LobbyTypeBball
+	LobbyTypeDebug
 
 	LobbyStateInitializing LobbyState = 0
 	LobbyStateWaiting      LobbyState = 1
