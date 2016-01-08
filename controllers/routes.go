@@ -23,20 +23,14 @@ type Sockets struct {
 }
 
 func (s Sockets) SocketHandler(w http.ResponseWriter, r *http.Request) {
+	//check if player is in the whitelist
 	if config.Constants.SteamIDWhitelist != "" {
+		allowed := false
+
 		session, err := chelpers.GetSessionHTTP(r)
-
-		allowed := true
-
 		if err == nil {
 			steamid, ok := session.Values["steam_id"]
-			if !ok {
-				allowed = false
-			} else if !chelpers.IsSteamIDWhitelisted(steamid.(string)) {
-				allowed = false
-			}
-		} else {
-			allowed = false
+			allowed = ok && chelpers.IsSteamIDWhitelisted(steamid.(string))
 		}
 		if !allowed {
 			http.Error(w, "Sorry, but you're not in the closed alpha", 403)
