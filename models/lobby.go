@@ -21,12 +21,12 @@ type LobbyType int
 type LobbyState int
 
 const (
-	LobbyTypeSixes      LobbyType = 6
-	LobbyTypeHighlander LobbyType = 9
-	LobbyTypeFours      LobbyType = 4
-	LobbyTypeUltiduo    LobbyType = 3
-	LobbyTypeBball      LobbyType = 2
-	LobbyTypeDebug      LobbyType = 1
+	LobbyTypeSixes LobbyType = iota
+	LobbyTypeHighlander
+	LobbyTypeFours
+	LobbyTypeUltiduo
+	LobbyTypeBball
+	LobbyTypeDebug
 
 	LobbyStateInitializing LobbyState = 0
 	LobbyStateWaiting      LobbyState = 1
@@ -80,9 +80,7 @@ type ServerRecord struct {
 	RconPassword   string // rcon_password
 }
 
-//Given Lobby IDs are unique, we'll use them for mumble channel names
-//
-// Represents a Lobby
+//Lobby represents a Lobby
 type Lobby struct {
 	gorm.Model
 	State LobbyState
@@ -261,6 +259,13 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 	// Must specify CreatedBy manually if the lobby is created by a player
 
 	return lobby
+}
+
+//CurrentState returns the lobby's current state
+func (l *Lobby) CurrentState() LobbyState {
+	var state int
+	db.DB.DB().QueryRow("SELECT state FROM lobbies WHERE id = $1", l.ID).Scan(&state)
+	return LobbyState(state)
 }
 
 //GetPlayerSlotObj returns the LobbySlot object if the given player occupies a slot in the lobby

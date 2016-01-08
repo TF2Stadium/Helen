@@ -12,12 +12,13 @@ import (
 )
 
 // major ver -> migration routine
-var migrationRoutines = map[uint64]func(){}
+var migrationRoutines = map[uint64]func(){
+	2: lobbyTypeChange,
+}
 
 func whitelist_id_string() {
 	var count int
 
-	db.DB.DB().Stats()
 	db.DB.Table("lobbies").Count(&count)
 	if count == 0 {
 		db.DB.Exec("ALTER TABLE lobbies DROP COLUMN whitelist")
@@ -39,5 +40,25 @@ func whitelist_id_string() {
 
 	for i, lobbyID := range lobbyIDs {
 		db.DB.Model(&models.Lobby{}).Where("id = ?", lobbyID).Update("whitelist", strconv.Itoa(whitelistIDs[i]))
+	}
+}
+
+func lobbyTypeChange() {
+	newLobbyType := map[int]models.LobbyType{
+		6: models.LobbyTypeSixes,
+		9: models.LobbyTypeHighlander,
+		4: models.LobbyTypeFours,
+		3: models.LobbyTypeUltiduo,
+		2: models.LobbyTypeBball,
+		1: models.LobbyTypeDebug,
+	}
+
+	var lobbyIDs []uint
+	db.DB.Table("lobbies").Order("id").Pluck("id", &lobbyIDs)
+
+	for _, lobbyID := range lobbyIDs {
+		var old int
+		db.DB.DB().QueryRow("SELECT type FROM lobbies WHERE id = $1", lobbyID).Scan(&old)
+		db.DB.Table("lobbies").Where("id = ?", lobbyID).Update("type", newLobbyType[old])
 	}
 }
