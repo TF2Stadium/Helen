@@ -56,12 +56,7 @@ func FumbleLobbyCreated(lob *Lobby) error {
 		return nil
 	}
 
-	newLobby := mumble.NewLobby()
-	newLobby.ID = int(lob.ID)
-
-	lobby := new(mumble.Lobby)
-
-	err := Fumble.Call("Fumble.CreateLobby", &newLobby, &lobby)
+	err := Fumble.Call("Fumble.CreateLobby", lob.ID, &struct{}{})
 
 	if err != nil {
 		helpers.Logger.Warning(err.Error())
@@ -69,32 +64,24 @@ func FumbleLobbyCreated(lob *Lobby) error {
 	}
 	FumbleLobbiesLock.Lock()
 	defer FumbleLobbiesLock.Unlock()
-	FumbleLobbies[lob.ID] = lobby
 
 	return nil
 }
 
-func FumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error {
+func fumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error {
 	if Fumble == nil {
 		return nil
 	}
 
-	user := mumble.NewUser()
+	user := mumble.User{}
 	user.Name = playerName
 	user.Team = mumble.Team(playerTeam)
 
-	FumbleLobbiesLock.Lock()
-	defer FumbleLobbiesLock.Unlock()
-
-	reply := new(mumble.Lobby)
-
-	err := Fumble.Call("Fumble.AllowPlayer", &mumble.LobbyArgs{user, FumbleLobbies[lobbyId]}, reply)
+	err := Fumble.Call("Fumble.AllowPlayer", &mumble.LobbyArgs{user, lobbyId}, &struct{}{})
 	if err != nil {
 		helpers.Logger.Warning(err.Error())
 	}
-	FumbleLobbiesLock.Lock()
-	defer FumbleLobbiesLock.Unlock()
-	FumbleLobbies[lobbyId] = reply
+
 	return nil
 }
 
@@ -119,9 +106,7 @@ func FumbleLobbyStarted(lob_ *Lobby) {
 			} else {
 				userIp = so.Request().RemoteAddr
 			}*/
-			FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, strings.ToUpper(team))
-		} else {
-			helpers.Logger.Warning("Socket for player with steamid[%d] not found.", player.SteamID)
+			fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+player.Name, strings.ToUpper(team))
 		}
 	}
 }
@@ -133,7 +118,7 @@ func FumbleLobbyPlayerJoinedSub(lob *Lobby, player *Player, slot int) {
 	}
 
 	team, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
-	FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, strings.ToUpper(team))
+	fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+player.Name, strings.ToUpper(team))
 }
 
 func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
@@ -143,7 +128,7 @@ func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
 	}
 
 	_, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
-	FumbleAllowPlayer(lob.ID, strings.ToUpper(class)+" "+player.Name, "")
+	fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+player.Name, "")
 }
 
 func FumbleLobbyEnded(lob *Lobby) {
@@ -154,7 +139,7 @@ func FumbleLobbyEnded(lob *Lobby) {
 	FumbleLobbiesLock.Lock()
 	defer FumbleLobbiesLock.Unlock()
 
-	err := Fumble.Call("Fumble.EndLobby", FumbleLobbies[lob.ID], nil)
+	err := Fumble.Call("Fumble.EndLobby", lob.ID, nil)
 	if err != nil {
 		helpers.Logger.Warning(err.Error())
 	}
