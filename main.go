@@ -65,7 +65,6 @@ func main() {
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()
-	models.FumbleConnect()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 
 	if !config.Constants.ServerMockUp {

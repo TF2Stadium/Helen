@@ -1,10 +1,7 @@
 package models
 
 import (
-	"net/rpc"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -13,63 +10,23 @@ import (
 	"github.com/TF2Stadium/fumble/mumble"
 )
 
-var Fumble *rpc.Client
-
-var FumbleLobbiesLock = new(sync.RWMutex)
-var FumbleLobbies = make(map[uint]*mumble.Lobby)
-
-func FumbleConnect() {
-	if config.Constants.FumblePort == "" {
-		return
-	}
-
-	helpers.Logger.Debug("Connecting to Fumble on port %s", config.Constants.FumblePort)
-	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.FumblePort)
-	if err != nil {
-		helpers.Logger.Fatal(err)
-	}
-
-	Fumble = client
-	helpers.Logger.Debug("Connected!")
-}
-
-func FumbleReconnect() {
-	if config.Constants.FumblePort == "" {
-		return
-	}
-
-	helpers.Logger.Debug("Reconnecting to Fumble on port %s", config.Constants.FumblePort)
-	client, err := rpc.DialHTTP("tcp", "localhost:"+config.Constants.FumblePort)
-
-	for err != nil {
-		helpers.Logger.Critical("%s", err.Error())
-		time.Sleep(1 * time.Second)
-		client, err = rpc.DialHTTP("tcp", "localhost:"+config.Constants.FumblePort)
-	}
-
-	Fumble = client
-	helpers.Logger.Debug("Connected!")
-}
-
 func FumbleLobbyCreated(lob *Lobby) error {
-	if Fumble == nil {
+	if config.Constants.FumblePort == "" {
 		return nil
 	}
 
-	err := Fumble.Call("Fumble.CreateLobby", lob.ID, &struct{}{})
+	err := call(config.Constants.FumblePort, "Fumble.CreateLobby", lob.ID, &struct{}{})
 
 	if err != nil {
 		helpers.Logger.Warning(err.Error())
 		return err
 	}
-	FumbleLobbiesLock.Lock()
-	defer FumbleLobbiesLock.Unlock()
 
 	return nil
 }
 
 func fumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error {
-	if Fumble == nil {
+	if config.Constants.FumblePort == "" {
 		return nil
 	}
 
@@ -77,7 +34,7 @@ func fumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error
 	user.Name = playerName
 	user.Team = mumble.Team(playerTeam)
 
-	err := Fumble.Call("Fumble.AllowPlayer", &mumble.LobbyArgs{user, lobbyId}, &struct{}{})
+	err := call(config.Constants.FumblePort, "Fumble.AllowPlayer", &mumble.LobbyArgs{user, lobbyId}, &struct{}{})
 	if err != nil {
 		helpers.Logger.Warning(err.Error())
 	}
@@ -86,7 +43,7 @@ func fumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error
 }
 
 func FumbleLobbyStarted(lob_ *Lobby) {
-	if Fumble == nil {
+	if config.Constants.FumblePort == "" {
 		return
 	}
 
@@ -112,8 +69,7 @@ func FumbleLobbyStarted(lob_ *Lobby) {
 }
 
 func FumbleLobbyPlayerJoinedSub(lob *Lobby, player *Player, slot int) {
-	if Fumble == nil {
-		// TODO fix
+	if config.Constants.FumblePort == "" {
 		return
 	}
 
@@ -122,8 +78,7 @@ func FumbleLobbyPlayerJoinedSub(lob *Lobby, player *Player, slot int) {
 }
 
 func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
-	if Fumble == nil {
-		// TODO fix
+	if config.Constants.FumblePort == "" {
 		return
 	}
 
@@ -132,16 +87,12 @@ func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
 }
 
 func FumbleLobbyEnded(lob *Lobby) {
-	if Fumble == nil {
+	if config.Constants.FumblePort == "" {
 		return
 	}
 
-	FumbleLobbiesLock.Lock()
-	defer FumbleLobbiesLock.Unlock()
-
-	err := Fumble.Call("Fumble.EndLobby", lob.ID, nil)
+	err := call(config.Constants.FumblePort, "Fumble.EndLobby", lob.ID, nil)
 	if err != nil {
 		helpers.Logger.Warning(err.Error())
 	}
-	delete(FumbleLobbies, lob.ID)
 }
