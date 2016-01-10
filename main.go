@@ -66,6 +66,7 @@ func main() {
 	migrations.Do()
 	stores.SetupStores()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
+	models.DeleteUnusedServerRecords()
 
 	if !config.Constants.ServerMockUp {
 		models.CheckConnection()
