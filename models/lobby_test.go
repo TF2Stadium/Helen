@@ -20,6 +20,19 @@ func init() {
 	testhelpers.CleanupDB()
 }
 
+func TestDeleteUnusedServerRecords(t *testing.T) {
+	var count int
+
+	lobby := testhelpers.CreateLobby()
+	lobby.Close(false)
+
+	DeleteUnusedServerRecords()
+
+	err := db.DB.Table("server_records").Count(&count).Error
+	assert.NoError(t, err)
+	assert.Zero(t, count)
+}
+
 func TestLobbyCreation(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
@@ -42,7 +55,6 @@ func TestLobbyCreation(t *testing.T) {
 func TestLobbyClose(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
 	lobby.Save()
 
 	req := &Requirement{
@@ -54,6 +66,8 @@ func TestLobbyClose(t *testing.T) {
 	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Count(&count)
 	assert.Zero(t, count)
 
+	db.DB.Table("server_records").Where("id = ?", lobby.ServerInfoID).Count(&count)
+	assert.Zero(t, count)
 	lobby, _ = GetLobbyByID(lobby.ID)
 	assert.Equal(t, lobby.State, LobbyStateEnded)
 }
