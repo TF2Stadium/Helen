@@ -25,6 +25,7 @@ func TestDeleteUnusedServerRecords(t *testing.T) {
 
 	lobby := testhelpers.CreateLobby()
 	lobby.Close(false)
+	db.DB.Save(&ServerRecord{})
 
 	DeleteUnusedServerRecords()
 
