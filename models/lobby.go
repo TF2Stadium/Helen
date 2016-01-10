@@ -80,6 +80,16 @@ type ServerRecord struct {
 	RconPassword   string // rcon_password
 }
 
+//DeleteUnusedServerRecords checks all server records in the DB and deletes them if
+//the corresponsing lobby is closed
+func DeleteUnusedServerRecords() {
+	serverInfoIDs := []uint{}
+	db.DB.Table("lobbies").Where("state = ?", LobbyStateEnded).Pluck("server_info_id", &serverInfoIDs)
+	for _, id := range serverInfoIDs {
+		db.DB.Table("server_records").Where("id = ?", id).Delete(&ServerRecord{})
+	}
+}
+
 //Lobby represents a Lobby
 type Lobby struct {
 	gorm.Model
@@ -610,7 +620,7 @@ func (lobby *Lobby) SetupServer() error {
 func (lobby *Lobby) Close(rpc bool) {
 	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).UpdateColumn("filled", true)
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
-	db.DB.Delete(&lobby.ServerInfo)
+	db.DB.Table("server_records").Where("id = ?", lobby.ServerInfoID).Delete(&ServerRecord{})
 	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Delete(&Requirement{})
 	//db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
 	if rpc {
