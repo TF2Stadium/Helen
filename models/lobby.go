@@ -707,7 +707,11 @@ func (lobby *Lobby) SubNotInGamePlayers() {
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes
 func (lobby *Lobby) Start() {
 	db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", LobbyStateInProgress)
-	time.AfterFunc(time.Minute*5, lobby.SubNotInGamePlayers)
+	time.AfterFunc(time.Minute*5, func() {
+		if lobby.CurrentState() != LobbyStateEnded {
+			lobby.SubNotInGamePlayers()
+		}
+	})
 }
 
 // manually called. Should be called after the change to lobby actually takes effect.
