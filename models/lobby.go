@@ -84,9 +84,14 @@ type ServerRecord struct {
 //the corresponsing lobby is closed
 func DeleteUnusedServerRecords() {
 	serverInfoIDs := []uint{}
-	db.DB.Table("lobbies").Where("state = ?", LobbyStateEnded).Pluck("server_info_id", &serverInfoIDs)
+	db.DB.Table("server_records").Pluck("id", &serverInfoIDs)
 	for _, id := range serverInfoIDs {
-		db.DB.Table("server_records").Where("id = ?", id).Delete(&ServerRecord{})
+		lobby := &Lobby{}
+		err := db.DB.Where("server_info_id = ?", id).First(lobby).Error
+
+		if err != nil || lobby.State == LobbyStateEnded {
+			db.DB.Table("server_records").Where("id = ?", id).Delete(&ServerRecord{})
+		}
 	}
 }
 
