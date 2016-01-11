@@ -24,7 +24,7 @@ test:
   override:
       - case $CIRCLE_NODE_INDEX in 0) go test  ./controllers/ ./controllers/socket/internal/handler/ -v -race ;; 1) go test -v -race ./models/... ./database/... ./helpers/... ./config/... ./rpc/... ;; esac:
           parallel: true
-          pwd: ~/.go_workspace/src/github.com/TF2Stadium/Helen 
+          pwd: /home/ubuntu/.go_workspace/src/github.com/TF2Stadium/Helen 
 deployment:
   master:
     branch: master
