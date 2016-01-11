@@ -616,7 +616,7 @@ func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, dat
 func (Lobby) RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
 	var lobbies []models.Lobby
 	db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
-	so.EmitJSON(helpers.NewRequest("lobbyListData", lobbies))
+	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(lobbies)))
 
 	return chelpers.EmptySuccessJS
 }
