@@ -5,6 +5,7 @@ machine:
     DATABASE_NAME: "circle_test"
     DATABASE_USERNAME: "ubuntu"
     DATABASE_PASSWORD: ""
+    GO15VENDOREXPERIMENT: 1
 dependencies:
   cache_directories:
       - "vendor"
