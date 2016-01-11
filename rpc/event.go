@@ -59,7 +59,7 @@ func playerDisc(playerID, lobbyID uint) {
 		if err != nil {
 			helpers.Logger.Error(err.Error())
 		}
-		if !ingame {
+		if !ingame && lobby.CurrentState() != models.LobbyStateEnded {
 			sub, _ := models.NewSub(lobby.ID, player.ID)
 			db.DB.Save(sub)
 			models.BroadcastSubList()
