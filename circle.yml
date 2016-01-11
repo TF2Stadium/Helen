@@ -19,6 +19,7 @@ dependencies:
       - tar -xvf "glide-0.8.3-linux-amd64.tar.gz"
       - mv linux-amd64/glide glide
       - ./glide install
+      - ln -s ~/Helen/ ~/.go_workspace/src/github.com/TF2Stadium/Helen
       - go build
 test:
   override:
