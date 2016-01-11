@@ -21,9 +21,9 @@ dependencies:
       - ./glide install
       - ln -s ~/Helen/ ~/.go_workspace/src/github.com/TF2Stadium/Helen
       - cd ~/.go_workspace/src/github.com/TF2Stadium/Helen
-      - go build
 test:
   override:
+      - pwd
       - case $CIRCLE_NODE_INDEX in 0) go test  ./controllers/ ./controllers/socket/internal/handler/ -v -race ;; 1) go test -v -race ./models/... ./database/... ./helpers/... ./config/... ./rpc/... ;; esac:
           parallel: true
 deployment:
