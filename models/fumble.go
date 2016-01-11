@@ -83,7 +83,7 @@ func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
 	}
 
 	_, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
-	fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+player.Name, "")
+	fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+sanitize(player.Name), "")
 }
 
 func FumbleLobbyEnded(lob *Lobby) {
