@@ -20,6 +20,7 @@ dependencies:
       - mv linux-amd64/glide glide
       - ./glide install
       - ln -s ~/Helen/ ~/.go_workspace/src/github.com/TF2Stadium/Helen
+      - cd ~/.go_workspace/src/github.com/TF2Stadium/Helen
       - go build
 test:
   override:
