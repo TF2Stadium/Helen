@@ -27,7 +27,7 @@ _testmain.go
 *.coverprofile
 *.log
 *.pid
-
+vendor
 .DS_Store
 
 .idea

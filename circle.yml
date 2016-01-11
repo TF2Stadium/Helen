@@ -14,6 +14,9 @@ dependencies:
       - go version
 test:
   override:
+      - wget "https://github.com/Masterminds/glide/releases/download/0.8.3/glide-0.8.3-darwin-amd64.tar.gz"
+      - tar -xvf "glide-0.8.3-darwin-amd64.tar.gz"
+      - ./glide
       - case $CIRCLE_NODE_INDEX in 0) go test  ./controllers/ ./controllers/socket/internal/handler/ -v -race ;; 1) go test -v -race ./models/... ./database/... ./helpers/... ./config/... ./rpc/... ;; esac:
           parallel: true
 deployment:
