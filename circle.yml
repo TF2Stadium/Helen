@@ -6,12 +6,17 @@ machine:
     DATABASE_USERNAME: "ubuntu"
     DATABASE_PASSWORD: ""
 dependencies:
-  pre:
+  override:
       - sudo rm -rf /usr/local/go
       - wget "https://godeb.s3.amazonaws.com/godeb-amd64.tar.gz"
       - tar -xvf "godeb-amd64.tar.gz"
       - ./godeb install 1.5.2
       - go version
+      - wget "https://github.com/Masterminds/glide/releases/download/0.8.3/glide-0.8.3-darwin-amd64.tar.gz"
+      - tar -xvf "glide-0.8.3-darwin-amd64.tar.gz"
+      - mv darwin-amd64/glide glide
+      - ./glide install
+      - go build
 test:
   override:
       - wget "https://github.com/Masterminds/glide/releases/download/0.8.3/glide-0.8.3-darwin-amd64.tar.gz"
