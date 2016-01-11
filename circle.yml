@@ -20,16 +20,16 @@ dependencies:
       - mv linux-amd64/glide glide
       - ./glide install
       - ln -s ~/Helen/ ~/.go_workspace/src/github.com/TF2Stadium/Helen
-      - cd ~/.go_workspace/src/github.com/TF2Stadium/Helen
 test:
   override:
-      - pwd
       - case $CIRCLE_NODE_INDEX in 0) go test  ./controllers/ ./controllers/socket/internal/handler/ -v -race ;; 1) go test -v -race ./models/... ./database/... ./helpers/... ./config/... ./rpc/... ;; esac:
           parallel: true
+          pwd: ~/.go_workspace/src/github.com/TF2Stadium/Helen 
 deployment:
   master:
     branch: master
     commands:
+      - cd ~/.go_workspace/src/github.com/TF2Stadium/Helen
       - mkdir binaries
       - cp lobbySettingsData.json binaries/lobbySettingsData.json
       - go build -o binaries/helen-prod *.go
@@ -39,6 +39,7 @@ deployment:
   dev:
     branch: dev
     commands:
+      - cd ~/.go_workspace/src/github.com/TF2Stadium/Helen
       - mkdir binaries
       - cp lobbySettingsData.json binaries/lobbySettingsData.json
       - go build -race -o binaries/helen-dev *.go
