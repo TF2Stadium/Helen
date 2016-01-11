@@ -749,7 +749,8 @@ func BroadcastLobbyList() {
 	lobbies := []Lobby{}
 	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	broadcaster.SendMessageToRoom(
-		fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom), "lobbyListData", lobbies)
+		fmt.Sprintf("%s_public", config.Constants.GlobalChatRoom),
+		"lobbyListData", DecorateLobbyListData(lobbies))
 }
 
 func (l *Lobby) LobbyData(include bool) LobbyData {
