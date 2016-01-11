@@ -79,4 +79,10 @@ func SetupHTTPRoutes(mux *http.ServeMux, server *wsevent.Server, noauth *wsevent
 		mux.HandleFunc("/startMockLogin/", MockLoginHandler)
 	}
 	mux.HandleFunc("/websocket/", Sockets{server, noauth}.SocketHandler)
+
+	//Bans
+	mux.HandleFunc("/ban/join", banJoin)
+	mux.HandleFunc("/ban/create", banCreate)
+	mux.HandleFunc("/ban/chat", banChat)
+	mux.HandleFunc("/ban/full", banFull)
 }
