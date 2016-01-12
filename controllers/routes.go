@@ -81,11 +81,17 @@ func SetupHTTPRoutes(mux *http.ServeMux, server *wsevent.Server, noauth *wsevent
 		{"/logout", LogoutHandler},
 		{"/websocket/", Sockets{server, noauth}.SocketHandler},
 
-		{"/admin/ban", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminPage)},
-		{"/admin/chatlogs/", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetChatLogs)},
+		{"/admin/roles", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminRolePage)},
+		{"/admin/roles/addadmin", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddAdmin)},
+		{"/admin/roles/addmod", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddMod)},
+		{"/admin/roles/remove", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.Remove)},
+
+		{"/admin/ban", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminBanPage)},
 		{"/admin/ban/join", chelpers.FilterHTTPRequest(helpers.ActionBanJoin, admin.BanJoin)},
 		{"/admin/ban/create", chelpers.FilterHTTPRequest(helpers.ActionBanCreate, admin.BanCreate)},
 		{"/admin/ban/chat", chelpers.FilterHTTPRequest(helpers.ActionBanChat, admin.BanChat)},
+
+		{"/admin/chatlogs/", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetChatLogs)},
 	}
 
 	if config.Constants.MockupAuth {
