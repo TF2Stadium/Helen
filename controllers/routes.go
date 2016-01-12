@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/controllers/admin"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -70,19 +71,28 @@ func (s Sockets) SocketHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SetupHTTPRoutes(mux *http.ServeMux, server *wsevent.Server, noauth *wsevent.Server) {
-	mux.HandleFunc("/", MainHandler)
-	mux.HandleFunc("/openidcallback", LoginCallbackHandler)
-	mux.HandleFunc("/startLogin", LoginHandler)
-	mux.HandleFunc("/logout", LogoutHandler)
-	mux.HandleFunc("/chatlogs/", chelpers.FilterHTTPRequest(GetChatLogs))
+	var routes = []struct {
+		pattern string
+		handler func(http.ResponseWriter, *http.Request)
+	}{
+		{"/", MainHandler},
+		{"/openidcallback", LoginCallbackHandler},
+		{"/startLogin", LoginHandler},
+		{"/logout", LogoutHandler},
+		{"/websocket/", Sockets{server, noauth}.SocketHandler},
+
+		{"/admin/ban", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminPage)},
+		{"/admin/chatlogs/", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetChatLogs)},
+		{"/admin/ban/join", chelpers.FilterHTTPRequest(helpers.ActionBanJoin, admin.BanJoin)},
+		{"/admin/ban/create", chelpers.FilterHTTPRequest(helpers.ActionBanCreate, admin.BanCreate)},
+		{"/admin/ban/chat", chelpers.FilterHTTPRequest(helpers.ActionBanChat, admin.BanChat)},
+	}
+
 	if config.Constants.MockupAuth {
 		mux.HandleFunc("/startMockLogin/", MockLoginHandler)
 	}
-	mux.HandleFunc("/websocket/", Sockets{server, noauth}.SocketHandler)
 
-	//Bans
-	mux.HandleFunc("/ban/join", banJoin)
-	mux.HandleFunc("/ban/create", banCreate)
-	mux.HandleFunc("/ban/chat", banChat)
-	mux.HandleFunc("/ban/full", banFull)
+	for _, route := range routes {
+		mux.HandleFunc(route.pattern, route.handler)
+	}
 }
