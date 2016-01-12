@@ -116,7 +116,6 @@ func StartServer(auth *wsevent.Server, noauth *wsevent.Server) *httptest.Server 
 	mux.HandleFunc("/startLogin", controllers.LoginHandler)
 	mux.HandleFunc("/startMockLogin/", controllers.MockLoginHandler)
 	mux.HandleFunc("/logout", controllers.LogoutHandler)
-	mux.HandleFunc("/chatlogs/", controllers.GetChatLogs)
 	mux.HandleFunc("/websocket/", controllers.Sockets{auth, noauth}.SocketHandler)
 
 	broadcaster.Init(auth, noauth)
