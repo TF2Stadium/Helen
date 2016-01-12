@@ -81,7 +81,7 @@ func CheckPrivilege(so *wsevent.Client, action authority.AuthAction) (err *helpe
 	return
 }
 
-func FilterHTTPRequest(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+func FilterHTTPRequest(action authority.AuthAction, f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := GetSessionHTTP(r)
@@ -97,7 +97,7 @@ func FilterHTTPRequest(f func(http.ResponseWriter, *http.Request)) func(http.Res
 		}
 
 		player, _ := models.GetPlayerBySteamID(steamid.(string))
-		if !(player.Role == helpers.RoleAdmin || player.Role == helpers.RoleMod) {
+		if !(player.Role.Can(action)) {
 			http.Error(w, "Not authorized", 403)
 			return
 		}
