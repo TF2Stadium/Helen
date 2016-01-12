@@ -134,7 +134,7 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 	lob.Save()
 
 	err = lob.SetupServer()
-	if err != nil {
+	if err != nil { //lobby setup failed, delete lobby and corresponding server record
 		qerr := db.DB.Where("id = ?", lob.ID).Delete(&models.Lobby{}).Error
 		if qerr != nil {
 			helpers.Logger.Warning(qerr.Error())
