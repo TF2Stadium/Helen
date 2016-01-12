@@ -59,7 +59,7 @@ func playerDisc(playerID, lobbyID uint) {
 		if err != nil {
 			helpers.Logger.Error(err.Error())
 		}
-		if !ingame {
+		if !ingame && lobby.CurrentState() != models.LobbyStateEnded {
 			sub, _ := models.NewSub(lobby.ID, player.ID)
 			db.DB.Save(sub)
 			models.BroadcastSubList()
@@ -88,8 +88,6 @@ func playerSub(playerID, lobbyID uint) {
 	models.BroadcastSubList()
 
 	lobby, _ := models.GetLobbyByID(lobbyID)
-	lobby.RemovePlayer(player)
-
 	models.SendNotification(fmt.Sprintf("%s has been reported.", player.Name), int(lobby.ID))
 }
 

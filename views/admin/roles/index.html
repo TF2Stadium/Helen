@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <title>Example form</title>
+    <style type="text/css">
+    .container {
+        width: 500px;
+        clear: both;
+    }
+    .container input {
+        width: 100%;
+        clear: both;
+    }
+
+    </style>
+  </head>
+  
+  <body>
+    <div class="container">
+      <b>Add Admin</b>
+      <form method="get" action="roles/addadmin">
+	Steam ID: <input type="text" name="steamid"><br>
+	<input type="submit" value="Submit">
+      </form>
+      
+      <b>Add Moderator</b>
+      <form method="get" action="roles/addmod">
+	Steam ID: <input type="text" name="steamid"><br>
+	<input type="submit" value="Submit">
+      </form>
+
+       <b>Remove Admin/Mod</b>
+      <form method="get" action="roles/remove">
+	Steam ID: <input type="text" name="steamid"><br>
+	<input type="submit" value="Submit">
+      </form>      
+    </div>
+  </body>
+</html>

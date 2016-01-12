@@ -191,11 +191,7 @@ func (l LobbyData) SendToPlayer(steamid string) {
 	broadcaster.SendMessage(steamid, "lobbyData", l)
 }
 
-func DecorateLobbyListData(lobbies []Lobby) LobbyListData {
-	if len(lobbies) == 0 {
-		return LobbyListData{}
-	}
-
+func DecorateLobbyListData(lobbies []Lobby) []LobbyData {
 	var lobbyList = make([]LobbyData, len(lobbies))
 
 	for i, lobby := range lobbies {
@@ -203,9 +199,7 @@ func DecorateLobbyListData(lobbies []Lobby) LobbyListData {
 		lobbyList[i] = lobbyData
 	}
 
-	listObj := LobbyListData{lobbyList}
-
-	return listObj
+	return lobbyList
 }
 
 func sanitize(name string) string {

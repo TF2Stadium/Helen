@@ -385,7 +385,7 @@ func TestNotInGameSub(t *testing.T) {
 	lobby := testhelpers.CreateLobby()
 	defer lobby.Close(false)
 	var players []*Player
-	var ingame int
+	var ingame, subbed int
 
 	for i := 0; i < 12; i++ {
 		players = append(players, testhelpers.CreatePlayer())
@@ -399,12 +399,13 @@ func TestNotInGameSub(t *testing.T) {
 		}
 	}
 
+	t.Logf("%d players are in-game, %d player have been substituted", ingame, subbed)
 	lobby.SubNotInGamePlayers()
-	assert.Equal(t, lobby.GetPlayerNumber(), ingame)
 
 	var subcount int
 	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Count(&subcount)
 	assert.Equal(t, subcount, 12-ingame)
+	lobby.Close(false)
 }
 
 func TestSlotRequirements(t *testing.T) {

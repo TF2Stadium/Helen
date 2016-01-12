@@ -25,13 +25,14 @@ var RoleMap = map[string]authority.AuthRole{
 	"administrator": RoleAdmin,
 }
 
-// You cant's change the order of these
+// You can't change the order of these
 const (
 	ActionBanJoin authority.AuthAction = iota
 	ActionBanCreate
 	ActionBanChat
-
 	ActionChangeRole
+	ActionViewLogs
+	ActionViewPage //view admin pages
 )
 
 var ActionNames = map[authority.AuthAction]string{
@@ -47,6 +48,8 @@ func InitAuthorization() {
 	RoleMod.Allow(ActionBanChat)
 	RoleMod.Allow(ActionBanJoin)
 	RoleMod.Allow(ActionBanCreate)
+	RoleMod.Allow(ActionViewLogs)
+	RoleMod.Allow(ActionViewPage)
 
 	RoleAdmin.Inherit(RoleMod)
 	RoleAdmin.Allow(ActionChangeRole)
