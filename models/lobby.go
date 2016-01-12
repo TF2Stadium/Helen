@@ -423,15 +423,26 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	// Check if player is a substitute
 	var count int
 	db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).Count(&count)
+
 	if count != 0 {
-		db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).UpdateColumn("filled", true)
+		//remove previous slot occupant
+		prevPlayer := &Player{}
+		playerID, _ := lobby.GetPlayerIDBySlot(slot)
+		db.DB.First(prevPlayer, playerID)
+		//kicks player if they're in-game, resets their !rep count.
+		DisallowPlayer(lobby.ID, player.SteamID)
+		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Delete(&LobbySlot{}) //remove the slot
+
+		db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).UpdateColumn("filled", true) //substitute is now filled
+		//notify players in game server of subtitute
 		class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
 		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
+		//allow player in mumble
 		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
 	} else if _, err := lobby.GetPlayerIDBySlot(slot); err == nil {
 		return FilledErr
 	} else {
-		FumbleLobbyPlayerJoined(lobby, player, slot)
+		FumbleLobbyPlayerJoined(lobby, player, slot) // no errors, al
 	}
 
 	//try to remove them from spectators
