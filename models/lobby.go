@@ -689,17 +689,21 @@ func (lobby *Lobby) SetNotInGame(player *Player) error {
 	return lobby.setInGameStatus(player, false)
 }
 
-//SubNotInGamePlayers substitutes and removes players who haven't joined the game server yet.
+//SubNotInGamePlayers substitutes players who haven't joined the game server yet.
 //Called 5 minutes after the lobby starts.
 func (lobby *Lobby) SubNotInGamePlayers() {
 	playerids := []uint{}
-	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ?", lobby.ID, false).Pluck("player_id", &playerids).Error
-	if err != nil {
-		helpers.Logger.Error(err.Error())
-		return
-	}
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ?", lobby.ID, false).Pluck("player_id", &playerids)
 
 	for _, id := range playerids {
+		var count int
+		db.DB.Table("substitutes").Where("lobby_id = ? AND player_id = ?", lobby.ID, id).Count(&count)
+		if count != 0 {
+			//player has already been reported in game, don't sub them
+			continue
+		}
+
+		helpers.Logger.Debug("repping %d", id)
 		sub, err := NewSub(lobby.ID, id)
 		if err != nil {
 			helpers.Logger.Error(err.Error())
@@ -707,9 +711,8 @@ func (lobby *Lobby) SubNotInGamePlayers() {
 		}
 		sub.Save()
 		player, _ := GetPlayerByID(id)
-		SendNotification(fmt.Sprintf("%s has been removed for not joining the game.", player.Alias()), int(lobby.ID))
+		SendNotification(fmt.Sprintf("%s has been reported for not joining the game.", player.Alias()), int(lobby.ID))
 	}
-	db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ?", lobby.ID, false).Delete(&LobbySlot{})
 	lobby.OnChange(true)
 	BroadcastSubList()
 	return
