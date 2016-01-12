@@ -63,7 +63,7 @@ func FumbleLobbyStarted(lob_ *Lobby) {
 			} else {
 				userIp = so.Request().RemoteAddr
 			}*/
-			fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+player.Name, strings.ToUpper(team))
+			fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+sanitize(player.Name), strings.ToUpper(team))
 		}
 	}
 }
@@ -74,7 +74,7 @@ func FumbleLobbyPlayerJoinedSub(lob *Lobby, player *Player, slot int) {
 	}
 
 	team, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
-	fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+player.Name, strings.ToUpper(team))
+	fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+sanitize(player.Name), strings.ToUpper(team))
 }
 
 func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
