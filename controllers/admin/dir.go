@@ -9,6 +9,11 @@ import (
 	"path/filepath"
 )
 
+func ServeAdminPage(w http.ResponseWriter, r *http.Request) {
+	abs, _ := filepath.Abs("./views/admin")
+	http.ServeFile(w, r, abs)
+}
+
 func ServeAdminBanPage(w http.ResponseWriter, r *http.Request) {
 	abs, _ := filepath.Abs("./views/admin/ban")
 	http.ServeFile(w, r, abs)

@@ -81,6 +81,8 @@ func SetupHTTPRoutes(mux *http.ServeMux, server *wsevent.Server, noauth *wsevent
 		{"/logout", LogoutHandler},
 		{"/websocket/", Sockets{server, noauth}.SocketHandler},
 
+		{"/admin", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminPage)},
+
 		{"/admin/roles", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminRolePage)},
 		{"/admin/roles/addadmin", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddAdmin)},
 		{"/admin/roles/addmod", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddMod)},
