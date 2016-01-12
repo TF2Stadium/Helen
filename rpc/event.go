@@ -88,8 +88,6 @@ func playerSub(playerID, lobbyID uint) {
 	models.BroadcastSubList()
 
 	lobby, _ := models.GetLobbyByID(lobbyID)
-	lobby.RemovePlayer(player)
-
 	models.SendNotification(fmt.Sprintf("%s has been reported.", player.Name), int(lobby.ID))
 }
 
