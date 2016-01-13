@@ -414,6 +414,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 		} else {
 			// assign the player to a new slot
 			// try to remove them from the old slot (in case they are switching slots)
+			if lobby.SlotNeedsSubstitute(slot) {
+				return NeedsSubErr
+			}
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
 			slotChange = true
 		}
