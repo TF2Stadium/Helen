@@ -349,6 +349,13 @@ func GetLobbyByID(id uint) (*Lobby, *helpers.TPError) {
 	return lob, nil
 }
 
+func (lobby *Lobby) HasPlayer(player *Player) bool {
+	var count int
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Count(&count)
+
+	return count != 0
+}
+
 //AddPlayer adds the given player to lobby, If the player occupies a slot in the lobby already, switch slots.
 //If the player is in another lobby, removes them from that lobby before adding them.
 func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helpers.TPError {
