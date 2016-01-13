@@ -5,146 +5,110 @@
 package admin
 
 import (
-	"fmt"
-	"html"
+	"errors"
+	"html/template"
 	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 )
 
-var dateRegex = regexp.MustCompile(`(\d{2})-(\d{2})-(\d{4})`)
+var (
+	dateRegex = regexp.MustCompile(`(\d{2})-(\d{2})-(\d{4})`)
+)
 
 func GetChatLogs(w http.ResponseWriter, r *http.Request) {
+	chatLogsTempl, err := template.ParseFiles("views/admin/templates/chatlogs.html")
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	var messages []*models.ChatMessage
-	steamid := strings.Index(r.URL.Path, "steamid/")
-	room := strings.Index(r.URL.Path, "room/")
+	values := r.URL.Query()
 
-	if steamid != -1 {
-		var err error
-
-		steamid := r.URL.Path[strings.Index(r.URL.Path, "steamid/")+8:]
-		index := strings.Index(steamid, "/")
-		if index != -1 {
-			steamid = steamid[:index]
-		}
-
-		player, tperr := models.GetPlayerBySteamID(steamid)
-		if tperr != nil {
-			http.Error(w, tperr.Error(), 400)
-			return
-		}
-
-		messages, err = models.GetPlayerMessages(player)
-		if err != nil {
-			http.Error(w, err.Error(), 400)
-			return
-		}
-
-	} else if room != -1 {
-		roomstr := r.URL.Path[strings.Index(r.URL.Path, "room/")+5:]
-		index := strings.Index(roomstr, "/")
-		if index != -1 {
-			roomstr = roomstr[:index]
-		}
-
-		room, err := strconv.Atoi(roomstr)
-		if err != nil {
-			http.Error(w, err.Error(), 400)
-			return
-		}
-
-		messages, err = models.GetRoomMessages(room)
-		if err != nil {
-			http.Error(w, err.Error(), 400)
-			return
-		}
+	room, err := strconv.Atoi(values.Get("room"))
+	if err != nil && values.Get("room") != "" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	from := int64(0)
-	to := time.Now().Unix()
+	steamID := values.Get("steamid")
+	var from, to time.Time
 
-	if dateRegex.MatchString(r.URL.Query().Get("from")) {
-		t, err := timestamp(r.URL.Query().Get("from"))
-
+	if values.Get("from") != "" {
+		from, err = timestamp(values.Get("from"))
 		if err != nil {
-			http.Error(w, err.Error(), 400)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		from = t.Unix()
+	} else {
+		from = time.Time{}
 	}
-	if dateRegex.MatchString(r.URL.Query().Get("to")) {
-		t, err := timestamp(r.URL.Query().Get("to"))
 
+	if values.Get("to") != "" {
+		to, err = timestamp(values.Get("to"))
 		if err != nil {
-			http.Error(w, err.Error(), 400)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		to = t.Unix()
+	} else {
+		to = time.Now()
 	}
 
-	//fmt.Printf("%d %d\n", from, to)
-	var filteredMessages []*models.ChatMessage
+	table := db.DB.Table("chat_messages")
+	if values.Get("room") == "" {
+		if steamID == "" {
+			http.Error(w, "No Steam ID given.", http.StatusBadRequest)
+			return
+		}
+		table.Joins("INNER JOIN players ON players.id = chat_messages.player_id").Where("players.steam_id = ? AND chat_messages.created_at >= ? AND chat_messages.created_at <= ?", steamID, from, to).Find(&messages)
+	} else if steamID == "" {
+		table.Where("room = ? AND created_at >= ? AND created_at <= ?", room, from, to).Find(&messages)
+	}
+
 	for _, message := range messages {
-		if message.CreatedAt.Unix() >= from && message.CreatedAt.Unix() <= to {
-			filteredMessages = append(filteredMessages, message)
+		err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
+		if err != nil {
+			helpers.Logger.Warning(err.Error())
 		}
 	}
 
-	logs := "<body>\n"
-	format := "<font color=\"red\">[%s]</font> <a href=\"https://steamcommunity.com/profiles/%s\">%s</a>: %s<br>\n"
-	if steamid != -1 {
-		format = "<font color=\"red\">[%s]</font> <a href=\"https://steamcommunity.com/profiles/%s\">%s</a>: %s<br>\n"
+	err = chatLogsTempl.Execute(w, messages)
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+		return
 	}
-
-	prevRoom := -1
-	//format := "%s: %s\t[%s]\n"
-	for _, message := range filteredMessages {
-		var player models.Player
-		if prevRoom != message.Room {
-			logs += fmt.Sprintf("<font color=\"blue\"> Room #%d </font><br>\n", message.Room)
-		}
-
-		prevRoom = message.Room
-		db.DB.First(&player, message.PlayerID)
-
-		if steamid != -1 {
-			logs += fmt.Sprintf(format, message.CreatedAt.Format(time.RFC822), player.SteamID, player.Name, html.EscapeString(message.Message))
-			continue
-		}
-
-		logs += fmt.Sprintf(format, message.CreatedAt.Format(time.RFC822), player.SteamID, player.Name, html.EscapeString(message.Message))
-	}
-
-	logs += "</body>"
-	fmt.Fprint(w, logs)
 }
 
-func timestamp(date string) (*time.Time, error) {
+func timestamp(date string) (time.Time, error) {
+	if !dateRegex.MatchString(date) {
+		return time.Time{}, errors.New("timestamp: invalid date")
+	}
+
 	matches := dateRegex.FindStringSubmatch(date)
 
 	month, err := strconv.Atoi(matches[1])
 	if err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	day, err := strconv.Atoi(matches[2])
 	if err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	year, err := strconv.Atoi(matches[3])
 	if err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	t := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
 
-	return &t, nil
+	return t, nil
 }
