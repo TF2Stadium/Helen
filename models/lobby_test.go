@@ -468,3 +468,19 @@ func TestGeneralRequirements(t *testing.T) {
 	err = lobby.AddPlayer(player, 3, "")
 	assert.Equal(t, err, ReqHoursErr)
 }
+
+func TestHasPlayer(t *testing.T) {
+	t.Parallel()
+	lobby := testhelpers.CreateLobby()
+	defer lobby.Close(false)
+	player := testhelpers.CreatePlayer()
+
+	lobby.AddPlayer(player, 1, "")
+	assert.True(t, lobby.HasPlayer(player))
+
+	player2 := testhelpers.CreatePlayer()
+	assert.False(t, lobby.HasPlayer(player2))
+
+	lobby.RemovePlayer(player)
+	assert.False(t, lobby.HasPlayer(player))
+}
