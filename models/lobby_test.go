@@ -485,7 +485,7 @@ func TestHasPlayer(t *testing.T) {
 	assert.False(t, lobby.HasPlayer(player))
 }
 
-func TestSlotNeedsSubtitute(t *testing.T) {
+func TestSlotNeedsSubstitute(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
 	defer lobby.Close(false)
@@ -496,4 +496,20 @@ func TestSlotNeedsSubtitute(t *testing.T) {
 	sub.Save()
 
 	assert.True(t, lobby.SlotNeedsSubstitute(1))
+}
+
+func TestFillSubstitute(t *testing.T) {
+	t.Parallel()
+	lobby := testhelpers.CreateLobby()
+	defer lobby.Close(false)
+
+	player := testhelpers.CreatePlayer()
+
+	lobby.AddPlayer(player, 1, "")
+	sub, _ := NewSub(lobby.ID, player.ID)
+	sub.Save()
+
+	assert.True(t, lobby.SlotNeedsSubstitute(1))
+	assert.NoError(t, lobby.FillSubstitute(1))
+	assert.False(t, lobby.SlotNeedsSubstitute(1))
 }
