@@ -405,7 +405,7 @@ func TestLobbyClose(t *testing.T) {
 			continue
 		}
 		switch message["request"].(string) {
-		case "lobbyLeft", "lobbyClosed", "lobbyData", "lobbyListData":
+		case "lobbyLeft", "lobbyClosed", "lobbyData", "lobbyListData", "subListData":
 			continue
 		default:
 			t.Fatalf("Shouldn't be getting request %s: %v", message["request"].(string), message)
