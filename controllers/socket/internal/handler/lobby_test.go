@@ -395,7 +395,7 @@ func TestLobbyClose(t *testing.T) {
 		},
 	}
 	conn.WriteJSON(args)
-	messages, err := testhelpers.ReadMessages(conn, 5, nil)
+	messages, err := testhelpers.ReadMessages(conn, 6, nil)
 	assert.NoError(t, err)
 
 	for _, message := range messages {
@@ -405,7 +405,7 @@ func TestLobbyClose(t *testing.T) {
 			continue
 		}
 		switch message["request"].(string) {
-		case "lobbyLeft", "lobbyClosed", "lobbyData", "lobbyListData":
+		case "lobbyLeft", "lobbyClosed", "lobbyData", "lobbyListData", "subListData":
 			continue
 		default:
 			t.Fatalf("Shouldn't be getting request %s: %v", message["request"].(string), message)
@@ -420,7 +420,7 @@ func TestLobbyClose(t *testing.T) {
 		},
 	}
 	conn.WriteJSON(args)
-	messages, _ = testhelpers.ReadMessages(conn, 2, nil)
+	messages, _ = testhelpers.ReadMessages(conn, 2, t)
 	assert.Equal(t, len(messages), 2)
 	assert.False(t, messages[1]["success"].(bool))
 
