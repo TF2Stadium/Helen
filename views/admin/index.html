@@ -3,4 +3,27 @@
    <b>Admin Control Panel</b><br>
   <a href="/admin/ban">Ban players</a> <br>
   <a href="/admin/roles">Change player roles</a>
+  <br>
+
+  <style type="text/css">
+    .container {
+        width: 500px;
+        clear: both;
+    }
+    .container input {
+        width: 100%;
+        clear: both;
+    }
+    </style>
+
+  <b>Chat Logs</b>
+  <div class="container">
+    <form method="get" action="admin/chatlogs">
+      Steam ID: <input type="text" name="steamid"><br>
+      Room    : <input type="text" name="room"><br>
+      From    : <input type="text" name="from"><br>
+      To      : <input type="text" name="to"><br>
+      <input type="submit" value="Submit">
+    </form>
+  </div>
 </html>

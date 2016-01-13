@@ -1,0 +1,7 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+    {{range .}}
+    <font color="red">{{.CreatedAt}}</font> <a href="{{.Player.ProfileURL}}">{{.Player.Name}}</a>: {{.Message}} <tab align=right> [room {{.Room}}]<br>
+    {{end}}
+  </body>
+</html>
