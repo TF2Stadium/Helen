@@ -667,6 +667,7 @@ func (lobby *Lobby) Close(rpc bool) {
 	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
 	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", DecorateLobbyClosed(lobby))
 
+	BroadcastSubList()
 	BroadcastLobby(lobby)
 }
 
