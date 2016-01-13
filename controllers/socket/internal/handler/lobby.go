@@ -342,7 +342,8 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		hooks.AfterLobbyJoin(server, so, lob, player)
 	}
 
-	if lob.IsFull() {
+	//check if lobby isn't already in progress (which happens when the player is subbing)
+	if lob.IsFull() && lob.State != models.LobbyStateInProgress {
 		lob.State = models.LobbyStateReadyingUp
 		lob.ReadyUpTimestamp = time.Now().Unix() + 30
 		lob.Save()
@@ -372,7 +373,8 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	}
 
 	if lob.State == models.LobbyStateInProgress {
-		broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lob, player.Name, *args.Class))
+		db.DB.Preload("ServerInfo").First(lob, lob.ID)
+		so.EmitJSON(helpers.NewRequest("lobbyStart", models.DecorateLobbyConnect(lob, player.Name, *args.Class)))
 	}
 
 	return chelpers.EmptySuccessJS

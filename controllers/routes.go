@@ -93,7 +93,7 @@ func SetupHTTPRoutes(mux *http.ServeMux, server *wsevent.Server, noauth *wsevent
 		{"/admin/ban/create", chelpers.FilterHTTPRequest(helpers.ActionBanCreate, admin.BanCreate)},
 		{"/admin/ban/chat", chelpers.FilterHTTPRequest(helpers.ActionBanChat, admin.BanChat)},
 
-		{"/admin/chatlogs/", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetChatLogs)},
+		{"/admin/chatlogs", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetChatLogs)},
 	}
 
 	if config.Constants.MockupAuth {
