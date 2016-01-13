@@ -356,6 +356,13 @@ func (lobby *Lobby) HasPlayer(player *Player) bool {
 	return count != 0
 }
 
+func (lobby *Lobby) SlotNeedsSubstitute(slot int) bool {
+	var count int
+	db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ? ", lobby.ID, slot, false).Count(&count)
+
+	return count != 0
+}
+
 //AddPlayer adds the given player to lobby, If the player occupies a slot in the lobby already, switch slots.
 //If the player is in another lobby, removes them from that lobby before adding them.
 func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helpers.TPError {
