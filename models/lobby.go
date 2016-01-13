@@ -363,6 +363,14 @@ func (lobby *Lobby) SlotNeedsSubstitute(slot int) bool {
 	return count != 0
 }
 
+//FillSubstitute marks the substitute reocrd for the given slot as true, and Broadcasts the updated sub list
+func (lobby *Lobby) FillSubstitute(slot int) error {
+	err := db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).UpdateColumn("filled", true).Error
+	BroadcastSubList()
+
+	return err
+}
+
 //AddPlayer adds the given player to lobby, If the player occupies a slot in the lobby already, switch slots.
 //If the player is in another lobby, removes them from that lobby before adding them.
 func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helpers.TPError {
@@ -451,6 +459,8 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Delete(&LobbySlot{}) //remove the slot
 
 		db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).UpdateColumn("filled", true) //substitute is now filled
+		//substitute is now filled
+		lobby.FillSubstitute(slot)
 		//notify players in game server of subtitute
 		class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
 		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
