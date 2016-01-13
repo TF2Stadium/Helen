@@ -395,7 +395,7 @@ func TestLobbyClose(t *testing.T) {
 		},
 	}
 	conn.WriteJSON(args)
-	messages, err := testhelpers.ReadMessages(conn, 5, nil)
+	messages, err := testhelpers.ReadMessages(conn, 6, nil)
 	assert.NoError(t, err)
 
 	for _, message := range messages {
@@ -420,7 +420,7 @@ func TestLobbyClose(t *testing.T) {
 		},
 	}
 	conn.WriteJSON(args)
-	messages, _ = testhelpers.ReadMessages(conn, 2, nil)
+	messages, _ = testhelpers.ReadMessages(conn, 2, t)
 	assert.Equal(t, len(messages), 2)
 	assert.False(t, messages[1]["success"].(bool))
 
