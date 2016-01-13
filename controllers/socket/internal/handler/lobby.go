@@ -371,8 +371,9 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		models.BroadcastLobbyList()
 	}
 
-	if lob.State == models.LobbyStateInProgress {
-		broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lob, player.Name, *args.Class))
+	if lob.CurrentState() == models.LobbyStateInProgress {
+		db.DB.Preload("ServerInfo").First(lob, lob.ID)
+		so.EmitJSON(helpers.NewRequest("lobbyStart", models.DecorateLobbyConnect(lob, player.Name, *args.Class)))
 	}
 
 	return chelpers.EmptySuccessJS
