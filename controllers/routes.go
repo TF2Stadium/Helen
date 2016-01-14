@@ -70,11 +70,14 @@ func (s Sockets) SocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type route struct {
+	pattern string
+	handler func(http.ResponseWriter, *http.Request)
+}
+
 func SetupHTTPRoutes(mux *http.ServeMux, server *wsevent.Server, noauth *wsevent.Server) {
-	var routes = []struct {
-		pattern string
-		handler func(http.ResponseWriter, *http.Request)
-	}{
+
+	var routes = []route{
 		{"/", MainHandler},
 		{"/openidcallback", LoginCallbackHandler},
 		{"/startLogin", LoginHandler},
@@ -87,6 +90,7 @@ func SetupHTTPRoutes(mux *http.ServeMux, server *wsevent.Server, noauth *wsevent
 		{"/admin/roles/addadmin", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddAdmin)},
 		{"/admin/roles/addmod", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddMod)},
 		{"/admin/roles/remove", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.Remove)},
+		{"/admin/roles/adddev", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddDeveloper)},
 
 		{"/admin/ban", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminBanPage)},
 		{"/admin/ban/join", chelpers.FilterHTTPRequest(helpers.ActionBanJoin, admin.BanJoin)},
