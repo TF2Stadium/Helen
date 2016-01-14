@@ -98,7 +98,7 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 
 	for _, message := range messages {
 		//err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
-		err := db.DB.Table("players").Select("name, profileurl").Where("id = ?", message.PlayerID).Scan(&message.Player).Error
+		err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
 		if err != nil {
 			helpers.Logger.Warning(err.Error())
 		}
