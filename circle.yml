@@ -10,7 +10,7 @@ dependencies:
       - sudo rm -rf /usr/local/go
       - wget "https://godeb.s3.amazonaws.com/godeb-amd64.tar.gz"
       - tar -xvf "godeb-amd64.tar.gz"
-      - ./godeb install 1.5.2
+      - ./godeb install 1.5.3
       - go version
 test:
   override:
