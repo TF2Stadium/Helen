@@ -1,7 +1,22 @@
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <body>
-    {{range .}}
-    <font color="red">{{.CreatedAt}}</font> <a href="{{.Player.ProfileURL}}">{{.Player.Name}}</a>: {{.Message}} <tab align=right> [room {{.Room}}]<br>
-    {{end}}
+    <table style="width:90%" border="1">
+      <tr>
+	<td>Profile</td>
+	<td>Message</td>
+	<td>Time</td>
+	<td>Room</td>
+      </tr>
+
+      {{range .}}
+      <tr>
+	<td><a href="{{.Player.ProfileURL}}">{{.Player.Name}}</a></td>
+	<td>{{.Message}}</td>
+	<td>{{.CreatedAt.Format "Mon Jan _2 15:04:05 2006"}}</td>
+	<td>{{.Room}}</td>
+      </tr>
+      {{end}}
+    </table>
   </body>
 </html>
