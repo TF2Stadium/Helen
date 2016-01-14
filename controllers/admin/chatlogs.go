@@ -95,7 +95,6 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	helpers.Logger.Debug("%v from: %v to: %v", messages, from, to)
 
 	for _, message := range messages {
 		//err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
