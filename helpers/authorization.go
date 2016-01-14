@@ -11,18 +11,21 @@ const (
 	RolePlayer authority.AuthRole = iota
 	RoleMod
 	RoleAdmin
+	RoleDeveloper
 )
 
 var RoleNames = map[authority.AuthRole]string{
-	RolePlayer: "player",
-	RoleMod:    "moderator",
-	RoleAdmin:  "administrator",
+	RoleDeveloper: "developer",
+	RolePlayer:    "player",
+	RoleMod:       "moderator",
+	RoleAdmin:     "administrator",
 }
 
 var RoleMap = map[string]authority.AuthRole{
 	"player":        RolePlayer,
 	"moderator":     RoleMod,
 	"administrator": RoleAdmin,
+	"developer":     RoleDeveloper,
 }
 
 // You can't change the order of these
@@ -44,6 +47,8 @@ var ActionNames = map[authority.AuthAction]string{
 }
 
 func InitAuthorization() {
+	RoleDeveloper.Allow(ActionViewPage)
+
 	RoleMod.Inherit(RolePlayer)
 	RoleMod.Allow(ActionBanChat)
 	RoleMod.Allow(ActionBanJoin)
