@@ -66,12 +66,13 @@ var (
 
 // Represents an occupied player slot in a lobby
 type LobbySlot struct {
-	ID       uint // ID of the lobby
-	LobbyID  uint // ID of the player occupying the slot
-	PlayerID uint // Slot number
-	Slot     int  // Denotes if the player is ready
-	Ready    bool // Denotes if the player is in game
-	InGame   bool // true if the player is in the game server
+	ID       uint //ID of the lobby
+	LobbyID  uint //ID of the player occupying the slot
+	PlayerID uint //Slot number
+	Slot     int  //Denotes if the player is ready
+	Ready    bool //Denotes if the player is in game
+	InGame   bool //true if the player is in the game server
+	NeedsSub bool //true if the slot needs a subtitute player
 }
 
 type ServerRecord struct {
