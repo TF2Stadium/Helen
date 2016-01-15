@@ -60,7 +60,6 @@ func playerDisc(playerID, lobbyID uint) {
 		}
 		if !ingame && lobby.CurrentState() != models.LobbyStateEnded {
 			lobby.Substitute(player)
-			lobby.RemovePlayer(player)
 		}
 	})
 }
