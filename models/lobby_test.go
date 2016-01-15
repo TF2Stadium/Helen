@@ -123,13 +123,14 @@ func TestLobbyAdd(t *testing.T) {
 	lobby2.Save()
 
 	// try to add a player while they're in another lobby
+	//player should be substituted
 	lobby.State = LobbyStateInProgress
 	lobby.Save()
 	err = lobby2.AddPlayer(players[0], 1, "")
 	assert.Nil(t, err)
 
 	var count int
-	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Count(&count)
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND needs_sub = ?", lobby.ID, true).Count(&count)
 	assert.Equal(t, count, 1)
 }
 
@@ -403,7 +404,7 @@ func TestNotInGameSub(t *testing.T) {
 	var (
 		players                  []*Player
 		ingame, subbed, subcount int
-		subs                     []int
+		//subs                     []int
 	)
 
 	for i := 0; i < 12; i++ {
@@ -417,8 +418,7 @@ func TestNotInGameSub(t *testing.T) {
 			ingame++
 			lobby.SetInGame(player)
 		} else if r == 2 {
-			sub, _ := NewSub(lobby.ID, player.ID)
-			sub.Save()
+			lobby.Substitute(player)
 			subbed++
 		}
 
@@ -427,9 +427,8 @@ func TestNotInGameSub(t *testing.T) {
 	t.Logf("%d players are in-game, %d player have been substituted", ingame, subbed)
 	lobby.SubNotInGamePlayers()
 
-	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Count(&subcount)
-	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &subs)
-	assert.Equal(t, subcount, len(subs))
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND needs_sub = ?", lobby.ID, true).Count(&subcount)
+	//assert.Equal(t, subcount, len(subs))
 	lobby.Close(false)
 }
 
@@ -517,8 +516,7 @@ func TestSlotNeedsSubstitute(t *testing.T) {
 	player := testhelpers.CreatePlayer()
 
 	lobby.AddPlayer(player, 1, "")
-	sub, _ := NewSub(lobby.ID, player.ID)
-	sub.Save()
+	lobby.Substitute(player)
 
 	assert.True(t, lobby.SlotNeedsSubstitute(1))
 }
@@ -531,8 +529,7 @@ func TestFillSubstitute(t *testing.T) {
 	player := testhelpers.CreatePlayer()
 
 	lobby.AddPlayer(player, 1, "")
-	sub, _ := NewSub(lobby.ID, player.ID)
-	sub.Save()
+	lobby.Substitute(player)
 
 	assert.True(t, lobby.SlotNeedsSubstitute(1))
 	assert.NoError(t, lobby.FillSubstitute(1))
