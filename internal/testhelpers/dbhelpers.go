@@ -45,7 +45,6 @@ func CleanupDB() {
 		"players",
 		"server_records",
 		"spectators_players_lobbies",
-		"substitutes",
 		"requirements",
 	}
 	for _, table := range tables {
