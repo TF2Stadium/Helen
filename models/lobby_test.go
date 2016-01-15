@@ -231,6 +231,22 @@ func TestSetNotInGame(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, slot.InGame)
 }
+
+func TestIsPlayerInGame(t *testing.T) {
+	t.Parallel()
+	player := testhelpers.CreatePlayer()
+
+	lobby := testhelpers.CreateLobby()
+	defer lobby.Close(false)
+	lobby.Save()
+	lobby.AddPlayer(player, 0, "")
+	lobby.SetInGame(player)
+
+	ingame, err := lobby.IsPlayerInGame(player)
+	assert.NoError(t, err)
+	assert.True(t, ingame)
+}
+
 func TestIsEveryoneReady(t *testing.T) {
 	t.Parallel()
 	player := testhelpers.CreatePlayer()
@@ -384,8 +400,11 @@ func TestNotInGameSub(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
 	defer lobby.Close(false)
-	var players []*Player
-	var ingame, subbed int
+	var (
+		players                  []*Player
+		ingame, subbed, subcount int
+		subs                     []int
+	)
 
 	for i := 0; i < 12; i++ {
 		players = append(players, testhelpers.CreatePlayer())
@@ -393,18 +412,24 @@ func TestNotInGameSub(t *testing.T) {
 	for i, player := range players {
 		err := lobby.AddPlayer(player, i, "")
 		assert.NoError(t, err)
-		if rand.Intn(2) == 1 {
+		r := rand.Intn(3)
+		if r == 1 {
 			ingame++
 			lobby.SetInGame(player)
+		} else if r == 2 {
+			sub, _ := NewSub(lobby.ID, player.ID)
+			sub.Save()
+			subbed++
 		}
+
 	}
 
 	t.Logf("%d players are in-game, %d player have been substituted", ingame, subbed)
 	lobby.SubNotInGamePlayers()
 
-	var subcount int
 	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Count(&subcount)
-	assert.Equal(t, subcount, 12-ingame)
+	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &subs)
+	assert.Equal(t, subcount, len(subs))
 	lobby.Close(false)
 }
 
