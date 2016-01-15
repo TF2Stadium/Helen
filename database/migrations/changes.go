@@ -12,7 +12,7 @@ import (
 
 //follows semantic versioning scheme
 var schemaVersion = semver.Version{
-	Major: 2,
+	Major: 3,
 	Minor: 0,
 	Patch: 0,
 }
@@ -56,7 +56,10 @@ func checkSchema() {
 
 	if v, _ := semver.Parse(currStr); v.Major < schemaVersion.Major {
 		helpers.Logger.Warning("Incompatible schema change detected (%s), attempting to migrate to (%s).", currStr, schemaVersion.String())
-		f := migrationRoutines[schemaVersion.Major]
-		f()
+		for i := v.Major + 1; i <= schemaVersion.Major; i++ {
+			helpers.Logger.Debug("Calling migration routine for %d.0.0", i)
+			f := migrationRoutines[i]
+			f()
+		}
 	}
 }
