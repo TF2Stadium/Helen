@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 )
@@ -60,9 +59,7 @@ func playerDisc(playerID, lobbyID uint) {
 			helpers.Logger.Error(err.Error())
 		}
 		if !ingame && lobby.CurrentState() != models.LobbyStateEnded {
-			sub, _ := models.NewSub(lobby.ID, player.ID)
-			db.DB.Save(sub)
-			models.BroadcastSubList()
+			lobby.Substitute(player)
 			lobby.RemovePlayer(player)
 		}
 	})
@@ -78,16 +75,9 @@ func playerConn(playerID, lobbyID uint) {
 
 func playerSub(playerID, lobbyID uint) {
 	player, _ := models.GetPlayerByID(playerID)
-	sub, err := models.NewSub(lobbyID, player.ID)
-	if err != nil {
-		helpers.Logger.Error(err.Error())
-		return
-	}
-	db.DB.Save(sub)
-
-	models.BroadcastSubList()
-
 	lobby, _ := models.GetLobbyByID(lobbyID)
+	lobby.Substitute(player)
+
 	models.SendNotification(fmt.Sprintf("%s has been reported.", player.Name), int(lobby.ID))
 }
 
