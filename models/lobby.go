@@ -365,16 +365,15 @@ func (lobby *Lobby) HasPlayer(player *Player) bool {
 //SlotNeedsSubstitute returns true if the given slot needs a substitute
 func (lobby *Lobby) SlotNeedsSubstitute(slot int) bool {
 	var count int
-	db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ? ", lobby.ID, slot, false).Count(&count)
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND slot = ? AND needs_sub = ?", lobby.ID, slot, true).Count(&count)
 
 	return count != 0
 }
 
 //FillSubstitute marks the substitute reocrd for the given slot as true, and Broadcasts the updated sub list
 func (lobby *Lobby) FillSubstitute(slot int) error {
-	err := db.DB.Table("substitutes").Where("lobby_id = ? AND slot = ? AND filled = ?", lobby.ID, slot, false).UpdateColumn("filled", true).Error
+	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND slot = ?", lobby.ID, slot).UpdateColumn("needs_sub", false).Error
 	BroadcastSubList()
-
 	return err
 }
 
@@ -413,17 +412,13 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	//Check if the player is currently in another lobby
 	if currLobbyID, err := player.GetLobbyID(false); err == nil {
 		if currLobbyID != lobby.ID {
-			// if the player is in a different lobby, remove them from that lobby
-			// plus substitute them
+			//if the player is in a different lobby, remove them from that lobby
+			//plus substitute them
 			curLobby, _ := GetLobbyByID(currLobbyID)
 
 			if curLobby.State == LobbyStateInProgress {
-				sub, _ := NewSub(curLobby.ID, player.ID)
-				sub.Save()
-				BroadcastSubList()
+				curLobby.Substitute(player)
 			}
-
-			curLobby.RemovePlayer(player)
 
 		} else { //player is in the same lobby, they're changing their slots
 			//assign the player to a new slot
@@ -656,7 +651,6 @@ func (lobby *Lobby) SetupServer() error {
 //If rpc == true, the log listener in Pauling for the corresponding server is stopped, this is
 //used when the lobby is closed manually by a player
 func (lobby *Lobby) Close(rpc bool) {
-	db.DB.Table("substitutes").Where("lobby_id = ?", lobby.ID).UpdateColumn("filled", true)
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.Table("server_records").Where("id = ?", lobby.ServerInfoID).Delete(&ServerRecord{})
 	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Delete(&Requirement{})
@@ -717,25 +711,12 @@ func (lobby *Lobby) SetNotInGame(player *Player) error {
 func (lobby *Lobby) SubNotInGamePlayers() {
 	playerids := []uint{}
 	db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ?", lobby.ID, false).Pluck("player_id", &playerids)
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ? AND needs_sub = ?", lobby.ID, false, false).UpdateColumn("needs_sub", true)
 
 	for _, id := range playerids {
-		var count int
-		db.DB.Table("substitutes").Where("lobby_id = ? AND player_id = ?", lobby.ID, id).Count(&count)
-		if count != 0 {
-			//player has already been reported in game, don't sub them
-			continue
-		}
-
-		sub, err := NewSub(lobby.ID, id)
-		if err != nil {
-			helpers.Logger.Error(err.Error())
-			continue
-		}
-		sub.Save()
 		player, _ := GetPlayerByID(id)
 		SendNotification(fmt.Sprintf("%s has been reported for not joining the game.", player.Alias()), int(lobby.ID))
 	}
-	lobby.OnChange(true)
 	BroadcastSubList()
 	return
 }
@@ -791,4 +772,20 @@ func BroadcastLobbyList() {
 
 func (l *Lobby) LobbyData(include bool) LobbyData {
 	return DecorateLobbyData(l, include)
+}
+
+//Substitute sets the needs_sub column of the given slot to true, and broadcasts the new
+//substitute list
+func (lobby *Lobby) Substitute(player *Player) {
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).UpdateColumn("needs_sub", true)
+
+	db.DB.Preload("Stats").First(player, player.ID)
+	player.Stats.IncreaseSubCount()
+	BroadcastSubList()
+}
+
+//BroadcastSubList broadcasts a the subtitute list to the room 0_public
+func BroadcastSubList() {
+	subList := DecorateSubstituteList()
+	broadcaster.SendMessageToRoom("0_public", "subListData", subList)
 }
