@@ -83,6 +83,16 @@ type LobbyConnectData struct {
 	} `json:"mumble"`
 }
 
+type SubstituteData struct {
+	LobbyID uint   `json:"id"`
+	Format  string `json:"type"`
+	MapName string `json:"map"`
+	Region  string `json:"region"`
+	Mumble  bool   `json:"mumbleRequired"`
+	Team    string `sql:"-" json:"team"`
+	Class   string `sql:"-" json:"class"`
+}
+
 type LobbyEvent struct {
 	ID uint `json:"id"`
 }
@@ -240,4 +250,33 @@ func DecorateLobbyLeave(lobby *Lobby) LobbyEvent {
 
 func DecorateLobbyClosed(lobby *Lobby) LobbyEvent {
 	return LobbyEvent{lobby.ID}
+}
+
+func DecorateSubstitute(slot *LobbySlot) SubstituteData {
+	lobby := &Lobby{}
+	db.DB.First(lobby, slot.LobbyID)
+	substitute := SubstituteData{
+		LobbyID: lobby.ID,
+		Format:  formatMap[lobby.Type],
+		MapName: lobby.MapName,
+		Region:  lobby.RegionName,
+		Mumble:  lobby.Mumble,
+	}
+
+	substitute.Team, substitute.Class, _ = LobbyGetSlotInfoString(lobby.Type, slot.Slot)
+
+	return substitute
+}
+
+func DecorateSubstituteList() []SubstituteData {
+	slots := []*LobbySlot{}
+	subList := []SubstituteData{}
+
+	db.DB.Table("lobby_slots").Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").Where("lobby_slots.needs_sub = ? AND lobbies.state = ?", true, LobbyStateInProgress).Find(&slots)
+
+	for _, slot := range slots {
+		subList = append(subList, DecorateSubstitute(slot))
+	}
+
+	return subList
 }

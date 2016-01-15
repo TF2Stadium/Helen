@@ -14,6 +14,7 @@ import (
 // major ver -> migration routine
 var migrationRoutines = map[uint64]func(){
 	2: lobbyTypeChange,
+	3: dropSubtituteTable,
 }
 
 func whitelist_id_string() {
@@ -61,4 +62,8 @@ func lobbyTypeChange() {
 		db.DB.DB().QueryRow("SELECT type FROM lobbies WHERE id = $1", lobbyID).Scan(&old)
 		db.DB.Table("lobbies").Where("id = ?", lobbyID).Update("type", newLobbyType[old])
 	}
+}
+
+func dropSubtituteTable() {
+	db.DB.Exec("DROP TABLE substitutes")
 }
