@@ -20,9 +20,11 @@ import (
 	"github.com/yohcop/openid-go"
 )
 
-var nonceStore = &openid.SimpleNonceStore{
-	Store: make(map[string][]*openid.Nonce)}
-var discoveryCache = &openid.SimpleDiscoveryCache{}
+var (
+	nonceStore = &openid.SimpleNonceStore{
+		Store: make(map[string][]*openid.Nonce)}
+	discoveryCache = &openid.SimpleDiscoveryCache{}
+)
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if url, err := openid.RedirectURL("http://steamcommunity.com/openid",

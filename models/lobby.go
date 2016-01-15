@@ -195,6 +195,7 @@ func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPErr
 	//BUG(vibhavp): FitsRequirements doesn't check reliability
 	requirements := []*Requirement{}
 
+	//Updates player's game hours
 	player.UpdatePlayerInfo()
 	player.Save()
 
@@ -277,14 +278,16 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 	return lobby
 }
 
-//CurrentState returns the lobby's current state
+//CurrentState returns the lobby's current state.
+//It's meant to be used for old lobby objects which might have their state change while the
+//object hasn't been updated.
 func (l *Lobby) CurrentState() LobbyState {
 	var state int
 	db.DB.DB().QueryRow("SELECT state FROM lobbies WHERE id = $1", l.ID).Scan(&state)
 	return LobbyState(state)
 }
 
-//GetPlayerSlotObj returns the LobbySlot object if the given player occupies a slot in the lobby
+//GetPlayerSlotObj returns the LobbySlot object if the given player occupies a slot in the lobby.
 func (lobby *Lobby) GetPlayerSlotObj(player *Player) (*LobbySlot, error) {
 	slotObj := &LobbySlot{}
 
@@ -383,19 +386,17 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	 * anything else?
 	 */
 
+	//check if slot password is valid
 	if lobby.SlotPassword != "" && lobby.SlotPassword != password {
 		if lobby.PlayerWhitelist == "" && password != "" {
 			return InvalidPasswordErr
 		}
 	}
 
-	if player.ID == 0 {
-		return helpers.NewTPError("Player not in the database", -1)
-	}
-
 	num := 0
 
-	// It should really be possible to do this query using relations
+	//Check if player is banned
+	//TODO(nonagon): It should really be possible to do this query using relations
 	if err := db.DB.Table("banned_players_lobbies").
 		Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).
 		Count(&num).Error; num > 0 || err != nil {
@@ -408,6 +409,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	}
 
 	var slotChange bool
+	//Check if the player is currently in another lobby
 	if currLobbyID, err := player.GetLobbyID(false); err == nil {
 		if currLobbyID != lobby.ID {
 			// if the player is in a different lobby, remove them from that lobby
@@ -422,10 +424,11 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 
 			curLobby.RemovePlayer(player)
 
-		} else {
-			// assign the player to a new slot
-			// try to remove them from the old slot (in case they are switching slots)
+		} else { //player is in the same lobby, they're changing their slots
+			//assign the player to a new slot
 			if lobby.SlotNeedsSubstitute(slot) {
+				//the slot needs a substitute (which happens when the lobby is in progress),
+				//so players already in the lobby cannot fill it.
 				return NeedsSubErr
 			}
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
@@ -434,6 +437,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	}
 
 	if !slotChange {
+		//check if the player is in the steam group whitelist
 		url := fmt.Sprintf(`http://steamcommunity.com/groups/%s/memberslistxml/?xml=1`,
 			lobby.PlayerWhitelist)
 
@@ -442,19 +446,19 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 		}
 
 		if lobby.HasRequirements(slot) {
+			//check if player fits the requirements for the slot
 			if ok, err := lobby.FitsRequirements(player, slot); !ok {
 				return err
 			}
 		}
 	}
 
-	// Check if player is a substitute
+	// Check if player is a substitute (the slot needs a subtitute)
 	if lobby.SlotNeedsSubstitute(slot) {
-		//kicks player if they're in-game, resets their !rep count.
+		//kicks previous slot occupant if they're in-game, resets their !rep count, removes them from the lobby
 		DisallowPlayer(lobby.ID, player.SteamID)
-		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Delete(&LobbySlot{}) //remove the slot
-		//substitute is now filled
-		lobby.FillSubstitute(slot)
+		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Delete(&LobbySlot{})
+		lobby.FillSubstitute(slot) //substitute is now "filled"
 		//notify players in game server of subtitute
 		class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
 		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
@@ -526,12 +530,14 @@ func (lobby *Lobby) RemoveUnreadyPlayers(spec bool) error {
 	playerids := []uint{}
 
 	if spec {
+		//get list of player ids which are not ready
 		err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND ready = ?", lobby.ID, false).Pluck("player_id", &playerids).Error
 		if err != nil {
 			return err
 		}
 	}
 
+	//remove players which aren't ready
 	err := db.DB.Where("lobby_id = ? AND ready = ?", lobby.ID, false).Delete(&LobbySlot{}).Error
 	if spec {
 		for _, id := range playerids {
@@ -546,23 +552,20 @@ func (lobby *Lobby) RemoveUnreadyPlayers(spec bool) error {
 
 //IsPlayerInGame returns true if the player is in-game
 func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
-	ingame := []bool{}
-	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("in_game", &ingame).Error
+	var ingame bool
+	err := db.DB.DB().QueryRow("SELECT in_game FROM lobby_slots WHERE lobby_id = $1 AND player_id = $2", lobby.ID, player.ID).Scan(&ingame)
 	if err != nil {
 		return false, err
 	}
 
-	return (len(ingame) != 0 && ingame[0]), err
+	return ingame, err
 }
 
 //IsPlayerReady returns true if the given player is ready
-func (lobby *Lobby) IsPlayerReady(player *Player) (bool, *helpers.TPError) {
-	ready := []bool{}
-	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Pluck("ready", &ready).Error
-	if err != nil {
-		return false, helpers.NewTPError("Player is not in the lobby.", 5)
-	}
-	return (len(ready) != 0 && ready[0]), nil
+func (lobby *Lobby) IsPlayerReady(player *Player) (bool, error) {
+	var ready bool
+	err := db.DB.DB().QueryRow("SELECT ready FROM lobby_slots WHERE lobby_id = $1 AND player_id = $2", lobby.ID, player.ID).Scan(&ready)
+	return ready, err
 }
 
 //UnreadyAllPlayers unreadies all players in the lobby
