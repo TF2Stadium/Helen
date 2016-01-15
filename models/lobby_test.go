@@ -544,3 +544,15 @@ func TestStart(t *testing.T) {
 	lobby.Start()
 	assert.Equal(t, lobby.CurrentState(), LobbyStateInProgress)
 }
+
+func TestIsSubNeeded(t *testing.T) {
+	t.Parallel()
+	lobby := testhelpers.CreateLobby()
+	defer lobby.Close(false)
+	player := testhelpers.CreatePlayer()
+	lobby.AddPlayer(player, 1, "")
+
+	lobby.Substitute(player)
+	assert.True(t, lobby.SlotNeedsSubstitute(1))
+
+}

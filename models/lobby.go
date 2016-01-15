@@ -363,11 +363,10 @@ func (lobby *Lobby) HasPlayer(player *Player) bool {
 }
 
 //SlotNeedsSubstitute returns true if the given slot needs a substitute
-func (lobby *Lobby) SlotNeedsSubstitute(slot int) bool {
-	var count int
-	db.DB.Table("lobby_slots").Where("lobby_id = ? AND slot = ? AND needs_sub = ?", lobby.ID, slot, true).Count(&count)
-
-	return count != 0
+func (lobby *Lobby) SlotNeedsSubstitute(slot int) (needsSub bool) {
+	//use database/sql API, since it's simpler here
+	db.DB.DB().QueryRow("SELECT needs_sub FROM lobby_slots WHERE lobby_id = $1 AND slot = $2", lobby.ID, slot).Scan(&needsSub)
+	return
 }
 
 //FillSubstitute marks the substitute reocrd for the given slot as true, and Broadcasts the updated sub list
@@ -453,8 +452,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	if lobby.SlotNeedsSubstitute(slot) {
 		//kicks previous slot occupant if they're in-game, resets their !rep count, removes them from the lobby
 		DisallowPlayer(lobby.ID, player.SteamID)
+		//delete previous slot
 		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Delete(&LobbySlot{})
-		lobby.FillSubstitute(slot) //substitute is now "filled"
+		BroadcastSubList() //since the sub slot has been deleted, broadcast the updated substitute list
 		//notify players in game server of subtitute
 		class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
 		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
