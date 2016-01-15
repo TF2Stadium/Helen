@@ -538,3 +538,12 @@ func TestFillSubstitute(t *testing.T) {
 	assert.NoError(t, lobby.FillSubstitute(1))
 	assert.False(t, lobby.SlotNeedsSubstitute(1))
 }
+
+func TestStart(t *testing.T) {
+	t.Parallel()
+	lobby := testhelpers.CreateLobby()
+	defer lobby.Close(false)
+
+	lobby.Start()
+	assert.Equal(t, lobby.CurrentState(), LobbyStateInProgress)
+}
