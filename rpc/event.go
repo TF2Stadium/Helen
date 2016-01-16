@@ -14,6 +14,7 @@ type Event struct {
 
 	LobbyID  uint
 	PlayerID uint
+	LogsID   int //logs.tf ID
 }
 
 //Event names
@@ -40,7 +41,7 @@ func (Event) Handle(e Event, nop *struct{}) error {
 	case DisconnectedFromServer:
 		disconnectedFromServer(e.LobbyID)
 	case MatchEnded:
-		matchEnded(e.LobbyID)
+		matchEnded(e.LobbyID, e.LogsID)
 	}
 
 	return nil
@@ -98,12 +99,14 @@ func disconnectedFromServer(lobbyID uint) {
 	models.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
 }
 
-func matchEnded(lobbyID uint) {
+func matchEnded(lobbyID uint, logsID uint) {
 	lobby, _ := models.GetLobbyByIDServer(lobbyID)
 
 	helpers.Logger.Debug("#%d: Match Ended", lobbyID)
 
 	lobby.UpdateStats()
 	lobby.Close(false)
-	models.SendNotification("Lobby Ended.", int(lobby.ID))
+
+	msg := fmt.Sprintf("Lobby Ended. Logs: http://logs.tf/%d", logsID)
+	models.SendNotification(msg, int(lobby.ID))
 }
