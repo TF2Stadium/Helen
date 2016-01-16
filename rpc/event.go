@@ -99,7 +99,7 @@ func disconnectedFromServer(lobbyID uint) {
 	models.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
 }
 
-func matchEnded(lobbyID uint, logsID uint) {
+func matchEnded(lobbyID uint, logsID int) {
 	lobby, _ := models.GetLobbyByIDServer(lobbyID)
 
 	helpers.Logger.Debug("#%d: Match Ended", lobbyID)
