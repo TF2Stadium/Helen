@@ -28,7 +28,7 @@ func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 	broadcaster.SendMessage(player.SteamID, "lobbyJoined", models.DecorateLobbyData(lobby, false))
 }
 
-func AfterLobbyLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby, player *models.Player) {
+func AfterLobbyLeave(server *wsevent.Server, lobby *models.Lobby, player *models.Player) {
 	broadcaster.SendMessage(player.SteamID, "lobbyLeft", models.DecorateLobbyLeave(lobby))
 
 	sockets, _ := broadcaster.GetSockets(player.SteamID)

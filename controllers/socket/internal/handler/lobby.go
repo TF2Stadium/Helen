@@ -519,7 +519,7 @@ func (Lobby) LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		return tperr
 	}
 
-	hooks.AfterLobbyLeave(server, so, lob, player)
+	hooks.AfterLobbyLeave(server, lob, player)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
@@ -554,7 +554,7 @@ func (Lobby) LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) i
 
 	lob.BanPlayer(player)
 
-	hooks.AfterLobbyLeave(server, so, lob, player)
+	hooks.AfterLobbyLeave(server, lob, player)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
@@ -577,7 +577,7 @@ func (Lobby) LobbyLeave(server *wsevent.Server, so *wsevent.Client, data []byte)
 		return tperr
 	}
 
-	hooks.AfterLobbyLeave(server, so, lob, player)
+	hooks.AfterLobbyLeave(server, lob, player)
 
 	return chelpers.EmptySuccessJS
 }
