@@ -16,19 +16,16 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/TF2Stadium/wsevent"
 	"github.com/stretchr/testify/assert"
 )
 
 func init() {
 	helpers.InitLogger()
 	testhelpers.CleanupDB()
+	testhelpers.StartServer()
 }
 
 func TestLogin(t *testing.T) {
-	server := testhelpers.StartServer(wsevent.NewServer(), wsevent.NewServer())
-	defer server.Close()
-
 	var count int
 
 	steamid := strconv.Itoa(rand.Int())
@@ -51,9 +48,6 @@ func TestLogin(t *testing.T) {
 }
 
 func TestWS(t *testing.T) {
-	server := testhelpers.StartServer(wsevent.NewServer(), wsevent.NewServer())
-	defer server.Close()
-
 	steamid := strconv.Itoa(rand.Int())
 	client := testhelpers.NewClient()
 
@@ -68,41 +62,4 @@ func TestWS(t *testing.T) {
 	assert.NotNil(t, conn)
 
 	testhelpers.ReadMessages(conn, testhelpers.InitMessages, t)
-}
-
-func BenchmarkWS(b *testing.B) {
-	server := testhelpers.StartServer(wsevent.NewServer(), wsevent.NewServer())
-	defer server.Close()
-	//wg := new(sync.WaitGroup)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		//go func() {
-		//wg.Add(1)
-		//defer wg.Done()
-
-		steamid := strconv.Itoa(rand.Int())
-		client := testhelpers.NewClient()
-		_, err := testhelpers.Login(steamid, client)
-		if err != nil {
-			b.Error(err)
-			b.FailNow()
-		}
-
-		conn, err := testhelpers.ConnectWS(client)
-		if err != nil {
-			b.Error(err)
-			b.FailNow()
-		}
-
-		for i := 0; i < 5; i++ {
-			_, _, err := conn.ReadMessage()
-			if err != nil {
-				b.Error(err)
-				b.FailNow()
-			}
-		}
-		//}()
-	}
-	//wg.Wait()
 }
