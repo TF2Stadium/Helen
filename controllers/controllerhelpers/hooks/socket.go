@@ -7,8 +7,8 @@ package hooks
 import (
 	"time"
 
-	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
@@ -19,7 +19,7 @@ func OnDisconnect(socketID string) {
 	defer chelpers.DeauthenticateSocket(socketID)
 	if chelpers.IsLoggedInSocket(socketID) {
 		steamid := chelpers.GetSteamId(socketID)
-		broadcaster.RemoveSocket(socketID, steamid)
+		sessions.RemoveSocket(socketID, steamid)
 		player, tperr := models.GetPlayerBySteamID(steamid)
 		if tperr != nil || player == nil {
 			helpers.Logger.Error(tperr.Error())
@@ -35,14 +35,14 @@ func OnDisconnect(socketID string) {
 		for _, id := range ids {
 			//if this _specific_ socket is spectating this lobby, remove them from it
 			//player might be spectating other lobbies in another tab, but we don't care
-			if broadcaster.IsSpectating(socketID, id) {
+			if sessions.IsSpectating(socketID, id) {
 				lobby, _ := models.GetLobbyByID(id)
 				err := lobby.RemoveSpectator(player, true)
 				if err != nil {
 					helpers.Logger.Error(err.Error())
 					continue
 				}
-				broadcaster.RemoveSpectator(socketID)
+				sessions.RemoveSpectator(socketID)
 				//helpers.Logger.Debug("removing %s from %d", player.SteamId, id)
 			}
 		}
@@ -50,9 +50,9 @@ func OnDisconnect(socketID string) {
 		id, _ := player.GetLobbyID(true)
 		//if player is in a waiting lobby, and hasn't connected for > 30 seconds,
 		//remove him from it. Here, connected = player isn't connected from any tab/window
-		if id != 0 && broadcaster.ConnectedSockets(player.SteamID) == 0 {
+		if id != 0 && sessions.ConnectedSockets(player.SteamID) == 0 {
 			time.AfterFunc(time.Second*30, func() {
-				if !broadcaster.IsConnected(player.SteamID) {
+				if !sessions.IsConnected(player.SteamID) {
 					//player may have changed lobbies during this time
 					//fetch lobby ID again
 					id, err := player.GetLobbyID(true)
