@@ -98,7 +98,7 @@ func SocketInit(server *wsevent.Server, noauth *wsevent.Server, so *wsevent.Clie
 	loggedIn := chelpers.IsLoggedInSocket(so.Id())
 	if loggedIn {
 		steamid := chelpers.GetSteamId(so.Id())
-		broadcaster.SetSocket(steamid, so)
+		broadcaster.AddSocket(steamid, so)
 	}
 
 	if loggedIn {
