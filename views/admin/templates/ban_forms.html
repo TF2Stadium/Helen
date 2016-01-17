@@ -8,9 +8,9 @@
     {{range .}}
     <form method="get" action="{{.URL}}" class="pure-form">
       <legend>{{.Title}}</legend>
-      <input placeholder="Steam ID" type="text" name="steamid">
-      <input placeholder="Until" type="text" name="until">
-      <input placeholder="Reason" type="text" name="reason">
+      <input placeholder="Steam ID" type="text" name="steamid" required>
+      <input placeholder="Until" type="text" name="until" required>
+      <input placeholder="Reason" type="text" name="reason" required>
       <button type="submit" class="pure-button pure-button-primary">Ban</button>
     </form>
     {{end}}
