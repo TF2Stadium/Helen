@@ -6,16 +6,23 @@ package admin
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/models"
 )
 
 var timeRe = regexp.MustCompile(`(\d+[a-z])`)
+var banString = map[models.PlayerBanType]string{
+	models.PlayerBanJoin:   "joining lobbies",
+	models.PlayerBanCreate: "creating lobbies",
+	models.PlayerBanChat:   "chatting",
+	models.PlayerBanFull:   "the website",
+}
 
 //(y)ear (m)onth (w)eek (d)ay (h)our
 func parseTime(str string) (*time.Time, error) {
@@ -52,8 +59,9 @@ func parseTime(str string) (*time.Time, error) {
 	return &t, nil
 }
 
-func banPlayer(u *url.URL, banType models.PlayerBanType) error {
-	values := u.Query()
+func banPlayer(w http.ResponseWriter, r *http.Request, banType models.PlayerBanType) error {
+	values := r.URL.Query()
+	confirm := values.Get("confirm")
 	steamid := values.Get("steamid")
 	reason := values.Get("reason")
 
@@ -62,38 +70,48 @@ func banPlayer(u *url.URL, banType models.PlayerBanType) error {
 		return tperr
 	}
 
-	until, err := parseTime(values.Get("until"))
-	if err != nil {
-		return err
+	switch confirm {
+	case "yes":
+		until, err := parseTime(values.Get("until"))
+		if err != nil {
+			return err
+		}
+
+		player.BanUntil(*until, banType, reason)
+	default:
+		query := r.URL.Query()
+		query.Set("confirm", "yes")
+		r.URL.RawQuery = query.Encode()
+		title := fmt.Sprintf("Ban %s (%s) from %s?", player.Name, player.SteamID, banString[banType])
+		confirmReq(w, r.URL.String(), config.Constants.Domain+"/admin/ban", title)
 	}
 
-	player.BanUntil(*until, models.PlayerBanJoin, reason)
 	return nil
 }
 
 func BanJoin(w http.ResponseWriter, r *http.Request) {
-	err := banPlayer(r.URL, models.PlayerBanJoin)
+	err := banPlayer(w, r, models.PlayerBanJoin)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
 }
 
 func BanChat(w http.ResponseWriter, r *http.Request) {
-	err := banPlayer(r.URL, models.PlayerBanChat)
+	err := banPlayer(w, r, models.PlayerBanChat)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
 }
 
 func BanCreate(w http.ResponseWriter, r *http.Request) {
-	err := banPlayer(r.URL, models.PlayerBanCreate)
+	err := banPlayer(w, r, models.PlayerBanCreate)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
 }
 
 func BanFull(w http.ResponseWriter, r *http.Request) {
-	err := banPlayer(r.URL, models.PlayerBanFull)
+	err := banPlayer(w, r, models.PlayerBanFull)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
