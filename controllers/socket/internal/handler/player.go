@@ -75,7 +75,7 @@ func (Player) PlayerNotReady(server *wsevent.Server, so *wsevent.Client, data []
 
 	tperr = lobby.UnreadyPlayer(player)
 	lobby.RemovePlayer(player)
-	hooks.AfterLobbyLeave(server, so, lobby, player)
+	hooks.AfterLobbyLeave(server, lobby, player)
 
 	if tperr != nil {
 		return tperr

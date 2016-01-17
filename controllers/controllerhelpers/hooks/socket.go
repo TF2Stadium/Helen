@@ -19,7 +19,7 @@ func OnDisconnect(socketID string) {
 	defer chelpers.DeauthenticateSocket(socketID)
 	if chelpers.IsLoggedInSocket(socketID) {
 		steamid := chelpers.GetSteamId(socketID)
-		broadcaster.RemoveSocket(steamid)
+		broadcaster.RemoveSocket(socketID, steamid)
 		player, tperr := models.GetPlayerBySteamID(steamid)
 		if tperr != nil || player == nil {
 			helpers.Logger.Error(tperr.Error())
@@ -33,27 +33,39 @@ func OnDisconnect(socketID string) {
 		}
 
 		for _, id := range ids {
-			lobby, _ := models.GetLobbyByID(id)
-			err := lobby.RemoveSpectator(player, true)
-			if err != nil {
-				helpers.Logger.Error(err.Error())
-				continue
+			//if this _specific_ socket is spectating this lobby, remove them from it
+			//player might be spectating other lobbies in another tab, but we don't care
+			if broadcaster.IsSpectating(socketID, id) {
+				lobby, _ := models.GetLobbyByID(id)
+				err := lobby.RemoveSpectator(player, true)
+				if err != nil {
+					helpers.Logger.Error(err.Error())
+					continue
+				}
+				broadcaster.RemoveSpectator(socketID)
+				//helpers.Logger.Debug("removing %s from %d", player.SteamId, id)
 			}
-			//helpers.Logger.Debug("removing %s from %d", player.SteamId, id)
 		}
 
-		time.AfterFunc(time.Second*30, func() {
-			if !broadcaster.IsConnected(player.SteamID) {
-				id, err := player.GetLobbyID(true)
-				if err != nil {
-					return
-				}
+		id, _ := player.GetLobbyID(true)
+		//if player is in a waiting lobby, and hasn't connected for > 30 seconds,
+		//remove him from it. Here, connected = player isn't connected from any tab/window
+		if id != 0 && broadcaster.ConnectedSockets(player.SteamID) == 0 {
+			time.AfterFunc(time.Second*30, func() {
+				if !broadcaster.IsConnected(player.SteamID) {
+					//player may have changed lobbies during this time
+					//fetch lobby ID again
+					id, err := player.GetLobbyID(true)
+					if err != nil {
+						return
+					}
 
-				lobby := &models.Lobby{}
-				db.DB.First(lobby, id)
-				lobby.RemovePlayer(player)
-			}
-		})
+					lobby := &models.Lobby{}
+					db.DB.First(lobby, id)
+					lobby.RemovePlayer(player)
+				}
+			})
+		}
 	}
 
 }
