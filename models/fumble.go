@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/fumble/mumble"
@@ -56,15 +55,7 @@ func FumbleLobbyStarted(lob_ *Lobby) {
 		var player Player
 		db.DB.First(&player, slot.PlayerID)
 
-		if _, ok := broadcaster.GetSocket(player.SteamID); ok {
-			/*var userIp string
-			if userIpParts := strings.Split(so.Request().RemoteAddr, ":"); len(userIpParts) == 2 {
-				userIp = userIpParts[0]
-			} else {
-				userIp = so.Request().RemoteAddr
-			}*/
-			fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+sanitize(player.Name), strings.ToUpper(team))
-		}
+		fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+sanitize(player.Name), strings.ToUpper(team))
 	}
 }
 
