@@ -387,9 +387,11 @@ func removeUnreadyPlayers(server *wsevent.Server, lobby *models.Lobby) {
 	lobby.RemoveUnreadyPlayers(true)
 
 	for _, steamID := range steamIDs {
-		so, ok := broadcaster.GetSocket(steamID)
+		sockets, ok := broadcaster.GetSockets(steamID)
 		if ok {
-			server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", lobby.ID))
+			for _, so := range sockets {
+				server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", lobby.ID))
+			}
 		}
 	}
 }
@@ -424,10 +426,9 @@ func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data
 				specSameLobby = true
 				continue
 			}
-
-			lobby, _ := models.GetLobbyByID(id)
-			lobby.RemoveSpectator(player, true)
-
+			//a socket should only spectate one lobby, remove socket from
+			//any other lobby room
+			//multiple sockets from one player can spectatte multiple lobbies
 			server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", id))
 		}
 	}
@@ -518,7 +519,6 @@ func (Lobby) LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		return tperr
 	}
 
-	so, _ = broadcaster.GetSocket(player.SteamID)
 	hooks.AfterLobbyLeave(server, so, lob, player)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
@@ -554,7 +554,6 @@ func (Lobby) LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) i
 
 	lob.BanPlayer(player)
 
-	so, _ = broadcaster.GetSocket(player.SteamID)
 	hooks.AfterLobbyLeave(server, so, lob, player)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
