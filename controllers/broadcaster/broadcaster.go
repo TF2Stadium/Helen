@@ -11,9 +11,11 @@ import (
 	"github.com/TF2Stadium/wsevent"
 )
 
-var mu = new(sync.RWMutex)
-var socketServer *wsevent.Server
-var socketServerNoLogin *wsevent.Server
+var (
+	mu                  = new(sync.RWMutex) //protects the following vars
+	socketServer        *wsevent.Server
+	socketServerNoLogin *wsevent.Server
+)
 
 func Init(server *wsevent.Server, nologin *wsevent.Server) {
 	mu.Lock()
@@ -23,14 +25,18 @@ func Init(server *wsevent.Server, nologin *wsevent.Server) {
 }
 
 func SendMessage(steamid string, event string, content interface{}) {
-	socket, ok := GetSocket(steamid)
+	sockets, ok := GetSockets(steamid)
 	if !ok {
 		return
 	}
 
 	mu.RLock()
 	defer mu.RUnlock()
-	socket.EmitJSON(helpers.NewRequest(event, content))
+	for _, socket := range sockets {
+		go func(so *wsevent.Client) {
+			so.EmitJSON(helpers.NewRequest(event, content))
+		}(socket)
+	}
 }
 
 func SendMessageToRoom(room string, event string, content interface{}) {
