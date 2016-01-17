@@ -29,7 +29,7 @@ const (
 	PlayerBanFull
 )
 
-// Represents a player ban
+//PlayerBan represents a player ban
 type PlayerBan struct {
 	gorm.Model
 	PlayerID uint          // ID of the player banned
@@ -39,7 +39,7 @@ type PlayerBan struct {
 	Active   bool          `sql:"default:true"` // Whether the ban is active
 }
 
-// Represents a stored player setting
+//PlayerSetting represents a stored player setting
 type PlayerSetting struct {
 	ID        uint
 	CreatedAt time.Time
@@ -49,6 +49,7 @@ type PlayerSetting struct {
 	Value string `sql:"size:65535"` // Setting value
 }
 
+//Player represents a player object
 type Player struct {
 	gorm.Model
 	Debug   bool   // true if player is a dummy one.
