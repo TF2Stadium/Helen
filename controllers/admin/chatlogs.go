@@ -79,9 +79,9 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to).Find(&messages).Count(&playerID).Error
+		err = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to).Order("id desc").Find(&messages).Count(&playerID).Error
 	} else if steamID == "" { //Retrieve all messages sent to a specfic room
-		err = db.DB.Where("room = ? AND (created_at >= ? AND created_at <= ?)", room, from, to).Find(&messages).Error
+		err = db.DB.Where("room = ? AND (created_at >= ? AND created_at <= ?)", room, from, to).Order("id desc").Find(&messages).Error
 	} else { //Retrieve all messages sent to a specific room and a speficic player
 		playerID := getPlayerID(steamID)
 		if playerID == 0 {
@@ -89,7 +89,7 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to).Find(&messages).Count(&playerID).Error
+		err = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to).Order("id desc").Find(&messages).Count(&playerID).Error
 	}
 
 	if err != nil {
