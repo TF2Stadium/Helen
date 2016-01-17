@@ -1,29 +1,30 @@
 <html>
+  <head>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+  </head>
+  
   <title>Admin Control Panel </title>
-   <b>Admin Control Panel</b><br>
-  <a href="/admin/ban">Ban players</a> <br>
-  <a href="/admin/roles">Change player roles</a>
-  <br>
+  <center>
+  <b>Admin Control Panel</b><br>
+  </center>
+  <a class="pure-button pure-button-primary" href="/admin/ban">Ban Players</a><br><br>
+  <a class="pure-button pure-button-primary" href="/admin/roles">Change player roles</a>
 
-  <style type="text/css">
-    .container {
-        width: 500px;
-        clear: both;
-    }
-    .container input {
-        width: 100%;
-        clear: both;
-    }
-    </style>
-
-  <b>Chat Logs</b>
-  <div class="container">
-    <form method="get" action="admin/chatlogs">
-      Steam ID: <input type="text" name="steamid"><br>
-      Room    : <input type="text" name="room"><br>
-      From    : <input type="text" name="from"><br>
-      To      : <input type="text" name="to"><br>
-      <input type="submit" value="Submit">
-    </form>
-  </div>
+  <form method="get" action="admin/chatlogs" class="pure-form pure-form-aligned">
+    <fieldset class="pure-control-group">
+      <legend>Chat Logs</legend>
+      
+      <label for="steamid">Player's Steam ID</label>
+       <input placeholder="Steam ID" type="text" name="steamid"><br>
+        <label for="lobbyid">Room (Lobby ID, 0 for global room)</label>
+      <input placeholder="Room" type="text" name="room">
+      </fieldset>
+    <fieldset class="pure-control-group">
+      <label for="from">From (MM-DD-YYYY)</label>
+      <input placeholder="From" type="text" name="from"><br>
+      <label for="to">To (MM-DD-YYYY)</label>
+      <input placeholder="To" type="text" name="to">
+    </fieldset>
+      <button type="submit" class="pure-button pure-button-primary">View</button>
+  </form>
 </html>

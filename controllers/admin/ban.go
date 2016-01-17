@@ -52,7 +52,7 @@ func parseTime(str string) (*time.Time, error) {
 	return &t, nil
 }
 
-func ban(u *url.URL, banType models.PlayerBanType) error {
+func banPlayer(u *url.URL, banType models.PlayerBanType) error {
 	values := u.Query()
 	steamid := values.Get("steamid")
 	reason := values.Get("reason")
@@ -72,28 +72,28 @@ func ban(u *url.URL, banType models.PlayerBanType) error {
 }
 
 func BanJoin(w http.ResponseWriter, r *http.Request) {
-	err := ban(r.URL, models.PlayerBanJoin)
+	err := banPlayer(r.URL, models.PlayerBanJoin)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
 }
 
 func BanChat(w http.ResponseWriter, r *http.Request) {
-	err := ban(r.URL, models.PlayerBanChat)
+	err := banPlayer(r.URL, models.PlayerBanChat)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
 }
 
 func BanCreate(w http.ResponseWriter, r *http.Request) {
-	err := ban(r.URL, models.PlayerBanCreate)
+	err := banPlayer(r.URL, models.PlayerBanCreate)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
 }
 
 func BanFull(w http.ResponseWriter, r *http.Request) {
-	err := ban(r.URL, models.PlayerBanFull)
+	err := banPlayer(r.URL, models.PlayerBanFull)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}

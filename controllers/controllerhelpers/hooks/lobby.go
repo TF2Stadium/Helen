@@ -11,6 +11,7 @@ import (
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
@@ -20,7 +21,7 @@ func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 	room := fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID))
 	//make all sockets join the private room, given the one the player joined the lobby on
 	//might close, so lobbyStart and lobbyReadyUp can be sent to other tabs
-	sockets, _ := broadcaster.GetSockets(player.SteamID)
+	sockets, _ := sessions.GetSockets(player.SteamID)
 	for _, so := range sockets {
 		server.AddClient(so, room)
 	}
@@ -31,7 +32,7 @@ func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 func AfterLobbyLeave(server *wsevent.Server, lobby *models.Lobby, player *models.Player) {
 	broadcaster.SendMessage(player.SteamID, "lobbyLeft", models.DecorateLobbyLeave(lobby))
 
-	sockets, _ := broadcaster.GetSockets(player.SteamID)
+	sockets, _ := sessions.GetSockets(player.SteamID)
 	//player might have connected from multiple tabs, remove all of them from the room
 	for _, so := range sockets {
 		server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
@@ -40,20 +41,20 @@ func AfterLobbyLeave(server *wsevent.Server, lobby *models.Lobby, player *models
 
 func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
 	//remove socket from room of the previous lobby the socket was spectating (if any)
-	lobbyID, ok := broadcaster.GetSpectating(so.Id())
+	lobbyID, ok := sessions.GetSpectating(so.Id())
 	if ok {
 		server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", lobbyID))
-		broadcaster.RemoveSpectator(so.Id())
+		sessions.RemoveSpectator(so.Id())
 	}
 
 	server.AddClient(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 	chelpers.BroadcastScrollback(so, lobby.ID)
-	broadcaster.SetSpectator(so.Id(), lobby.ID)
+	sessions.SetSpectator(so.Id(), lobby.ID)
 }
 
 func AfterLobbySpecLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
 	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
-	broadcaster.RemoveSpectator(so.Id())
+	sessions.RemoveSpectator(so.Id())
 }
 
 func GetLobbyRoom(lobbyid uint) string {

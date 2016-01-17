@@ -7,25 +7,25 @@ package broadcaster
 import (
 	"sync"
 
+	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/wsevent"
 )
 
 var (
-	mu                  = new(sync.RWMutex) //protects the following vars
-	socketServer        *wsevent.Server
-	socketServerNoLogin *wsevent.Server
+	mu           = new(sync.RWMutex) //protects the following vars
+	auth, noauth *wsevent.Server
 )
 
-func Init(server *wsevent.Server, nologin *wsevent.Server) {
+func Init(a, na *wsevent.Server) {
 	mu.Lock()
-	socketServer = server
-	socketServerNoLogin = nologin
+	auth = a
+	noauth = a
 	mu.Unlock()
 }
 
 func SendMessage(steamid string, event string, content interface{}) {
-	sockets, ok := GetSockets(steamid)
+	sockets, ok := sessions.GetSockets(steamid)
 	if !ok {
 		return
 	}
@@ -40,7 +40,7 @@ func SendMessage(steamid string, event string, content interface{}) {
 }
 
 func SendMessageToRoom(room string, event string, content interface{}) {
-	if socketServer == nil {
+	if auth == nil { //check for testing purposes
 		return
 	}
 
@@ -48,6 +48,6 @@ func SendMessageToRoom(room string, event string, content interface{}) {
 
 	mu.RLock()
 	defer mu.RUnlock()
-	socketServer.BroadcastJSON(room, v)
-	socketServerNoLogin.BroadcastJSON(room, v)
+	auth.BroadcastJSON(room, v)
+	noauth.BroadcastJSON(room, v)
 }

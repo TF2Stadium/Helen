@@ -387,12 +387,8 @@ func removeUnreadyPlayers(server *wsevent.Server, lobby *models.Lobby) {
 	lobby.RemoveUnreadyPlayers(true)
 
 	for _, steamID := range steamIDs {
-		sockets, ok := broadcaster.GetSockets(steamID)
-		if ok {
-			for _, so := range sockets {
-				server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", lobby.ID))
-			}
-		}
+		player, _ := models.GetPlayerBySteamID(steamID)
+		hooks.AfterLobbyLeave(server, lobby, player)
 	}
 }
 

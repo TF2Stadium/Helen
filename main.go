@@ -78,10 +78,9 @@ func main() {
 	}
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 
-	broadcaster.Init(server, nologin)
-	socket.ServerInit(server, nologin)
+	broadcaster.Init(socket.AuthServer, socket.UnauthServer)
 	mux := http.NewServeMux()
-	controllers.SetupHTTPRoutes(mux, server, nologin)
+	controllers.SetupHTTPRoutes(mux)
 
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
 		// init static FileServer

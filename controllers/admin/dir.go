@@ -5,9 +5,32 @@
 package admin
 
 import (
+	"html/template"
 	"net/http"
 	"path/filepath"
+
+	"github.com/TF2Stadium/Helen/helpers"
 )
+
+type form struct {
+	URL   string //URL
+	Title string //Title
+}
+
+var banForm = []form{
+	{"ban/join", "Ban from joining lobbies"},
+	{"ban/create", "Ban from creating lobbies"},
+	{"ban/chat", "Ban from chatting"},
+	{"ban/full", "Full ban"},
+}
+
+var roleForm = []form{
+	{"roles/addadmin", "Add Admin"},
+	{"roles/addmod", "Add Mod"},
+	{"roles/adddev", "Add Developer"},
+
+	{"roles/remove", "Remove Admin/Mod"},
+}
 
 func ServeAdminPage(w http.ResponseWriter, r *http.Request) {
 	abs, _ := filepath.Abs("./views/admin")
@@ -15,11 +38,21 @@ func ServeAdminPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeAdminBanPage(w http.ResponseWriter, r *http.Request) {
-	abs, _ := filepath.Abs("./views/admin/ban")
-	http.ServeFile(w, r, abs)
+	templ, err := template.ParseFiles("views/admin/templates/ban_forms.html")
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+		return
+	}
+
+	templ.Execute(w, banForm)
 }
 
 func ServeAdminRolePage(w http.ResponseWriter, r *http.Request) {
-	abs, _ := filepath.Abs("./views/admin/roles")
-	http.ServeFile(w, r, abs)
+	templ, err := template.ParseFiles("views/admin/templates/role_forms.html")
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+		return
+	}
+
+	templ.Execute(w, roleForm)
 }

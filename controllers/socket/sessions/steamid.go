@@ -1,4 +1,7 @@
-package broadcaster
+//Package sessions provides functions to help maintain consistency
+//across multiple websocket connections from a single player,
+//when the player has multiple tabs/windows open (since each tab opens a new websocket connection)
+package sessions
 
 import (
 	"sync"
@@ -14,6 +17,7 @@ var (
 	socketSpectating = make(map[string]uint)
 )
 
+//AddSocket adds so to the list of sockets connected from steamid
 func AddSocket(steamid string, so *wsevent.Client) {
 	mapMu.Lock()
 	defer mapMu.Unlock()
@@ -21,6 +25,7 @@ func AddSocket(steamid string, so *wsevent.Client) {
 	steamIDSockets[steamid] = append(steamIDSockets[steamid], so)
 }
 
+//RemoveSocket removes so from the list of sockets connected from steamid
 func RemoveSocket(sessionID, steamID string) {
 	mapMu.Lock()
 	defer mapMu.Unlock()
@@ -42,45 +47,23 @@ func RemoveSocket(sessionID, steamID string) {
 	}
 }
 
+//GetSockets returns a list of sockets connected from steamid. The second return value is
+//false if they player has no sockets connected
 func GetSockets(steamid string) (sockets []*wsevent.Client, success bool) {
-	mu.RLock()
-	defer mu.RUnlock()
+	mapMu.RLock()
+	defer mapMu.RUnlock()
 
 	sockets, success = steamIDSockets[steamid]
 	return
 }
 
+//IsConnected returns whether the given steamid is connected to the website
 func IsConnected(steamid string) bool {
 	_, ok := GetSockets(steamid)
 	return ok
 }
 
+//ConnectedSockets returns the number of socket connections from steamid
 func ConnectedSockets(steamid string) int {
 	return len(steamIDSockets[steamid])
-}
-
-func SetSpectator(socketID string, lobbyID uint) {
-	mapMu.Lock()
-	defer mapMu.Unlock()
-	socketSpectating[socketID] = lobbyID
-}
-
-func GetSpectating(socketID string) (lobbyID uint, ok bool) {
-	mapMu.RLock()
-	defer mapMu.RUnlock()
-	lobbyID, ok = socketSpectating[socketID]
-	return
-}
-
-func RemoveSpectator(socketID string) {
-	mapMu.Lock()
-	defer mapMu.Unlock()
-	delete(socketSpectating, socketID)
-}
-
-func IsSpectating(socketID string, lobbyID uint) bool {
-	mapMu.RLock()
-	defer mapMu.RUnlock()
-	_, ok := socketSpectating[socketID]
-	return ok
 }
