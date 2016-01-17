@@ -18,12 +18,7 @@ import (
 
 var upgrader = websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool { return true }}
 
-type Sockets struct {
-	Auth   *wsevent.Server
-	Noauth *wsevent.Server
-}
-
-func (s Sockets) SocketHandler(w http.ResponseWriter, r *http.Request) {
+func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	//check if player is in the whitelist
 	if config.Constants.SteamIDWhitelist != "" {
 		allowed := false
@@ -45,9 +40,9 @@ func (s Sockets) SocketHandler(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		_, ok := session.Values["steam_id"]
 		if ok {
-			so, err = s.Auth.NewClient(upgrader, w, r)
+			so, err = socket.AuthServer.NewClient(upgrader, w, r)
 		} else {
-			so, err = s.Noauth.NewClient(upgrader, w, r)
+			so, err = socket.UnauthServer.NewClient(upgrader, w, r)
 		}
 	} else {
 		var estr = "Couldn't create WebSocket connection."
@@ -64,7 +59,7 @@ func (s Sockets) SocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//helpers.Logger.Debug("Connected to Socket")
-	err = socket.SocketInit(s.Auth, s.Noauth, so)
+	err = socket.SocketInit(so)
 	if err != nil {
 		LogoutSession(w, r)
 	}
@@ -75,14 +70,13 @@ type route struct {
 	handler func(http.ResponseWriter, *http.Request)
 }
 
-func SetupHTTPRoutes(mux *http.ServeMux, server *wsevent.Server, noauth *wsevent.Server) {
-
+func SetupHTTPRoutes(mux *http.ServeMux) {
 	var routes = []route{
 		{"/", MainHandler},
 		{"/openidcallback", LoginCallbackHandler},
 		{"/startLogin", LoginHandler},
 		{"/logout", LogoutHandler},
-		{"/websocket/", Sockets{server, noauth}.SocketHandler},
+		{"/websocket/", SocketHandler},
 
 		{"/admin", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminPage)},
 
