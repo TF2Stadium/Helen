@@ -1,22 +1,31 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+  </head>
   <body>
-    <table style="width:90%" border="1">
-      <tr>
-	<td>Profile</td>
-	<td>Message</td>
-	<td>Time</td>
-	<td>Room</td>
-      </tr>
+    <table class="pure-table" >
 
-      {{range .}}
-      <tr>
-	<td><a href="{{.Player.ProfileURL}}">{{.Player.Name}}</a></td>
-	<td>{{.Message}}</td>
-	<td>{{.CreatedAt.Format "Mon Jan _2 15:04:05 2006"}}</td>
-	<td>{{.Room}}</td>
-      </tr>
-      {{end}}
+      <thead>
+	<tr>
+	  <td>Profile</td>
+	  <td>Message</td>
+	  <td>Time</td>
+	  <td>Room</td>
+	</tr>
+      </thead>
+      
+      <tbody>
+	{{range .}}
+	<tr>
+	  <td><a href="{{.Player.ProfileURL}}">{{.Player.Name}}</a></td>
+	  <td>{{.Message}}</td>
+	  <td>{{.CreatedAt.Format "Mon Jan _2 15:04:05 2006"}}</td>
+	  <td>{{.Room}}</td>
+	</tr>
+	{{end}}
+      </tbody>
+      
     </table>
   </body>
 </html>
