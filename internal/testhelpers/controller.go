@@ -21,7 +21,6 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/websocket"
 )
 
@@ -109,16 +108,20 @@ func EmitJSONWithReply(conn *websocket.Conn, req map[string]interface{}) (map[st
 	return resp["data"].(map[string]interface{}), nil
 }
 
-func StartServer(auth *wsevent.Server, noauth *wsevent.Server) *httptest.Server {
+func resetServers() {
+	socket.NewServers()
+	broadcaster.Init(socket.AuthServer, socket.UnauthServer)
+}
+
+func StartServer() *httptest.Server {
+	resetServers()
 	var mux = http.NewServeMux()
 	mux.HandleFunc("/", controllers.MainHandler)
 	mux.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
 	mux.HandleFunc("/startLogin", controllers.LoginHandler)
 	mux.HandleFunc("/startMockLogin/", controllers.MockLoginHandler)
 	mux.HandleFunc("/logout", controllers.LogoutHandler)
-	mux.HandleFunc("/websocket/", controllers.Sockets{auth, noauth}.SocketHandler)
-
-	broadcaster.Init(auth, noauth)
+	mux.HandleFunc("/websocket/", controllers.SocketHandler)
 
 	l, err := net.Listen("tcp", "localhost:8080")
 	if err != nil {
@@ -156,23 +159,4 @@ func ReadJSON(conn *websocket.Conn) map[string]interface{} {
 	}
 
 	return reply["data"].(map[string]interface{})
-}
-
-func getEvent(data []byte) string {
-	var js struct {
-		Request string
-	}
-	json.Unmarshal(data, &js)
-	return js.Request
-}
-
-func NewSockets() (*wsevent.Server, *wsevent.Server) {
-	auth := wsevent.NewServer()
-	noauth := wsevent.NewServer()
-
-	auth.Extractor = getEvent
-	noauth.Extractor = getEvent
-
-	socket.ServerInit(auth, noauth)
-	return auth, noauth
 }
