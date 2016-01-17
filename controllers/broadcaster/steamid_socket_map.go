@@ -65,6 +65,13 @@ func SetSpectator(socketID string, lobbyID uint) {
 	socketSpectating[socketID] = lobbyID
 }
 
+func GetSpectating(socketID string) (lobbyID uint, ok bool) {
+	mapMu.RLock()
+	defer mapMu.RUnlock()
+	lobbyID, ok = socketSpectating[socketID]
+	return
+}
+
 func RemoveSpectator(socketID string) {
 	mapMu.Lock()
 	defer mapMu.Unlock()
