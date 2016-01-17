@@ -1,15 +1,20 @@
-<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
 <html>
+  <head>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+  </head>
+  
   <title>Admin Control Panel </title>
-   <b>Admin Control Panel</b><br>
-   <a class="pure-button" href="/admin/ban">Ban Players</a>
-  <a class="pure-button" href="/admin/roles">Change player roles</a>
-  <br>
+  <center>
+  <b>Admin Control Panel</b><br>
+  </center>
+  <a class="pure-button pure-button-primary" href="/admin/ban">Ban Players</a><br><br>
+  <a class="pure-button pure-button-primary" href="/admin/roles">Change player roles</a>
 
   <form method="get" action="admin/chatlogs" class="pure-form pure-form-aligned">
     <fieldset class="pure-control-group">
       <legend>Chat Logs</legend>
-       <label for="steamid">Player's Steam ID</label>
+      
+      <label for="steamid">Player's Steam ID</label>
        <input placeholder="Steam ID" type="text" name="steamid"><br>
         <label for="lobbyid">Room (Lobby ID, 0 for global room)</label>
       <input placeholder="Room" type="text" name="room">
