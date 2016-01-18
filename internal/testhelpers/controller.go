@@ -17,10 +17,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TF2Stadium/Helen/controllers"
-	"github.com/TF2Stadium/Helen/controllers/broadcaster"
-	"github.com/TF2Stadium/Helen/controllers/socket"
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/routes"
 	"github.com/gorilla/websocket"
 )
 
@@ -108,20 +107,10 @@ func EmitJSONWithReply(conn *websocket.Conn, req map[string]interface{}) (map[st
 	return resp["data"].(map[string]interface{}), nil
 }
 
-func resetServers() {
-	socket.NewServers()
-	broadcaster.Init(socket.AuthServer, socket.UnauthServer)
-}
-
 func StartServer() *httptest.Server {
-	resetServers()
 	var mux = http.NewServeMux()
-	mux.HandleFunc("/", controllers.MainHandler)
-	mux.HandleFunc("/openidcallback", controllers.LoginCallbackHandler)
-	mux.HandleFunc("/startLogin", controllers.LoginHandler)
-	mux.HandleFunc("/startMockLogin/", controllers.MockLoginHandler)
-	mux.HandleFunc("/logout", controllers.LogoutHandler)
-	mux.HandleFunc("/websocket/", controllers.SocketHandler)
+	config.Constants.MockupAuth = true
+	routes.SetupHTTP(mux)
 
 	l, err := net.Listen("tcp", "localhost:8080")
 	if err != nil {
