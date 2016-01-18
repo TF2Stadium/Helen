@@ -381,13 +381,12 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 }
 
 func removeUnreadyPlayers(server *wsevent.Server, lobby *models.Lobby) {
-	var steamIDs []string
+	var players []*models.Player
 
-	db.DB.Table("players").Select("players.steam_id").Joins("INNER JOIN lobby_slots ON lobby_slots.player_id = players.id").Where("lobby_slots.lobby_id = ? AND lobby_slots.ready = ?", lobby.ID, false).Find(&steamIDs)
+	db.DB.Table("players").Joins("INNER JOIN lobby_slots ON lobby_slots.player_id = players.id").Where("lobby_slots.lobby_id = ? AND lobby_slots.ready = ?", lobby.ID, false).Find(&players)
 	lobby.RemoveUnreadyPlayers(true)
 
-	for _, steamID := range steamIDs {
-		player, _ := models.GetPlayerBySteamID(steamID)
+	for _, player := range players {
 		hooks.AfterLobbyLeave(server, lobby, player)
 	}
 }
