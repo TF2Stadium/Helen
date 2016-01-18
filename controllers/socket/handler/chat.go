@@ -25,7 +25,7 @@ func (Chat) Name(s string) string {
 
 var lastChatTime = make(map[string]int64)
 
-func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Chat) ChatSend(so *wsevent.Client, data []byte) interface{} {
 	steamid := chelpers.GetSteamId(so.Id())
 	now := time.Now().Unix()
 	if now-lastChatTime[steamid] == 0 {
@@ -92,7 +92,7 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 	return chelpers.EmptySuccessJS
 }
 
-func (Chat) ChatDelete(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Chat) ChatDelete(so *wsevent.Client, data []byte) interface{} {
 	if err := chelpers.CheckPrivilege(so, helpers.ActionDeleteChat); err != nil {
 		return err
 	}
@@ -108,6 +108,9 @@ func (Chat) ChatDelete(server *wsevent.Server, so *wsevent.Client, data []byte) 
 
 	message := &models.ChatMessage{}
 	err := db.DB.Table("chat_messages").Where("room = ? AND id = ?", args.Room, args.ID).First(message).Error
+	if message.Bot {
+		return helpers.NewTPError("Cannot delete notification messages", -1)
+	}
 	if err != nil {
 		return helpers.NewTPError("Can't find message", -1)
 	}

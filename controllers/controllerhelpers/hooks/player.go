@@ -14,6 +14,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
 )
 
@@ -32,7 +33,7 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 	so.EmitJSON(helpers.NewRequest("subListData", models.DecorateSubstituteList()))
 }
 
-func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *models.Player) {
+func AfterConnectLoggedIn(so *wsevent.Client, player *models.Player) {
 	if time.Since(player.UpdatedAt) >= time.Hour*1 {
 		player.UpdatePlayerInfo()
 		player.Save()
@@ -41,8 +42,8 @@ func AfterConnectLoggedIn(server *wsevent.Server, so *wsevent.Client, player *mo
 	lobbyID, err := player.GetLobbyID(false)
 	if err == nil {
 		lobby, _ := models.GetLobbyByIDServer(lobbyID)
-		AfterLobbyJoin(server, so, lobby, player)
-		AfterLobbySpec(server, so, lobby)
+		AfterLobbyJoin(so, lobby, player)
+		AfterLobbySpec(socket.AuthServer, so, lobby)
 		models.BroadcastLobbyToUser(lobby, chelpers.GetSteamId(so.Id()))
 		slot := &models.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error

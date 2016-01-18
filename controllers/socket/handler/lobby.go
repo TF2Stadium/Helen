@@ -18,6 +18,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
 )
 
@@ -55,7 +56,7 @@ func newRequirement(team, class string, requirement Requirement, lobby *models.L
 	return nil
 }
 
-func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbyCreate(so *wsevent.Client, data []byte) interface{} {
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
 		str := fmt.Sprintf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
@@ -177,7 +178,7 @@ func (Lobby) LobbyCreate(_ *wsevent.Server, so *wsevent.Client, data []byte) int
 		}{lob.ID})
 }
 
-func (Lobby) LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbyServerReset(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		ID *uint `json:"id"`
 	}
@@ -215,7 +216,7 @@ func (Lobby) LobbyServerReset(server *wsevent.Server, so *wsevent.Client, data [
 
 var validAddress = regexp.MustCompile(`.+\:\d+`)
 
-func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) ServerVerify(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Server  *string `json:"server"`
 		Rconpwd *string `json:"rconpwd"`
@@ -250,7 +251,7 @@ func (Lobby) ServerVerify(server *wsevent.Server, so *wsevent.Client, data []byt
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbyClose(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Id *uint `json:"id"`
 	}
@@ -287,7 +288,7 @@ func (Lobby) LobbyClose(server *wsevent.Server, so *wsevent.Client, data []byte)
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbyJoin(so *wsevent.Client, data []byte) interface{} {
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 	if banned, until := player.IsBannedWithTime(models.PlayerBanJoin); banned {
 		str := fmt.Sprintf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
@@ -328,8 +329,8 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	}
 
 	if prevId, _ := player.GetLobbyID(false); prevId != 0 && !sameLobby {
-		server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", prevId))
-		server.RemoveClient(so.Id(), fmt.Sprintf("%d_private", prevId))
+		socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%d_public", prevId))
+		socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%d_private", prevId))
 	}
 
 	tperr = lob.AddPlayer(player, slot, *args.Password)
@@ -339,7 +340,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	}
 
 	if !sameLobby {
-		hooks.AfterLobbyJoin(server, so, lob, player)
+		hooks.AfterLobbyJoin(so, lob, player)
 	}
 
 	//check if lobby isn't already in progress (which happens when the player is subbing)
@@ -356,7 +357,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 			//remove unreadied players and unready the
 			//rest.
 			if lobby.State != models.LobbyStateInProgress && lobby.State != models.LobbyStateEnded {
-				removeUnreadyPlayers(server, lobby)
+				removeUnreadyPlayers(lobby)
 
 				lobby.State = models.LobbyStateWaiting
 				lobby.Save()
@@ -380,18 +381,18 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	return chelpers.EmptySuccessJS
 }
 
-func removeUnreadyPlayers(server *wsevent.Server, lobby *models.Lobby) {
+func removeUnreadyPlayers(lobby *models.Lobby) {
 	var players []*models.Player
 
 	db.DB.Table("players").Joins("INNER JOIN lobby_slots ON lobby_slots.player_id = players.id").Where("lobby_slots.lobby_id = ? AND lobby_slots.ready = ?", lobby.ID, false).Find(&players)
 	lobby.RemoveUnreadyPlayers(true)
 
 	for _, player := range players {
-		hooks.AfterLobbyLeave(server, lobby, player)
+		hooks.AfterLobbyLeave(lobby, player)
 	}
 }
 
-func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbySpectatorJoin(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Id *uint `json:"id"`
 	}
@@ -424,7 +425,7 @@ func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data
 			//a socket should only spectate one lobby, remove socket from
 			//any other lobby room
 			//multiple sockets from one player can spectatte multiple lobbies
-			server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", id))
+			socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%d_public", id))
 		}
 	}
 
@@ -438,7 +439,7 @@ func (Lobby) LobbySpectatorJoin(server *wsevent.Server, so *wsevent.Client, data
 		}
 	}
 
-	hooks.AfterLobbySpec(server, so, lob)
+	hooks.AfterLobbySpec(socket.AuthServer, so, lob)
 	models.BroadcastLobbyToUser(lob, player.SteamID)
 	return chelpers.EmptySuccessJS
 }
@@ -489,7 +490,7 @@ func playerCanKick(lobbyId uint, steamId string) (bool, *helpers.TPError) {
 	return true, nil
 }
 
-func (Lobby) LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbyKick(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Id      *uint   `json:"id"`
 		Steamid *string `json:"steamid"`
@@ -514,7 +515,7 @@ func (Lobby) LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) 
 		return tperr
 	}
 
-	hooks.AfterLobbyLeave(server, lob, player)
+	hooks.AfterLobbyLeave(lob, player)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
@@ -522,7 +523,7 @@ func (Lobby) LobbyKick(server *wsevent.Server, so *wsevent.Client, data []byte) 
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbyBan(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Id      *uint   `json:"id"`
 		Steamid *string `json:"steamid"`
@@ -549,7 +550,7 @@ func (Lobby) LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) i
 
 	lob.BanPlayer(player)
 
-	hooks.AfterLobbyLeave(server, lob, player)
+	hooks.AfterLobbyLeave(lob, player)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
@@ -557,7 +558,7 @@ func (Lobby) LobbyBan(server *wsevent.Server, so *wsevent.Client, data []byte) i
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbyLeave(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbyLeave(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Id *uint `json:"id"`
 	}
@@ -572,12 +573,12 @@ func (Lobby) LobbyLeave(server *wsevent.Server, so *wsevent.Client, data []byte)
 		return tperr
 	}
 
-	hooks.AfterLobbyLeave(server, lob, player)
+	hooks.AfterLobbyLeave(lob, player)
 
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbySpectatorLeave(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Id *uint `json:"id"`
 	}
@@ -598,18 +599,18 @@ func (Lobby) LobbySpectatorLeave(server *wsevent.Server, so *wsevent.Client, dat
 
 	if !player.IsSpectatingID(lob.ID) {
 		if id, _ := player.GetLobbyID(false); id == *args.Id {
-			hooks.AfterLobbySpecLeave(server, so, lob)
+			hooks.AfterLobbySpecLeave(so, lob)
 			return chelpers.EmptySuccessJS
 		}
 	}
 
 	lob.RemoveSpectator(player, true)
-	hooks.AfterLobbySpecLeave(server, so, lob)
+	hooks.AfterLobbySpecLeave(so, lob)
 
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) RequestLobbyListData(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Lobby) RequestLobbyListData(so *wsevent.Client, data []byte) interface{} {
 	var lobbies []models.Lobby
 	db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(lobbies)))
