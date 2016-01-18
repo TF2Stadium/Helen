@@ -41,6 +41,7 @@ var routes = []route{
 	{"/admin/ban/chat", chelpers.FilterHTTPRequest(helpers.ActionBanChat, admin.BanChat)},
 
 	{"/admin/chatlogs", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetChatLogs)},
+	{"/admin/banlogs", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.DisplayLogs)},
 }
 
 func SetupHTTP(mux *http.ServeMux) {
