@@ -14,7 +14,7 @@ func (Player) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Player) PlayerReady(so *wsevent.Client, data []byte) interface{} {
 	steamid := chelpers.GetSteamId(so.Id())
 	player, tperr := models.GetPlayerBySteamID(steamid)
 	if tperr != nil {
@@ -52,7 +52,7 @@ func (Player) PlayerReady(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerNotReady(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Player) PlayerNotReady(so *wsevent.Client, data []byte) interface{} {
 	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
 
 	if tperr != nil {
@@ -75,7 +75,7 @@ func (Player) PlayerNotReady(server *wsevent.Server, so *wsevent.Client, data []
 
 	tperr = lobby.UnreadyPlayer(player)
 	lobby.RemovePlayer(player)
-	hooks.AfterLobbyLeave(server, lobby, player)
+	hooks.AfterLobbyLeave(lobby, player)
 
 	if tperr != nil {
 		return tperr
@@ -85,7 +85,7 @@ func (Player) PlayerNotReady(server *wsevent.Server, so *wsevent.Client, data []
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Player) PlayerSettingsGet(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Key *string `json:"key"`
 	}
@@ -114,7 +114,7 @@ func (Player) PlayerSettingsGet(server *wsevent.Server, so *wsevent.Client, data
 	return chelpers.NewResponse(result)
 }
 
-func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Player) PlayerSettingsSet(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Key   *string `json:"key"`
 		Value *string `json:"value"`
@@ -146,7 +146,7 @@ func (Player) PlayerSettingsSet(server *wsevent.Server, so *wsevent.Client, data
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerProfile(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Player) PlayerProfile(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Steamid *string `json:"steamid"`
 	}

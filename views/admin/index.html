@@ -7,8 +7,9 @@
   <center>
   <b>Admin Control Panel</b><br>
   </center>
-  <a class="pure-button pure-button-primary" href="/admin/ban">Ban Players</a><br><br>
+  <a class="pure-button pure-button-primary" href="/admin/ban">Ban Players</a>
   <a class="pure-button pure-button-primary" href="/admin/roles">Change player roles</a>
+  <a class="pure-button pure-button-primary" href="/admin/banlogs">View Ban logs</a>
 
   <form method="get" action="admin/chatlogs" class="pure-form pure-form-aligned">
     <fieldset class="pure-control-group">
@@ -23,7 +24,12 @@
       <label for="from">From (MM-DD-YYYY)</label>
       <input placeholder="From" type="text" name="from"><br>
       <label for="to">To (MM-DD-YYYY)</label>
-      <input placeholder="To" type="text" name="to">
+      <input placeholder="To" type="text" name="to"><br>
+      <label for="state">Order</label>
+        <select id="order" name="order">
+            <option>Descending</option>
+            <option>Ascending</option>
+        </select>
     </fieldset>
       <button type="submit" class="pure-button pure-button-primary">View</button>
   </form>

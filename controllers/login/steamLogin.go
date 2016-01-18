@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package controllers
+package login
 
 import (
 	"net/http"

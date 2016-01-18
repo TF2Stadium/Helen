@@ -7,12 +7,14 @@ package admin
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 )
 
@@ -115,4 +117,33 @@ func BanFull(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
+}
+
+type BanData struct {
+	Player  *models.Player
+	BanName string
+	Ban     *models.PlayerBan
+}
+
+func DisplayLogs(w http.ResponseWriter, r *http.Request) {
+	allBans := models.GetAllActiveBans()
+	var bans []BanData
+
+	templ, err := template.ParseFiles("views/admin/templates/ban_logs.html")
+	if err != nil {
+		helpers.Logger.Error(err.Error())
+		return
+	}
+
+	for _, ban := range allBans {
+		player, _ := models.GetPlayerByID(ban.PlayerID)
+		banData := BanData{
+			Player:  player,
+			BanName: fmt.Sprintf("Banned from %s", banString[ban.Type]),
+			Ban:     ban}
+
+		bans = append(bans, banData)
+	}
+
+	templ.Execute(w, bans)
 }

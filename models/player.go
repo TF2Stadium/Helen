@@ -289,3 +289,9 @@ func (player *Player) GetActiveBans() ([]*PlayerBan, error) {
 	}
 	return bans, nil
 }
+
+func GetAllActiveBans() []*PlayerBan {
+	var bans []*PlayerBan
+	db.DB.Where("active = TRUE AND until > now()").Find(&bans)
+	return bans
+}

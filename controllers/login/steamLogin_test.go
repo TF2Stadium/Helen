@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package controllers_test
+package login_test
 
 import (
 	"io/ioutil"
@@ -26,6 +26,7 @@ func init() {
 }
 
 func TestLogin(t *testing.T) {
+	//	t.Parallel()
 	var count int
 
 	steamid := strconv.Itoa(rand.Int())
@@ -48,6 +49,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestWS(t *testing.T) {
+	//	t.Parallel()
 	steamid := strconv.Itoa(rand.Int())
 	client := testhelpers.NewClient()
 

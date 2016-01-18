@@ -14,28 +14,29 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
 )
 
-func AfterLobbyJoin(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby, player *models.Player) {
+func AfterLobbyJoin(so *wsevent.Client, lobby *models.Lobby, player *models.Player) {
 	room := fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID))
 	//make all sockets join the private room, given the one the player joined the lobby on
 	//might close, so lobbyStart and lobbyReadyUp can be sent to other tabs
 	sockets, _ := sessions.GetSockets(player.SteamID)
 	for _, so := range sockets {
-		server.AddClient(so, room)
+		socket.AuthServer.AddClient(so, room)
 	}
 
 	broadcaster.SendMessage(player.SteamID, "lobbyJoined", models.DecorateLobbyData(lobby, false))
 }
 
-func AfterLobbyLeave(server *wsevent.Server, lobby *models.Lobby, player *models.Player) {
+func AfterLobbyLeave(lobby *models.Lobby, player *models.Player) {
 	broadcaster.SendMessage(player.SteamID, "lobbyLeft", models.DecorateLobbyLeave(lobby))
 
 	sockets, _ := sessions.GetSockets(player.SteamID)
 	//player might have connected from multiple tabs, remove all of them from the room
 	for _, so := range sockets {
-		server.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
+		socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
 	}
 }
 
@@ -52,8 +53,8 @@ func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 	sessions.SetSpectator(so.Id(), lobby.ID)
 }
 
-func AfterLobbySpecLeave(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
-	server.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+func AfterLobbySpecLeave(so *wsevent.Client, lobby *models.Lobby) {
+	socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 	sessions.RemoveSpectator(so.Id())
 }
 

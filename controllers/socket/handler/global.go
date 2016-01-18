@@ -18,7 +18,7 @@ func (Global) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-func (Global) GetConstant(_ *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Global) GetConstant(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Constant string `json:"constant"`
 	}
@@ -37,11 +37,11 @@ func (Global) GetConstant(_ *wsevent.Server, so *wsevent.Client, data []byte) in
 	return chelpers.NewResponse(output)
 }
 
-func (Global) GetSocketInfo(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
-	socketinfo := struct {
-		ID    string   `json:"id"`
-		Rooms []string `json:"rooms"`
-	}{so.Id(), server.RoomsJoined(so.Id())}
+// func (Global) GetSocketInfo(so *wsevent.Client, data []byte) interface{} {
+// 	socketinfo := struct {
+// 		ID    string   `json:"id"`
+// 		Rooms []string `json:"rooms"`
+// 	}{so.Id(), server.RoomsJoined(so.Id())}
 
-	return chelpers.NewResponse(socketinfo)
-}
+// 	return chelpers.NewResponse(socketinfo)
+// }

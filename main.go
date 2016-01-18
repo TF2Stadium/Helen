@@ -15,32 +15,20 @@ import (
 	"github.com/DSchalla/go-pid"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
-	"github.com/TF2Stadium/Helen/controllers"
-	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
-	"github.com/TF2Stadium/Helen/internal/profile"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/routes"
+	socketServer "github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/Helen/rpc"
-	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/context"
 	_ "github.com/rakyll/gom/http"
 	"github.com/rs/cors"
 )
-
-var (
-	server  = wsevent.NewServer()
-	nologin = wsevent.NewServer()
-)
-
-func init() {
-	http.HandleFunc("/wsevent/auth/server", profile.Profile(server))
-	http.HandleFunc("/wsevent/noauth/server", profile.Profile(nologin))
-}
 
 func main() {
 	helpers.InitLogger()
@@ -78,9 +66,10 @@ func main() {
 	}
 	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 
-	broadcaster.Init(socket.AuthServer, socket.UnauthServer)
 	mux := http.NewServeMux()
-	controllers.SetupHTTPRoutes(mux)
+	routes.SetupHTTP(mux)
+	socketServer.InitializeSocketServer()
+	socket.RegisterHandlers()
 
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
 		// init static FileServer

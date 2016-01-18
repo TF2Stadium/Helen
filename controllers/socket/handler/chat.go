@@ -25,7 +25,7 @@ func (Chat) Name(s string) string {
 
 var lastChatTime = make(map[string]int64)
 
-func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+func (Chat) ChatSend(so *wsevent.Client, data []byte) interface{} {
 	steamid := chelpers.GetSteamId(so.Id())
 	now := time.Now().Unix()
 	if now-lastChatTime[steamid] == 0 {
@@ -87,6 +87,41 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 		return chelpers.EmptySuccessJS
 	}
 
+	message.Send()
+
+	return chelpers.EmptySuccessJS
+}
+
+func (Chat) ChatDelete(so *wsevent.Client, data []byte) interface{} {
+	if err := chelpers.CheckPrivilege(so, helpers.ActionDeleteChat); err != nil {
+		return err
+	}
+
+	var args struct {
+		ID   *int  `json:"id"`
+		Room *uint `json:"room"`
+	}
+
+	if err := chelpers.GetParams(data, &args); err != nil {
+		return err
+	}
+
+	message := &models.ChatMessage{}
+	err := db.DB.Table("chat_messages").Where("room = ? AND id = ?", args.Room, args.ID).First(message).Error
+	if message.Bot {
+		return helpers.NewTPError("Cannot delete notification messages", -1)
+	}
+	if err != nil {
+		return helpers.NewTPError("Can't find message", -1)
+	}
+
+	player, _ := models.GetPlayerByID(message.PlayerID)
+	message.Deleted = true
+	message.Timestamp = message.CreatedAt.Unix()
+	message.Save()
+	message.Message = "<deleted>"
+	message.Player = models.DecoratePlayerSummary(player)
+	message.Player.Tags = []string{"deleted"}
 	message.Send()
 
 	return chelpers.EmptySuccessJS

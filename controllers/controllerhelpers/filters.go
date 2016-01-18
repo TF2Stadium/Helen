@@ -71,12 +71,9 @@ func IsSteamIDWhitelisted(steamid string) bool {
 // shitlord
 func CheckPrivilege(so *wsevent.Client, action authority.AuthAction) (err *helpers.TPError) {
 	//Checks if the client has the neccesary authority to perform action
-	if int(action) != 0 {
-		var role, _ = GetPlayerRole(so.Id())
-		can := role.Can(action)
-		if !can {
-			err = helpers.NewTPError("You are not authorized to perform this action.", 0)
-		}
+	player, _ := models.GetPlayerBySteamID(GetSteamId(so.Id()))
+	if !player.Role.Can(action) {
+		return helpers.NewTPError("You are not authorized to perform this action", -1)
 	}
 	return
 }
