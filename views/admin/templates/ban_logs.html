@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+  </head>
+  
+  <body>
+    <table class="pure-table" >
+      <thead>
+	<tr>
+	  <td>Player</td>
+	  <td>Ban</td>
+	  <td>Reason</td>
+	  <td>On</td>
+	  <td>Until</td>
+	</tr>
+      </thead>
+      <tbody>
+	{{range .}}
+	<tr>
+	  <td>.PlayerName</td>
+	  <td>.BanName</td>
+	  <td>.Ban.Reason</td>
+	  <td>.Ban.CreatedAt.Format "Mon Jan _2 15:04:05 2006"</td>
+	  <td>.Ban.Until.Format "Mon Jan _2 15:04:05 2006"</td>
+	</tr>
+	{{end}}
+      </tbody>
+    </table>
+  </body>
+</html>
