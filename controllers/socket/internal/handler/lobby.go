@@ -355,7 +355,7 @@ func (Lobby) LobbyJoin(server *wsevent.Server, so *wsevent.Client, data []byte) 
 			//if all player's haven't readied up,
 			//remove unreadied players and unready the
 			//rest.
-			if lobby.State != models.LobbyStateInProgress {
+			if lobby.State != models.LobbyStateInProgress && lobby.State != models.LobbyStateEnded {
 				removeUnreadyPlayers(server, lobby)
 
 				lobby.State = models.LobbyStateWaiting
