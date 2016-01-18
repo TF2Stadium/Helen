@@ -91,3 +91,34 @@ func (Chat) ChatSend(server *wsevent.Server, so *wsevent.Client, data []byte) in
 
 	return chelpers.EmptySuccessJS
 }
+
+func (Chat) ChatDelete(server *wsevent.Server, so *wsevent.Client, data []byte) interface{} {
+	if err := chelpers.CheckPrivilege(so, helpers.ActionDeleteChat); err != nil {
+		return err
+	}
+
+	var args struct {
+		ID   *int  `json:"id"`
+		Room *uint `json:"room"`
+	}
+
+	if err := chelpers.GetParams(data, &args); err != nil {
+		return err
+	}
+
+	message := &models.ChatMessage{}
+	err := db.DB.Table("chat_messages").Where("room = ? AND id = ?", args.Room, args.ID).First(message).Error
+	if err != nil {
+		return helpers.NewTPError("Can't find message", -1)
+	}
+
+	player, _ := models.GetPlayerByID(message.PlayerID)
+	message.Deleted = true
+	message.Save()
+	message.Message = "<deleted>"
+	message.Player = models.DecoratePlayerSummary(player)
+	message.Player.Tags = []string{"deleted"}
+	message.Send()
+
+	return chelpers.EmptySuccessJS
+}
