@@ -36,6 +36,7 @@ const (
 	ActionChangeRole
 	ActionViewLogs
 	ActionViewPage //view admin pages
+	ActionDeleteChat
 )
 
 var ActionNames = map[authority.AuthAction]string{
@@ -55,6 +56,7 @@ func InitAuthorization() {
 	RoleMod.Allow(ActionBanCreate)
 	RoleMod.Allow(ActionViewLogs)
 	RoleMod.Allow(ActionViewPage)
+	RoleMod.Allow(ActionDeleteChat)
 
 	RoleAdmin.Inherit(RoleMod)
 	RoleAdmin.Allow(ActionChangeRole)
