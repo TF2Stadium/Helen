@@ -117,6 +117,7 @@ func (Chat) ChatDelete(so *wsevent.Client, data []byte) interface{} {
 
 	player, _ := models.GetPlayerByID(message.PlayerID)
 	message.Deleted = true
+	message.Timestamp = message.CreatedAt.Unix()
 	message.Save()
 	message.Message = "<deleted>"
 	message.Player = models.DecoratePlayerSummary(player)
