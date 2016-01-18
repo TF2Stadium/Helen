@@ -27,7 +27,7 @@ type ChatMessage struct {
 	// The actual Message, limited to 120 characters
 	Message string `json:"message" sql:"type:varchar(120)"`
 	// True if the message has been deleted by a moderator
-	Deleted bool `json:"-"`
+	Deleted bool `json:"deleted"`
 	// true if the message is sent by a bot
 	Bot bool `json:"bot"`
 	// true if the message is in-game
@@ -119,7 +119,7 @@ func GetPlayerMessages(player *Player) ([]*ChatMessage, error) {
 func GetScrollback(room int) ([]*ChatMessage, error) {
 	var messages []*ChatMessage
 
-	err := db.DB.Table("chat_messages").Where("room = ?", room).Order("id desc").Limit(20).Find(&messages).Error
+	err := db.DB.Table("chat_messages").Where("room = ? AND deleted = FALSE", room).Order("id desc").Limit(20).Find(&messages).Error
 
 	for _, message := range messages {
 		var player Player
