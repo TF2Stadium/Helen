@@ -16,6 +16,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/jinzhu/gorm"
 )
 
 var (
@@ -67,6 +68,9 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		to = time.Now()
 	}
 
+	order := values.Get("order")
+	var results *gorm.DB
+
 	if values.Get("room") == "" { //Retrieve all messages sent by a specific player
 		if steamID == "" {
 			http.Error(w, "No Steam ID given.", http.StatusBadRequest)
@@ -79,9 +83,9 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to).Order("id desc").Find(&messages).Count(&playerID).Error
+		results = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to)
 	} else if steamID == "" { //Retrieve all messages sent to a specfic room
-		err = db.DB.Where("room = ? AND (created_at >= ? AND created_at <= ?)", room, from, to).Order("id desc").Find(&messages).Error
+		results = db.DB.Where("room = ? AND (created_at >= ? AND created_at <= ?)", room, from, to)
 	} else { //Retrieve all messages sent to a specific room and a speficic player
 		playerID := getPlayerID(steamID)
 		if playerID == 0 {
@@ -89,11 +93,18 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to).Order("id desc").Find(&messages).Count(&playerID).Error
+		results = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to)
+	}
+
+	if order == "Ascending" {
+		err = results.Order("id").Find(&messages).Error
+	} else if order == "Descending" {
+		err = results.Order("id desc").Find(&messages).Error
 	}
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	for _, message := range messages {
