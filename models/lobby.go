@@ -387,9 +387,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 
 	//check if slot password is valid
 	if lobby.SlotPassword != "" && lobby.SlotPassword != password {
-		if lobby.PlayerWhitelist == "" && password != "" {
-			return InvalidPasswordErr
-		}
+		return InvalidPasswordErr
 	}
 
 	num := 0
