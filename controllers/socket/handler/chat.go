@@ -121,7 +121,7 @@ func (Chat) ChatDelete(so *wsevent.Client, data []byte) interface{} {
 	message.Save()
 	message.Message = "<deleted>"
 	message.Player = models.DecoratePlayerSummary(player)
-	message.Player.Tags = []string{"deleted"}
+	message.Player.Tags = append(message.Player.Tags, "deleted")
 	message.Send()
 
 	return chelpers.EmptySuccessJS
