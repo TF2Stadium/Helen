@@ -24,8 +24,8 @@ type ChatMessage struct {
 
 	// Room to which the message was sent
 	Room int `json:"room"`
-	// The actual Message, limited to 120 characters
-	Message string `json:"message" sql:"type:varchar(120)"`
+	// The actual Message, limited to 150 characters
+	Message string `json:"message" sql:"type:varchar(150)"`
 	// True if the message has been deleted by a moderator
 	Deleted bool `json:"deleted"`
 	// true if the message is sent by a bot

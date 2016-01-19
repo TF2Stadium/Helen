@@ -71,7 +71,7 @@ func (Chat) ChatSend(so *wsevent.Client, data []byte) interface{} {
 	case (*args.Message)[0] == '\n':
 		return helpers.NewTPError("Cannot send messages prefixed with newline", 4)
 
-	case len(*args.Message) > 120:
+	case len(*args.Message) > 150:
 		return helpers.NewTPError("Message too long", 4)
 	}
 
