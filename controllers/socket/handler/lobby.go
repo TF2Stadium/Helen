@@ -164,13 +164,15 @@ func (Lobby) LobbyCreate(so *wsevent.Client, data []byte) interface{} {
 				}
 			}
 		}
-		general := &models.Requirement{
-			LobbyID: lob.ID,
-			Hours:   args.Requirements.General.Hours,
-			Lobbies: args.Requirements.General.Lobbies,
-			Slot:    -1,
+		if args.Requirements.General.Hours != 0 || args.Requirements.General.Lobbies != 0 {
+			general := &models.Requirement{
+				LobbyID: lob.ID,
+				Hours:   args.Requirements.General.Hours,
+				Lobbies: args.Requirements.General.Lobbies,
+				Slot:    -1,
+			}
+			general.Save()
 		}
-		general.Save()
 	}
 	return chelpers.NewResponse(
 		struct {
