@@ -665,6 +665,7 @@ func (lobby *Lobby) Close(rpc bool) {
 
 	BroadcastSubList()
 	BroadcastLobby(lobby)
+	FumbleLobbyEnded(lobby)
 }
 
 //UpdateStats updates the PlayerStats records for all players in the lobby

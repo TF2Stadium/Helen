@@ -279,8 +279,6 @@ func (Lobby) LobbyClose(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPError("Lobby already closed.", -1)
 	}
 
-	models.FumbleLobbyEnded(lob)
-
 	lob.Close(true)
 	models.BroadcastLobbyList() // has to be done manually for now
 

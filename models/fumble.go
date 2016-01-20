@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/TF2Stadium/Helen/config"
-	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/fumble/mumble"
 )
@@ -41,31 +40,13 @@ func fumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error
 	return nil
 }
 
-func FumbleLobbyStarted(lob_ *Lobby) {
-	if config.Constants.FumblePort == "" {
-		return
-	}
-
-	var lob Lobby
-	db.DB.Preload("Slots").First(&lob, lob_.ID)
-
-	for _, slot := range lob.Slots {
-		team, class, _ := LobbyGetSlotInfoString(lob.Type, slot.Slot)
-
-		var player Player
-		db.DB.First(&player, slot.PlayerID)
-
-		fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+sanitize(player.Name), strings.ToUpper(team))
-	}
-}
-
 func FumbleLobbyPlayerJoinedSub(lob *Lobby, player *Player, slot int) {
 	if config.Constants.FumblePort == "" {
 		return
 	}
 
 	team, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
-	fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+sanitize(player.Name), strings.ToUpper(team))
+	fumbleAllowPlayer(lob.ID, strings.ToUpper(team)+"_"+strings.ToUpper(class), strings.ToUpper(team))
 }
 
 func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
@@ -73,8 +54,8 @@ func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
 		return
 	}
 
-	_, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
-	fumbleAllowPlayer(lob.ID, strings.ToUpper(class)+"_"+sanitize(player.Name), "")
+	team, class, _ := LobbyGetSlotInfoString(lob.Type, slot)
+	fumbleAllowPlayer(lob.ID, strings.ToUpper(team)+"_"+strings.ToUpper(class), "")
 }
 
 func FumbleLobbyEnded(lob *Lobby) {
