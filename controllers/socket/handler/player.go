@@ -46,7 +46,6 @@ func (Player) PlayerReady(so *wsevent.Client, data []byte) interface{} {
 
 		hooks.BroadcastLobbyStart(lobby)
 		models.BroadcastLobbyList()
-		models.FumbleLobbyStarted(lobby)
 	}
 
 	return chelpers.EmptySuccessJS
