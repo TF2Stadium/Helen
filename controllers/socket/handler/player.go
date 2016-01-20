@@ -131,7 +131,8 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	if *args.Key == "siteAlias" {
+	switch *args.Key {
+	case "siteAlias":
 		profile := models.DecoratePlayerProfileJson(player)
 		so.EmitJSON(helpers.NewRequest("playerProfile", profile))
 
@@ -139,6 +140,12 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, data []byte) interface{} {
 			lobby, _ := models.GetLobbyByID(lobbyID)
 			lobbyData := lobby.LobbyData(true)
 			lobbyData.Send()
+		}
+	case "mumbleNick":
+		for _, c := range *args.Value {
+			if !(c >= 'A' && c <= 'z') {
+				return helpers.NewTPError("Invalid Mumble nickname.", -1)
+			}
 		}
 	}
 

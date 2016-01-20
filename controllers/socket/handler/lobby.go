@@ -373,9 +373,9 @@ func (Lobby) LobbyJoin(so *wsevent.Client, data []byte) interface{} {
 		models.BroadcastLobbyList()
 	}
 
-	if lob.State == models.LobbyStateInProgress {
+	if lob.State == models.LobbyStateInProgress { //this happens when the player is a substitute
 		db.DB.Preload("ServerInfo").First(lob, lob.ID)
-		so.EmitJSON(helpers.NewRequest("lobbyStart", models.DecorateLobbyConnect(lob, player.Name, *args.Class)))
+		so.EmitJSON(helpers.NewRequest("lobbyStart", models.DecorateLobbyConnect(lob, player.Name, slot)))
 	}
 
 	return chelpers.EmptySuccessJS

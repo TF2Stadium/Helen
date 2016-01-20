@@ -72,7 +72,7 @@ func BroadcastLobbyStart(lobby *models.Lobby) {
 		var player models.Player
 		db.DB.First(&player, slot.PlayerID)
 
-		_, class, _ := models.LobbyGetSlotInfoString(lobby.Type, slot.Slot)
-		broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, class))
+		connectInfo := models.DecorateLobbyConnect(lobby, player.Name, slot.Slot)
+		broadcaster.SendMessage(player.SteamID, "lobbyStart", connectInfo)
 	}
 }
