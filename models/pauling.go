@@ -102,3 +102,12 @@ func Say(lobbyId uint, text string) {
 
 	call(config.Constants.PaulingPort, "Pauling.Say", &Args{Id: lobbyId, Text: text}, &Args{})
 }
+
+func serverExists(lobbyID uint) (exists bool) {
+	if config.Constants.ServerMockUp {
+		return false
+	}
+
+	call(config.Constants.PaulingPort, "Pauling.Exists", lobbyID, &exists)
+	return
+}
