@@ -34,8 +34,6 @@ func CheckConnection() {
 	if err != nil {
 		helpers.Logger.Fatal(err.Error())
 	}
-
-	helpers.Logger.Debug("Able to connect to Pauling")
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {

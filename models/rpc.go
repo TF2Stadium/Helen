@@ -41,10 +41,12 @@ func ConnectRPC() {
 	if !config.Constants.ServerMockUp {
 		client := connect(config.Constants.PaulingPort)
 		rpcClientMap[config.Constants.PaulingPort] = client
+		helpers.Logger.Info("Connected to Pauling on port %s", config.Constants.PaulingPort)
 	}
 	if config.Constants.FumblePort != "" {
 		client := connect(config.Constants.FumblePort)
 		rpcClientMap[config.Constants.FumblePort] = client
+		helpers.Logger.Info("Connected to Fumble on port %s", config.Constants.FumblePort)
 	}
 }
 
