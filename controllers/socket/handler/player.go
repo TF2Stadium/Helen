@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"regexp"
+
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -113,6 +115,8 @@ func (Player) PlayerSettingsGet(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.NewResponse(result)
 }
 
+var reMumbleNick = regexp.MustCompile(`\w+`)
+
 func (Player) PlayerSettingsSet(so *wsevent.Client, data []byte) interface{} {
 	var args struct {
 		Key   *string `json:"key"`
@@ -142,10 +146,8 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, data []byte) interface{} {
 			lobbyData.Send()
 		}
 	case "mumbleNick":
-		for _, c := range *args.Value {
-			if !(c >= 'A' && c <= 'z') {
-				return helpers.NewTPError("Invalid Mumble nickname.", -1)
-			}
+		if !reMumbleNick.MatchString(*args.Value) {
+			return helpers.NewTPError("Invalid Mumble nick.", -1)
 		}
 	}
 
