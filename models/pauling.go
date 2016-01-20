@@ -5,9 +5,6 @@
 package models
 
 import (
-	"net/rpc"
-	"time"
-
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 )
@@ -30,20 +27,6 @@ type Args struct {
 	SteamId2  string
 	Slot      string
 	Text      string
-}
-
-func call(addr, method string, args, reply interface{}) error {
-	client, err := rpc.DialHTTP("tcp", "localhost:"+addr)
-	if err != nil {
-		for err != nil {
-			time.Sleep(1 * time.Second)
-			client, err = rpc.DialHTTP("tcp", "localhost:"+addr)
-		}
-	}
-
-	err = client.Call(method, args, reply)
-	client.Close()
-	return err
 }
 
 func CheckConnection() {

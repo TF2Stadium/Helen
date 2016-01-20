@@ -56,6 +56,7 @@ func main() {
 	models.InitializeLobbySettings("./lobbySettingsData.json")
 	models.DeleteUnusedServerRecords()
 
+	models.ConnectRPC()
 	if !config.Constants.ServerMockUp {
 		models.CheckConnection()
 	}
