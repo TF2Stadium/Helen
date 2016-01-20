@@ -57,7 +57,7 @@ func newRequirement(team, class string, requirement Requirement, lobby *models.L
 }
 
 func (Lobby) LobbyCreate(so *wsevent.Client, data []byte) interface{} {
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
+	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
 		str := fmt.Sprintf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
 		return helpers.NewTPError(str, -1)
@@ -189,7 +189,7 @@ func (Lobby) LobbyServerReset(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
+	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 	if tperr != nil {
 		return tperr
 	}
@@ -263,7 +263,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, data []byte) interface{} {
 
 	}
 
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
+	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
 	lob, tperr := models.GetLobbyByIDServer(uint(*args.Id))
 	if tperr != nil {
@@ -291,7 +291,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, data []byte) interface{} {
 }
 
 func (Lobby) LobbyJoin(so *wsevent.Client, data []byte) interface{} {
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
+	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 	if banned, until := player.IsBannedWithTime(models.PlayerBanJoin); banned {
 		str := fmt.Sprintf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
 		return helpers.NewTPError(str, -1)
@@ -331,8 +331,8 @@ func (Lobby) LobbyJoin(so *wsevent.Client, data []byte) interface{} {
 	}
 
 	if prevId, _ := player.GetLobbyID(false); prevId != 0 && !sameLobby {
-		socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%d_public", prevId))
-		socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%d_private", prevId))
+		socket.AuthServer.RemoveClient(so, fmt.Sprintf("%d_public", prevId))
+		socket.AuthServer.RemoveClient(so, fmt.Sprintf("%d_private", prevId))
 	}
 
 	tperr = lob.AddPlayer(player, slot, *args.Password)
@@ -410,7 +410,7 @@ func (Lobby) LobbySpectatorJoin(so *wsevent.Client, data []byte) interface{} {
 		return tperr
 	}
 
-	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
+	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 	if tperr != nil {
 		return tperr
 	}
@@ -427,7 +427,7 @@ func (Lobby) LobbySpectatorJoin(so *wsevent.Client, data []byte) interface{} {
 			//a socket should only spectate one lobby, remove socket from
 			//any other lobby room
 			//multiple sockets from one player can spectatte multiple lobbies
-			socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%d_public", id))
+			socket.AuthServer.RemoveClient(so, fmt.Sprintf("%d_public", id))
 		}
 	}
 
@@ -503,7 +503,7 @@ func (Lobby) LobbyKick(so *wsevent.Client, data []byte) interface{} {
 	}
 
 	steamId := *args.Steamid
-	selfSteamId := chelpers.GetSteamId(so.Id())
+	selfSteamId := chelpers.GetSteamId(so.ID)
 
 	if steamId == selfSteamId {
 		return helpers.NewTPError("Player can't kick himself.", -1)
@@ -536,7 +536,7 @@ func (Lobby) LobbyBan(so *wsevent.Client, data []byte) interface{} {
 	}
 
 	steamId := *args.Steamid
-	selfSteamId := chelpers.GetSteamId(so.Id())
+	selfSteamId := chelpers.GetSteamId(so.ID)
 
 	if steamId == selfSteamId {
 		return helpers.NewTPError("Player can't kick himself.", -1)
@@ -568,7 +568,7 @@ func (Lobby) LobbyLeave(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	steamId := chelpers.GetSteamId(so.Id())
+	steamId := chelpers.GetSteamId(so.ID)
 
 	lob, player, tperr := removePlayerFromLobby(*args.Id, steamId)
 	if tperr != nil {
@@ -588,7 +588,7 @@ func (Lobby) LobbySpectatorLeave(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	steamId := chelpers.GetSteamId(so.Id())
+	steamId := chelpers.GetSteamId(so.ID)
 	player, tperr := models.GetPlayerBySteamID(steamId)
 	if tperr != nil {
 		return tperr

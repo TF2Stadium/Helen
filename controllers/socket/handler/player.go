@@ -15,7 +15,7 @@ func (Player) Name(s string) string {
 }
 
 func (Player) PlayerReady(so *wsevent.Client, data []byte) interface{} {
-	steamid := chelpers.GetSteamId(so.Id())
+	steamid := chelpers.GetSteamId(so.ID)
 	player, tperr := models.GetPlayerBySteamID(steamid)
 	if tperr != nil {
 		return tperr
@@ -53,7 +53,7 @@ func (Player) PlayerReady(so *wsevent.Client, data []byte) interface{} {
 }
 
 func (Player) PlayerNotReady(so *wsevent.Client, data []byte) interface{} {
-	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
+	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
 	if tperr != nil {
 		return tperr
@@ -95,7 +95,7 @@ func (Player) PlayerSettingsGet(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
+	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
 	var settings []models.PlayerSetting
 	var setting models.PlayerSetting
@@ -125,7 +125,7 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
+	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
 	err = player.SetSetting(*args.Key, *args.Value)
 	if err != nil {
@@ -158,7 +158,7 @@ func (Player) PlayerProfile(so *wsevent.Client, data []byte) interface{} {
 
 	steamid := *args.Steamid
 	if steamid == "" {
-		steamid = chelpers.GetSteamId(so.Id())
+		steamid = chelpers.GetSteamId(so.ID)
 	}
 
 	player, playErr := models.GetPlayerWithStats(steamid)

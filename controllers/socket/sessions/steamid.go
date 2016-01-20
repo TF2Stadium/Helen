@@ -32,7 +32,7 @@ func RemoveSocket(sessionID, steamID string) {
 
 	clients := steamIDSockets[steamID]
 	for i, socket := range clients {
-		if socket.Id() == sessionID {
+		if socket.ID == sessionID {
 			clients[i] = clients[len(clients)-1]
 			clients[len(clients)-1] = nil
 			clients = clients[:len(clients)-1]

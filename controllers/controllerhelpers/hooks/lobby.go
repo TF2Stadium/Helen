@@ -36,26 +36,26 @@ func AfterLobbyLeave(lobby *models.Lobby, player *models.Player) {
 	sockets, _ := sessions.GetSockets(player.SteamID)
 	//player might have connected from multiple tabs, remove all of them from the room
 	for _, so := range sockets {
-		socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
+		socket.AuthServer.RemoveClient(so, fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
 	}
 }
 
 func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
 	//remove socket from room of the previous lobby the socket was spectating (if any)
-	lobbyID, ok := sessions.GetSpectating(so.Id())
+	lobbyID, ok := sessions.GetSpectating(so.ID)
 	if ok {
-		server.RemoveClient(so.Id(), fmt.Sprintf("%d_public", lobbyID))
-		sessions.RemoveSpectator(so.Id())
+		server.RemoveClient(so, fmt.Sprintf("%d_public", lobbyID))
+		sessions.RemoveSpectator(so.ID)
 	}
 
 	server.AddClient(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 	chelpers.BroadcastScrollback(so, lobby.ID)
-	sessions.SetSpectator(so.Id(), lobby.ID)
+	sessions.SetSpectator(so.ID, lobby.ID)
 }
 
 func AfterLobbySpecLeave(so *wsevent.Client, lobby *models.Lobby) {
-	socket.AuthServer.RemoveClient(so.Id(), fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
-	sessions.RemoveSpectator(so.Id())
+	socket.AuthServer.RemoveClient(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+	sessions.RemoveSpectator(so.ID)
 }
 
 func GetLobbyRoom(lobbyid uint) string {

@@ -69,22 +69,22 @@ var ErrRecordNotFound = errors.New("Player record for found.")
 
 //SocketInit initializes the websocket connection for the provided socket
 func SocketInit(so *wsevent.Client) error {
-	chelpers.AuthenticateSocket(so.Id(), so.Request())
-	loggedIn := chelpers.IsLoggedInSocket(so.Id())
+	chelpers.AuthenticateSocket(so.ID, so.Request)
+	loggedIn := chelpers.IsLoggedInSocket(so.ID)
 	if loggedIn {
-		steamid := chelpers.GetSteamId(so.Id())
+		steamid := chelpers.GetSteamId(so.ID)
 		sessions.AddSocket(steamid, so)
 	}
 
 	if loggedIn {
 		hooks.AfterConnect(socket.AuthServer, so)
 
-		player, err := models.GetPlayerBySteamID(chelpers.GetSteamId(so.Id()))
+		player, err := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 		if err != nil {
 			helpers.Logger.Warning(
 				"User has a cookie with but a matching player record doesn't exist: %s",
-				chelpers.GetSteamId(so.Id()))
-			chelpers.DeauthenticateSocket(so.Id())
+				chelpers.GetSteamId(so.ID))
+			chelpers.DeauthenticateSocket(so.ID)
 			hooks.AfterConnect(socket.UnauthServer, so)
 			return ErrRecordNotFound
 		}

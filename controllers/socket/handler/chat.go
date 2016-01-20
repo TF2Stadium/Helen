@@ -26,7 +26,7 @@ func (Chat) Name(s string) string {
 var lastChatTime = make(map[string]int64)
 
 func (Chat) ChatSend(so *wsevent.Client, data []byte) interface{} {
-	steamid := chelpers.GetSteamId(so.Id())
+	steamid := chelpers.GetSteamId(so.ID)
 	now := time.Now().Unix()
 	if now-lastChatTime[steamid] == 0 {
 		return helpers.NewTPError("You're sending messages too quickly", -1)

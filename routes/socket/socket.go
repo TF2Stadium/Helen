@@ -2,10 +2,8 @@ package socket
 
 import (
 	"encoding/json"
-	"net/http"
 
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/routes/socket/internal/profile"
 	"github.com/TF2Stadium/wsevent"
 )
 
@@ -29,9 +27,6 @@ func InitializeSocketServer() {
 	UnauthServer.DefaultHandler = func(_ *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPError("Player isn't logged in.", -4)
 	}
-
-	http.HandleFunc("/wsevent/auth/server", profile.Profile(AuthServer))
-	http.HandleFunc("/wsevent/noauth/server", profile.Profile(UnauthServer))
 
 }
 
