@@ -5,6 +5,7 @@
 package models
 
 import (
+	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/bitly/go-simplejson"
 )
@@ -48,13 +49,12 @@ func decoratePlayerTags(p *Player) []string {
 }
 
 func DecoratePlayerProfileJson(p *Player) PlayerProfile {
+	db.DB.Preload("Stats").First(p, p.ID)
 	profile := PlayerProfile{}
 	alias, _ := p.GetSetting("siteAlias")
 
-	s := PlayerStats{}
-
-	s.Total = s.TotalLobbies()
-	profile.Stats = s
+	p.Stats.Total = p.Stats.TotalLobbies()
+	profile.Stats = p.Stats
 
 	// info
 	if alias.Value != "" {
@@ -74,11 +74,12 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 }
 
 func DecoratePlayerSummary(p *Player) PlayerSummary {
+	db.DB.Preload("Stats").First(p, p.ID)
 	summary := PlayerSummary{
 		Avatar:        p.Avatar,
 		GameHours:     p.GameHours,
 		ProfileURL:    p.Profileurl,
-		LobbiesPlayed: p.Stats.PlayedHighlanderCount + p.Stats.PlayedSixesCount,
+		LobbiesPlayed: p.Stats.TotalLobbies(),
 		SteamID:       p.SteamID,
 		Name:          p.Name,
 		Tags:          decoratePlayerTags(p),
