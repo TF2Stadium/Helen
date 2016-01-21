@@ -54,9 +54,10 @@ func main() {
 	migrations.Do()
 	stores.SetupStores()
 	models.InitializeLobbySettings("./lobbySettingsData.json")
-	models.DeleteUnusedServerRecords()
 
 	models.ConnectRPC()
+	models.DeleteUnusedServerRecords()
+
 	if !config.Constants.ServerMockUp {
 		models.CheckConnection()
 	}
