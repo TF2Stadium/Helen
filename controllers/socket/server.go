@@ -19,10 +19,16 @@ func RegisterHandlers() {
 	socket.AuthServer.Register(handler.Player{}) //Player Handlers
 	socket.AuthServer.Register(handler.Chat{})   //Chat Handlers
 
-	socket.UnauthServer.On("lobbySpectatorJoin", unAuthSpecJoin)
+	socket.UnauthServer.Register(Lobby{})
 }
 
-func unAuthSpecJoin(so *wsevent.Client, args struct {
+type Lobby struct{}
+
+func (Lobby) Name() string {
+	return "lobbySpectatorJoin"
+}
+
+func (Lobby) UnAuthSpecJoin(so *wsevent.Client, args struct {
 	ID *uint `json:"id"`
 }) interface{} {
 
