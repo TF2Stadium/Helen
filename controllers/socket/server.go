@@ -24,7 +24,7 @@ func RegisterHandlers() {
 
 type Lobby struct{}
 
-func (Lobby) Name() string {
+func (Lobby) Name(_ string) string {
 	return "lobbySpectatorJoin"
 }
 
