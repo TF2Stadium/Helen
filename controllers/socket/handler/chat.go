@@ -23,16 +23,14 @@ func (Chat) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-var lastChatTime = make(map[string]int64)
+var lastChatTime = make(map[uint]int64)
 
 func (Chat) ChatSend(so *wsevent.Client, data []byte) interface{} {
-	steamid := chelpers.GetSteamId(so.ID)
+	playerID := chelpers.GetPlayerID(so.ID)
 	now := time.Now().Unix()
-	if now-lastChatTime[steamid] == 0 {
+	if now-lastChatTime[playerID] == 0 {
 		return helpers.NewTPError("You're sending messages too quickly", -1)
 	}
-
-	player, tperr := models.GetPlayerBySteamID(steamid)
 
 	var args struct {
 		Message *string `json:"message"`
@@ -44,10 +42,8 @@ func (Chat) ChatSend(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	lastChatTime[steamid] = now
-	if tperr != nil {
-		return tperr
-	}
+	lastChatTime[playerID] = now
+	player, _ := models.GetPlayerByID(playerID)
 
 	//helpers.Logger.Debug("received chat message: %s %s", *args.Message, player.Name)
 
@@ -76,10 +72,6 @@ func (Chat) ChatSend(so *wsevent.Client, data []byte) interface{} {
 	}
 
 	message := models.NewChatMessage(*args.Message, *args.Room, player)
-	if tperr != nil {
-		return tperr
-	}
-
 	message.Save()
 
 	if strings.HasPrefix(*args.Message, "!admin") {

@@ -57,7 +57,7 @@ func newRequirement(team, class string, requirement Requirement, lobby *models.L
 }
 
 func (Lobby) LobbyCreate(so *wsevent.Client, data []byte) interface{} {
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
+	player := chelpers.GetPlayerFromSocket(so.ID)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
 		str := fmt.Sprintf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
 		return helpers.NewTPError(str, -1)
@@ -189,11 +189,7 @@ func (Lobby) LobbyServerReset(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
-	if tperr != nil {
-		return tperr
-	}
-
+	player := chelpers.GetPlayerFromSocket(so.ID)
 	lobby, tperr := models.GetLobbyByID(*args.ID)
 
 	if player.SteamID != lobby.CreatedBySteamID || player.Role != helpers.RoleAdmin {
@@ -263,8 +259,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, data []byte) interface{} {
 
 	}
 
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
-
+	player := chelpers.GetPlayerFromSocket(so.ID)
 	lob, tperr := models.GetLobbyByIDServer(uint(*args.Id))
 	if tperr != nil {
 		return tperr
@@ -289,7 +284,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, data []byte) interface{} {
 }
 
 func (Lobby) LobbyJoin(so *wsevent.Client, data []byte) interface{} {
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
+	player := chelpers.GetPlayerFromSocket(so.ID)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanJoin); banned {
 		str := fmt.Sprintf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
 		return helpers.NewTPError(str, -1)
@@ -408,11 +403,7 @@ func (Lobby) LobbySpectatorJoin(so *wsevent.Client, data []byte) interface{} {
 		return tperr
 	}
 
-	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
-	if tperr != nil {
-		return tperr
-	}
-
+	player := chelpers.GetPlayerFromSocket(so.ID)
 	var specSameLobby bool
 
 	arr, tperr := player.GetSpectatingIds()
@@ -586,12 +577,7 @@ func (Lobby) LobbySpectatorLeave(so *wsevent.Client, data []byte) interface{} {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	steamId := chelpers.GetSteamId(so.ID)
-	player, tperr := models.GetPlayerBySteamID(steamId)
-	if tperr != nil {
-		return tperr
-	}
-
+	player := chelpers.GetPlayerFromSocket(so.ID)
 	lob, tperr := models.GetLobbyByID(*args.Id)
 	if tperr != nil {
 		return tperr
