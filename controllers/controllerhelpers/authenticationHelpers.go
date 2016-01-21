@@ -7,6 +7,7 @@ package controllerhelpers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
@@ -60,9 +61,16 @@ func GetSteamId(socketid string) string {
 	return session.Values["steam_id"].(string)
 }
 
-func GetPlayerSocket(socketid string) (*models.Player, error) {
-	steamid := GetSteamId(socketid)
-	return models.GetPlayerBySteamID(steamid)
+func GetPlayerID(socketid string) uint {
+	session, _ := GetSessionSocket(socketid)
+	id, _ := strconv.ParseUint(session.Values["id"].(string), 10, 64)
+	return uint(id)
+}
+
+func GetPlayerFromSocket(socketid string) *models.Player {
+	id := GetPlayerID(socketid)
+	player, _ := models.GetPlayerByID(id)
+	return player
 }
 
 func GetPlayerRole(socketid string) (authority.AuthRole, error) {
