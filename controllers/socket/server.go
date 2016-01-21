@@ -22,14 +22,9 @@ func RegisterHandlers() {
 	socket.UnauthServer.On("lobbySpectatorJoin", unAuthSpecJoin)
 }
 
-func unAuthSpecJoin(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		ID *uint `json:"id"`
-	}
-
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func unAuthSpecJoin(so *wsevent.Client, args struct {
+	ID *uint `json:"id"`
+}) interface{} {
 
 	var lob *models.Lobby
 	lob, tperr := models.GetLobbyByID(*args.ID)

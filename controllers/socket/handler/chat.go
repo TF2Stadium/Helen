@@ -25,21 +25,15 @@ func (Chat) Name(s string) string {
 
 var lastChatTime = make(map[uint]int64)
 
-func (Chat) ChatSend(so *wsevent.Client, data []byte) interface{} {
+func (Chat) ChatSend(so *wsevent.Client, args struct {
+	Message *string `json:"message"`
+	Room    *int    `json:"room"`
+}) interface{} {
+
 	playerID := chelpers.GetPlayerID(so.ID)
 	now := time.Now().Unix()
 	if now-lastChatTime[playerID] == 0 {
 		return helpers.NewTPError("You're sending messages too quickly", -1)
-	}
-
-	var args struct {
-		Message *string `json:"message"`
-		Room    *int    `json:"room"`
-	}
-
-	err := chelpers.GetParams(data, &args)
-	if err != nil {
-		return helpers.NewTPErrorFromError(err)
 	}
 
 	lastChatTime[playerID] = now
@@ -84,17 +78,12 @@ func (Chat) ChatSend(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Chat) ChatDelete(so *wsevent.Client, data []byte) interface{} {
+func (Chat) ChatDelete(so *wsevent.Client, args struct {
+	ID   *int  `json:"id"`
+	Room *uint `json:"room"`
+}) interface{} {
+
 	if err := chelpers.CheckPrivilege(so, helpers.ActionDeleteChat); err != nil {
-		return err
-	}
-
-	var args struct {
-		ID   *int  `json:"id"`
-		Room *uint `json:"room"`
-	}
-
-	if err := chelpers.GetParams(data, &args); err != nil {
 		return err
 	}
 

@@ -18,13 +18,9 @@ func (Global) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-func (Global) GetConstant(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Constant string `json:"constant"`
-	}
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Global) GetConstant(so *wsevent.Client, args struct {
+	Constant string `json:"constant"`
+}) interface{} {
 
 	output := simplejson.New()
 	switch args.Constant {

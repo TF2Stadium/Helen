@@ -56,38 +56,31 @@ func newRequirement(team, class string, requirement Requirement, lobby *models.L
 	return nil
 }
 
-func (Lobby) LobbyCreate(so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
+	Map         *string `json:"map"`
+	Type        *string `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
+	League      *string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
+	Server      *string `json:"server"`
+	RconPwd     *string `json:"rconpwd"`
+	WhitelistID *string `json:"whitelistID"`
+	Mumble      *bool   `json:"mumbleRequired"`
+
+	Password            *string `json:"password" empty:"-"`
+	SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
+
+	Requirements *struct {
+		Classes map[string]Requirement `json:"classes,omitempty"`
+		General Requirement            `json:"general,omitempty"`
+	} `json:"requirements" empty:"-"`
+}) interface{} {
+
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
 		str := fmt.Sprintf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
 		return helpers.NewTPError(str, -1)
 	}
 
-	var args struct {
-		Map         *string `json:"map"`
-		Type        *string `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
-		League      *string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
-		Server      *string `json:"server"`
-		RconPwd     *string `json:"rconpwd"`
-		WhitelistID *string `json:"whitelistID"`
-		Mumble      *bool   `json:"mumbleRequired"`
-
-		Password            *string `json:"password" empty:"-"`
-		SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
-
-		Requirements *struct {
-			Classes map[string]Requirement `json:"classes,omitempty"`
-			General Requirement            `json:"general,omitempty"`
-		} `json:"requirements" empty:"-"`
-	}
-
-	err := chelpers.GetParams(data, &args)
-	if err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
-
 	var steamGroup string
-
 	if *args.SteamGroupWhitelist != "" && !rSteamGroup.MatchString(*args.SteamGroupWhitelist) {
 		return helpers.NewTPError("Invalid Steam group URL", -1)
 	} else if rSteamGroup.MatchString(*args.SteamGroupWhitelist) {
@@ -134,7 +127,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, data []byte) interface{} {
 	}
 	lob.Save()
 
-	err = lob.SetupServer()
+	err := lob.SetupServer()
 	if err != nil { //lobby setup failed, delete lobby and corresponding server record
 		qerr := db.DB.Where("id = ?", lob.ID).Delete(&models.Lobby{}).Error
 		if qerr != nil {
@@ -180,14 +173,9 @@ func (Lobby) LobbyCreate(so *wsevent.Client, data []byte) interface{} {
 		}{lob.ID})
 }
 
-func (Lobby) LobbyServerReset(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		ID *uint `json:"id"`
-	}
-
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Lobby) LobbyServerReset(so *wsevent.Client, args struct {
+	ID *uint `json:"id"`
+}) interface{} {
 
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	lobby, tperr := models.GetLobbyByID(*args.ID)
@@ -214,15 +202,10 @@ func (Lobby) LobbyServerReset(so *wsevent.Client, data []byte) interface{} {
 
 var validAddress = regexp.MustCompile(`.+\:\d+`)
 
-func (Lobby) ServerVerify(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Server  *string `json:"server"`
-		Rconpwd *string `json:"rconpwd"`
-	}
-
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Lobby) ServerVerify(so *wsevent.Client, args struct {
+	Server  *string `json:"server"`
+	Rconpwd *string `json:"rconpwd"`
+}) interface{} {
 
 	if !validAddress.MatchString(*args.Server) {
 		return helpers.NewTPError("Invalid Server Address", -1)
@@ -249,15 +232,9 @@ func (Lobby) ServerVerify(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbyClose(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Id *uint `json:"id"`
-	}
-
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-
-	}
+func (Lobby) LobbyClose(so *wsevent.Client, args struct {
+	Id *uint `json:"id"`
+}) interface{} {
 
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	lob, tperr := models.GetLobbyByIDServer(uint(*args.Id))
@@ -283,25 +260,20 @@ func (Lobby) LobbyClose(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbyJoin(so *wsevent.Client, data []byte) interface{} {
+func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
+	Id       *uint   `json:"id"`
+	Class    *string `json:"class"`
+	Team     *string `json:"team" valid:"red,blu"`
+	Password *string `json:"password" empty:"-"`
+}) interface{} {
+
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanJoin); banned {
 		str := fmt.Sprintf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
 		return helpers.NewTPError(str, -1)
 	}
 
-	var args struct {
-		Id       *uint   `json:"id"`
-		Class    *string `json:"class"`
-		Team     *string `json:"team" valid:"red,blu"`
-		Password *string `json:"password" empty:"-"`
-	}
-
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
 	//helpers.Logger.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
-
 	lob, tperr := models.GetLobbyByID(*args.Id)
 	if tperr != nil {
 		return tperr
@@ -387,14 +359,9 @@ func removeUnreadyPlayers(lobby *models.Lobby) {
 	}
 }
 
-func (Lobby) LobbySpectatorJoin(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Id *uint `json:"id"`
-	}
-
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Lobby) LobbySpectatorJoin(so *wsevent.Client, args struct {
+	Id *uint `json:"id"`
+}) interface{} {
 
 	var lob *models.Lobby
 	lob, tperr := models.GetLobbyByID(*args.Id)
@@ -481,15 +448,10 @@ func playerCanKick(lobbyId uint, steamId string) (bool, *helpers.TPError) {
 	return true, nil
 }
 
-func (Lobby) LobbyKick(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Id      *uint   `json:"id"`
-		Steamid *string `json:"steamid"`
-	}
-
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Lobby) LobbyKick(so *wsevent.Client, args struct {
+	Id      *uint   `json:"id"`
+	Steamid *string `json:"steamid"`
+}) interface{} {
 
 	steamId := *args.Steamid
 	selfSteamId := chelpers.GetSteamId(so.ID)
@@ -514,15 +476,10 @@ func (Lobby) LobbyKick(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbyBan(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Id      *uint   `json:"id"`
-		Steamid *string `json:"steamid"`
-	}
-
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Lobby) LobbyBan(so *wsevent.Client, args struct {
+	Id      *uint   `json:"id"`
+	Steamid *string `json:"steamid"`
+}) interface{} {
 
 	steamId := *args.Steamid
 	selfSteamId := chelpers.GetSteamId(so.ID)
@@ -549,13 +506,9 @@ func (Lobby) LobbyBan(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbyLeave(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Id *uint `json:"id"`
-	}
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Lobby) LobbyLeave(so *wsevent.Client, args struct {
+	Id *uint `json:"id"`
+}) interface{} {
 
 	steamId := chelpers.GetSteamId(so.ID)
 
@@ -569,13 +522,9 @@ func (Lobby) LobbyLeave(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) LobbySpectatorLeave(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Id *uint `json:"id"`
-	}
-	if err := chelpers.GetParams(data, &args); err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Lobby) LobbySpectatorLeave(so *wsevent.Client, args struct {
+	Id *uint `json:"id"`
+}) interface{} {
 
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	lob, tperr := models.GetLobbyByID(*args.Id)
@@ -596,7 +545,7 @@ func (Lobby) LobbySpectatorLeave(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Lobby) RequestLobbyListData(so *wsevent.Client, data []byte) interface{} {
+func (Lobby) RequestLobbyListData(so *wsevent.Client, _ struct{}) interface{} {
 	var lobbies []models.Lobby
 	db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(lobbies)))

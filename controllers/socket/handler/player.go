@@ -16,7 +16,7 @@ func (Player) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-func (Player) PlayerReady(so *wsevent.Client, data []byte) interface{} {
+func (Player) PlayerReady(so *wsevent.Client, _ struct{}) interface{} {
 	steamid := chelpers.GetSteamId(so.ID)
 	player, tperr := models.GetPlayerBySteamID(steamid)
 	if tperr != nil {
@@ -53,7 +53,7 @@ func (Player) PlayerReady(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerNotReady(so *wsevent.Client, data []byte) interface{} {
+func (Player) PlayerNotReady(so *wsevent.Client, _ struct{}) interface{} {
 	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
 	if tperr != nil {
@@ -86,16 +86,11 @@ func (Player) PlayerNotReady(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerSettingsGet(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Key *string `json:"key"`
-	}
+func (Player) PlayerSettingsGet(so *wsevent.Client, args struct {
+	Key *string `json:"key"`
+}) interface{} {
 
-	err := chelpers.GetParams(data, &args)
-	if err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
-
+	var err error
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
 	var settings []models.PlayerSetting
@@ -117,20 +112,14 @@ func (Player) PlayerSettingsGet(so *wsevent.Client, data []byte) interface{} {
 
 var reMumbleNick = regexp.MustCompile(`\w+`)
 
-func (Player) PlayerSettingsSet(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Key   *string `json:"key"`
-		Value *string `json:"value"`
-	}
-
-	err := chelpers.GetParams(data, &args)
-	if err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
+	Key   *string `json:"key"`
+	Value *string `json:"value"`
+}) interface{} {
 
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
-	err = player.SetSetting(*args.Key, *args.Value)
+	err := player.SetSetting(*args.Key, *args.Value)
 	if err != nil {
 		return helpers.NewTPErrorFromError(err)
 	}
@@ -154,15 +143,9 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, data []byte) interface{} {
 	return chelpers.EmptySuccessJS
 }
 
-func (Player) PlayerProfile(so *wsevent.Client, data []byte) interface{} {
-	var args struct {
-		Steamid *string `json:"steamid"`
-	}
-
-	err := chelpers.GetParams(data, &args)
-	if err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+func (Player) PlayerProfile(so *wsevent.Client, args struct {
+	Steamid *string `json:"steamid"`
+}) interface{} {
 
 	steamid := *args.Steamid
 	if steamid == "" {
