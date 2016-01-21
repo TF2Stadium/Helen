@@ -67,3 +67,34 @@ func TestDisconnectedFromServer(t *testing.T) {
 	e.Handle(e, &struct{}{})
 	assert.Equal(t, lobby.CurrentState(), models.LobbyStateEnded)
 }
+
+func TestMatchEnded(t *testing.T) {
+	t.Parallel()
+	lobby := testhelpers.CreateLobby()
+	player := testhelpers.CreatePlayer()
+
+	lobby.Type = models.LobbyTypeBball
+	lobby.Save()
+	lobby.AddPlayer(player, 0, "")
+
+	e := rpc.Event{
+		Name:    rpc.MatchEnded,
+		LobbyID: lobby.ID,
+	}
+
+	e.Handle(e, &struct{}{})
+	db.DB.Preload("Stats").First(player, player.ID)
+	assert.Equal(t, player.Stats.PlayedBballCount, 1)
+
+	lobby = testhelpers.CreateLobby()
+
+	lobby.Type = models.LobbyTypeBball
+	lobby.Save()
+	lobby.AddPlayer(player, 0, "")
+
+	e.LobbyID = lobby.ID
+	e.Handle(e, &struct{}{})
+	db.DB.Preload("Stats").First(player, player.ID)
+	assert.Equal(t, player.Stats.PlayedBballCount, 2)
+	assert.Equal(t, player.Stats.TotalLobbies(), 2)
+}
