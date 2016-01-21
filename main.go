@@ -23,7 +23,6 @@ import (
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes"
-	socketServer "github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/Helen/rpc"
 	"github.com/gorilla/context"
 	_ "github.com/rakyll/gom/http"
@@ -70,7 +69,6 @@ func main() {
 
 	mux := http.NewServeMux()
 	routes.SetupHTTP(mux)
-	socketServer.InitializeSocketServer()
 	socket.RegisterHandlers()
 
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
