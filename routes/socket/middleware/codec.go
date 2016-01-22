@@ -62,7 +62,6 @@ outer:
 	return nil
 }
 
-func (JSONCodec) MarshalError(err error) []byte {
-	bytes, _ := json.Marshal(helpers.NewTPErrorFromError(err))
-	return bytes
+func (JSONCodec) Error(err error) interface{} {
+	return helpers.NewTPErrorFromError(err)
 }
