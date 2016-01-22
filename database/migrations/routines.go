@@ -16,6 +16,7 @@ var migrationRoutines = map[uint64]func(){
 	2: lobbyTypeChange,
 	3: dropSubtituteTable,
 	4: increaseChatMessageLength,
+	5: updateAllPlayerInfo,
 }
 
 func whitelist_id_string() {
@@ -71,4 +72,14 @@ func dropSubtituteTable() {
 
 func increaseChatMessageLength() {
 	db.DB.Exec("ALTER TABLE chat_messages ALTER COLUMN message TYPE character varying(150)")
+}
+
+func updateAllPlayerInfo() {
+	var players []*models.Player
+	db.DB.Table("players").Find(&players)
+
+	for _, player := range players {
+		player.UpdatePlayerInfo()
+		player.Save()
+	}
 }
