@@ -215,6 +215,17 @@ func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPErr
 
 	for _, req := range requirements {
 		if player.GameHours < req.Hours {
+			//update player info only if the nummber of hours needed > the number of hours
+			//passed since player info was last updated
+			if time.Since(player.UpdatedAt) < time.Hour*time.Duration(req.Hours-player.GameHours) {
+				player.UpdatePlayerInfo()
+				player.Save()
+
+				if player.GameHours < req.Hours {
+					return false, ReqHoursErr
+				}
+				continue
+			}
 			return false, ReqHoursErr
 		}
 
