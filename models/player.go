@@ -65,8 +65,8 @@ type Player struct {
 	Role       authority.AuthRole `sql:"default:0"` // Role is player by default
 
 	Settings       []PlayerSetting
-	MumbleUsername string
-	MumbleAuthkey  string
+	MumbleUsername string `sql:"unique"`
+	MumbleAuthkey  string `sql:"not null;unique"`
 }
 
 // Create a new player with the given steam id.
