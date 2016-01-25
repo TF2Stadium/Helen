@@ -426,6 +426,8 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 
 			if curLobby.State == LobbyStateInProgress {
 				curLobby.Substitute(player)
+			} else {
+				curLobby.RemovePlayer(player)
 			}
 
 		} else { //player is in the same lobby, they're changing their slots
