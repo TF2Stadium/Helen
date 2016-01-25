@@ -296,7 +296,6 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 	}
 
 	if prevId, _ := player.GetLobbyID(false); prevId != 0 && !sameLobby {
-		socket.AuthServer.RemoveClient(so, fmt.Sprintf("%d_public", prevId))
 		socket.AuthServer.RemoveClient(so, fmt.Sprintf("%d_private", prevId))
 	}
 
