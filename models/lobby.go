@@ -478,7 +478,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	}
 
 	//try to remove them from spectators
-	lobby.RemoveSpectator(player, false)
+	lobby.RemoveSpectator(player, true)
 
 	newSlotObj := &LobbySlot{
 		PlayerID: player.ID,
