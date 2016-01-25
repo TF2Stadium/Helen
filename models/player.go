@@ -155,8 +155,8 @@ func (player *Player) GetLobbyID(inProgress bool) (uint, *helpers.TPError) {
 		Where("lobby_slots.player_id = ? AND lobbies.state NOT IN (?)", player.ID, states).
 		First(playerSlot).Error
 
-	// if the player is not in any lobby, return error
-	if err != nil {
+	// if the player is not in any lobby or the player has been reported/needs sub, return error
+	if err != nil || playerSlot.NeedsSub {
 		return 0, helpers.NewTPError("Player not in any lobby", 1)
 	}
 
