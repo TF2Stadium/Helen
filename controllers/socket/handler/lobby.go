@@ -296,7 +296,8 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 	}
 
 	if prevId, _ := player.GetLobbyID(false); prevId != 0 && !sameLobby {
-		socket.AuthServer.RemoveClient(so, fmt.Sprintf("%d_private", prevId))
+		lobby, _ := models.GetLobbyByID(prevId)
+		hooks.AfterLobbyLeave(lobby, player)
 	}
 
 	tperr = lob.AddPlayer(player, slot, *args.Password)
