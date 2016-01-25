@@ -428,6 +428,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 				curLobby.Substitute(player)
 			} else {
 				curLobby.RemovePlayer(player)
+				curLobby.AddSpectator(player)
 			}
 
 		} else { //player is in the same lobby, they're changing their slots
