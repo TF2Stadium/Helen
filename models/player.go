@@ -64,9 +64,9 @@ type Player struct {
 	Name       string             // Player name
 	Role       authority.AuthRole `sql:"default:0"` // Role is player by default
 
-	Settings       []PlayerSetting
-	MumbleUsername string `sql:"unique"`
-	MumbleAuthkey  string `sql:"not null;unique"`
+	Settings []PlayerSetting
+	// MumbleUsername string `sql:"unique"`
+	// MumbleAuthkey  string `sql:"not null;unique"`
 }
 
 // Create a new player with the given steam id.
@@ -153,7 +153,7 @@ func (player *Player) GetLobbyID(inProgress bool) (uint, *helpers.TPError) {
 
 	err := db.DB.Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").
 		Where("lobby_slots.player_id = ? AND lobbies.state NOT IN (?)", player.ID, states).
-		Find(playerSlot).Error
+		First(playerSlot).Error
 
 	// if the player is not in any lobby, return error
 	if err != nil {
