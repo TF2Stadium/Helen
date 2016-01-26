@@ -679,6 +679,7 @@ func (lobby *Lobby) Close(rpc bool) {
 
 	BroadcastSubList()
 	BroadcastLobby(lobby)
+	BroadcastLobbyList() // has to be done manually for now
 	FumbleLobbyEnded(lobby)
 }
 
