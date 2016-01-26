@@ -252,7 +252,6 @@ func (Lobby) LobbyClose(so *wsevent.Client, args struct {
 	}
 
 	lob.Close(true)
-	models.BroadcastLobbyList() // has to be done manually for now
 
 	notify := fmt.Sprintf("Lobby closed by %s", player.Name)
 	models.SendNotification(notify, int(lob.ID))
