@@ -100,3 +100,14 @@ func (Helen) IsAllowed(args Args, ok *bool) error {
 
 	return nil
 }
+
+func (Helen) GetServers(_ struct{}, serverMap *map[uint]*models.ServerRecord) error {
+	servers := []*models.ServerRecord{}
+	db.DB.Table("server_records").Find(&servers)
+	for _, server := range servers {
+		var lobbyID uint
+		db.DB.DB().QueryRow("SELECT id FROM lobbies WHERE server_info_id = $1", server.ID).Scan(&lobbyID)
+		(*serverMap)[lobbyID] = server
+	}
+	return nil
+}
