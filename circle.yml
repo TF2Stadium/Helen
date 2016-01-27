@@ -6,7 +6,6 @@ machine:
     DATABASE_NAME: "circle_test"
     DATABASE_USERNAME: "ubuntu"
     DATABASE_PASSWORD: ""
-    GO15VENDOREXPERIMENT: "1"
 
 dependencies:
   pre:
@@ -20,6 +19,7 @@ deployment:
   docker:
     branch: docker
     commands:
+      - export GO15VENDOREXPERIMENT=1
       - godep save ./...
       - docker build -t helen .
   master:
