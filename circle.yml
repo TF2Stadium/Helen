@@ -1,6 +1,7 @@
 machine:
   services:
     - postgresql
+    - docker
   environment:
     DATABASE_NAME: "circle_test"
     DATABASE_USERNAME: "ubuntu"
