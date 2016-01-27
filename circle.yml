@@ -5,18 +5,22 @@ machine:
     DATABASE_NAME: "circle_test"
     DATABASE_USERNAME: "ubuntu"
     DATABASE_PASSWORD: ""
+    GO15VENDOREXPERIMENT: "1"
+
 dependencies:
   pre:
-      - sudo rm -rf /usr/local/go
-      - wget "https://godeb.s3.amazonaws.com/godeb-amd64.tar.gz"
-      - tar -xvf "godeb-amd64.tar.gz"
-      - ./godeb install 1.5.3
-      - go version
+    - go get github.com/tools/godep
+    - godep save ./...
+    - docker login -e $DOCKER_EMAIL -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 test:
   override:
       - case $CIRCLE_NODE_INDEX in 0) go test ./controllers/... -v -race ;; 1) go test -v -race ./models/... ./database/... ./helpers/... ./config/... ./rpc/... ;; esac:
           parallel: true
 deployment:
+  docker:
+    branch: docker
+    commands:
+      - docker build -t helen .
   master:
     branch: master
     commands:
