@@ -89,9 +89,9 @@ func DeleteUnusedServerRecords() {
 	db.DB.Table("server_records").Pluck("id", &serverInfoIDs)
 	for _, id := range serverInfoIDs {
 		lobby := &Lobby{}
-		db.DB.Where("server_info_id = ?", id).First(lobby)
+		err := db.DB.Where("server_info_id = ?", id).First(lobby).Error
 
-		if lobby.State == LobbyStateEnded {
+		if err != nil || lobby.State == LobbyStateEnded {
 			db.DB.Table("server_records").Where("id = ?", id).Delete(&ServerRecord{})
 		}
 	}
