@@ -7,6 +7,7 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
 )
 
@@ -77,6 +78,8 @@ func (Player) PlayerNotReady(so *wsevent.Client, _ struct{}) interface{} {
 	tperr = lobby.UnreadyPlayer(player)
 	lobby.RemovePlayer(player)
 	hooks.AfterLobbyLeave(lobby, player)
+	lobby.AddSpectator(player)
+	hooks.AfterLobbySpec(socket.AuthServer, so, lobby)
 
 	if tperr != nil {
 		return tperr
