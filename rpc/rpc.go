@@ -102,6 +102,8 @@ func (Helen) IsAllowed(args Args, ok *bool) error {
 }
 
 func (Helen) GetServers(_ struct{}, serverMap *map[uint]*models.ServerRecord) error {
+	*serverMap = make(map[uint]*models.ServerRecord)
+
 	servers := []*models.ServerRecord{}
 	db.DB.Table("server_records").Find(&servers)
 	for _, server := range servers {
