@@ -56,10 +56,7 @@ func main() {
 
 	models.ConnectRPC()
 	models.DeleteUnusedServerRecords()
-
-	if !config.Constants.ServerMockUp {
-		models.CheckConnection()
-	}
+	go models.Ping()
 
 	chelpers.InitGeoIPDB()
 	if config.Constants.SteamIDWhitelist != "" {
