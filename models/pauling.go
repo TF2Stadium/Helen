@@ -5,8 +5,9 @@
 package models
 
 import (
+	"time"
+
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
 )
 
 type ServerBootstrap struct {
@@ -27,13 +28,6 @@ type Args struct {
 	SteamId2  string
 	Slot      string
 	Text      string
-}
-
-func CheckConnection() {
-	err := call(config.Constants.PaulingPort, "Pauling.Test", struct{}{}, &struct{}{})
-	if err != nil {
-		helpers.Logger.Fatal(err.Error())
-	}
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {
@@ -110,4 +104,16 @@ func serverExists(lobbyID uint) (exists bool) {
 
 	call(config.Constants.PaulingPort, "Pauling.Exists", lobbyID, &exists)
 	return
+}
+
+func Ping() {
+	if config.Constants.ServerMockUp {
+		return
+	}
+
+	tick := time.NewTicker(time.Second)
+	for {
+		<-tick.C
+		call(config.Constants.PaulingPort, "Pauling.Ping", struct{}{}, &struct{}{})
+	}
 }
