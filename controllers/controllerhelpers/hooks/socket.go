@@ -11,11 +11,13 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/internal/pprof"
 	"github.com/TF2Stadium/Helen/models"
 )
 
 //OnDisconnect is connected when a player with a given socketID disconnects
 func OnDisconnect(socketID string) {
+	pprof.Clients.Add(-1)
 	defer chelpers.DeauthenticateSocket(socketID)
 	if chelpers.IsLoggedInSocket(socketID) {
 		steamid := chelpers.GetSteamId(socketID)
