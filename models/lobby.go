@@ -91,7 +91,7 @@ func DeleteUnusedServerRecords() {
 		lobby := &Lobby{}
 		db.DB.Where("server_info_id = ?", id).First(lobby)
 
-		if !serverExists(lobby.ID) {
+		if lobby.State == LobbyStateEnded {
 			db.DB.Table("server_records").Where("id = ?", id).Delete(&ServerRecord{})
 		}
 	}
