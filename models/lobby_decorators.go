@@ -87,7 +87,12 @@ type SubstituteData struct {
 	LobbyID uint   `json:"id"`
 	Format  string `json:"type"`
 	MapName string `json:"map"`
-	Region  string `json:"region"`
+
+	Region struct {
+		Name string `json:"name"`
+		Code string `json:"code"`
+	} `json:"region"`
+
 	Mumble  bool   `json:"mumbleRequired"`
 	Team    string `sql:"-" json:"team"`
 	Class   string `sql:"-" json:"class"`
@@ -250,9 +255,11 @@ func DecorateSubstitute(slot *LobbySlot) SubstituteData {
 		LobbyID: lobby.ID,
 		Format:  formatMap[lobby.Type],
 		MapName: lobby.MapName,
-		Region:  lobby.RegionName,
 		Mumble:  lobby.Mumble,
 	}
+
+	substitute.Region.Name = lobby.RegionName
+	substitute.Region.Code = lobby.RegionCode
 
 	substitute.Team, substitute.Class, _ = LobbyGetSlotInfoString(lobby.Type, slot.Slot)
 
