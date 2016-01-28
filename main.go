@@ -5,7 +5,9 @@
 package main
 
 import (
+	_ "expvar"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"strings"
 	"time"
@@ -21,11 +23,11 @@ import (
 	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
+	_ "github.com/TF2Stadium/Helen/internal/pprof"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes"
 	"github.com/TF2Stadium/Helen/rpc"
 	"github.com/gorilla/context"
-	_ "github.com/rakyll/gom/http"
 	"github.com/rs/cors"
 )
 
