@@ -6,71 +6,50 @@ package config
 
 import (
 	"os"
+	"reflect"
+	"strconv"
 	"strings"
 
-	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/Sirupsen/logrus"
+	"github.com/op/go-logging"
 )
 
 type constants struct {
 	GlobalChatRoom     string
-	Port               string
-	Domain             string
-	OpenIDRealm        string
-	CookieDomain       string
-	LoginRedirectPath  string
-	CookieStoreSecret  string
+	Port               string `env:"PORT"`
+	Domain             string `env:"SERVER_DOMAIN"`
+	OpenIDRealm        string `env:"SERVER_OPENID_REALM"`
+	CookieDomain       string `env:"SERVER_COOKIE_DOMAIN"`
+	LoginRedirectPath  string `env:"SERVER_REDIRECT_PATH"`
+	CookieStoreSecret  string `env:"COOKIE_STORE_SECRET,secret"`
 	StaticFileLocation string
 	SessionName        string
-	RPCPort            string
-	PaulingPort        string
-	FumblePort         string
-	MumbleAddr         string
-	MumblePort         string
-	MumblePassword     string
-	SteamIDWhitelist   string
-	ServerMockUp       bool
-	MockupAuth         bool
-	GeoIP              string
+	RPCPort            string `env:"RPC_PORT"`
+	PaulingPort        string `env:"PAULING_PORT"`
+	FumblePort         string `env:"FUMBLE_PORT"`
+	MumbleAddr         string `env:"MUMBLE_ADDR"`
+	MumblePort         string `env:"MUMBLE_PORT"`
+	MumblePassword     string `env:"MUMBLE_PASSWORD"`
+	SteamIDWhitelist   string `env:"STEAMID_WHITELIST"`
+	ServerMockUp       bool   `env:"PAULING_DISABLE"`
+	MockupAuth         bool   `env:"MOCKUP_AUTH"`
+	GeoIP              string `env:"GEOIP_DB"`
 	AllowedCorsOrigins []string
 
 	// database
-	DbHost     string
-	DbPort     string
-	DbDatabase string
-	DbUsername string
-	DbPassword string
+	DbHost     string `env:"DATABASE_HOST"`
+	DbPort     string `env:"DATABASE_PORT"`
+	DbDatabase string `env:"DATABASE_NAME"`
+	DbUsername string `env:"DATABASE_USERNAME"`
+	DbPassword string `env:"DATABASE_PASSWORD,secret"`
 
-	SteamDevApiKey string
+	SteamDevApiKey string `env:"STEAM_API_KEY,secret"`
 	SteamApiMockUp bool
 
-	ProfilerEnable bool
-	ProfilerPort   string
+	ProfilerEnable bool   `env:"PROFILER_ENABLE"`
+	ProfilerPort   string `env:"PROFILER_PORT"`
 
-	SlackbotURL string
-}
-
-func overrideFromEnv(constant *string, name string, secret bool) {
-	val := os.Getenv(name)
-	if "" != val {
-		*constant = val
-
-		if secret {
-			helpers.Logger.Debug("%s = <secret>", name)
-		} else {
-			helpers.Logger.Debug("%s = %s", name, *constant)
-		}
-	}
-}
-
-func overrideBoolFromEnv(constant *bool, name string) {
-	val := os.Getenv(name)
-	if val != "" {
-		*constant = map[string]bool{
-			"true":  true,
-			"false": false,
-		}[val]
-		helpers.Logger.Debug("%s = %t", name, *constant)
-	}
+	SlackbotURL string `env:"SLACK_URL,secret"`
 }
 
 var Constants = constants{}
@@ -85,36 +64,51 @@ func SetupConstants() {
 		setupTravisTestConstants()
 	}
 
-	overrideFromEnv(&Constants.Port, "PORT", false)
-	overrideFromEnv(&Constants.CookieStoreSecret, "COOKIE_STORE_SECRET", true)
-	overrideFromEnv(&Constants.SteamDevApiKey, "STEAM_API_KEY", true)
-	overrideFromEnv(&Constants.DbHost, "DATABASE_HOST", true)
-	overrideFromEnv(&Constants.DbPort, "DATABASE_PORT", true)
-	overrideFromEnv(&Constants.DbDatabase, "DATABASE_NAME", true)
-	overrideFromEnv(&Constants.DbUsername, "DATABASE_USERNAME", true)
-	overrideFromEnv(&Constants.DbPassword, "DATABASE_PASSWORD", true)
-	overrideFromEnv(&Constants.RPCPort, "RPC_PORT", false)
-	overrideFromEnv(&Constants.PaulingPort, "PAULING_PORT", false)
-	overrideFromEnv(&Constants.Domain, "SERVER_DOMAIN", false)
-	overrideFromEnv(&Constants.OpenIDRealm, "SERVER_OPENID_REALM", false)
-	overrideFromEnv(&Constants.CookieDomain, "SERVER_COOKIE_DOMAIN", false)
-	overrideFromEnv(&Constants.FumblePort, "FUMBLE_PORT", false)
-	overrideBoolFromEnv(&Constants.ServerMockUp, "PAULING_DISABLE")
-	overrideBoolFromEnv(&Constants.MockupAuth, "MOCKUP_AUTH")
-	overrideFromEnv(&Constants.GeoIP, "GEOIP_DB", true)
-	overrideFromEnv(&Constants.LoginRedirectPath, "SERVER_REDIRECT_PATH", false)
-	overrideFromEnv(&Constants.SteamIDWhitelist, "STEAMID_WHITELIST", false)
-	overrideFromEnv(&Constants.MumbleAddr, "MUMBLE_ADDR", false)
-	overrideFromEnv(&Constants.MumblePort, "MUMBLE_PORT", false)
-	overrideFromEnv(&Constants.MumblePassword, "MUMBLE_PASSWORD", true)
+	ps := reflect.ValueOf(&Constants)
 
-	overrideFromEnv(&Constants.ProfilerPort, "PROFILER_PORT", true)
-	overrideBoolFromEnv(&Constants.ProfilerEnable, "PROFILER_ENABLE")
-	overrideFromEnv(&Constants.SlackbotURL, "SLACK_URL", true)
-	// conditional assignments
+	for i := 0; i < ps.Elem().NumField(); i++ {
+		field := ps.Elem().Field(i)
+		opts := strings.Split(reflect.TypeOf(Constants).Field(i).Tag.Get("env"), ",")
+
+		if len(opts) == 0 {
+			continue
+		}
+
+		val := os.Getenv(opts[0])
+		if val == "" {
+			continue
+		}
+
+		switch field.Kind() {
+		case reflect.String:
+			field.SetString(val)
+		case reflect.Bool:
+			if val == "true" {
+				field.SetBool(true)
+			} else if val == "false" {
+				field.SetBool(false)
+			} else {
+				logrus.Panicf("Invalid value for bool opt %s: %s", opts[0], val)
+			}
+		case reflect.Int:
+			num, err := strconv.Atoi(val)
+			if err != nil {
+				logrus.Panicf("Invalid value for int opt %s: %s", opts[0], val)
+			}
+			field.SetInt(int64(num))
+		}
+
+		if len(opts) > 1 && opts[1] == "secret" {
+			logrus.Debug("%s = %s", opts[0], logging.Redact(val))
+			continue
+		}
+
+		logrus.Debug("%s = %s", opts[0], val)
+
+	}
 
 	if Constants.SteamDevApiKey == "your steam dev api key" && !Constants.SteamApiMockUp {
-		helpers.Logger.Warning("Steam api key not provided, setting SteamApiMockUp to true")
+		logrus.Warning("Steam api key not provided, setting SteamApiMockUp to true")
 		Constants.SteamApiMockUp = true
 	}
 
