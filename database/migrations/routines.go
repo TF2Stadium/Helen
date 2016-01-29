@@ -17,6 +17,7 @@ var migrationRoutines = map[uint64]func(){
 	3: dropSubtituteTable,
 	4: increaseChatMessageLength,
 	5: updateAllPlayerInfo,
+	6: truncateHTTPSessions,
 }
 
 func whitelist_id_string() {
@@ -82,4 +83,8 @@ func updateAllPlayerInfo() {
 		player.UpdatePlayerInfo()
 		player.Save()
 	}
+}
+
+func truncateHTTPSessions() {
+	db.DB.Exec("TRUNCATE TABLE http_sessions")
 }
