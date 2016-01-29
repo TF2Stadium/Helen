@@ -4,6 +4,8 @@ import (
 	"encoding/xml"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/Sirupsen/logrus"
 )
 
 type GroupXML struct {
@@ -18,13 +20,13 @@ func GetGroupMembers(url string) ([]string, error) {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		return []string{}, err
 	}
 
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		return []string{}, err
 	}
 

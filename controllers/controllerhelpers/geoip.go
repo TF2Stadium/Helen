@@ -4,8 +4,8 @@ import (
 	"net"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/oschwald/geoip2-golang"
 )
 
@@ -20,7 +20,7 @@ func InitGeoIPDB() {
 	geodb, err = geoip2.Open(config.Constants.GeoIP)
 
 	if err != nil {
-		helpers.Logger.Fatal(err.Error())
+		logrus.Fatal(err.Error())
 	}
 }
 
@@ -32,13 +32,13 @@ func GetRegion(server string) (string, string) {
 	arr := strings.Split(server, ":")
 	addr, err := net.ResolveIPAddr("ip4", arr[0])
 	if err != nil {
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		return "", ""
 	}
 
 	record, err := geodb.Country(addr.IP)
 	if err != nil {
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		return "", ""
 	}
 

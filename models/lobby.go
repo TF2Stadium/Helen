@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
@@ -408,7 +409,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	if err := db.DB.Table("banned_players_lobbies").
 		Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).
 		Count(&num).Error; num > 0 || err != nil {
-		//helpers.Logger.Debug(fmt.Sprint(err))
+		//logrus.Debug(fmt.Sprint(err))
 		return LobbyBanErr
 	}
 
@@ -693,7 +694,7 @@ func (lobby *Lobby) UpdateStats() {
 		player := &Player{}
 		err := db.DB.First(player, slot.PlayerID).Error
 		if err != nil {
-			helpers.Logger.Critical("%s", err.Error())
+			logrus.Error(err)
 			return
 		}
 		db.DB.Preload("Stats").First(player, slot.PlayerID)

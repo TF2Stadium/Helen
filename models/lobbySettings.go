@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/Sirupsen/logrus"
 	"github.com/bitly/go-simplejson"
 )
 
@@ -123,13 +123,13 @@ func GetLobbyWhitelist(whitelistId int) (*LobbyWhitelist, bool) {
 func InitializeLobbySettings(fileName string) {
 	realPath, err := filepath.Abs(fileName)
 	if err != nil {
-		helpers.Logger.Fatal(err.Error())
+		logrus.Fatal(err.Error())
 		return
 	}
 
 	err = LoadLobbySettingsFromFile(realPath)
 	if err != nil {
-		helpers.Logger.Fatal(err.Error())
+		logrus.Fatal(err.Error())
 	}
 }
 

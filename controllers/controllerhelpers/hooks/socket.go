@@ -7,10 +7,10 @@ package hooks
 import (
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/pprof"
 	"github.com/TF2Stadium/Helen/models"
 )
@@ -24,13 +24,13 @@ func OnDisconnect(socketID string) {
 		sessions.RemoveSocket(socketID, steamid)
 		player, tperr := models.GetPlayerBySteamID(steamid)
 		if tperr != nil || player == nil {
-			helpers.Logger.Error(tperr.Error())
+			logrus.Error(tperr.Error())
 			return
 		}
 
 		ids, tperr := player.GetSpectatingIds()
 		if tperr != nil {
-			helpers.Logger.Error(tperr.Error())
+			logrus.Error(tperr.Error())
 			return
 		}
 
@@ -41,11 +41,11 @@ func OnDisconnect(socketID string) {
 				lobby, _ := models.GetLobbyByID(id)
 				err := lobby.RemoveSpectator(player, true)
 				if err != nil {
-					helpers.Logger.Error(err.Error())
+					logrus.Error(err.Error())
 					continue
 				}
 				sessions.RemoveSpectator(socketID)
-				//helpers.Logger.Debug("removing %s from %d", player.SteamId, id)
+				//logrus.Debug("removing %s from %d", player.SteamId, id)
 			}
 		}
 

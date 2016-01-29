@@ -93,9 +93,9 @@ type SubstituteData struct {
 		Code string `json:"code"`
 	} `json:"region"`
 
-	Mumble  bool   `json:"mumbleRequired"`
-	Team    string `sql:"-" json:"team"`
-	Class   string `sql:"-" json:"class"`
+	Mumble bool   `json:"mumbleRequired"`
+	Team   string `sql:"-" json:"team"`
+	Class  string `sql:"-" json:"class"`
 }
 
 type LobbyEvent struct {

@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/jinzhu/gorm"
 )
@@ -31,7 +31,7 @@ func getPlayerID(steamID string) (playerID uint) {
 func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 	chatLogsTempl, err := template.ParseFiles("views/admin/templates/chatlogs.html")
 	if err != nil {
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -111,13 +111,13 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		//err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
 		err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
 		if err != nil {
-			helpers.Logger.Warning(err.Error())
+			logrus.Warning(err.Error())
 		}
 	}
 
 	err = chatLogsTempl.Execute(w, messages)
 	if err != nil {
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		return
 	}
 }

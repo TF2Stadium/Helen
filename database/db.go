@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"sync"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 )
@@ -39,7 +39,7 @@ func Init() {
 		RawQuery: "sslmode=disable",
 	}
 
-	helpers.Logger.Info("Connecting to DB on %s", DBUrl.String())
+	logrus.Info("Connecting to DB on %s", DBUrl.String())
 
 	DBUrl.User = url.UserPassword(config.Constants.DbUsername, config.Constants.DbPassword)
 
@@ -47,11 +47,11 @@ func Init() {
 	DB, err = gorm.Open("postgres", DBUrl.String())
 	//	DB, err := gorm.Open("sqlite3", "/tmp/gorm.db")
 	if err != nil {
-		helpers.Logger.Fatal(err.Error())
+		logrus.Fatal(err.Error())
 	}
 
-	DB.SetLogger(helpers.FakeLogger{})
+	DB.SetLogger(logrus.StandardLogger())
 
-	helpers.Logger.Info("Connected!")
+	logrus.Info("Connected!")
 	initialized = true
 }

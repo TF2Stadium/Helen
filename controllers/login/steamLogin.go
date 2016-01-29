@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
@@ -32,7 +32,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		config.Constants.OpenIDRealm); err == nil {
 		http.Redirect(w, r, url, 303)
 	} else {
-		helpers.Logger.Debug(err.Error())
+		logrus.Debug(err.Error())
 	}
 }
 
@@ -98,7 +98,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	fullURL := config.Constants.Domain + r.URL.String()
 	idURL, err := openid.Verify(fullURL, discoveryCache, nonceStore)
 	if err != nil {
-		helpers.Logger.Warning("%s", err.Error())
+		logrus.Warning("%s", err.Error())
 		return
 	}
 
@@ -122,7 +122,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		session.Options = &sessions.Options{MaxAge: -1}
 		session.Save(r, w)
 
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		http.Error(w, "Internal Server Error.", 500)
 		return
 	}

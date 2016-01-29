@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
@@ -49,7 +50,7 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		var estr = "Couldn't create WebSocket connection."
 		//estr = err.Error()
 
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		http.Error(w, estr, 500)
 		return
 	}
@@ -59,7 +60,7 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//helpers.Logger.Debug("Connected to Socket")
+	//logrus.Debug("Connected to Socket")
 	err = SocketInit(so)
 	if err != nil {
 		login.LogoutSession(w, r)
@@ -82,7 +83,7 @@ func SocketInit(so *wsevent.Client) error {
 
 		player, err := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 		if err != nil {
-			helpers.Logger.Warning(
+			logrus.Warning(
 				"User has a cookie with but a matching player record doesn't exist: %s",
 				chelpers.GetSteamId(so.ID))
 			chelpers.DeauthenticateSocket(so.ID)

@@ -15,6 +15,7 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 
 	"github.com/DSchalla/go-pid"
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -41,7 +42,7 @@ func main() {
 		go func() {
 			graceful.Run(address, 1*time.Second, nil)
 		}()
-		helpers.Logger.Info("Running Profiler at %s", address)
+		logrus.Info("Running Profiler at %s", address)
 	}
 
 	pid := &pid.Instance{}
@@ -83,6 +84,6 @@ func main() {
 	}).Handler(context.ClearHandler(mux))
 
 	// start the server
-	helpers.Logger.Info("Serving at %s", config.Constants.Domain)
+	logrus.Info("Serving at %s", config.Constants.Domain)
 	graceful.Run(":"+config.Constants.Port, 1*time.Second, corsHandler)
 }

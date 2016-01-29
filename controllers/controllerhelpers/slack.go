@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
 )
 
 type message struct {
@@ -28,7 +28,7 @@ func slackBroadcaster() {
 			strings.NewReader(final))
 
 		if err != nil {
-			helpers.Logger.Error(err.Error())
+			logrus.Error(err.Error())
 		}
 
 		time.Sleep(time.Second * 1)

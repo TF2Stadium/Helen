@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/models"
 )
 
@@ -57,7 +57,7 @@ func playerDisc(playerID, lobbyID uint) {
 	time.AfterFunc(time.Minute*2, func() {
 		ingame, err := lobby.IsPlayerInGame(player)
 		if err != nil {
-			helpers.Logger.Error(err.Error())
+			logrus.Error(err.Error())
 		}
 		if !ingame && lobby.CurrentState() != models.LobbyStateEnded {
 			lobby.Substitute(player)
@@ -93,7 +93,7 @@ func playerChat(lobbyID uint, playerID uint, message string) {
 func disconnectedFromServer(lobbyID uint) {
 	lobby, _ := models.GetLobbyByIDServer(lobbyID)
 
-	helpers.Logger.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
+	logrus.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
 	lobby.Close(false)
 	models.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
@@ -102,7 +102,7 @@ func disconnectedFromServer(lobbyID uint) {
 func matchEnded(lobbyID uint, logsID int) {
 	lobby, _ := models.GetLobbyByIDServer(lobbyID)
 
-	helpers.Logger.Debug("#%d: Match Ended", lobbyID)
+	logrus.Debug("#%d: Match Ended", lobbyID)
 
 	lobby.UpdateStats()
 	lobby.Close(false)

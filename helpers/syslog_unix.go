@@ -5,19 +5,13 @@
 // that can be found in the COPYING file.
 package helpers
 
-import (
-	"log/syslog"
+// func setupPapertrail(addr string, backend logging.Backend) {
+// 	writer, err := syslog.Dial("udp4", addr, syslog.LOG_EMERG, "Helen")
+// 	if err != nil {
+// 		Logger.Fatal(err.Error())
+// 	}
 
-	"github.com/op/go-logging"
-)
-
-func setupPapertrail(addr string, backend logging.Backend) {
-	writer, err := syslog.Dial("udp4", addr, syslog.LOG_EMERG, "Helen")
-	if err != nil {
-		Logger.Fatal(err.Error())
-	}
-
-	format = logging.MustStringFormatter(`[%{level:.4s}] %{shortfile} %{shortfunc}() : %{message}`)
-	syslogBackend := logging.NewBackendFormatter(&logging.SyslogBackend{Writer: writer}, format)
-	logging.SetBackend(backend, syslogBackend)
-}
+// 	format = logging.MustStringFormatter(`[%{level:.4s}] %{shortfile} %{shortfunc}() : %{message}`)
+// 	syslogBackend := logging.NewBackendFormatter(&logging.SyslogBackend{Writer: writer}, format)
+// 	logging.SetBackend(backend, syslogBackend)
+// }

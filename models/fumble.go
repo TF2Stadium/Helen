@@ -3,8 +3,8 @@ package models
 import (
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/fumble/mumble"
 )
 
@@ -16,7 +16,7 @@ func FumbleLobbyCreated(lob *Lobby) error {
 	err := call(config.Constants.FumblePort, "Fumble.CreateLobby", lob.ID, &struct{}{})
 
 	if err != nil {
-		helpers.Logger.Warning(err.Error())
+		logrus.Warning(err.Error())
 		return err
 	}
 
@@ -34,7 +34,7 @@ func fumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error
 
 	err := call(config.Constants.FumblePort, "Fumble.AllowPlayer", &mumble.LobbyArgs{user, lobbyId}, &struct{}{})
 	if err != nil {
-		helpers.Logger.Warning(err.Error())
+		logrus.Warning(err.Error())
 	}
 
 	return nil
@@ -65,6 +65,6 @@ func FumbleLobbyEnded(lob *Lobby) {
 
 	err := call(config.Constants.FumblePort, "Fumble.EndLobby", lob.ID, nil)
 	if err != nil {
-		helpers.Logger.Warning(err.Error())
+		logrus.Warning(err.Error())
 	}
 }

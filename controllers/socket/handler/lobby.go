@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -131,7 +132,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	if err != nil { //lobby setup failed, delete lobby and corresponding server record
 		qerr := db.DB.Where("id = ?", lob.ID).Delete(&models.Lobby{}).Error
 		if qerr != nil {
-			helpers.Logger.Warning(qerr.Error())
+			logrus.Warning(qerr.Error())
 		}
 		db.DB.Delete(&lob.ServerInfo)
 		return helpers.NewTPErrorFromError(err)
@@ -272,7 +273,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 		return helpers.NewTPError(str, -1)
 	}
 
-	//helpers.Logger.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
+	//logrus.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
 	lob, tperr := models.GetLobbyByID(*args.Id)
 	if tperr != nil {
 		return tperr

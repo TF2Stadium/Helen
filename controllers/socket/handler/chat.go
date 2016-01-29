@@ -39,7 +39,7 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 	lastChatTime[playerID] = now
 	player, _ := models.GetPlayerByID(playerID)
 
-	//helpers.Logger.Debug("received chat message: %s %s", *args.Message, player.Name)
+	//logrus.Debug("received chat message: %s %s", *args.Message, player.Name)
 
 	if *args.Room > 0 {
 		var count int

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +28,7 @@ func TestDatabasePing(t *testing.T) {
 	}
 	config.SetupConstants()
 
-	helpers.Logger.Debug("[Test.Database] IsTest? " + strconv.FormatBool(IsTest))
+	logrus.Debug("[Test.Database] IsTest? " + strconv.FormatBool(IsTest))
 	Init()
 	assert.Nil(t, DB.DB().Ping())
 }

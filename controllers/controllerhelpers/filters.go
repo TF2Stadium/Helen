@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
@@ -29,7 +30,7 @@ func WhitelistListener() {
 		resp, err := http.Get(config.Constants.SteamIDWhitelist)
 
 		if err != nil {
-			helpers.Logger.Error(err.Error())
+			logrus.Error(err.Error())
 			continue
 		}
 
@@ -47,7 +48,7 @@ func WhitelistListener() {
 
 		for _, steamID := range groupXML.Members {
 			//_, ok := whitelistSteamID[steamID]
-			//helpers.Logger.Info("Whitelisting SteamID %s", steamID)
+			//logrus.Info("Whitelisting SteamID %s", steamID)
 			whitelistSteamID[steamID] = true
 		}
 		whitelistLock.Unlock()

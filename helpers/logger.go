@@ -7,28 +7,34 @@ package helpers
 import (
 	"fmt"
 	"os"
+	"time"
 
-	"github.com/op/go-logging"
+	"github.com/Sirupsen/logrus"
+	"github.com/facebookgo/stack"
 )
 
-var Logger = logging.MustGetLogger("main")
+type formatter struct{}
 
-var format = logging.MustStringFormatter(
-	`%{time:15:04:05} %{color} [%{level:.4s}] %{shortfile} %{shortfunc}() : %{message} %{color:reset}`)
+func (formatter) Format(e *logrus.Entry) ([]byte, error) {
+	var t logrus.Formatter
 
-type FakeLogger struct{}
+	frame := stack.Caller(7)
+	frame.File = stack.StripGOPATH(frame.File)
+	e.Data["function"] = frame.Name
+	e.Data["file"] = fmt.Sprintf("%s:%d", frame.File, frame.Line)
 
-func (f FakeLogger) Print(v ...interface{}) {
-	Logger.Warning(fmt.Sprint(v))
+	if os.Getenv("LOG_FORMAT") == "json" {
+		t = &logrus.JSONFormatter{}
+	} else {
+		t = &logrus.TextFormatter{
+			FullTimestamp:   true,
+			TimestampFormat: time.Stamp,
+		}
+	}
+
+	return t.Format(e)
 }
 
 func InitLogger() {
-	backend := logging.NewLogBackend(os.Stderr, "", 0)
-	backendFormatter := logging.NewBackendFormatter(backend, format)
-
-	if addr := os.Getenv("PAPERTRAIL_ADDR"); addr != "" {
-		setupPapertrail(addr, backendFormatter)
-	} else {
-		logging.SetBackend(backendFormatter)
-	}
+	logrus.SetFormatter(&formatter{})
 }

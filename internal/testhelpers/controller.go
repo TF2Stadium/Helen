@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/routes"
 	"github.com/gorilla/websocket"
 )
@@ -144,7 +144,7 @@ func ReadJSON(conn *websocket.Conn) map[string]interface{} {
 
 	err := conn.ReadJSON(&reply)
 	if err != nil {
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 	}
 
 	return reply["data"].(map[string]interface{})

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -24,7 +25,7 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 	var lobbies []models.Lobby
 	err := db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies).Error
 	if err != nil {
-		helpers.Logger.Critical("%s", err.Error())
+		logrus.Error(err)
 		return
 	}
 

@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
 )
 
 func isNetworkError(err error) bool {
@@ -24,7 +24,7 @@ func isNetworkError(err error) bool {
 func connect(port string) *rpc.Client {
 	client, err := rpc.DialHTTP("tcp", "localhost:"+port)
 	for err != nil {
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		time.Sleep(1 * time.Second)
 		client, err = rpc.DialHTTP("tcp", "localhost:"+port)
 	}
@@ -41,12 +41,12 @@ func ConnectRPC() {
 	if !config.Constants.ServerMockUp {
 		client := connect(config.Constants.PaulingPort)
 		rpcClientMap[config.Constants.PaulingPort] = client
-		helpers.Logger.Info("Connected to Pauling on port %s", config.Constants.PaulingPort)
+		logrus.Info("Connected to Pauling on port %s", config.Constants.PaulingPort)
 	}
 	if config.Constants.FumblePort != "" {
 		client := connect(config.Constants.FumblePort)
 		rpcClientMap[config.Constants.FumblePort] = client
-		helpers.Logger.Info("Connected to Fumble on port %s", config.Constants.FumblePort)
+		logrus.Info("Connected to Fumble on port %s", config.Constants.FumblePort)
 	}
 }
 

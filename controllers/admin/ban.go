@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 )
 
@@ -131,7 +131,7 @@ func DisplayLogs(w http.ResponseWriter, r *http.Request) {
 
 	templ, err := template.ParseFiles("views/admin/templates/ban_logs.html")
 	if err != nil {
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		return
 	}
 

@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/Sirupsen/logrus"
 )
 
 type form struct {
@@ -40,7 +40,7 @@ func ServeAdminPage(w http.ResponseWriter, r *http.Request) {
 func ServeAdminBanPage(w http.ResponseWriter, r *http.Request) {
 	templ, err := template.ParseFiles("views/admin/templates/ban_forms.html")
 	if err != nil {
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		return
 	}
 
@@ -50,7 +50,7 @@ func ServeAdminBanPage(w http.ResponseWriter, r *http.Request) {
 func ServeAdminRolePage(w http.ResponseWriter, r *http.Request) {
 	templ, err := template.ParseFiles("views/admin/templates/role_forms.html")
 	if err != nil {
-		helpers.Logger.Error(err.Error())
+		logrus.Error(err.Error())
 		return
 	}
 

@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"net/rpc"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 )
 
@@ -44,11 +44,11 @@ func StartRPC() {
 
 	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", config.Constants.RPCPort))
 	if err != nil {
-		helpers.Logger.Fatal(err)
+		logrus.Fatal(err)
 	}
 
-	helpers.Logger.Info("Started RPC on %s", config.Constants.RPCPort)
-	helpers.Logger.Fatal(http.Serve(l, nil))
+	logrus.Info("Started RPC on %s", config.Constants.RPCPort)
+	logrus.Fatal(http.Serve(l, nil))
 }
 
 // GetPlayerID returns a player ID (primary key), given their Steam Community id
