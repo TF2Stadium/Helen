@@ -48,7 +48,7 @@ func SetupStores() {
 		sessionStoreMutex.Lock()
 
 		if len(key) == 0 {
-			SessionStore = pgstore.NewPGStore(database.DBUrl.String())
+			SessionStore = pgstore.NewPGStore(database.DBUrl.String(), []byte("secret"))
 		} else {
 			SessionStore = pgstore.NewPGStore(database.DBUrl.String(), key)
 		}
