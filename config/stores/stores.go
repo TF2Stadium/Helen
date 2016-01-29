@@ -7,6 +7,11 @@ package stores
 import (
 	"sync"
 
+	"io/ioutil"
+
+	"encoding/base64"
+
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/antonlindstrom/pgstore"
@@ -22,9 +27,32 @@ var SessionStore *pgstore.PGStore
 var socketAuthStore = make(map[string]*sessions.Session)
 
 func SetupStores() {
+	var key []byte
+
+	if config.Constants.CookieStoreSecret != "" {
+		logrus.Infof("Reading cookie key from file %s", config.Constants.CookieStoreSecret)
+		bytes, err := ioutil.ReadFile(config.Constants.CookieStoreSecret)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		key, err = base64.StdEncoding.DecodeString(string(bytes))
+		if err != nil {
+			logrus.Fatal(err)
+		}
+	} else {
+		logrus.Warning("No Cookie Secret Key is configured.")
+	}
+
 	if SessionStore == nil {
 		sessionStoreMutex.Lock()
-		SessionStore = pgstore.NewPGStore(database.DBUrl.String(), []byte(config.Constants.SessionName))
+
+		if len(key) == 0 {
+			SessionStore = pgstore.NewPGStore(database.DBUrl.String())
+		} else {
+			SessionStore = pgstore.NewPGStore(database.DBUrl.String(), key)
+		}
+
 		SessionStore.Options.HttpOnly = true
 		sessionStoreMutex.Unlock()
 	}
