@@ -66,6 +66,7 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	err = SocketInit(so)
 	if err != nil {
 		login.LogoutSession(w, r)
+		so.Close()
 	}
 }
 
