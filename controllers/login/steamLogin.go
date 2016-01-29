@@ -22,7 +22,7 @@ import (
 
 var (
 	nonceStore     = openid.NewSimpleNonceStore()
-	discoveryCache = &openid.SimpleDiscoveryCache{}
+	discoveryCache = openid.NewSimpleDiscoveryCache()
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
