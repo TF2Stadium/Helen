@@ -46,6 +46,8 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			so, err = socket.UnauthServer.NewClient(upgrader, w, r)
 		}
+		pprof.Clients.Add(1)
+
 	} else {
 		var estr = "Couldn't create WebSocket connection."
 		//estr = err.Error()
@@ -100,6 +102,5 @@ func SocketInit(so *wsevent.Client) error {
 
 	so.EmitJSON(helpers.NewRequest("socketInitialized", "{}"))
 
-	pprof.Clients.Add(1)
 	return nil
 }
