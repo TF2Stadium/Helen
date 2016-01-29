@@ -21,8 +21,7 @@ import (
 )
 
 var (
-	nonceStore = &openid.SimpleNonceStore{
-		Store: make(map[string][]*openid.Nonce)}
+	nonceStore     = openid.NewSimpleNonceStore()
 	discoveryCache = &openid.SimpleDiscoveryCache{}
 )
 
