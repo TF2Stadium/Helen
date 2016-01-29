@@ -113,3 +113,11 @@ func (Helen) GetServers(_ struct{}, serverMap *map[uint]*models.ServerRecord) er
 	}
 	return nil
 }
+
+func (Helen) IsReported(args Args, ok *bool) error {
+	var count int
+	playerID := getPlayerID(args.SteamID)
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ? AND needs_sub = ?", args.LobbyID, playerID, true).Count(&count)
+	*ok = (count != 0)
+	return nil
+}
