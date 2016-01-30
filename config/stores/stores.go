@@ -7,8 +7,6 @@ package stores
 import (
 	"sync"
 
-	"io/ioutil"
-
 	"encoding/base64"
 
 	"github.com/Sirupsen/logrus"
@@ -30,18 +28,14 @@ func SetupStores() {
 	var key []byte
 
 	if config.Constants.CookieStoreSecret != "" {
-		logrus.Infof("Reading cookie key from file %s", config.Constants.CookieStoreSecret)
-		bytes, err := ioutil.ReadFile(config.Constants.CookieStoreSecret)
-		if err != nil {
-			logrus.Fatal(err)
-		}
+		var err error
 
-		key, err = base64.StdEncoding.DecodeString(string(bytes))
+		key, err = base64.StdEncoding.DecodeString(string(config.Constants.CookieStoreSecret))
 		if err != nil {
 			logrus.Fatal(err)
 		}
 	} else {
-		logrus.Warning("No Cookie Secret Key is configured.")
+		logrus.Warning("Using an insecure cookie encryption key")
 	}
 
 	if SessionStore == nil {
