@@ -1,12 +1,8 @@
-FROM golang:alpine
+FROM scratch
 
-ADD . /go/src/github.com/TF2Stadium/Helen
+ADD main /helen
+ADD views /views
+#ADD static /static
+ADD lobbySettingsData.json /lobbySettingsData.json
 
-ENV GO15VENDOREXPERIMENT 1
-RUN go install -v github.com/TF2Stadium/Helen
-RUN cp -R /go/src/github.com/TF2Stadium/Helen/views /go/
-RUN cp -R /go/src/github.com/TF2Stadium/Helen/static /go/
-RUN cp /go/src/github.com/TF2Stadium/Helen/lobbySettingsData.json /go/
-RUN rm -rf /go/src /go/pkg
-
-ENTRYPOINT /go/bin/Helen
+CMD ["/helen"]
