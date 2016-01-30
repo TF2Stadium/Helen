@@ -8,7 +8,7 @@ import (
 	"encoding/base64"
 	_ "expvar"
 	"flag"
-	"io/ioutil"
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -36,21 +36,20 @@ import (
 	"github.com/rs/cors"
 )
 
-var flagGen = flag.String("genkey", "", "write a 32bit key for encrypting cookies the given file, and exit")
+var flagGen = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
 
 func main() {
 	helpers.InitLogger()
 
 	flag.Parse()
-	if *flagGen != "" {
+	if *flagGen {
 		key := securecookie.GenerateRandomKey(64)
 		if len(key) == 0 {
 			logrus.Fatal("Couldn't generate random key")
 		}
 
 		base64Key := base64.StdEncoding.EncodeToString(key)
-		ioutil.WriteFile(*flagGen, []byte(base64Key), 0666)
-		logrus.Infof("Written key to file %s", *flagGen)
+		fmt.Println(base64Key)
 		return
 	}
 
