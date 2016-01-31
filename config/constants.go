@@ -146,7 +146,7 @@ func setupProductionConstants() {
 }
 
 func setupTestConstants() {
-	Constants.DbAddr = "127.0.0.1:5724"
+	Constants.DbAddr = "127.0.0.1:5432"
 	Constants.DbDatabase = "TESTtf2stadium"
 	Constants.DbUsername = "TESTtf2stadium"
 	Constants.DbPassword = "dickbutt"
@@ -156,7 +156,7 @@ func setupTestConstants() {
 }
 
 func setupTravisTestConstants() {
-	Constants.DbAddr = "127.0.0.1:5724"
+	Constants.DbAddr = "127.0.0.1:5432"
 	Constants.DbDatabase = "tf2stadium"
 	Constants.DbUsername = "postgres"
 	Constants.DbPassword = ""
