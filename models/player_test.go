@@ -95,7 +95,7 @@ func TestPlayerInfoFetching(t *testing.T) {
 	}
 
 	// disable mock mode because we're actually testing it
-	config.Constants.SteamApiMockUp = false
+	config.SteamApiMockUp = false
 
 	player, playErr := NewPlayer("76561197999073985")
 	assert.Nil(t, playErr)
