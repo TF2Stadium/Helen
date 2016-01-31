@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -42,12 +41,12 @@ func StartRPC() {
 	rpc.Register(event)
 	rpc.HandleHTTP()
 
-	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", config.Constants.RPCPort))
+	l, err := net.Listen("tcp", config.Constants.RPCAddr)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	logrus.Info("Started RPC on %s", config.Constants.RPCPort)
+	logrus.Info("Started RPC on ", config.Constants.RPCAddr)
 	logrus.Fatal(http.Serve(l, nil))
 }
 

@@ -34,7 +34,7 @@ func Init() {
 
 	DBUrl = url.URL{
 		Scheme:   "postgres",
-		Host:     config.Constants.DbHost,
+		Host:     config.Constants.DbAddr,
 		Path:     config.Constants.DbDatabase,
 		RawQuery: "sslmode=disable",
 	}

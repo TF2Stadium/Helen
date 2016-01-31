@@ -226,7 +226,6 @@ func DecorateLobbyConnect(lobby *Lobby, name string, slot int) LobbyConnectData 
 	l.Game.Host = lobby.ServerInfo.Host
 
 	l.Mumble.Address = config.Constants.MumbleAddr
-	l.Mumble.Port = config.Constants.MumblePort
 	l.Mumble.Password = config.Constants.MumblePassword
 	l.Mumble.Channel = "match" + strconv.FormatUint(uint64(lobby.ID), 10)
 	team, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)

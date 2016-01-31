@@ -21,12 +21,12 @@ func isNetworkError(err error) bool {
 
 }
 
-func connect(port string) *rpc.Client {
-	client, err := rpc.DialHTTP("tcp", "localhost:"+port)
+func connect(addr string) *rpc.Client {
+	client, err := rpc.DialHTTP("tcp", addr)
 	for err != nil {
 		logrus.Error(err.Error())
 		time.Sleep(1 * time.Second)
-		client, err = rpc.DialHTTP("tcp", "localhost:"+port)
+		client, err = rpc.DialHTTP("tcp", "localhost:"+addr)
 	}
 
 	return client
@@ -39,26 +39,26 @@ var (
 
 func ConnectRPC() {
 	if !config.Constants.ServerMockUp {
-		client := connect(config.Constants.PaulingPort)
-		rpcClientMap[config.Constants.PaulingPort] = client
-		logrus.Info("Connected to Pauling on port %s", config.Constants.PaulingPort)
+		client := connect(config.Constants.PaulingAddr)
+		rpcClientMap[config.Constants.PaulingAddr] = client
+		logrus.Info("Connected to Pauling on port %s", config.Constants.PaulingAddr)
 	}
-	if config.Constants.FumblePort != "" {
-		client := connect(config.Constants.FumblePort)
-		rpcClientMap[config.Constants.FumblePort] = client
-		logrus.Info("Connected to Fumble on port %s", config.Constants.FumblePort)
+	if config.Constants.FumbleAddr != "" {
+		client := connect(config.Constants.FumbleAddr)
+		rpcClientMap[config.Constants.FumbleAddr] = client
+		logrus.Info("Connected to Fumble on port %s", config.Constants.FumbleAddr)
 	}
 }
 
-func call(port, method string, args, reply interface{}) error {
+func call(addr, method string, args, reply interface{}) error {
 	mu.RLock()
-	client := rpcClientMap[port]
+	client := rpcClientMap[addr]
 	mu.RUnlock()
 
 	err := client.Call(method, args, reply)
 	if isNetworkError(err) {
 		mu.Lock()
-		rpcClientMap[port] = connect(port)
+		rpcClientMap[addr] = connect(addr)
 		mu.Unlock()
 	}
 

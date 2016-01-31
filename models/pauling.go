@@ -35,7 +35,7 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 		return nil
 	}
 
-	return call(config.Constants.PaulingPort, "Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
+	return call(config.Constants.PaulingAddr, "Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
 }
 
 func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
@@ -51,7 +51,7 @@ func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league st
 		League:    league,
 		Whitelist: whitelist,
 		Map:       mapName}
-	return call(config.Constants.PaulingPort, "Pauling.SetupServer", args, &Args{})
+	return call(config.Constants.PaulingAddr, "Pauling.SetupServer", args, &Args{})
 }
 
 func ReExecConfig(lobbyId uint) error {
@@ -59,7 +59,7 @@ func ReExecConfig(lobbyId uint) error {
 		return nil
 	}
 
-	return call(config.Constants.PaulingPort, "Pauling.ReExecConfig", &Args{Id: lobbyId}, &Args{})
+	return call(config.Constants.PaulingAddr, "Pauling.ReExecConfig", &Args{Id: lobbyId}, &Args{})
 }
 
 func VerifyInfo(info ServerRecord) error {
@@ -67,7 +67,7 @@ func VerifyInfo(info ServerRecord) error {
 		return nil
 	}
 
-	return call(config.Constants.PaulingPort, "Pauling.VerifyInfo", &info, &Args{})
+	return call(config.Constants.PaulingAddr, "Pauling.VerifyInfo", &info, &Args{})
 }
 
 func IsPlayerInServer(steamid string) (reply bool) {
@@ -76,7 +76,7 @@ func IsPlayerInServer(steamid string) (reply bool) {
 	}
 
 	args := &Args{SteamId: steamid}
-	call(config.Constants.PaulingPort, "Pauling.IsPlayerInServer", &args, &reply)
+	call(config.Constants.PaulingAddr, "Pauling.IsPlayerInServer", &args, &reply)
 
 	return
 }
@@ -86,7 +86,7 @@ func End(lobbyId uint) {
 		return
 	}
 
-	call(config.Constants.PaulingPort, "Pauling.End", &Args{Id: lobbyId}, &Args{})
+	call(config.Constants.PaulingAddr, "Pauling.End", &Args{Id: lobbyId}, &Args{})
 }
 
 func Say(lobbyId uint, text string) {
@@ -94,7 +94,7 @@ func Say(lobbyId uint, text string) {
 		return
 	}
 
-	call(config.Constants.PaulingPort, "Pauling.Say", &Args{Id: lobbyId, Text: text}, &Args{})
+	call(config.Constants.PaulingAddr, "Pauling.Say", &Args{Id: lobbyId, Text: text}, &Args{})
 }
 
 func serverExists(lobbyID uint) (exists bool) {
@@ -102,7 +102,7 @@ func serverExists(lobbyID uint) (exists bool) {
 		return false
 	}
 
-	call(config.Constants.PaulingPort, "Pauling.Exists", lobbyID, &exists)
+	call(config.Constants.PaulingAddr, "Pauling.Exists", lobbyID, &exists)
 	return
 }
 
@@ -114,6 +114,6 @@ func Ping() {
 	tick := time.NewTicker(time.Second)
 	for {
 		<-tick.C
-		call(config.Constants.PaulingPort, "Pauling.Ping", struct{}{}, &struct{}{})
+		call(config.Constants.PaulingAddr, "Pauling.Ping", struct{}{}, &struct{}{})
 	}
 }

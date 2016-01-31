@@ -24,11 +24,10 @@ type constants struct {
 	CookieStoreSecret  string `env:"COOKIE_STORE_SECRET,secret"`
 	StaticFileLocation string
 	SessionName        string
-	RPCPort            string `env:"RPC_PORT"`
-	PaulingPort        string `env:"PAULING_PORT"`
-	FumblePort         string `env:"FUMBLE_PORT"`
+	RPCAddr            string `env:"RPC_ADDR"`
+	PaulingAddr        string `env:"PAULING_ADDR"`
+	FumbleAddr         string `env:"FUMBLE_ADDR"`
 	MumbleAddr         string `env:"MUMBLE_ADDR"`
-	MumblePort         string `env:"MUMBLE_PORT"`
 	MumblePassword     string `env:"MUMBLE_PASSWORD"`
 	SteamIDWhitelist   string `env:"STEAMID_WHITELIST"`
 	ServerMockUp       bool   `env:"PAULING_DISABLE"`
@@ -37,8 +36,7 @@ type constants struct {
 	AllowedCorsOrigins []string
 
 	// database
-	DbHost     string `env:"DATABASE_HOST"`
-	DbPort     string `env:"DATABASE_PORT"`
+	DbAddr     string `env:"DATABASE_ADDR"`
 	DbDatabase string `env:"DATABASE_NAME"`
 	DbUsername string `env:"DATABASE_USERNAME"`
 	DbPassword string `env:"DATABASE_PASSWORD,secret"`
@@ -47,7 +45,7 @@ type constants struct {
 	SteamApiMockUp bool
 
 	ProfilerEnable bool   `env:"PROFILER_ENABLE"`
-	ProfilerPort   string `env:"PROFILER_PORT"`
+	ProfilerPort   string `env:"PROFILER_ADDR"`
 
 	SlackbotURL string `env:"SLACK_URL,secret"`
 }
@@ -117,7 +115,7 @@ func SetupConstants() {
 func setupDevelopmentConstants() {
 	Constants.GlobalChatRoom = "0"
 	Constants.Port = "8080"
-	Constants.RPCPort = "8081"
+	Constants.RPCAddr = "localhost:8081"
 	Constants.Domain = "http://localhost:8080"
 	Constants.OpenIDRealm = "http://localhost:8080"
 	Constants.CookieDomain = ""
@@ -125,12 +123,11 @@ func setupDevelopmentConstants() {
 	Constants.CookieStoreSecret = ""
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
-	Constants.PaulingPort = "8001"
+	Constants.PaulingAddr = "localhost:8001"
 	Constants.ServerMockUp = true
 	Constants.AllowedCorsOrigins = []string{"*"}
 
-	Constants.DbHost = "127.0.0.1"
-	Constants.DbPort = "5724"
+	Constants.DbAddr = "127.0.0.1:5432"
 	Constants.DbDatabase = "tf2stadium"
 	Constants.DbUsername = "tf2stadium"
 	Constants.DbPassword = "dickbutt" // change this
@@ -149,7 +146,7 @@ func setupProductionConstants() {
 }
 
 func setupTestConstants() {
-	Constants.DbHost = "127.0.0.1"
+	Constants.DbAddr = "127.0.0.1:5724"
 	Constants.DbDatabase = "TESTtf2stadium"
 	Constants.DbUsername = "TESTtf2stadium"
 	Constants.DbPassword = "dickbutt"
@@ -159,7 +156,7 @@ func setupTestConstants() {
 }
 
 func setupTravisTestConstants() {
-	Constants.DbHost = "127.0.0.1"
+	Constants.DbAddr = "127.0.0.1:5724"
 	Constants.DbDatabase = "tf2stadium"
 	Constants.DbUsername = "postgres"
 	Constants.DbPassword = ""
