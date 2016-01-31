@@ -17,13 +17,13 @@ func init() {
 }
 
 func TestEnvVariablesOverrideConfig(t *testing.T) {
-	os.Unsetenv("PORT")
+	os.Unsetenv("SERVER_ADDR")
 	SetupConstants()
-	port := Constants.Port
+	addr := Constants.Address
 
-	os.Setenv("PORT", "123456as")
+	os.Setenv("SERVER_ADDR", "123456as")
 	SetupConstants()
-	port2 := Constants.Port
+	addr2 := Constants.Address
 
-	assert.NotEqual(t, port, port2)
+	assert.NotEqual(t, addr, addr2)
 }
