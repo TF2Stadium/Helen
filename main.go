@@ -103,6 +103,6 @@ func main() {
 	}).Handler(context.ClearHandler(mux))
 
 	// start the server
-	logrus.Info("Serving at %s", config.Constants.Domain)
-	graceful.Run(":"+config.Constants.Port, 1*time.Second, corsHandler)
+	logrus.Info("Serving on", config.HTTPAddress())
+	graceful.Run(config.Constants.Address, 1*time.Second, corsHandler)
 }

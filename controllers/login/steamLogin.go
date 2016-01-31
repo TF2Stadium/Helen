@@ -27,7 +27,7 @@ var (
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if url, err := openid.RedirectURL("http://steamcommunity.com/openid",
-		config.Constants.Domain+"/openidcallback",
+		config.HTTPAddress()+"/openidcallback",
 		config.Constants.OpenIDRealm); err == nil {
 		http.Redirect(w, r, url, 303)
 	} else {
@@ -94,7 +94,7 @@ func setSession(w http.ResponseWriter, r *http.Request, steamid string) error {
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	regex := regexp.MustCompile(`http://steamcommunity.com/openid/id/(\d+)`)
 
-	fullURL := config.Constants.Domain + r.URL.String()
+	fullURL := config.HTTPAddress() + r.URL.String()
 	idURL, err := openid.Verify(fullURL, discoveryCache, nonceStore)
 	if err != nil {
 		logrus.Warning("%s", err.Error())

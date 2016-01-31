@@ -85,7 +85,7 @@ func banPlayer(w http.ResponseWriter, r *http.Request, banType models.PlayerBanT
 		query.Set("confirm", "yes")
 		r.URL.RawQuery = query.Encode()
 		title := fmt.Sprintf("Ban %s (%s) from %s?", player.Name, player.SteamID, banString[banType])
-		confirmReq(w, r.URL.String(), config.Constants.Domain+"/admin/ban", title)
+		confirmReq(w, r.URL.String(), config.HTTPAddress()+"/admin/ban", title)
 	}
 
 	return nil

@@ -30,7 +30,7 @@ func changeRole(w http.ResponseWriter, r *http.Request, role authority.AuthRole)
 		query.Set("confirm", "yes")
 		r.URL.RawQuery = query.Encode()
 		title := fmt.Sprintf("Make %s (%s) a %s?", player.Name, player.SteamID, helpers.RoleNames[role])
-		confirmReq(w, r.URL.String(), config.Constants.Domain+"/admin/roles", title)
+		confirmReq(w, r.URL.String(), config.HTTPAddress()+"/admin/roles", title)
 	}
 
 	return nil
