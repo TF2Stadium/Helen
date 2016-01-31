@@ -74,7 +74,7 @@ type Player struct {
 func NewPlayer(steamId string) (*Player, error) {
 	player := &Player{SteamID: steamId}
 
-	if !config.Constants.SteamApiMockUp {
+	if !config.SteamApiMockUp {
 		player.Stats = NewPlayerStats()
 
 		err := player.UpdatePlayerInfo()
@@ -190,7 +190,7 @@ func (player *Player) GetSpectatingIds() ([]uint, *helpers.TPError) {
 
 //Retrieve the player's details using the Steam API. The object needs to be saved after this.
 func (player *Player) UpdatePlayerInfo() error {
-	if config.Constants.SteamApiMockUp {
+	if config.SteamApiMockUp {
 		return nil
 	}
 

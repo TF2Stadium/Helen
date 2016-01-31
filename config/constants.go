@@ -12,8 +12,13 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-type constants struct {
+var (
 	GlobalChatRoom     string
+	SteamApiMockUp     bool
+	AllowedCorsOrigins []string
+)
+
+type constants struct {
 	Address            string `envconfig:"SERVER_ADDR"` // -> HELEN_SERVER_DOMAIN
 	OpenIDRealm        string `envconfig:"SERVER_OPENID_REALM"`
 	CookieDomain       string `envconfig:"SERVER_COOKIE_DOMAIN"`
@@ -30,7 +35,6 @@ type constants struct {
 	ServerMockUp       bool   `envconfig:"PAULING_DISABLE"`
 	MockupAuth         bool   `envconfig:"MOCKUP_AUTH"`
 	GeoIP              string `envconfig:"GEOIP_DB"`
-	AllowedCorsOrigins []string
 
 	// database
 	DbAddr     string `envconfig:"DATABASE_ADDR"`
@@ -39,7 +43,6 @@ type constants struct {
 	DbPassword string `envconfig:"DATABASE_PASSWORD"`
 
 	SteamDevApiKey string `envconfig:"STEAM_API_KEY"`
-	SteamApiMockUp bool
 
 	ProfilerEnable bool   `envconfig:"PROFILER_ENABLE"`
 	ProfilerPort   string `envconfig:"PROFILER_ADDR"`
@@ -68,15 +71,15 @@ func SetupConstants() {
 		logrus.Fatal(err)
 	}
 
-	if Constants.SteamDevApiKey == "your steam dev api key" && !Constants.SteamApiMockUp {
+	if Constants.SteamDevApiKey == "your steam dev api key" && SteamApiMockUp {
 		logrus.Warning("Steam api key not provided, setting SteamApiMockUp to true")
-		Constants.SteamApiMockUp = true
+		SteamApiMockUp = true
 	}
 
 }
 
 func setupDevelopmentConstants() {
-	Constants.GlobalChatRoom = "0"
+	GlobalChatRoom = "0"
 	Constants.RPCAddr = "localhost:8081"
 	Constants.Address = "localhost:8080"
 	Constants.OpenIDRealm = "http://localhost:8080"
@@ -87,7 +90,7 @@ func setupDevelopmentConstants() {
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
 	Constants.PaulingAddr = "localhost:8001"
 	Constants.ServerMockUp = true
-	Constants.AllowedCorsOrigins = []string{"*"}
+	AllowedCorsOrigins = []string{"*"}
 
 	Constants.DbAddr = "127.0.0.1:5432"
 	Constants.DbDatabase = "tf2stadium"
@@ -95,7 +98,7 @@ func setupDevelopmentConstants() {
 	Constants.DbPassword = "dickbutt" // change this
 
 	Constants.SteamDevApiKey = "your steam dev api key"
-	Constants.SteamApiMockUp = false
+	SteamApiMockUp = false
 
 	Constants.ProfilerPort = "6060"
 }
@@ -113,7 +116,7 @@ func setupTestConstants() {
 	Constants.DbPassword = "dickbutt"
 
 	Constants.ServerMockUp = true
-	Constants.SteamApiMockUp = true
+	SteamApiMockUp = true
 }
 
 func setupTravisTestConstants() {
@@ -123,5 +126,5 @@ func setupTravisTestConstants() {
 	Constants.DbPassword = ""
 
 	Constants.ServerMockUp = true
-	Constants.SteamApiMockUp = true
+	SteamApiMockUp = true
 }

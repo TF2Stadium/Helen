@@ -52,7 +52,7 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 		}
 	} else {
 		// else room is the lobby list room
-		*args.Room, _ = strconv.Atoi(config.Constants.GlobalChatRoom)
+		*args.Room, _ = strconv.Atoi(config.GlobalChatRoom)
 	}
 	switch {
 	case len(*args.Message) == 0:
