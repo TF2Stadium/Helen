@@ -26,7 +26,7 @@ func connect(addr string) *rpc.Client {
 	for err != nil {
 		logrus.Error(err.Error())
 		time.Sleep(1 * time.Second)
-		client, err = rpc.DialHTTP("tcp", "localhost:"+addr)
+		client, err = rpc.DialHTTP("tcp", addr)
 	}
 
 	return client
