@@ -21,6 +21,8 @@ type Args struct {
 	SteamID string
 
 	Team, Class string
+
+	LogSecret string
 }
 
 func (Helen) Test(struct{}, *struct{}) error {
@@ -118,5 +120,13 @@ func (Helen) IsReported(args Args, ok *bool) error {
 	playerID := getPlayerID(args.SteamID)
 	db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ? AND needs_sub = ?", args.LobbyID, playerID, true).Count(&count)
 	*ok = (count != 0)
+	return nil
+}
+
+func (Helen) SetSecret(args Args, _ *struct{}) error {
+	lobby, _ := models.GetLobbyByIDServer(args.LobbyID)
+	lobby.ServerInfo.LogSecret = args.LogSecret
+	db.DB.Save(lobby.ServerInfo)
+
 	return nil
 }
