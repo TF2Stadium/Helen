@@ -6,7 +6,7 @@
 
   <body>
     {{range .}}
-    <form method="get" action="{{.URL}}" class="pure-form">
+    <form method="post" action="{{.URL}}" class="pure-form">
       <legend>{{.Title}}</legend>
       <input placeholder="Steam ID" type="text" name="steamid" required>
       <button type="submit" class="pure-button pure-button-primary">Add</button>

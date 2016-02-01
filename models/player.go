@@ -5,6 +5,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -211,7 +212,7 @@ func (player *Player) UpdatePlayerInfo() error {
 		pHours, hErr := scraper.GetTF2Hours(player.SteamID)
 
 		if hErr != nil {
-			return hErr
+			return errors.New("models.UpdatePlayerInfo: " + hErr.Error())
 		}
 
 		player.GameHours = pHours

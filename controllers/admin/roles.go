@@ -8,29 +8,34 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 )
 
 func changeRole(w http.ResponseWriter, r *http.Request, role authority.AuthRole) error {
-	player, err := models.GetPlayerBySteamID(r.URL.Query().Get("steamid"))
+	player, terr := models.GetPlayerBySteamID(r.URL.Query().Get("steamid"))
+	if terr != nil {
+		return terr
+	}
+
+	err := r.ParseForm()
 	if err != nil {
 		return err
 	}
 
-	switch r.URL.Query().Get("confirm") {
+	switch r.Form.Get("confirm") {
 	case "yes":
+		if err := verifyToken(r, "changeRole"); err != nil {
+			return err
+		}
+
 		player.Role = role
 		player.Save()
 		fmt.Fprintf(w, "%s (%s) has been made a %s", player.Name, player.SteamID, helpers.RoleNames[role])
 	default:
-		query := r.URL.Query()
-		query.Set("confirm", "yes")
-		r.URL.RawQuery = query.Encode()
 		title := fmt.Sprintf("Make %s (%s) a %s?", player.Name, player.SteamID, helpers.RoleNames[role])
-		confirmReq(w, r.URL.String(), config.HTTPAddress()+"/admin/roles", title)
+		confirmReq(w, r, "changeRole", title)
 	}
 
 	return nil
@@ -61,7 +66,13 @@ func AddDeveloper(w http.ResponseWriter, r *http.Request) {
 }
 
 func Remove(w http.ResponseWriter, r *http.Request) {
-	steamid := r.URL.Query().Get("steamid")
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	steamid := r.Form.Get("steamid")
 	player, err := models.GetPlayerBySteamID(steamid)
 	if err != nil {
 		http.Error(w, err.Error(), 400)

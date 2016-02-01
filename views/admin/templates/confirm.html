@@ -18,8 +18,12 @@
         }
       </style>
       <b>{{.Title}}</b><br><br>
-      <a class="button-success pure-button" href="{{.URL}}">Yes</a>
-      <a class="button-error pure-button" href="{{.RedirectURL}}">No</a>
+
+      <form method="post" action="{{.URL}}">
+	<input type="hidden" name="confirm" value="yes">
+	<input type="hidden" name="xsrf-token" value="{{.XSRFToken}}">
+	<button type="submit" class="button-success pure-button">Yes</a>
+      </form>
     </div>    
   </body>
 </html>

@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/models"
 )
 
@@ -62,7 +61,12 @@ func parseTime(str string) (*time.Time, error) {
 }
 
 func banPlayer(w http.ResponseWriter, r *http.Request, banType models.PlayerBanType) error {
-	values := r.URL.Query()
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+
+	values := r.Form
 	confirm := values.Get("confirm")
 	steamid := values.Get("steamid")
 	reason := values.Get("reason")
@@ -74,6 +78,10 @@ func banPlayer(w http.ResponseWriter, r *http.Request, banType models.PlayerBanT
 
 	switch confirm {
 	case "yes":
+		if err := verifyToken(r, "banPlayer"); err != nil {
+			return err
+		}
+
 		until, err := parseTime(values.Get("until"))
 		if err != nil {
 			return err
@@ -81,11 +89,8 @@ func banPlayer(w http.ResponseWriter, r *http.Request, banType models.PlayerBanT
 
 		player.BanUntil(*until, banType, reason)
 	default:
-		query := r.URL.Query()
-		query.Set("confirm", "yes")
-		r.URL.RawQuery = query.Encode()
 		title := fmt.Sprintf("Ban %s (%s) from %s?", player.Name, player.SteamID, banString[banType])
-		confirmReq(w, r.URL.String(), config.HTTPAddress()+"/admin/ban", title)
+		confirmReq(w, r, "banPlayer", title)
 	}
 
 	return nil
