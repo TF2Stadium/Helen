@@ -19,11 +19,11 @@ func init() {
 func TestEnvVariablesOverrideConfig(t *testing.T) {
 	os.Unsetenv("SERVER_ADDR")
 	SetupConstants()
-	addr := Constants.Address
+	addr := Constants.ListenAddress
 
 	os.Setenv("SERVER_ADDR", "123456as")
 	SetupConstants()
-	addr2 := Constants.Address
+	addr2 := Constants.ListenAddress
 
 	assert.NotEqual(t, addr, addr2)
 }
