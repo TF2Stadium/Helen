@@ -10,7 +10,6 @@ machine:
 dependencies:
   pre:
     - go get github.com/tools/godep
-    - docker login -e $DOCKER_EMAIL -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 test:
   override:
       - case $CIRCLE_NODE_INDEX in 0) go test ./controllers/... -v -race ;; 1) go test -v -race ./models/... ./database/... ./helpers/... ./config/... ./rpc/... ;; esac:
@@ -19,9 +18,8 @@ deployment:
   docker:
     branch: docker
     commands:
-      - export GO15VENDOREXPERIMENT=1
-      - godep save ./...
-      - docker build -t helen .
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - cd docker && make -B
   master:
     branch: master
     commands:
