@@ -19,7 +19,8 @@ var (
 )
 
 type constants struct {
-	Address            string `envconfig:"SERVER_ADDR"` // -> HELEN_SERVER_DOMAIN
+	ListenAddress      string `envconfig:"SERVER_ADDR"`
+	PublicAddress      string `envconfig:"PUBLIC_ADDR"` // should include schema
 	OpenIDRealm        string `envconfig:"SERVER_OPENID_REALM"`
 	CookieDomain       string `envconfig:"SERVER_COOKIE_DOMAIN"`
 	LoginRedirectPath  string `envconfig:"SERVER_REDIRECT_PATH"`
@@ -52,10 +53,6 @@ type constants struct {
 
 var Constants = constants{}
 
-func HTTPAddress() string {
-	return "http://" + Constants.Address
-}
-
 func SetupConstants() {
 	setupDevelopmentConstants()
 	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) == "production" {
@@ -77,12 +74,15 @@ func SetupConstants() {
 		SteamApiMockUp = false
 	}
 
+	if Constants.PublicAddress == "" {
+		Constants.PublicAddress = "http://" + Constants.ListenAddress
+	}
 }
 
 func setupDevelopmentConstants() {
 	GlobalChatRoom = "0"
 	Constants.RPCAddr = "localhost:8081"
-	Constants.Address = "localhost:8080"
+	Constants.ListenAddress = "localhost:8080"
 	Constants.OpenIDRealm = "http://localhost:8080"
 	Constants.CookieDomain = ""
 	Constants.LoginRedirectPath = "http://localhost:8080/"
