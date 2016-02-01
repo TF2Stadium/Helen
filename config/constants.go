@@ -71,9 +71,10 @@ func SetupConstants() {
 		logrus.Fatal(err)
 	}
 
-	if Constants.SteamDevApiKey == "your steam dev api key" && SteamApiMockUp {
+	if Constants.SteamDevApiKey == "your steam dev api key" {
 		logrus.Warning("Steam api key not provided, setting SteamApiMockUp to true")
-		SteamApiMockUp = true
+	} else {
+		SteamApiMockUp = false
 	}
 
 }
@@ -98,7 +99,7 @@ func setupDevelopmentConstants() {
 	Constants.DbPassword = "dickbutt" // change this
 
 	Constants.SteamDevApiKey = "your steam dev api key"
-	SteamApiMockUp = false
+	SteamApiMockUp = true
 
 	Constants.ProfilerPort = "6060"
 }
