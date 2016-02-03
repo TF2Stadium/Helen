@@ -383,7 +383,7 @@ func (Lobby) LobbySpectatorJoin(so *wsevent.Client, args struct {
 			//a socket should only spectate one lobby, remove socket from
 			//any other lobby room
 			//multiple sockets from one player can spectatte multiple lobbies
-			socket.AuthServer.RemoveClient(so, fmt.Sprintf("%d_public", id))
+			socket.AuthServer.Leave(so, fmt.Sprintf("%d_public", id))
 		}
 	}
 

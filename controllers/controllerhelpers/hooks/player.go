@@ -20,7 +20,7 @@ import (
 )
 
 func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
-	server.AddClient(so, fmt.Sprintf("%s_public", config.GlobalChatRoom)) //room for global chat
+	server.Join(so, fmt.Sprintf("%s_public", config.GlobalChatRoom)) //room for global chat
 
 	var lobbies []models.Lobby
 	err := db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies).Error

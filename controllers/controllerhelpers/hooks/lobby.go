@@ -24,7 +24,7 @@ func AfterLobbyJoin(so *wsevent.Client, lobby *models.Lobby, player *models.Play
 	//might close, so lobbyStart and lobbyReadyUp can be sent to other tabs
 	sockets, _ := sessions.GetSockets(player.SteamID)
 	for _, so := range sockets {
-		socket.AuthServer.AddClient(so, room)
+		socket.AuthServer.Join(so, room)
 	}
 
 	broadcaster.SendMessage(player.SteamID, "lobbyJoined", models.DecorateLobbyData(lobby, false))
@@ -36,7 +36,7 @@ func AfterLobbyLeave(lobby *models.Lobby, player *models.Player) {
 	sockets, _ := sessions.GetSockets(player.SteamID)
 	//player might have connected from multiple tabs, remove all of them from the room
 	for _, so := range sockets {
-		socket.AuthServer.RemoveClient(so, fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
+		socket.AuthServer.Leave(so, fmt.Sprintf("%s_private", GetLobbyRoom(lobby.ID)))
 	}
 }
 
@@ -44,17 +44,17 @@ func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lo
 	//remove socket from room of the previous lobby the socket was spectating (if any)
 	lobbyID, ok := sessions.GetSpectating(so.ID)
 	if ok {
-		server.RemoveClient(so, fmt.Sprintf("%d_public", lobbyID))
+		server.Leave(so, fmt.Sprintf("%d_public", lobbyID))
 		sessions.RemoveSpectator(so.ID)
 	}
 
-	server.AddClient(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+	server.Join(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 	chelpers.BroadcastScrollback(so, lobby.ID)
 	sessions.SetSpectator(so.ID, lobby.ID)
 }
 
 func AfterLobbySpecLeave(so *wsevent.Client, lobby *models.Lobby) {
-	socket.AuthServer.RemoveClient(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
+	socket.AuthServer.Leave(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
 	sessions.RemoveSpectator(so.ID)
 }
 
