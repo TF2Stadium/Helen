@@ -28,7 +28,6 @@ variables.
 | `HELEN_MUMBLE_ADDR`          | Mumble server address for lobbies.                                                                                                               |
 | `HELEN_MUMBLE_PASSWORD`      | Mumble server password for lobbies.                                                                                                              |
 | `HELEN_STEAMID_WHITELIST`    | If set, only players in the steamgroup can login to the site.                                                                                    |
-| `HELEN_PAULING_DISABLE`      | Disable Pauling support by setting this to "false".                                                                                              |
 | `HELEN_MOCKUP_AUTH`          | Allow Mock logins for testing.                                                                                                                   |
 | `HELEN_GEOIP_DB`             | Path to GeoIP Database to use for geolocating lobbies.                                                                                           |
 | `HELEN_DATABASE_ADDR`        | PSQL Address                                                                                                                                     |
@@ -44,6 +43,7 @@ variables.
 The code is divided into multiple packages that follow the usual web application structure:
 * models go in `models`
 * controllers go in `controllers`
+* database go in `database`, migration code goes to [database/migrations](../master/database/migrations)
 * routes go in `routes/routes.go`
 * helpers go in `helpers`
 
