@@ -38,7 +38,7 @@ var (
 )
 
 func ConnectRPC() {
-	if !config.Constants.ServerMockUp {
+	if config.Constants.PaulingAddr != "" {
 		client := connect(config.Constants.PaulingAddr)
 		rpcClientMap[config.Constants.PaulingAddr] = client
 		logrus.Info("Connected to Pauling on port %s", config.Constants.PaulingAddr)
@@ -51,6 +51,10 @@ func ConnectRPC() {
 }
 
 func call(addr, method string, args, reply interface{}) error {
+	if addr == "" {
+		return nil
+	}
+
 	mu.RLock()
 	client := rpcClientMap[addr]
 	mu.RUnlock()

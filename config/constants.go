@@ -33,7 +33,6 @@ type constants struct {
 	MumbleAddr         string `envconfig:"MUMBLE_ADDR"`
 	MumblePassword     string `envconfig:"MUMBLE_PASSWORD"`
 	SteamIDWhitelist   string `envconfig:"STEAMID_WHITELIST"`
-	ServerMockUp       bool   `envconfig:"PAULING_DISABLE"`
 	MockupAuth         bool   `envconfig:"MOCKUP_AUTH"`
 	GeoIP              string `envconfig:"GEOIP_DB"`
 
@@ -89,8 +88,7 @@ func setupDevelopmentConstants() {
 	Constants.CookieStoreSecret = ""
 	Constants.SessionName = "defaultSession"
 	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
-	Constants.PaulingAddr = "localhost:8001"
-	Constants.ServerMockUp = true
+	Constants.PaulingAddr = ""
 	AllowedCorsOrigins = []string{"*"}
 
 	Constants.DbAddr = "127.0.0.1:5432"
@@ -107,7 +105,6 @@ func setupDevelopmentConstants() {
 func setupProductionConstants() {
 	// override production stuff here
 	Constants.CookieDomain = ".tf2stadium.com"
-	Constants.ServerMockUp = false
 }
 
 func setupTestConstants() {
@@ -116,7 +113,6 @@ func setupTestConstants() {
 	Constants.DbUsername = "TESTtf2stadium"
 	Constants.DbPassword = "dickbutt"
 
-	Constants.ServerMockUp = true
 	SteamApiMockUp = true
 }
 
@@ -126,6 +122,5 @@ func setupTravisTestConstants() {
 	Constants.DbUsername = "postgres"
 	Constants.DbPassword = ""
 
-	Constants.ServerMockUp = true
 	SteamApiMockUp = true
 }
