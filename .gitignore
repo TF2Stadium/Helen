@@ -38,3 +38,6 @@ runTestsWithKeys.sh
 \#*
 
 bower_components
+docker/helen
+docker/lobbySettingsData.json
+docker/views/
