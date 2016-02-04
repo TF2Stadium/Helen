@@ -14,8 +14,6 @@ import (
 
 	"encoding/hex"
 
-	"strings"
-
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -122,12 +120,11 @@ func (player *Player) GenAuthKey() string {
 }
 
 func (player *Player) GenMumbleUsername() string {
-	arr := strings.Split(player.Name, " ")
-	if len(arr) == 0 {
-		mumbleNick := fmt.Sprintf("TF2Stadium%d", player.ID)
-		return mumbleNick
-	}
-	return arr[0]
+	last := &Player{}
+	db.DB.Table("players").Last(last)
+
+	mumbleNick := fmt.Sprintf("TF2Stadium%d", last.ID+1)
+	return mumbleNick
 }
 
 //if the player has an alias, return that. Else, return their steam name
