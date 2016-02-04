@@ -94,18 +94,18 @@ func NewPlayer(steamId string) (*Player, error) {
 		player.Stats = PlayerStats{}
 	}
 
-	player.MumbleUsername = player.genMumbleUsername()
-	player.MumbleAuthkey = genAuthKey(steamId)
+	player.MumbleUsername = player.GenMumbleUsername()
+	player.MumbleAuthkey = player.GenAuthKey()
 
 	return player, nil
 }
 
-func genAuthKey(steamID string) string {
+func (player *Player) GenAuthKey() string {
 	var count int
 	var authKey string
 
 	for {
-		buff := bytes.NewBufferString(steamID)
+		buff := bytes.NewBufferString(player.SteamID)
 		buff.Grow(32)
 		rand.Read(buff.Bytes())
 
@@ -121,7 +121,7 @@ func genAuthKey(steamID string) string {
 	return authKey
 }
 
-func (player *Player) genMumbleUsername() string {
+func (player *Player) GenMumbleUsername() string {
 	arr := strings.Split(player.Name, " ")
 	if len(arr) == 0 {
 		mumbleNick := fmt.Sprintf("TF2Stadium%d", player.ID)
