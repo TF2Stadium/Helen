@@ -91,7 +91,11 @@ func playerChat(lobbyID uint, playerID uint, message string) {
 }
 
 func disconnectedFromServer(lobbyID uint) {
-	lobby, _ := models.GetLobbyByIDServer(lobbyID)
+	lobby, err := models.GetLobbyByIDServer(lobbyID)
+	if err != nil {
+		logrus.Error("Couldn't find lobby ", lobbyID, " in database")
+		return
+	}
 
 	logrus.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
 
