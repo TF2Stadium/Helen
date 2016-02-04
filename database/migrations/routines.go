@@ -18,6 +18,7 @@ var migrationRoutines = map[uint64]func(){
 	4: increaseChatMessageLength,
 	5: updateAllPlayerInfo,
 	6: truncateHTTPSessions,
+	7: setMumbleInfo,
 }
 
 func whitelist_id_string() {
@@ -87,4 +88,15 @@ func updateAllPlayerInfo() {
 
 func truncateHTTPSessions() {
 	db.DB.Exec("TRUNCATE TABLE http_sessions")
+}
+
+func setMumbleInfo() {
+	var players []*models.Player
+
+	db.DB.Table("players").Find(&players)
+	for _, player := range players {
+		player.MumbleUsername = player.GenMumbleUsername()
+		player.MumbleAuthkey = player.GenAuthKey()
+		player.Save()
+	}
 }
