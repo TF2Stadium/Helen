@@ -41,12 +41,12 @@ func ConnectRPC() {
 	if config.Constants.PaulingAddr != "" {
 		client := connect(config.Constants.PaulingAddr)
 		rpcClientMap[config.Constants.PaulingAddr] = client
-		logrus.Info("Connected to Pauling on port %s", config.Constants.PaulingAddr)
+		logrus.Info("Connected to Pauling on port ", config.Constants.PaulingAddr)
 	}
 	if config.Constants.FumbleAddr != "" {
 		client := connect(config.Constants.FumbleAddr)
 		rpcClientMap[config.Constants.FumbleAddr] = client
-		logrus.Info("Connected to Fumble on port %s", config.Constants.FumbleAddr)
+		logrus.Info("Connected to Fumble on port ", config.Constants.FumbleAddr)
 	}
 }
 

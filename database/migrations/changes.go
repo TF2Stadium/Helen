@@ -30,7 +30,7 @@ func getCurrConstants() *Constant {
 
 func writeConstants() {
 	db.DB.Exec("UPDATE constants SET schema_version = ?", schemaVersion.String())
-	logrus.Info("Current Schema Version: %s", getCurrConstants().SchemaVersion)
+	logrus.Info("Current Schema Version: ", getCurrConstants().SchemaVersion)
 }
 
 func checkSchema() {
@@ -55,9 +55,9 @@ func checkSchema() {
 	}
 
 	if v, _ := semver.Parse(currStr); v.Major < schemaVersion.Major {
-		logrus.Warningf("Incompatible schema change detected (%s), attempting to migrate to (%s).", currStr, schemaVersion.String())
+		logrus.Warning("Incompatible schema change detected", currStr, " attempting to migrate to ", schemaVersion.String())
 		for i := v.Major + 1; i <= schemaVersion.Major; i++ {
-			logrus.Debugf("Calling migration routine for %d.0.0", i)
+			logrus.Debug("Calling migration routine for ", schemaVersion.String())
 			f := migrationRoutines[i]
 			f()
 		}

@@ -97,16 +97,12 @@ func disconnectedFromServer(lobbyID uint) {
 		return
 	}
 
-	logrus.Debug("#%d: Lost connection to %s", lobby.ID, lobby.ServerInfo.Host)
-
 	lobby.Close(false)
 	models.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
 }
 
 func matchEnded(lobbyID uint, logsID int) {
 	lobby, _ := models.GetLobbyByIDServer(lobbyID)
-
-	logrus.Debug("#%d: Match Ended", lobbyID)
 
 	lobby.UpdateStats()
 	lobby.Close(false)

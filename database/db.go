@@ -39,7 +39,7 @@ func Init() {
 		RawQuery: "sslmode=disable",
 	}
 
-	logrus.Info("Connecting to DB on %s", DBUrl.String())
+	logrus.Info("Connecting to DB on ", DBUrl.String())
 
 	DBUrl.User = url.UserPassword(config.Constants.DbUsername, config.Constants.DbPassword)
 

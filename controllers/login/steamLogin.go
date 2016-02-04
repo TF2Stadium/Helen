@@ -97,7 +97,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	fullURL := config.Constants.PublicAddress + r.URL.String()
 	idURL, err := openid.Verify(fullURL, discoveryCache, nonceStore)
 	if err != nil {
-		logrus.Warning("%s", err.Error())
+		logrus.Error(err)
 		return
 	}
 

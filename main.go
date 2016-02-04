@@ -61,7 +61,7 @@ func main() {
 		go func() {
 			graceful.Run(address, 1*time.Second, nil)
 		}()
-		logrus.Info("Running Profiler at %s", address)
+		logrus.Info("Running Profiler at ", address)
 	}
 
 	pid := &pid.Instance{}
