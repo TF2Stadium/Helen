@@ -5,8 +5,16 @@
 package models
 
 import (
+	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
 	"errors"
+	"fmt"
 	"time"
+
+	"encoding/hex"
+
+	"strings"
 
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
@@ -65,9 +73,9 @@ type Player struct {
 	Name       string             // Player name
 	Role       authority.AuthRole `sql:"default:0"` // Role is player by default
 
-	Settings []PlayerSetting
-	// MumbleUsername string `sql:"unique"`
-	// MumbleAuthkey  string `sql:"not null;unique"`
+	Settings       []PlayerSetting
+	MumbleUsername string `sql:"unique"`
+	MumbleAuthkey  string `sql:"not null;unique"`
 }
 
 // Create a new player with the given steam id.
@@ -86,7 +94,40 @@ func NewPlayer(steamId string) (*Player, error) {
 		player.Stats = PlayerStats{}
 	}
 
+	player.MumbleUsername = player.genMumbleUsername()
+	player.MumbleAuthkey = genAuthKey(steamId)
+
 	return player, nil
+}
+
+func genAuthKey(steamID string) string {
+	var count int
+	var authKey string
+
+	for {
+		buff := bytes.NewBufferString(steamID)
+		buff.Grow(32)
+		rand.Read(buff.Bytes())
+
+		sum := sha256.Sum256(buff.Bytes())
+		authKey = hex.EncodeToString(sum[:])
+
+		db.DB.Table("players").Where("mumble_authkey = ?", authKey).Count(&count)
+		if count == 0 {
+			break
+		}
+	}
+
+	return authKey
+}
+
+func (player *Player) genMumbleUsername() string {
+	arr := strings.Split(player.Name, " ")
+	if len(arr) == 0 {
+		mumbleNick := fmt.Sprintf("TF2Stadium%d", player.ID)
+		return mumbleNick
+	}
+	return arr[0]
 }
 
 //if the player has an alias, return that. Else, return their steam name
