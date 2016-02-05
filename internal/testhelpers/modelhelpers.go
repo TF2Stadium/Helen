@@ -18,6 +18,7 @@ func CreatePlayer() *models.Player {
 	steamID := base64.URLEncoding.EncodeToString(bytes)
 
 	player, _ := models.NewPlayer(steamID)
+	player.MumbleUsername = steamID
 	player.Save()
 	return player
 }
