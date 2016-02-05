@@ -31,6 +31,8 @@ type PlayerProfile struct {
 	Name      string `json:"name"`
 	ID        int    `json:"id"`
 	Role      string `json:"role"`
+	//5 lobbies for now
+	Lobbies []LobbyData `json:"lobbies"`
 }
 
 func DecoratePlayerSettingsJson(settings []PlayerSetting) *simplejson.Json {
@@ -69,7 +71,11 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	profile.Role = helpers.RoleNames[p.Role]
 
 	// TODO ban info
-
+	var lobbies []*Lobby
+	db.DB.Table("lobby_slots").Where("lobby_slots.player_id = ?", p.ID).Order("id desc").Limit("5").Find(&lobbies)
+	for _, lobby := range lobbies {
+		profile.Lobbies = append(profile.Lobbies, DecorateLobbyData(lobby, false))
+	}
 	return profile
 }
 
