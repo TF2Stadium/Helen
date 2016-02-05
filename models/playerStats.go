@@ -18,6 +18,16 @@ type PlayerStats struct {
 	PlayedUltiduoCount    int `sql:"played_ultiduo_count",json:"playedUltiduoCount"`
 	PlayedBballCount      int `sql:"played_bball_count",json:"playedBballCount"`
 
+	Scout    int `json:"scout"`
+	Soldier  int `json:"soldier"`
+	Pyro     int `json:"pyro"`
+	Engineer int `json:"engineer"`
+	Heavy    int `json:"heavy"`
+	Demoman  int `json:"demoman"`
+	Sniper   int `json:"sniper"`
+	Medic    int `json:"medic"`
+	Spy      int `json:"spy"`
+
 	Substitutes int `json:"substitutes"`
 }
 
@@ -49,5 +59,28 @@ func (ps *PlayerStats) PlayedCountIncrease(lt LobbyType) {
 
 func (ps *PlayerStats) IncreaseSubCount() {
 	ps.Substitutes++
+	database.DB.Save(ps)
+}
+
+func (ps *PlayerStats) IncreaseClassCount(lobby *Lobby, slot int) {
+	_, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)
+	classes := map[string]*int{
+		"scout1":   &ps.Scout,
+		"scout2":   &ps.Scout,
+		"roamer":   &ps.Soldier,
+		"pocket":   &ps.Soldier,
+		"soldier":  &ps.Soldier,
+		"soldier1": &ps.Soldier,
+		"soldier2": &ps.Soldier,
+		"pyro":     &ps.Pyro,
+		"engineer": &ps.Engineer,
+		"heavy":    &ps.Heavy,
+		"demoman":  &ps.Demoman,
+		"sniper":   &ps.Sniper,
+		"medic":    &ps.Medic,
+		"spy":      &ps.Spy,
+	}
+
+	*(classes[class])++
 	database.DB.Save(ps)
 }
