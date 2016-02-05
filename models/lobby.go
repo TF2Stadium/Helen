@@ -67,7 +67,7 @@ var (
 
 // Represents an occupied player slot in a lobby
 type LobbySlot struct {
-	ID       uint //ID of the lobby
+	gorm.Model
 	LobbyID  uint //ID of the player occupying the slot
 	PlayerID uint //Slot number
 	Slot     int  //Denotes if the player is ready
@@ -700,6 +700,7 @@ func (lobby *Lobby) UpdateStats() {
 		}
 		db.DB.Preload("Stats").First(player, slot.PlayerID)
 		player.Stats.PlayedCountIncrease(lobby.Type)
+		player.Stats.IncreaseClassCount(lobby, slot.Slot)
 		player.Save()
 	}
 	lobby.OnChange(false)
