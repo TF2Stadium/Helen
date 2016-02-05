@@ -67,7 +67,10 @@ var (
 
 // Represents an occupied player slot in a lobby
 type LobbySlot struct {
-	gorm.Model
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
 	LobbyID  uint //ID of the player occupying the slot
 	PlayerID uint //Slot number
 	Slot     int  //Denotes if the player is ready
