@@ -30,13 +30,16 @@ import (
 	_ "github.com/TF2Stadium/Helen/internal/pprof"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes"
+	socketServer "github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/Helen/rpc"
 	"github.com/gorilla/context"
 	"github.com/gorilla/securecookie"
 	"github.com/rs/cors"
 )
 
-var flagGen = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
+var (
+	flagGen = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
+)
 
 func main() {
 	helpers.InitLogger()
@@ -62,11 +65,6 @@ func main() {
 			graceful.Run(address, 1*time.Second, nil)
 		}()
 		logrus.Info("Running Profiler at ", address)
-	}
-
-	pid := &pid.Instance{}
-	if pid.Create() == nil {
-		defer pid.Remove()
 	}
 
 	authority.RegisterTypes()
@@ -102,7 +100,24 @@ func main() {
 		AllowCredentials: true,
 	}).Handler(context.ClearHandler(mux))
 
+	pid := &pid.Instance{}
+	if pid.Create() == nil {
+		defer pid.Remove()
+	}
+
 	// start the server
+	server := graceful.Server{
+		Timeout: 10 * time.Second,
+		Server:  &http.Server{Addr: config.Constants.ListenAddress, Handler: corsHandler},
+		ShutdownInitiated: func() {
+			logrus.Info("Recieved SIGTERM/SIGINT, waiting for socket requests to complete.")
+			socketServer.Wait()
+		},
+	}
+
 	logrus.Info("Serving on ", config.Constants.ListenAddress)
-	graceful.Run(config.Constants.ListenAddress, 1*time.Second, corsHandler)
+	err := server.ListenAndServe()
+	if err != nil {
+		logrus.Fatal(err)
+	}
 }
