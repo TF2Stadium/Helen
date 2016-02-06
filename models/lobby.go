@@ -691,10 +691,9 @@ func (lobby *Lobby) Close(rpc bool) {
 //UpdateStats updates the PlayerStats records for all players in the lobby
 //(increments the relevent lobby type field by one). Used when the lobby successfully ends.
 func (lobby *Lobby) UpdateStats() {
-	slots := [](*LobbySlot){}
-	db.DB.Where("lobby_id = ?", lobby.ID).Find(&slots)
+	db.DB.Preload("Slots").First(lobby, lobby.ID)
 
-	for _, slot := range slots {
+	for _, slot := range lobby.Slots {
 		player := &Player{}
 		err := db.DB.First(player, slot.PlayerID).Error
 		if err != nil {
