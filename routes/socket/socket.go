@@ -18,3 +18,9 @@ var (
 		return helpers.NewTPError("Player isn't logged in.", -4)
 	})
 )
+
+// Wait for all websocket requests to complete
+func Wait() {
+	AuthServer.Requests.Wait()
+	UnauthServer.Requests.Wait()
+}
