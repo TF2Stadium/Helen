@@ -24,6 +24,8 @@ var routes = []route{
 	{"/", controllers.MainHandler},
 	{"/openidcallback", login.LoginCallbackHandler},
 	{"/startLogin", login.LoginHandler},
+	{"/startTwitchLogin", login.TwitchLogin},
+	{"/twitchAuth", login.TwitchAuth},
 	{"/logout", login.LogoutHandler},
 	{"/websocket/", controllers.SocketHandler},
 
