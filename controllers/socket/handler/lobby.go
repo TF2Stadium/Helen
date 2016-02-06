@@ -552,3 +552,31 @@ func (Lobby) RequestLobbyListData(so *wsevent.Client, _ struct{}) interface{} {
 
 	return chelpers.EmptySuccessJS
 }
+
+func (Lobby) LobbyChangeOwner(so *wsevent.Client, args struct {
+	ID      *uint   `json:"id"`
+	SteamID *string `json:"steamid"`
+}) interface{} {
+	lobby, err := models.GetLobbyByID(*args.ID)
+	if err != nil {
+		return err
+	}
+
+	player := chelpers.GetPlayerFromSocket(so.ID)
+	if lobby.CreatedBySteamID != player.SteamID {
+		return helpers.NewTPError("You aren't authorized to change lobby owner.", -1)
+	}
+
+	player2, err := models.GetPlayerBySteamID(*args.SteamID)
+	if err != nil {
+		return err
+	}
+
+	lobby.CreatedBySteamID = player2.SteamID
+	lobby.Save()
+	models.BroadcastLobby(lobby)
+	models.BroadcastLobbyList()
+	models.NewBotMessage(fmt.Sprintf("Lobby leader changed to %s", player.Name), int(*args.ID)).Send()
+
+	return chelpers.EmptySuccessJS
+}
