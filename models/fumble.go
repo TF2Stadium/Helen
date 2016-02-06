@@ -4,15 +4,14 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/fumble/mumble"
 )
 
 func FumbleLobbyCreated(lob *Lobby) error {
-	err := call(config.Constants.FumbleAddr, "Fumble.CreateLobby", lob.ID, &struct{}{})
+	err := fumble.Call("Fumble.CreateLobby", lob.ID, &struct{}{})
 
 	if err != nil {
-		logrus.Warning(err.Error())
+		logrus.Error(err)
 		return err
 	}
 
@@ -24,10 +23,10 @@ func fumbleAllowPlayer(lobbyId uint, playerName string, playerTeam string) error
 	user.Name = playerName
 	user.Team = mumble.Team(playerTeam)
 
-	err := call(config.Constants.FumbleAddr, "Fumble.AllowPlayer", &mumble.LobbyArgs{
+	err := fumble.Call("Fumble.AllowPlayer", &mumble.LobbyArgs{
 		User: user, LobbyID: lobbyId}, &struct{}{})
 	if err != nil {
-		logrus.Warning(err.Error())
+		logrus.Error(err)
 	}
 
 	return nil
@@ -44,8 +43,8 @@ func FumbleLobbyPlayerJoined(lob *Lobby, player *Player, slot int) {
 }
 
 func FumbleLobbyEnded(lob *Lobby) {
-	err := call(config.Constants.FumbleAddr, "Fumble.EndLobby", lob.ID, nil)
+	err := fumble.Call("Fumble.EndLobby", lob.ID, nil)
 	if err != nil {
-		logrus.Warning(err.Error())
+		logrus.Error(err)
 	}
 }

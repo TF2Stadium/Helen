@@ -5,66 +5,29 @@
 package models
 
 import (
-	"io"
-	"net"
-	"net/rpc"
-	"sync"
-	"time"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
+	"github.com/vibhavp/rpcconn"
 )
 
-func isNetworkError(err error) bool {
-	_, ok := err.(*net.OpError)
-	return ok || err == io.ErrUnexpectedEOF || err == rpc.ErrShutdown
-
-}
-
-func connect(addr string) *rpc.Client {
-	client, err := rpc.DialHTTP("tcp", addr)
-	for err != nil {
-		logrus.Error(err.Error())
-		time.Sleep(1 * time.Second)
-		client, err = rpc.DialHTTP("tcp", addr)
-	}
-
-	return client
-}
-
 var (
-	rpcClientMap = make(map[string]*rpc.Client)
-	mu           = new(sync.RWMutex)
+	pauling *rpcconn.Client
+	fumble  *rpcconn.Client
 )
 
 func ConnectRPC() {
+	var err error
+
 	if config.Constants.PaulingAddr != "" {
-		client := connect(config.Constants.PaulingAddr)
-		rpcClientMap[config.Constants.PaulingAddr] = client
-		logrus.Info("Connected to Pauling on port ", config.Constants.PaulingAddr)
+		pauling, err = rpcconn.DialHTTP("tcp", config.Constants.PaulingAddr)
+		if err != nil {
+			logrus.Fatal(err)
+		}
 	}
 	if config.Constants.FumbleAddr != "" {
-		client := connect(config.Constants.FumbleAddr)
-		rpcClientMap[config.Constants.FumbleAddr] = client
-		logrus.Info("Connected to Fumble on port ", config.Constants.FumbleAddr)
+		fumble, err = rpcconn.DialHTTP("tcp", config.Constants.FumbleAddr)
+		if err != nil {
+			logrus.Fatal(err)
+		}
 	}
-}
-
-func call(addr, method string, args, reply interface{}) error {
-	if addr == "" {
-		return nil
-	}
-
-	mu.RLock()
-	client := rpcClientMap[addr]
-	mu.RUnlock()
-
-	err := client.Call(method, args, reply)
-	if isNetworkError(err) {
-		mu.Lock()
-		rpcClientMap[addr] = connect(addr)
-		mu.Unlock()
-	}
-
-	return err
 }
