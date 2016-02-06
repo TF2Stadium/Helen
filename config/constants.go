@@ -47,7 +47,9 @@ type constants struct {
 	ProfilerEnable bool   `envconfig:"PROFILER_ENABLE"`
 	ProfilerPort   string `envconfig:"PROFILER_ADDR"`
 
-	SlackbotURL string `envconfig:"SLACK_URL"`
+	SlackbotURL        string `envconfig:"SLACK_URL"`
+	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID"`
+	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET"`
 }
 
 var Constants = constants{}
