@@ -367,5 +367,5 @@ func (p *Player) IsSubscribed(channel string) bool {
 	err = dec.Decode(&reply)
 
 	//if status code is 404, the user isn't subscribed
-	return err != nil && resp.StatusCode != 404
+	return err == nil && resp.StatusCode != 404
 }
