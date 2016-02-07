@@ -2,15 +2,14 @@ package rpc
 
 import (
 	"errors"
+	"net"
 	"net/http"
 	"net/rpc"
-	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/tylerb/graceful"
 )
 
 type Helen struct{}
@@ -37,7 +36,7 @@ func getPlayerID(steamID string) uint {
 	return id
 }
 
-func StartRPC() {
+func StartRPC(l net.Listener) {
 	rpcServer := rpc.NewServer()
 
 	helen := new(Helen)
@@ -47,18 +46,13 @@ func StartRPC() {
 
 	//rpc.HandleHTTP()
 	rpcServer.HandleHTTP(rpc.DefaultRPCPath, rpc.DefaultDebugPath)
-	server := &graceful.Server{
-		Server: &http.Server{
-			Addr:         config.Constants.RPCAddr,
-			Handler:      rpcServer,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
-		},
-		Timeout: 10 * time.Second,
+	server := &http.Server{
+		Addr:    config.Constants.RPCAddr,
+		Handler: rpcServer,
 	}
 
 	logrus.Info("Started RPC on ", config.Constants.RPCAddr)
-	logrus.Fatal(server.ListenAndServe())
+	server.Serve(l)
 }
 
 // GetPlayerID returns a player ID (primary key), given their Steam Community id
