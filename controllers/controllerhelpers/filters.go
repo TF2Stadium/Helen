@@ -6,7 +6,6 @@ package controllerhelpers
 
 import (
 	"encoding/xml"
-	"io/ioutil"
 	"net/http"
 	"sync"
 	"time"
@@ -27,21 +26,26 @@ var (
 func WhitelistListener() {
 	ticker := time.NewTicker(time.Minute * 1)
 	for {
-		resp, err := http.Get(config.Constants.SteamIDWhitelist)
+		client := http.Client{Timeout: 5 * time.Second}
+		resp, err := client.Get(config.Constants.SteamIDWhitelist)
 
 		if err != nil {
 			logrus.Error(err.Error())
 			continue
 		}
 
-		bytes, _ := ioutil.ReadAll(resp.Body)
 		var groupXML struct {
 			//XMLName xml.Name `xml:"memberList"`
 			//GroupID uint64   `xml:"groupID64"`
 			Members []string `xml:"members>steamID64"`
 		}
 
-		xml.Unmarshal(bytes, &groupXML)
+		dec := xml.NewDecoder(resp.Body)
+		err = dec.Decode(&groupXML)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
 
 		whitelistLock.Lock()
 		whitelistSteamID = make(map[string]bool)
