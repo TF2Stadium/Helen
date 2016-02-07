@@ -24,13 +24,14 @@ type PlayerSummary struct {
 type PlayerProfile struct {
 	Stats PlayerStats `json:"stats"`
 
-	CreatedAt int64  `json:"createdAt"`
-	GameHours int    `json:"gameHours"`
-	SteamID   string `json:"steamid"`
-	Avatar    string `json:"avatar"`
-	Name      string `json:"name"`
-	ID        int    `json:"id"`
-	Role      string `json:"role"`
+	CreatedAt  int64  `json:"createdAt"`
+	TwitchName string `json:"twitchName"`
+	GameHours  int    `json:"gameHours"`
+	SteamID    string `json:"steamid"`
+	Avatar     string `json:"avatar"`
+	Name       string `json:"name"`
+	ID         int    `json:"id"`
+	Role       string `json:"role"`
 	//5 lobbies for now
 	Lobbies []LobbyData `json:"lobbies"`
 }
@@ -69,6 +70,7 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	profile.Avatar = p.Avatar
 	profile.Name = p.Name
 	profile.Role = helpers.RoleNames[p.Role]
+	profile.TwitchName = p.TwitchName
 
 	// TODO ban info
 	var lobbies []*Lobby
