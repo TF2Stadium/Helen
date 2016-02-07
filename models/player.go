@@ -75,6 +75,7 @@ type Player struct {
 	MumbleAuthkey  string `sql:"not null;unique"`
 
 	TwitchAccessToken string
+	TwitchName        string
 }
 
 // Create a new player with the given steam id.
