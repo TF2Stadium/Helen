@@ -3,7 +3,6 @@ package helpers
 import (
 	"encoding/xml"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -18,7 +17,7 @@ type GroupXML struct {
 func GetGroupMembers(url string) ([]string, error) {
 	var groupXML GroupXML
 
-	resp, err := http.Get(url)
+	resp, err := HTTPClient.Get(url)
 	if err != nil {
 		logrus.Error(err.Error())
 		return []string{}, err
