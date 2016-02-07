@@ -73,9 +73,10 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	profile.TwitchName = p.TwitchName
 
 	// TODO ban info
-	var lobbies []*Lobby
-	db.DB.Table("lobby_slots").Where("player_id = ?", p.ID).Order("id desc").Limit("5").Find(&lobbies)
-	for _, lobby := range lobbies {
+	var slots []*LobbySlot
+	db.DB.Table("lobby_slots").Where("player_id = ?", p.ID).Order("id desc").Limit("5").Find(&slots)
+	for _, slot := range slots {
+		lobby, _ := GetLobbyByID(slot.LobbyID)
 		profile.Lobbies = append(profile.Lobbies, DecorateLobbyData(lobby, false))
 	}
 	return profile
