@@ -29,7 +29,10 @@ func (Lobby) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-var rSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
+var (
+	reSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
+	reTwitchChan = regexp.MustCompile(`twitch.tv\/(.+)`)
+)
 
 type Restriction struct {
 	Red bool `json:"red,omitempty"`
@@ -68,6 +71,8 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 	Password            *string `json:"password" empty:"-"`
 	SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
+	// restrict lobby slots to twitch subs for a particular channel
+	TwitchWhitelist *string `json:"twitchWhitelist" empty:"-"`
 
 	Requirements *struct {
 		Classes map[string]Requirement `json:"classes,omitempty"`
@@ -82,10 +87,20 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	}
 
 	var steamGroup string
-	if *args.SteamGroupWhitelist != "" && !rSteamGroup.MatchString(*args.SteamGroupWhitelist) {
-		return helpers.NewTPError("Invalid Steam group URL", -1)
-	} else if rSteamGroup.MatchString(*args.SteamGroupWhitelist) {
-		steamGroup = rSteamGroup.FindStringSubmatch(*args.SteamGroupWhitelist)[1]
+	var twitchChan string
+	if *args.SteamGroupWhitelist != "" {
+		if reSteamGroup.MatchString(*args.SteamGroupWhitelist) {
+			steamGroup = reSteamGroup.FindStringSubmatch(*args.SteamGroupWhitelist)[1]
+		} else {
+			return helpers.NewTPError("Invalid Steam group URL", -1)
+		}
+	}
+	if *args.TwitchWhitelist != "" {
+		if reTwitchChan.MatchString(*args.TwitchWhitelist) {
+			twitchChan = reTwitchChan.FindStringSubmatch(*args.TwitchWhitelist)[1]
+		} else {
+			return helpers.NewTPError("Invalid Twitch channel URL", -1)
+		}
 	}
 
 	var playermap = map[string]models.LobbyType{
@@ -121,6 +136,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	// }
 
 	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, *args.WhitelistID, *args.Mumble, steamGroup, *args.Password)
+	lob.TwitchChannel = twitchChan
 	lob.CreatedBySteamID = player.SteamID
 	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP != "" {
