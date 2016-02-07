@@ -270,7 +270,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, args struct {
 
 	lob.Close(true)
 
-	notify := fmt.Sprintf("Lobby closed by %s", player.Name)
+	notify := fmt.Sprintf("Lobby closed by %s", player.Alias())
 	models.SendNotification(notify, int(lob.ID))
 
 	return chelpers.EmptySuccessJS
@@ -592,7 +592,7 @@ func (Lobby) LobbyChangeOwner(so *wsevent.Client, args struct {
 	lobby.Save()
 	models.BroadcastLobby(lobby)
 	models.BroadcastLobbyList()
-	models.NewBotMessage(fmt.Sprintf("Lobby leader changed to %s", player.Name), int(*args.ID)).Send()
+	models.NewBotMessage(fmt.Sprintf("Lobby leader changed to %s", player.Alias()), int(*args.ID)).Send()
 
 	return chelpers.EmptySuccessJS
 }

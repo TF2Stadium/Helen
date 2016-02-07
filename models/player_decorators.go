@@ -68,7 +68,7 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	profile.GameHours = p.GameHours
 	profile.SteamID = p.SteamID
 	profile.Avatar = p.Avatar
-	profile.Name = p.Name
+	profile.Name = p.Alias()
 	profile.Role = helpers.RoleNames[p.Role]
 	profile.TwitchName = p.TwitchName
 
@@ -89,7 +89,7 @@ func DecoratePlayerSummary(p *Player) PlayerSummary {
 		ProfileURL:    p.Profileurl,
 		LobbiesPlayed: p.Stats.TotalLobbies(),
 		SteamID:       p.SteamID,
-		Name:          p.Name,
+		Name:          p.Alias(),
 		Tags:          decoratePlayerTags(p),
 		Role:          helpers.RoleNames[p.Role],
 	}

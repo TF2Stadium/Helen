@@ -53,7 +53,7 @@ func playerDisc(playerID, lobbyID uint) {
 
 	lobby.SetNotInGame(player)
 
-	models.SendNotification(fmt.Sprintf("%s has disconected from the server.", player.Name), int(lobby.ID))
+	models.SendNotification(fmt.Sprintf("%s has disconected from the server.", player.Alias()), int(lobby.ID))
 	time.AfterFunc(time.Minute*2, func() {
 		ingame, err := lobby.IsPlayerInGame(player)
 		if err != nil {
@@ -78,7 +78,7 @@ func playerSub(playerID, lobbyID uint) {
 	lobby, _ := models.GetLobbyByID(lobbyID)
 	lobby.Substitute(player)
 
-	models.SendNotification(fmt.Sprintf("%s has been reported.", player.Name), int(lobby.ID))
+	models.SendNotification(fmt.Sprintf("%s has been reported.", player.Alias()), int(lobby.ID))
 }
 
 func playerChat(lobbyID uint, playerID uint, message string) {
