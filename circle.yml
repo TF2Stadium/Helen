@@ -35,6 +35,7 @@ deployment:
     commands:
       - mkdir binaries
       - cp lobbySettingsData.json binaries/lobbySettingsData.json
+      - cp -R static binaries/
       - cp -R views/ binaries/
       - go build -race -o binaries/helen-dev *.go
       - cp binaries/helen-dev $CIRCLE_ARTIFACTS/helen
