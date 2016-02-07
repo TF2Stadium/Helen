@@ -18,6 +18,11 @@ type reply struct {
 	Scope       []string `json:"scope"`
 }
 
+type userInfo struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+}
+
 func TwitchLogin(w http.ResponseWriter, r *http.Request) {
 	session, err := controllerhelpers.GetSessionHTTP(r)
 	if err != nil {
@@ -45,7 +50,7 @@ func TwitchLogin(w http.ResponseWriter, r *http.Request) {
 	values.Set("response_type", "code")
 	values.Set("client_id", config.Constants.TwitchClientID)
 	values.Set("redirect_uri", twitchRedirectURL)
-	values.Set("scope", "channel_check_subscription user_subscriptions channel_subscriptions")
+	values.Set("scope", "channel_check_subscription user_subscriptions channel_subscriptions user_read")
 	values.Set("state", xsrftoken.Generate(config.Constants.CookieStoreSecret, player.SteamID, "GET"))
 	loginURL.RawQuery = values.Encode()
 
@@ -118,8 +123,37 @@ func TwitchAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	info, err := getUserInfo(reply.AccessToken)
+	if err != nil {
+		logrus.Error(err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if info.Type != "user" {
+		http.Error(w, "Unsupported account type.", http.StatusBadRequest)
+		return
+	}
+
+	player.TwitchName = info.Name
 	player.TwitchAccessToken = reply.AccessToken
 	player.Save()
 
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, http.StatusTemporaryRedirect)
+}
+
+func getUserInfo(token string) (*userInfo, error) {
+	req, _ := http.NewRequest("GET", "https://api.twitch.tv/kraken/user", nil)
+	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
+	req.Header.Add("Authorization", "OAuth "+token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	info := &userInfo{}
+	dec := json.NewDecoder(resp.Body)
+	err = dec.Decode(info)
+	return info, err
 }
