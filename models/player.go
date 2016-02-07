@@ -11,8 +11,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -337,4 +339,23 @@ func GetAllActiveBans() []*PlayerBan {
 	var bans []*PlayerBan
 	db.DB.Where("active = TRUE AND until > now()").Find(&bans)
 	return bans
+}
+
+//IsSubscribed returns whether if the player has subscribed to the given twitch channel.
+//The player object should have a valid access token and twitch name
+func (p *Player) IsSubscribed(channel string) bool {
+	url := fmt.Sprintf("https://api.twitch.tv/kraken/users/%s/subscriptions/%s", p.TwitchName, channel)
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
+	req.Header.Add("Authorization", "OAuth "+p.TwitchAccessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logrus.Error(err)
+		return false
+	}
+
+	//if status code is 404, the user isn't subscribed
+	return resp.StatusCode != 404
 }
