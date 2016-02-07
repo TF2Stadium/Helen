@@ -121,6 +121,7 @@ type Lobby struct {
 
 	SlotPassword    string // Slot password, if any
 	PlayerWhitelist string // URL of steam group
+	TwitchChannel   string // twitch channel, slots will be restricted to channel subs
 
 	// TF2 Server Info
 	ServerInfo   ServerRecord
@@ -461,6 +462,18 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 			//check if player fits the requirements for the slot
 			if ok, err := lobby.FitsRequirements(player, slot); !ok {
 				return err
+			}
+		}
+
+		//check if player has been subbed to the twitch channel (if any)
+		if lobby.TwitchChannel != "" {
+			//check if player has connected their twitch account
+			if player.TwitchAccessToken == "" {
+				return helpers.NewTPError("You need to connect your Twitch Account first to join the lobby.", -1)
+			}
+			if !player.IsSubscribed(lobby.TwitchChannel) {
+				err := fmt.Sprintf("You aren't subscribed to %s", lobby.TwitchChannel)
+				return helpers.NewTPError(err, -1)
 			}
 		}
 	}
