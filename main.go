@@ -108,7 +108,13 @@ func main() {
 	// start the server
 	server := graceful.Server{
 		Timeout: 10 * time.Second,
-		Server:  &http.Server{Addr: config.Constants.ListenAddress, Handler: corsHandler},
+		Server: &http.Server{
+			Addr:         config.Constants.ListenAddress,
+			Handler:      corsHandler,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		},
+
 		ShutdownInitiated: func() {
 			logrus.Info("Recieved SIGTERM/SIGINT, waiting for socket requests to complete.")
 			socketServer.Wait()
