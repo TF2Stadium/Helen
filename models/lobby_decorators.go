@@ -120,12 +120,12 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 
 		ingame, _ := lobby.IsPlayerInGame(&player)
 		j.InGame = &ingame
+	}
 
-		if lobby.HasSlotRequirement(slot) {
-			j.Requirements, _ = lobby.GetSlotRequirement(slot)
-		} else if lobby.HasGeneralRequirement() {
-			j.Requirements, _ = lobby.GetGeneralRequirement()
-		}
+	if lobby.HasSlotRequirement(slot) {
+		j.Requirements, _ = lobby.GetSlotRequirement(slot)
+	} else if lobby.HasGeneralRequirement() {
+		j.Requirements, _ = lobby.GetGeneralRequirement()
 	}
 
 	return j
