@@ -34,14 +34,15 @@ type SpecDetails struct {
 }
 
 type LobbyData struct {
-	ID         uint   `json:"id"`
-	Mode       string `json:"gamemode"`
-	Type       string `json:"type"`
-	Players    int    `json:"players"`
-	Map        string `json:"map"`
-	League     string `json:"league"`
-	Mumble     bool   `json:"mumbleRequired"`
-	MaxPlayers int    `json:"maxPlayers"`
+	ID            uint   `json:"id"`
+	Mode          string `json:"gamemode"`
+	Type          string `json:"type"`
+	Players       int    `json:"players"`
+	Map           string `json:"map"`
+	League        string `json:"league"`
+	Mumble        bool   `json:"mumbleRequired"`
+	MaxPlayers    int    `json:"maxPlayers"`
+	TwitchChannel string `json:"twitchChannel"`
 
 	PlayerWhitelist bool `json:"whitelisted"`
 	Password        bool `json:"password"`
@@ -132,13 +133,14 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 
 func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyData := LobbyData{
-		ID:      lobby.ID,
-		Mode:    lobby.Mode,
-		Type:    formatMap[lobby.Type],
-		Players: lobby.GetPlayerNumber(),
-		Map:     lobby.MapName,
-		League:  lobby.League,
-		Mumble:  lobby.Mumble,
+		ID:            lobby.ID,
+		Mode:          lobby.Mode,
+		Type:          formatMap[lobby.Type],
+		Players:       lobby.GetPlayerNumber(),
+		Map:           lobby.MapName,
+		League:        lobby.League,
+		Mumble:        lobby.Mumble,
+		TwitchChannel: lobby.TwitchChannel,
 
 		PlayerWhitelist: lobby.PlayerWhitelist != "",
 		Password:        lobby.SlotPassword != "",
