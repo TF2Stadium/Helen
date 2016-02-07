@@ -9,6 +9,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"golang.org/x/net/xsrftoken"
 )
@@ -106,7 +107,7 @@ func TwitchAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := helpers.HTTPClient.Do(req)
 	if err != nil {
 		logrus.Error(err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -147,7 +148,7 @@ func getUserInfo(token string) (*userInfo, error) {
 	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
 	req.Header.Add("Authorization", "OAuth "+token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := helpers.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
