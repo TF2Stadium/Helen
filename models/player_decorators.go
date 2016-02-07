@@ -74,7 +74,7 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 
 	// TODO ban info
 	var lobbies []*Lobby
-	db.DB.Table("lobby_slots").Where("lobby_slots.player_id = ?", p.ID).Order("id desc").Limit("5").Find(&lobbies)
+	db.DB.Table("lobby_slots").Where("player_id = ?", p.ID).Order("id desc").Limit("5").Find(&lobbies)
 	for _, lobby := range lobbies {
 		profile.Lobbies = append(profile.Lobbies, DecorateLobbyData(lobby, false))
 	}
