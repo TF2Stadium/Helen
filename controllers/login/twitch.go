@@ -9,6 +9,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"golang.org/x/net/xsrftoken"
@@ -157,4 +158,21 @@ func getUserInfo(token string) (*userInfo, error) {
 	dec := json.NewDecoder(resp.Body)
 	err = dec.Decode(info)
 	return info, err
+}
+
+func TwitchLogout(w http.ResponseWriter, r *http.Request) {
+	session, err := controllerhelpers.GetSessionHTTP(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	steamID, ok := session.Values["steam_id"]
+	if !ok {
+		http.Error(w, "You are not logged in.", http.StatusUnauthorized)
+	}
+
+	db.DB.Table("players").Where("steam_id = ?", steamID).UpdateColumn(map[string]interface{}{
+		"twitch_access_token": "",
+		"twitch_name":         ""})
+	http.Redirect(w, r, config.Constants.LoginRedirectPath, http.StatusTemporaryRedirect)
 }
