@@ -26,6 +26,7 @@ var routes = []route{
 	{"/startLogin", login.LoginHandler},
 	{"/startTwitchLogin", login.TwitchLogin},
 	{"/twitchAuth", login.TwitchAuth},
+	{"/twitchLogout", login.TwitchLogout},
 	{"/logout", login.LogoutHandler},
 	{"/websocket/", controllers.SocketHandler},
 
