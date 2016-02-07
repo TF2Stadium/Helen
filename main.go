@@ -9,6 +9,7 @@ import (
 	_ "expvar"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -57,7 +58,11 @@ func main() {
 	}
 
 	config.SetupConstants()
-	go rpc.StartRPC()
+	l, err := net.Listen("tcp", config.Constants.RPCAddr)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	go rpc.StartRPC(l)
 
 	if config.Constants.ProfilerEnable {
 		address := "localhost:" + config.Constants.ProfilerPort
@@ -116,13 +121,15 @@ func main() {
 		},
 
 		ShutdownInitiated: func() {
-			logrus.Info("Recieved SIGTERM/SIGINT, waiting for socket requests to complete.")
+			logrus.Info("Received SIGINT/SIGTERM, closing RPC")
+			l.Close()
+			logrus.Info("waiting for socket requests to complete.")
 			socketServer.Wait()
 		},
 	}
 
 	logrus.Info("Serving on ", config.Constants.ListenAddress)
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		logrus.Fatal(err)
 	}
