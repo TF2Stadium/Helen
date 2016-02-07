@@ -144,9 +144,9 @@ type Requirement struct {
 
 	Slot int `json:"-"` // if -1, applies to all slots
 
-	Hours       int     // minimum hours needed
-	Lobbies     int     // minimum lobbies played
-	Reliability float64 // minimum reliability needed
+	Hours       int     `json:"hours"`       // minimum hours needed
+	Lobbies     int     `json:"lobbies"`     // minimum lobbies played
+	Reliability float64 `json:"reliability"` // minimum reliability needed
 }
 
 func NewRequirement(lobbyID uint, slot int, hours int, lobbies int) *Requirement {
