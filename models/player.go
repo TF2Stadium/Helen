@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -341,6 +342,8 @@ func GetAllActiveBans() []*PlayerBan {
 	return bans
 }
 
+var client = &http.Client{Timeout: 5 * time.Second}
+
 //IsSubscribed returns whether if the player has subscribed to the given twitch channel.
 //The player object should have a valid access token and twitch name
 func (p *Player) IsSubscribed(channel string) bool {
@@ -350,12 +353,19 @@ func (p *Player) IsSubscribed(channel string) bool {
 	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
 	req.Header.Add("Authorization", "OAuth "+p.TwitchAccessToken)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		logrus.Error(err)
 		return false
 	}
 
+	var reply struct {
+		ID string `json:"_id"`
+	}
+
+	dec := json.NewDecoder(resp.Body)
+	err = dec.Decode(&reply)
+
 	//if status code is 404, the user isn't subscribed
-	return resp.StatusCode != 404
+	return err != nil && resp.StatusCode != 404
 }
