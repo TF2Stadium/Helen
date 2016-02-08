@@ -125,26 +125,14 @@ func TestPlayerSettings(t *testing.T) {
 	player := testhelpers.CreatePlayer()
 
 	settings := player.Settings
-
 	assert.Equal(t, 0, len(settings))
 
 	player.SetSetting("foo", "bar")
+	assert.Equal(t, player.GetSetting("foo"), "bar")
 
-	settings, err = player.GetSettings()
-	assert.Nil(t, err)
-	assert.Equal(t, "foo", settings[0].Key)
-	assert.Equal(t, "bar", settings[0].Value)
-
-	setting, err := player.GetSetting("foo")
-	assert.Nil(t, err)
-	assert.Equal(t, "bar", setting.Value)
-
-	err = player.SetSetting("hello", "world")
-	assert.Nil(t, err)
-
-	settings, err = player.GetSettings()
-	assert.Nil(t, err)
-	assert.Equal(t, 2, len(settings))
+	player.SetSetting("hello", "world")
+	assert.Equal(t, player.GetSetting("hello"), "world")
+	assert.Len(t, player.Settings, 2)
 }
 
 func TestPlayerBanning(t *testing.T) {
