@@ -7,7 +7,6 @@ package models
 import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/bitly/go-simplejson"
 )
 
 type PlayerSummary struct {
@@ -37,16 +36,6 @@ type PlayerProfile struct {
 	Lobbies []LobbyData `json:"lobbies"`
 }
 
-func DecoratePlayerSettingsJson(settings []PlayerSetting) *simplejson.Json {
-	json := simplejson.New()
-
-	for _, obj := range settings {
-		json.Set(obj.Key, obj.Value)
-	}
-
-	return json
-}
-
 func decoratePlayerTags(p *Player) []string {
 	tags := []string{helpers.RoleNames[p.Role]}
 	return tags
@@ -55,15 +44,9 @@ func decoratePlayerTags(p *Player) []string {
 func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	db.DB.Preload("Stats").First(p, p.ID)
 	profile := PlayerProfile{}
-	alias, _ := p.GetSetting("siteAlias")
 
 	p.Stats.Total = p.Stats.TotalLobbies()
 	profile.Stats = p.Stats
-
-	// info
-	if alias.Value != "" {
-		profile.Name = alias.Value
-	}
 
 	profile.CreatedAt = p.CreatedAt.Unix()
 	profile.GameHours = p.GameHours
@@ -95,11 +78,6 @@ func DecoratePlayerSummary(p *Player) PlayerSummary {
 		Name:          p.Alias(),
 		Tags:          decoratePlayerTags(p),
 		Role:          helpers.RoleNames[p.Role],
-	}
-
-	alias, _ := p.GetSetting("siteAlias")
-	if alias.Value != "" {
-		summary.Name = alias.Value
 	}
 
 	return summary

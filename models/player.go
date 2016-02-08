@@ -73,7 +73,8 @@ type Player struct {
 	Name       string             // Player name
 	Role       authority.AuthRole `sql:"default:0"` // Role is player by default
 
-	Settings       []PlayerSetting
+	Settings gorm.Hstore
+
 	MumbleUsername string `sql:"unique"`
 	MumbleAuthkey  string `sql:"not null;unique"`
 
@@ -187,14 +188,12 @@ func (player *Player) GenMumbleUsername() string {
 
 //if the player has an alias, return that. Else, return their steam name
 func (p *Player) Alias() string {
-	alias, err := p.GetSetting("siteAlias")
-	if err != nil {
+	alias := p.GetSetting("siteAlias")
+	if alias == "" {
 		return p.Name
 	}
-	if alias.Value != "" {
-		return alias.Value
-	}
-	return p.Name
+
+	return alias
 }
 
 // Save any changes made to the player object
@@ -323,31 +322,26 @@ func (player *Player) UpdatePlayerInfo() error {
 	return nil
 }
 
-func (player *Player) SetSetting(key string, value string) error {
-	setting := PlayerSetting{}
-	err := db.DB.Where("player_id = ? AND key = ?", player.ID, key).First(&setting).Error
+func (player *Player) SetSetting(key string, value string) {
+	if player.Settings == nil {
+		player.Settings = make(gorm.Hstore)
+	}
 
-	setting.PlayerID = player.ID
-	setting.Key = key
-	setting.Value = value
-
-	err = db.DB.Save(&setting).Error
-
-	return err
+	player.Settings[key] = &value
+	player.Save()
 }
 
-func (player *Player) GetSetting(key string) (PlayerSetting, error) {
-	setting := PlayerSetting{}
-	err := db.DB.Where("player_id = ? AND key = ?", player.ID, key).First(&setting).Error
+func (player *Player) GetSetting(key string) string {
+	if player.Settings == nil {
+		return ""
+	}
 
-	return setting, err
-}
+	value, ok := player.Settings[key]
+	if !ok {
+		return ""
+	}
 
-func (player *Player) GetSettings() ([]PlayerSetting, error) {
-	var settings []PlayerSetting
-	err := db.DB.Where("player_id = ?", player.ID).Find(&settings).Error
-
-	return settings, err
+	return *value
 }
 
 func (player *Player) IsBannedWithTime(t PlayerBanType) (bool, time.Time) {

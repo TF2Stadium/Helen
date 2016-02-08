@@ -93,24 +93,14 @@ func (Player) PlayerSettingsGet(so *wsevent.Client, args struct {
 	Key *string `json:"key"`
 }) interface{} {
 
-	var err error
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
-	var settings []models.PlayerSetting
-	var setting models.PlayerSetting
 	if *args.Key == "*" {
-		settings, err = player.GetSettings()
-	} else {
-		setting, err = player.GetSetting(*args.Key)
-		settings = append(settings, setting)
+		return chelpers.NewResponse(player.Settings)
 	}
 
-	if err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
-
-	result := models.DecoratePlayerSettingsJson(settings)
-	return chelpers.NewResponse(result)
+	setting := player.GetSetting(*args.Key)
+	return chelpers.NewResponse(setting)
 }
 
 var reMumbleNick = regexp.MustCompile(`\w+`)
@@ -122,10 +112,7 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
-	err := player.SetSetting(*args.Key, *args.Value)
-	if err != nil {
-		return helpers.NewTPErrorFromError(err)
-	}
+	player.SetSetting(*args.Key, *args.Value)
 
 	switch *args.Key {
 	case "siteAlias":

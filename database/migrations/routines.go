@@ -7,6 +7,7 @@ package migrations
 import (
 	"strconv"
 
+	"github.com/Sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/jinzhu/gorm"
@@ -21,6 +22,7 @@ var migrationRoutines = map[uint64]func(){
 	6: truncateHTTPSessions,
 	7: setMumbleInfo,
 	8: setPlayerExternalLinks,
+	9: setPlayerSettings,
 }
 
 func whitelist_id_string() {
@@ -111,5 +113,21 @@ func setPlayerExternalLinks() {
 		player.ExternalLinks = make(gorm.Hstore)
 		player.SetExternalLinks()
 		player.Save()
+	}
+}
+
+// move player_settings values to player.Settings hstore
+func setPlayerSettings() {
+	rows, err := db.DB.DB().Query("SELECT player_id, key, value FROM player_settings")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	for rows.Next() {
+		var playerID uint
+		var key, value string
+
+		rows.Scan(&playerID, &key, &value)
+		player, _ := models.GetPlayerByID(playerID)
+		player.SetSetting(key, value)
 	}
 }

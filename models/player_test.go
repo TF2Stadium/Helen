@@ -124,13 +124,11 @@ func TestPlayerSettings(t *testing.T) {
 
 	player := testhelpers.CreatePlayer()
 
-	settings, err := player.GetSettings()
+	settings := player.Settings
 
-	assert.Nil(t, err)
 	assert.Equal(t, 0, len(settings))
 
-	err = player.SetSetting("foo", "bar")
-	assert.Nil(t, err)
+	player.SetSetting("foo", "bar")
 
 	settings, err = player.GetSettings()
 	assert.Nil(t, err)
