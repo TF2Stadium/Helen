@@ -66,13 +66,13 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 	}
 
 	message := models.NewChatMessage(*args.Message, *args.Room, player)
-	message.Save()
 
 	if strings.HasPrefix(*args.Message, "!admin") {
 		chelpers.SendToSlack(*args.Message, player.Name, player.SteamID)
 		return chelpers.EmptySuccessJS
 	}
 
+	message.Save()
 	message.Send()
 
 	return chelpers.EmptySuccessJS
