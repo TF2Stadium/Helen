@@ -636,6 +636,8 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 	case "reliability":
 		f, err = (*args.Value).Float64()
 		req.Reliability = f
+	default:
+		return helpers.NewTPError("Invalid requirement type.", -1)
 	}
 
 	if err != nil {
