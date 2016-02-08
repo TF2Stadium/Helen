@@ -44,8 +44,8 @@ type LobbyData struct {
 	MaxPlayers    int    `json:"maxPlayers"`
 	TwitchChannel string `json:"twitchChannel"`
 
-	PlayerWhitelist bool `json:"whitelisted"`
-	Password        bool `json:"password"`
+	SteamGroup string `json:"steamGroup"`
+	Password   bool   `json:"password"`
 
 	Region struct {
 		Name string `json:"name"`
@@ -142,8 +142,8 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		Mumble:        lobby.Mumble,
 		TwitchChannel: lobby.TwitchChannel,
 
-		PlayerWhitelist: lobby.PlayerWhitelist != "",
-		Password:        lobby.SlotPassword != "",
+		SteamGroup: lobby.PlayerWhitelist,
+		Password:   lobby.SlotPassword != "",
 	}
 
 	lobbyData.Region.Name = lobby.RegionName
