@@ -130,4 +130,6 @@ func setPlayerSettings() {
 		player, _ := models.GetPlayerByID(playerID)
 		player.SetSetting(key, value)
 	}
+
+	db.DB.Exec("DROP TABLE player_settings")
 }
