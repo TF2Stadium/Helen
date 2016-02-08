@@ -79,6 +79,8 @@ type Player struct {
 
 	TwitchAccessToken string
 	TwitchName        string
+
+	ExternalLinks gorm.Hstore
 }
 
 // Create a new player with the given steam id.
@@ -101,6 +103,57 @@ func NewPlayer(steamId string) (*Player, error) {
 	player.MumbleAuthkey = player.GenAuthKey()
 
 	return player, nil
+}
+
+func (player *Player) SetExternalLinks() {
+	player.ExternalLinks = make(gorm.Hstore)
+	defer player.Save()
+
+	// logs.tf
+	logstf := fmt.Sprintf(`http://logs.tf/profile/%s`, player.SteamID)
+	resp, err := helpers.HTTPClient.Get(logstf)
+	if err == nil && resp.StatusCode == 200 {
+		player.ExternalLinks["logstf"] = &logstf
+	}
+
+	// UGC
+	ugc := fmt.Sprintf(`http://www.ugcleague.com/players_page.cfm?player_id=%s`, player.SteamID)
+	resp, err = helpers.HTTPClient.Get(ugc)
+	if err == nil && resp.StatusCode == 200 {
+		player.ExternalLinks["ugc"] = &ugc
+	}
+
+	var reply struct {
+		Player *struct {
+			ID      int    `json:"id"`
+			Country string `json:"country"`
+		} `json:"player,omitempty"`
+		Status struct {
+			Code int `json:"code"`
+		}
+	}
+
+	etf2lURL := fmt.Sprintf(`http://api.etf2l.org/player/%s`, player.SteamID)
+	req, _ := http.NewRequest("GET", etf2lURL, nil)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	resp, err = helpers.HTTPClient.Do(req)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	dec := json.NewDecoder(resp.Body)
+	err = dec.Decode(&reply)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	if reply.Player != nil {
+		url := fmt.Sprintf(`http://beta.etf2l.org/forum/user/%d/`, reply.Player.ID)
+		player.ExternalLinks["etf2l"] = &url
+	}
 }
 
 func (player *Player) GenAuthKey() string {
@@ -237,6 +290,8 @@ func (player *Player) UpdatePlayerInfo() error {
 	if config.SteamApiMockUp {
 		return nil
 	}
+
+	player.SetExternalLinks()
 
 	scraper.SetSteamApiKey(config.Constants.SteamDevApiKey)
 	p, _ := GetPlayerBySteamID(player.SteamID)

@@ -9,6 +9,7 @@ import (
 
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/jinzhu/gorm"
 )
 
 // major ver -> migration routine
@@ -19,6 +20,7 @@ var migrationRoutines = map[uint64]func(){
 	5: updateAllPlayerInfo,
 	6: truncateHTTPSessions,
 	7: setMumbleInfo,
+	8: setPlayerExternalLinks,
 }
 
 func whitelist_id_string() {
@@ -97,6 +99,17 @@ func setMumbleInfo() {
 	for _, player := range players {
 		player.MumbleUsername = player.GenMumbleUsername()
 		player.MumbleAuthkey = player.GenAuthKey()
+		player.Save()
+	}
+}
+
+func setPlayerExternalLinks() {
+	var players []*models.Player
+	db.DB.Table("players").Find(&players)
+
+	for _, player := range players {
+		player.ExternalLinks = make(gorm.Hstore)
+		player.SetExternalLinks()
 		player.Save()
 	}
 }

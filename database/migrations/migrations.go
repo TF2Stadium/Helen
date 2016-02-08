@@ -14,6 +14,7 @@ import (
 var once = new(sync.Once)
 
 func Do() {
+	database.DB.Exec("CREATE EXTENSION IF NOT EXISTS hstore")
 	database.DB.AutoMigrate(&models.Player{})
 	database.DB.AutoMigrate(&models.Lobby{})
 	database.DB.AutoMigrate(&models.LobbySlot{})

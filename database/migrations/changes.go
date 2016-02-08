@@ -12,7 +12,7 @@ import (
 
 //follows semantic versioning scheme
 var schemaVersion = semver.Version{
-	Major: 7,
+	Major: 8,
 	Minor: 0,
 	Patch: 0,
 }
@@ -55,7 +55,7 @@ func checkSchema() {
 	}
 
 	if v, _ := semver.Parse(currStr); v.Major < schemaVersion.Major {
-		logrus.Warning("Incompatible schema change detected", currStr, " attempting to migrate to ", schemaVersion.String())
+		logrus.Warning("Incompatible schema change detected (", currStr, ") attempting to migrate to (", schemaVersion.String(), ")")
 		for i := v.Major + 1; i <= schemaVersion.Major; i++ {
 			logrus.Debug("Calling migration routine for ", schemaVersion.String())
 			f := migrationRoutines[i]
