@@ -48,16 +48,6 @@ type PlayerBan struct {
 	Active   bool          `sql:"default:true"` // Whether the ban is active
 }
 
-//PlayerSetting represents a stored player setting
-type PlayerSetting struct {
-	ID        uint
-	CreatedAt time.Time
-	PlayerID  uint
-
-	Key   string // Setting key
-	Value string `sql:"size:65535"` // Setting value
-}
-
 //Player represents a player object
 type Player struct {
 	gorm.Model
@@ -332,6 +322,7 @@ func (player *Player) SetSetting(key string, value string) {
 }
 
 func (player *Player) GetSetting(key string) string {
+	db.DB.First(player)
 	if player.Settings == nil {
 		return ""
 	}
