@@ -23,7 +23,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const InitMessages int = 5
+const InitMessages int = 4
 
 type SuffixList struct{}
 
