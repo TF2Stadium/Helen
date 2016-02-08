@@ -117,6 +117,7 @@ so.On("socketInitialized", function(s){
 })
 $(function() {
   createBox(so, "lobbyCreate", ["map", "type", "league", "whitelistID", "server", "rconpwd", "mumbleRequired", "password", "steamGroupWhitelist", "twitchWhitelist"]);
+  createBox(so, "lobbySetRequirement", ["id", "slot", "type", "value"]);
   createBox(so, "serverVerify", ["server", "rconpwd", "password"]);
   createBox(so, "lobbyClose", ["id"]);
   createBox(so, "lobbyJoin", ["id", "team", "class", "password"]);

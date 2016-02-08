@@ -7,6 +7,7 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"time"
@@ -593,6 +594,57 @@ func (Lobby) LobbyChangeOwner(so *wsevent.Client, args struct {
 	models.BroadcastLobby(lobby)
 	models.BroadcastLobbyList()
 	models.NewBotMessage(fmt.Sprintf("Lobby leader changed to %s", player.Alias()), int(*args.ID)).Send()
+
+	return chelpers.EmptySuccessJS
+}
+
+func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
+	ID *uint `json:"id"` // lobby ID
+
+	Slot  *int         `json:"slot"` // -1 if to set for all slots
+	Type  *string      `json:"type"`
+	Value *json.Number `json:"value"`
+}) interface{} {
+
+	lobby, tperr := models.GetLobbyByID(*args.ID)
+	if tperr != nil {
+		return tperr
+	}
+
+	player := chelpers.GetPlayerFromSocket(so.ID)
+	if lobby.CreatedBySteamID != player.SteamID {
+		return helpers.NewTPError("Only lobby owners can change requirements.", -1)
+	}
+
+	req := &models.Requirement{}
+	err := db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", *args.ID, *args.Slot).First(req).Error
+	if err != nil { //requirement doesn't exist. create one
+		req.Slot = *args.Slot
+		req.LobbyID = *args.ID
+	}
+
+	var n int64
+	var f float64
+
+	switch *args.Type {
+	case "hours":
+		n, err = (*args.Value).Int64()
+		req.Hours = int(n)
+	case "lobbies":
+		n, err = (*args.Value).Int64()
+		req.Lobbies = int(n)
+	case "reliability":
+		f, err = (*args.Value).Float64()
+		req.Reliability = f
+	}
+
+	if err != nil {
+		return helpers.NewTPError("Invalid requirement.", -1)
+	}
+
+	req.Save()
+	models.BroadcastLobby(lobby)
+	models.BroadcastLobbyList()
 
 	return chelpers.EmptySuccessJS
 }
