@@ -162,14 +162,6 @@ func NewRequirement(lobbyID uint, slot int, hours int, lobbies int) *Requirement
 
 func (r *Requirement) Save() { db.DB.Save(r) }
 
-//GetGlobalRequirement returns the global requirement for the lobby lobby
-func (lobby *Lobby) GetGeneralRequirement() (*Requirement, error) {
-	requirement := &Requirement{}
-	err := db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, -1).First(requirement).Error
-
-	return requirement, err
-}
-
 //GetSlotRequirement returns the slot requirement for the lobby lobby
 func (lobby *Lobby) GetSlotRequirement(slot int) (*Requirement, error) {
 	req := &Requirement{}
@@ -185,27 +177,15 @@ func (lobby *Lobby) HasSlotRequirement(slot int) bool {
 	return count != 0
 }
 
-//HasGeneralRequirement returns true if the lobby has a general requiement
-func (lobby *Lobby) HasGeneralRequirement() bool {
-	var count int
-	db.DB.Table("requirements").Where("lobby_id = ? AND slot = -1", lobby.ID).Count(&count)
-	return count != 0
-}
-
 //HasRequirements returns true if the given slot has a requirement (either general or slot-only)
 func (lobby *Lobby) HasRequirements(slot int) bool {
-	return lobby.HasSlotRequirement(slot) || lobby.HasGeneralRequirement()
+	return lobby.HasSlotRequirement(slot)
 }
 
 //FitsRequirements checks if the player fits the requirement to be added to the given slot in the lobby
 func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPError) {
 	//BUG(vibhavp): FitsRequirements doesn't check reliability
 	var req *Requirement
-
-	global, err := l.GetGeneralRequirement()
-	if err == nil {
-		req = global
-	}
 
 	slotReq, err := l.GetSlotRequirement(slot)
 	if err == nil {

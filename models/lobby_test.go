@@ -473,26 +473,6 @@ func TestSlotRequirements(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestGeneralRequirements(t *testing.T) {
-	t.Parallel()
-	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
-	player := testhelpers.CreatePlayer()
-	req := &Requirement{
-		LobbyID: lobby.ID,
-		Slot:    -1,
-		Hours:   1,
-		Lobbies: 1,
-	}
-	req.Save()
-
-	err := lobby.AddPlayer(player, 0, "")
-	assert.Equal(t, err, ReqHoursErr)
-
-	err = lobby.AddPlayer(player, 3, "")
-	assert.Equal(t, err, ReqHoursErr)
-}
-
 func TestHasPlayer(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()

@@ -176,13 +176,16 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			}
 		}
 		if args.Requirements.General.Hours != 0 || args.Requirements.General.Lobbies != 0 {
-			general := &models.Requirement{
-				LobbyID: lob.ID,
-				Hours:   args.Requirements.General.Hours,
-				Lobbies: args.Requirements.General.Lobbies,
-				Slot:    -1,
+			for i := 0; i < models.NumberOfClassesMap[lob.Type]; i++ {
+				req := &models.Requirement{
+					LobbyID: lob.ID,
+					Hours:   args.Requirements.General.Hours,
+					Lobbies: args.Requirements.General.Lobbies,
+					Slot:    i,
+				}
+				req.Save()
 			}
-			general.Save()
+
 		}
 	}
 	return chelpers.NewResponse(
@@ -614,6 +617,10 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	if lobby.CreatedBySteamID != player.SteamID {
 		return helpers.NewTPError("Only lobby owners can change requirements.", -1)
+	}
+
+	if !(*args.Slot >= 0 && *args.Slot < models.NumberOfClassesMap[lobby.Type]) {
+		return helpers.NewTPError("Invalid slot.", -1)
 	}
 
 	req := &models.Requirement{}

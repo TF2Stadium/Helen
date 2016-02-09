@@ -124,8 +124,6 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 
 	if lobby.HasSlotRequirement(slot) {
 		j.Requirements, _ = lobby.GetSlotRequirement(slot)
-	} else if lobby.HasGeneralRequirement() {
-		j.Requirements, _ = lobby.GetGeneralRequirement()
 	}
 
 	return j
