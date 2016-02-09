@@ -68,7 +68,3 @@ func serverExists(lobbyID uint) (exists bool) {
 	pauling.Call("Pauling.Exists", lobbyID, &exists)
 	return
 }
-
-func Ping() {
-	pauling.Call("Pauling.Ping", struct{}{}, &struct{}{})
-}
