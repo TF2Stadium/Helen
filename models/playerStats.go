@@ -4,9 +4,7 @@
 
 package models
 
-import (
-	"github.com/TF2Stadium/Helen/database"
-)
+import "github.com/TF2Stadium/Helen/database"
 
 type PlayerStats struct {
 	ID uint `json:"-"`
