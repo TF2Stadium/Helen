@@ -200,44 +200,34 @@ func (lobby *Lobby) HasRequirements(slot int) bool {
 //FitsRequirements checks if the player fits the requirement to be added to the given slot in the lobby
 func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPError) {
 	//BUG(vibhavp): FitsRequirements doesn't check reliability
-	requirements := []*Requirement{}
-
-	//Updates player's game hours
-	player.UpdatePlayerInfo()
-	player.Save()
+	var req *Requirement
 
 	global, err := l.GetGeneralRequirement()
 	if err == nil {
-		requirements = append(requirements, global)
+		req = global
 	}
 
 	slotReq, err := l.GetSlotRequirement(slot)
 	if err == nil {
-		requirements = append(requirements, slotReq)
+		req = slotReq
 	}
 
 	stats := PlayerStats{}
 	db.DB.First(&stats, player.StatsID)
 
-	for _, req := range requirements {
-		if player.GameHours < req.Hours {
-			//update player info only if the nummber of hours needed > the number of hours
-			//passed since player info was last updated
-			if time.Since(player.UpdatedAt) < time.Hour*time.Duration(req.Hours-player.GameHours) {
-				player.UpdatePlayerInfo()
-				player.Save()
+	if time.Since(player.UpdatedAt) < time.Hour*time.Duration(req.Hours-player.GameHours) {
+		//update player info only if the number of hours needed > the number of hours
+		//passed since player info was last updated
+		player.UpdatePlayerInfo()
+		player.Save()
+	}
 
-				if player.GameHours < req.Hours {
-					return false, ReqHoursErr
-				}
-				continue
-			}
-			return false, ReqHoursErr
-		}
+	if player.GameHours < req.Hours {
+		return false, ReqHoursErr
+	}
 
-		if stats.TotalLobbies() < req.Lobbies {
-			return false, ReqLobbiesErr
-		}
+	if stats.TotalLobbies() < req.Lobbies {
+		return false, ReqLobbiesErr
 	}
 
 	return true, nil
