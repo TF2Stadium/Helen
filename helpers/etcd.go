@@ -5,18 +5,16 @@ import (
 	"net"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/TF2Stadium/Helen/config"
 	"github.com/coreos/etcd/client"
 	"golang.org/x/net/context"
 )
 
 var kapi client.KeysAPI
 
-func ConnectEtcd() error {
+func ConnectEtcd(addr string) error {
 	var err error
 
-	cfg := client.Config{Endpoints: []string{config.Constants.EtcdAddr}}
+	cfg := client.Config{Endpoints: []string{addr}}
 	c, err := client.New(cfg)
 	if err != nil {
 		return err
@@ -36,7 +34,7 @@ func GetAddr(serviceName string) (string, error) {
 	return resp.Node.Value, nil
 }
 
-func SetAddr(serviceName string, addr string) error {
+func SetAddr(serviceName string, addr string) (*client.Node, error) {
 	l, _ := net.InterfaceAddrs()
 	var ipaddr string
 	for _, addr := range l {
@@ -47,7 +45,7 @@ func SetAddr(serviceName string, addr string) error {
 	}
 
 	if ipaddr == "" {
-		return errors.New("Couldn't get IP Address.")
+		return nil, errors.New("Couldn't get IP Address.")
 	}
 
 	if arr := strings.Split(addr, ":"); len(arr) != 0 {
@@ -56,9 +54,8 @@ func SetAddr(serviceName string, addr string) error {
 
 	resp, err := kapi.Set(context.Background(), serviceName, ipaddr, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	logrus.Info("Wrote key ", resp.Node.Key, "=", resp.Node.Value)
-	return nil
+	return resp.Node, nil
 }
