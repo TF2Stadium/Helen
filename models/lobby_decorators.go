@@ -15,6 +15,7 @@ import (
 )
 
 type SlotDetails struct {
+	Slot         int            `json:"slot"`
 	Filled       bool           `json:"filled"`
 	Player       *PlayerSummary `json:"player,omitempty"`
 	Ready        *bool          `json:"ready,omitempty"`
@@ -105,7 +106,7 @@ type LobbyEvent struct {
 
 func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetails {
 	playerId, err := lobby.GetPlayerIDBySlot(slot)
-	j := SlotDetails{Filled: err == nil}
+	j := SlotDetails{Slot: slot, Filled: err == nil}
 
 	if err == nil && includeDetails {
 		var player Player
