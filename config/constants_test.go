@@ -2,12 +2,13 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package config
+package config_test
 
 import (
 	"os"
 	"testing"
 
+	. "github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/stretchr/testify/assert"
 )
