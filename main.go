@@ -72,6 +72,18 @@ func main() {
 		logrus.Info("Running Profiler at ", address)
 	}
 
+	if config.Constants.EtcdAddr != "" {
+		err := helpers.ConnectEtcd()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		err = helpers.SetAddr(config.Constants.EtcdService, config.Constants.RPCAddr)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+	}
+
 	authority.RegisterTypes()
 	helpers.InitAuthorization()
 	database.Init()
