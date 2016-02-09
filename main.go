@@ -73,15 +73,17 @@ func main() {
 	}
 
 	if config.Constants.EtcdAddr != "" {
-		err := helpers.ConnectEtcd()
+		err := helpers.ConnectEtcd(config.Constants.EtcdAddr)
 		if err != nil {
 			logrus.Fatal(err)
 		}
 
-		err = helpers.SetAddr(config.Constants.EtcdService, config.Constants.RPCAddr)
+		node, err := helpers.SetAddr(config.Constants.EtcdService, config.Constants.RPCAddr)
 		if err != nil {
 			logrus.Fatal(err)
 		}
+
+		logrus.Info("Wrote key ", node.Key, "=", node.Value)
 	}
 
 	authority.RegisterTypes()
@@ -93,7 +95,6 @@ func main() {
 
 	models.ConnectRPC()
 	models.DeleteUnusedServerRecords()
-	models.Ping()
 
 	chelpers.InitGeoIPDB()
 	if config.Constants.SteamIDWhitelist != "" {
