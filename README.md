@@ -1,5 +1,5 @@
-Helen - DEV BRANCH
-==================
+Helen
+=====
 Helen is the backend server component for the tf2stadium.com project written in Go.
 
 [![Build Status](https://circleci.com/gh/TF2Stadium/Helen/tree/dev.svg?style=svg)](https://circleci.com/gh/TF2Stadium/Helen/tree/dev)
