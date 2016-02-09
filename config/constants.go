@@ -50,6 +50,9 @@ type constants struct {
 	SlackbotURL        string `envconfig:"SLACK_URL"`
 	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID"`
 	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET"`
+
+	EtcdAddr    string `envconfig:"ETCD_ADDR"`
+	EtcdService string `envconfig:"ETCD_SERVICE"`
 }
 
 var Constants = constants{}
@@ -77,6 +80,9 @@ func SetupConstants() {
 
 	if Constants.PublicAddress == "" {
 		Constants.PublicAddress = "http://" + Constants.ListenAddress
+	}
+	if Constants.EtcdAddr != "" && Constants.EtcdService == "" {
+		logrus.Fatal("No Etcd service provided.")
 	}
 }
 
