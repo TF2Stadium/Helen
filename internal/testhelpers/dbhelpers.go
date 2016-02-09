@@ -40,7 +40,6 @@ func CleanupDB() {
 		"lobbies",
 		"lobby_slots",
 		"player_bans",
-		"player_settings",
 		"player_stats",
 		"players",
 		"server_records",
