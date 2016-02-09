@@ -23,8 +23,8 @@ variables.
 | `HELEN_SERVER_OPENID_REALM`  | The OpenID Realm (See: [Section 9.2 of the OpenID Spec](https://openid.net/specs/openid-authentication-2_0-12.html#realms))                      |
 | `HELEN_SERVER_COOKIE_DOMAIN` | Cookie URL domain                                                                                                                                |
 | `HELEN_RPC_ADDR`             | Address to listen on for RPC requests                                                                                                            |
-| `HELEN_PAULING_ADDR`         | Address to connect to [Pauling](github.com/TF2Stadium/Pauling) on.                                                                               |
-| `HELEN_FUMBLE_ADDR`          | Address to connect to [Fumble](github.com/TF2Stadium/Fumble) on.                                                                                 |
+| `HELEN_PAULING_ADDR`         | Address to connect to [Pauling](github.com/TF2Stadium/Pauling) on. If written as `etcd:<service name>`, the service name is looked up in Etcd.   |
+| `HELEN_FUMBLE_ADDR`          | Address to connect to [Fumble](github.com/TF2Stadium/Fumble) on.If written as `etcd:<service name>`, the service name is looked up in Etcd.      |
 | `HELEN_MUMBLE_ADDR`          | Mumble server address for lobbies.                                                                                                               |
 | `HELEN_MUMBLE_PASSWORD`      | Mumble server password for lobbies.                                                                                                              |
 | `HELEN_STEAMID_WHITELIST`    | If set, only players in the steamgroup can login to the site.                                                                                    |
@@ -38,6 +38,10 @@ variables.
 | `HELEN_PROFILER_ENABLE`      | Enable profiler if set to "true".                                                                                                                |
 | `HELEN_PROFILER_ADDR`        | Address for profiler to listen on.                                                                                                               |
 | `HELEN_SLACK_URL`            | Slack URL for slack integration.                                                                                                                 |
+| `HELEN_TWITCH_CLIENT_ID`     | Twitch client ID (for twitch integration)                                                                                                        |
+| `HELEN_TWITCH_CLIENT_SECRET` | Twitch client secret (for twitch integration)                                                                                                    |
+| `HELEN_ETCD_ADDR`            | Etcd server address                                                                                                                              |
+| `HELEN_ETCD_SERVICE`         | Service name to write to etcd                                                                                                                    |
 
 ### Structure
 The code is divided into multiple packages that follow the usual web application structure:
