@@ -212,8 +212,7 @@ func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPErr
 		req = slotReq
 	}
 
-	stats := PlayerStats{}
-	db.DB.First(&stats, player.StatsID)
+	db.DB.Preload("Stats").First(player, player.ID)
 
 	if time.Since(player.UpdatedAt) < time.Hour*time.Duration(req.Hours-player.GameHours) {
 		//update player info only if the number of hours needed > the number of hours
@@ -226,7 +225,7 @@ func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPErr
 		return false, ReqHoursErr
 	}
 
-	if stats.TotalLobbies() < req.Lobbies {
+	if player.Stats.TotalLobbies() < req.Lobbies {
 		return false, ReqLobbiesErr
 	}
 
