@@ -68,3 +68,5 @@ The code is divided into multiple packages that follow the usual web application
 ### License
 
 Helen is licensed under the GNU Public License v3.
+
+This product includes GeoLite2 data created by MaxMind, available from [http://www.maxmind.com"](http://www.maxmind.com)
