@@ -46,7 +46,7 @@ func TwitchLogin(w http.ResponseWriter, r *http.Request) {
 		Path:   "kraken/oauth2/authorize",
 	}
 
-	twitchRedirectURL := "http://" + config.Constants.ListenAddress + "/" + "twitchAuth"
+	twitchRedirectURL := config.Constants.PublicAddress + "/" + "twitchAuth"
 
 	values := loginURL.Query()
 	values.Set("response_type", "code")
@@ -85,7 +85,7 @@ func TwitchAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	twitchRedirectURL := "http://" + config.Constants.ListenAddress + "/" + "twitchAuth"
+	twitchRedirectURL := config.Constants.PublicAddress + "/" + "twitchAuth"
 
 	// successful login, try getting access token now
 	tokenURL := url.URL{
