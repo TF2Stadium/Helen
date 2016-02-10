@@ -145,6 +145,31 @@ func (player *Player) SetExternalLinks() {
 		url := fmt.Sprintf(`http://beta.etf2l.org/forum/user/%d/`, reply.Player.ID)
 		player.ExternalLinks["etf2l"] = &url
 	}
+
+	// teamfortress.tv
+	tftv := fmt.Sprintf("http://www.teamfortress.tv/api/users/%s", player.SteamID)
+	resp, err = helpers.HTTPClient.Get(tftv)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	var tftvReply struct {
+		UserName string `json:"user_name"`
+	}
+
+	dec = json.NewDecoder(resp.Body)
+	err = dec.Decode(&reply)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	if tftvReply.UserName != "" {
+		uname := fmt.Sprintf("http://teamfortress.tv/user/%s", tftvReply.UserName)
+		player.ExternalLinks["tftv"] = &uname
+	}
+
 }
 
 func (player *Player) GenAuthKey() string {
