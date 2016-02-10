@@ -132,11 +132,6 @@ func TwitchAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if info.Type != "user" {
-		http.Error(w, "Unsupported account type.", http.StatusBadRequest)
-		return
-	}
-
 	player.TwitchName = info.Name
 	player.TwitchAccessToken = reply.AccessToken
 	player.Save()
