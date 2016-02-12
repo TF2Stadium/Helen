@@ -5,47 +5,43 @@
 package config
 
 import (
-	"os"
-	"strings"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
 )
 
 var (
-	GlobalChatRoom     string
+	GlobalChatRoom     string = "0"
 	SteamApiMockUp     bool
 	AllowedCorsOrigins []string
 )
 
 type constants struct {
-	ListenAddress      string `envconfig:"SERVER_ADDR"`
+	ListenAddress      string `envconfig:"SERVER_ADDR" default:"localhost:8080"`
 	PublicAddress      string `envconfig:"PUBLIC_ADDR"` // should include schema
-	OpenIDRealm        string `envconfig:"SERVER_OPENID_REALM"`
+	OpenIDRealm        string `envconfig:"SERVER_OPENID_REALM" default:"http://localhost:8080"`
 	CookieDomain       string `envconfig:"SERVER_COOKIE_DOMAIN"`
-	LoginRedirectPath  string `envconfig:"SERVER_REDIRECT_PATH"`
-	CookieStoreSecret  string `envconfig:"COOKIE_STORE_SECRET"`
+	LoginRedirectPath  string `envconfig:"SERVER_REDIRECT_PATH" default:"http://localhost:8080/"`
+	CookieStoreSecret  string `envconfig:"COOKIE_STORE_SECRET" default:"secret"`
 	StaticFileLocation string
 	SessionName        string
-	RPCAddr            string `envconfig:"RPC_ADDR"`
+	RPCAddr            string `envconfig:"RPC_ADDR" default:"localhost:8081"`
 	PaulingAddr        string `envconfig:"PAULING_ADDR"`
 	FumbleAddr         string `envconfig:"FUMBLE_ADDR"`
 	MumbleAddr         string `envconfig:"MUMBLE_ADDR"`
 	MumblePassword     string `envconfig:"MUMBLE_PASSWORD"`
 	SteamIDWhitelist   string `envconfig:"STEAMID_WHITELIST"`
-	MockupAuth         bool   `envconfig:"MOCKUP_AUTH"`
+	MockupAuth         bool   `envconfig:"MOCKUP_AUTH" default:"true"`
 	GeoIP              string `envconfig:"GEOIP_DB"`
 
 	// database
-	DbAddr     string `envconfig:"DATABASE_ADDR"`
-	DbDatabase string `envconfig:"DATABASE_NAME"`
-	DbUsername string `envconfig:"DATABASE_USERNAME"`
-	DbPassword string `envconfig:"DATABASE_PASSWORD"`
+	DbAddr     string `envconfig:"DATABASE_ADDR" default:"127.0.0.1:5432"`
+	DbDatabase string `envconfig:"DATABASE_NAME" default:"tf2stadium"`
+	DbUsername string `envconfig:"DATABASE_USERNAME" default:"tf2stadium"`
+	DbPassword string `envconfig:"DATABASE_PASSWORD" default:"dickbutt"`
 
-	SteamDevApiKey string `envconfig:"STEAM_API_KEY"`
+	SteamDevAPIKey string `envconfig:"STEAM_API_KEY" default:"your steam dev api key"`
 
-	ProfilerEnable bool   `envconfig:"PROFILER_ENABLE"`
-	ProfilerPort   string `envconfig:"PROFILER_ADDR"`
+	ProfilerAddr string `envconfig:"PROFILER_ADDR"`
 
 	SlackbotURL        string `envconfig:"SLACK_URL"`
 	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID"`
@@ -58,21 +54,12 @@ type constants struct {
 var Constants = constants{}
 
 func SetupConstants() {
-	setupDevelopmentConstants()
-	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) == "production" {
-		setupProductionConstants()
-	} else if val == "test" {
-		setupTestConstants()
-	} else if val == "travis_test" {
-		setupTravisTestConstants()
-	}
-
 	err := envconfig.Process("HELEN", &Constants)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	if Constants.SteamDevApiKey == "your steam dev api key" {
+	if Constants.SteamDevAPIKey == "your steam dev api key" {
 		logrus.Warning("Steam api key not provided, setting SteamApiMockUp to true")
 	} else {
 		SteamApiMockUp = false
@@ -81,54 +68,8 @@ func SetupConstants() {
 	if Constants.PublicAddress == "" {
 		Constants.PublicAddress = "http://" + Constants.ListenAddress
 	}
+
 	if Constants.EtcdAddr != "" && Constants.EtcdService == "" {
-		logrus.Fatal("No Etcd service provided.")
+		logrus.Fatal("No Etcd service name provided.")
 	}
-}
-
-func setupDevelopmentConstants() {
-	GlobalChatRoom = "0"
-	Constants.RPCAddr = "localhost:8081"
-	Constants.ListenAddress = "localhost:8080"
-	Constants.OpenIDRealm = "http://localhost:8080"
-	Constants.CookieDomain = ""
-	Constants.LoginRedirectPath = "http://localhost:8080/"
-	Constants.CookieStoreSecret = ""
-	Constants.SessionName = "defaultSession"
-	Constants.StaticFileLocation = os.Getenv("GOPATH") + "/src/github.com/TF2Stadium/Helen/static"
-	Constants.PaulingAddr = ""
-	AllowedCorsOrigins = []string{"*"}
-
-	Constants.DbAddr = "127.0.0.1:5432"
-	Constants.DbDatabase = "tf2stadium"
-	Constants.DbUsername = "tf2stadium"
-	Constants.DbPassword = "dickbutt" // change this
-
-	Constants.SteamDevApiKey = "your steam dev api key"
-	SteamApiMockUp = true
-
-	Constants.ProfilerPort = "6060"
-}
-
-func setupProductionConstants() {
-	// override production stuff here
-	Constants.CookieDomain = ".tf2stadium.com"
-}
-
-func setupTestConstants() {
-	Constants.DbAddr = "127.0.0.1:5432"
-	Constants.DbDatabase = "TESTtf2stadium"
-	Constants.DbUsername = "TESTtf2stadium"
-	Constants.DbPassword = "dickbutt"
-
-	SteamApiMockUp = true
-}
-
-func setupTravisTestConstants() {
-	Constants.DbAddr = "127.0.0.1:5432"
-	Constants.DbDatabase = "tf2stadium"
-	Constants.DbUsername = "postgres"
-	Constants.DbPassword = ""
-
-	SteamApiMockUp = true
 }
