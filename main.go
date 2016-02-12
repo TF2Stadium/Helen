@@ -27,8 +27,8 @@ import (
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/database/migrations"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/helpers/authority"
-	_ "github.com/TF2Stadium/Helen/internal/pprof"
+	_ "github.com/TF2Stadium/Helen/helpers/authority" // to register authority types
+	_ "github.com/TF2Stadium/Helen/internal/pprof"    // to setup expvars
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
@@ -84,7 +84,6 @@ func main() {
 		logrus.Info("Wrote key ", node.Key, "=", node.Value)
 	}
 
-	authority.RegisterTypes()
 	helpers.InitAuthorization()
 	database.Init()
 	migrations.Do()
