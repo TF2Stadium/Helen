@@ -27,7 +27,7 @@ var socketAuthStore = make(map[string]*sessions.Session)
 func SetupStores() {
 	var key []byte
 
-	if config.Constants.CookieStoreSecret != "" {
+	if config.Constants.CookieStoreSecret != "secret" {
 		var err error
 
 		key, err = base64.StdEncoding.DecodeString(string(config.Constants.CookieStoreSecret))
