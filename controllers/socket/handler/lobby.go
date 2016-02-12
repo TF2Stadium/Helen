@@ -176,7 +176,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			}
 		}
 		if args.Requirements.General.Hours != 0 || args.Requirements.General.Lobbies != 0 {
-			for i := 0; i < models.NumberOfClassesMap[lob.Type]; i++ {
+			for i := 0; i < 2*models.NumberOfClassesMap[lob.Type]; i++ {
 				req := &models.Requirement{
 					LobbyID: lob.ID,
 					Hours:   args.Requirements.General.Hours,
