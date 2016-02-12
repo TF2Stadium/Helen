@@ -5,7 +5,6 @@
 package testhelpers
 
 import (
-	"os"
 	"sync"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -24,8 +23,14 @@ func CleanupDB() {
 	defer cleaningMutex.Unlock()
 
 	o.Do(func() {
-		os.Setenv("DEPLOYMENT_ENV", "test")
 		config.SetupConstants()
+
+		config.Constants.DbAddr = "127.0.0.1:5432"
+		config.Constants.DbDatabase = "TESTtf2stadium"
+		config.Constants.DbUsername = "TESTtf2stadium"
+		config.Constants.DbPassword = "dickbutt"
+		config.SteamApiMockUp = true
+
 		database.Init()
 		authority.RegisterTypes()
 		migrations.Do()
