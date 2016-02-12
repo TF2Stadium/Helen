@@ -29,7 +29,7 @@ func CleanupDB() {
 		config.Constants.DbDatabase = "TESTtf2stadium"
 		config.Constants.DbUsername = "TESTtf2stadium"
 		config.Constants.DbPassword = "dickbutt"
-		config.SteamApiMockUp = true
+		config.Constants.SteamDevAPIKey = ""
 
 		database.Init()
 		authority.RegisterTypes()
