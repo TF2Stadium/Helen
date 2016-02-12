@@ -7,6 +7,7 @@ package helpers
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/facebookgo/stack"
@@ -14,22 +15,34 @@ import (
 
 type formatter struct{}
 
+var (
+	json logrus.Formatter = &logrus.JSONFormatter{
+		TimestampFormat: time.Stamp,
+	}
+	text logrus.Formatter = &logrus.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "15:04:05.000",
+	}
+)
+
 func (formatter) Format(e *logrus.Entry) ([]byte, error) {
-	var t logrus.Formatter
+	var f logrus.Formatter
 
 	frame := stack.Caller(7)
-	e.Data["func"] = fmt.Sprintf("%s:%d", frame.Name, frame.Line)
 
 	if os.Getenv("LOG_FORMAT") == "json" {
-		t = &logrus.JSONFormatter{}
+		e.Data["func"] = frame.Name
+		e.Data["line"] = frame.Line
+		e.Data["file"] = frame.File
+
+		f = json
 	} else {
-		t = &logrus.TextFormatter{
-			FullTimestamp:   true,
-			TimestampFormat: "15:04:05.000",
-		}
+		e.Data["func"] = fmt.Sprintf("%s:%d", frame.Name, frame.Line)
+
+		f = text
 	}
 
-	return t.Format(e)
+	return f.Format(e)
 }
 
 func InitLogger() {
