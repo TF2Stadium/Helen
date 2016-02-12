@@ -12,6 +12,11 @@ type AuthRole int
 
 var permissions = make(map[AuthRole]map[AuthAction]bool)
 
+func init() {
+	gob.Register(AuthAction(0))
+	gob.Register(AuthRole(0))
+}
+
 func (role AuthRole) Allow(action AuthAction) AuthRole {
 	amap, ok := permissions[role]
 	if !ok {
@@ -65,9 +70,4 @@ func Can(role_int int, action AuthAction) bool {
 
 func Reset() {
 	permissions = make(map[AuthRole]map[AuthAction]bool)
-}
-
-func RegisterTypes() {
-	gob.Register(AuthAction(0))
-	gob.Register(AuthRole(0))
 }
