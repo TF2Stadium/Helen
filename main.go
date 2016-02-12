@@ -65,12 +65,9 @@ func main() {
 	}
 	go rpc.StartRPC(l)
 
-	if config.Constants.ProfilerEnable {
-		address := "localhost:" + config.Constants.ProfilerPort
-		go func() {
-			graceful.Run(address, 1*time.Second, nil)
-		}()
-		logrus.Info("Running Profiler at ", address)
+	if config.Constants.ProfilerAddr != "" {
+		go graceful.Run(config.Constants.ProfilerAddr, 1*time.Second, nil)
+		logrus.Info("Running Profiler at ", config.Constants.ProfilerAddr)
 	}
 
 	if config.Constants.EtcdAddr != "" {
