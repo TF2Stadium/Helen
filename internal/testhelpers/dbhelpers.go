@@ -5,6 +5,7 @@
 package testhelpers
 
 import (
+	"os"
 	"sync"
 
 	"github.com/TF2Stadium/Helen/config"
@@ -25,11 +26,20 @@ func CleanupDB() {
 	o.Do(func() {
 		config.SetupConstants()
 
+		circleci := os.Getenv("CIRCLECI")
+		ci := os.Getenv("CI")
 		config.Constants.DbAddr = "127.0.0.1:5432"
-		config.Constants.DbDatabase = "TESTtf2stadium"
-		config.Constants.DbUsername = "TESTtf2stadium"
-		config.Constants.DbPassword = "dickbutt"
 		config.Constants.SteamDevAPIKey = ""
+
+		if circleci == "true" && ci == "true" {
+			config.Constants.DbUsername = "ubuntu"
+			config.Constants.DbDatabase = "circle_test"
+			config.Constants.DbPassword = ""
+		} else {
+			config.Constants.DbDatabase = "TESTtf2stadium"
+			config.Constants.DbUsername = "TESTtf2stadium"
+			config.Constants.DbPassword = "dickbutt"
+		}
 
 		database.Init()
 		authority.RegisterTypes()
