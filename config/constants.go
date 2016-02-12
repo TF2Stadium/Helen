@@ -11,19 +11,18 @@ import (
 
 var (
 	GlobalChatRoom     string = "0"
-	SteamApiMockUp     bool
-	AllowedCorsOrigins []string
+	AllowedCorsOrigins        = []string{"*"}
 )
 
 type constants struct {
 	ListenAddress      string `envconfig:"SERVER_ADDR" default:"localhost:8080"`
 	PublicAddress      string `envconfig:"PUBLIC_ADDR"` // should include schema
 	OpenIDRealm        string `envconfig:"SERVER_OPENID_REALM" default:"http://localhost:8080"`
-	CookieDomain       string `envconfig:"SERVER_COOKIE_DOMAIN"`
+	CookieDomain       string `envconfig:"SERVER_COOKIE_DOMAIN" default:""`
 	LoginRedirectPath  string `envconfig:"SERVER_REDIRECT_PATH" default:"http://localhost:8080/"`
 	CookieStoreSecret  string `envconfig:"COOKIE_STORE_SECRET" default:"secret"`
 	StaticFileLocation string
-	SessionName        string
+	SessionName        string `envconfig:"COOKIE_SESSION_NAME" default:"defaultSession"`
 	RPCAddr            string `envconfig:"RPC_ADDR" default:"localhost:8081"`
 	PaulingAddr        string `envconfig:"PAULING_ADDR"`
 	FumbleAddr         string `envconfig:"FUMBLE_ADDR"`
@@ -39,7 +38,7 @@ type constants struct {
 	DbUsername string `envconfig:"DATABASE_USERNAME" default:"tf2stadium"`
 	DbPassword string `envconfig:"DATABASE_PASSWORD" default:"dickbutt"`
 
-	SteamDevAPIKey string `envconfig:"STEAM_API_KEY" default:"your steam dev api key"`
+	SteamDevAPIKey string `envconfig:"STEAM_API_KEY"`
 
 	ProfilerAddr string `envconfig:"PROFILER_ADDR"`
 
@@ -59,10 +58,8 @@ func SetupConstants() {
 		logrus.Fatal(err)
 	}
 
-	if Constants.SteamDevAPIKey == "your steam dev api key" {
+	if Constants.SteamDevAPIKey == "" {
 		logrus.Warning("Steam api key not provided, setting SteamApiMockUp to true")
-	} else {
-		SteamApiMockUp = false
 	}
 
 	if Constants.PublicAddress == "" {

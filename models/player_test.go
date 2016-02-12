@@ -90,7 +90,7 @@ func TestGetSpectatingIds(t *testing.T) {
 func TestPlayerInfoFetching(t *testing.T) {
 	t.Parallel()
 
-	if config.Constants.SteamDevApiKey == "your steam dev api key" {
+	if config.Constants.SteamDevAPIKey == "" {
 		return
 	}
 
