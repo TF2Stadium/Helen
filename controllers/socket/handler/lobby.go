@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -147,11 +146,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 	err := lob.SetupServer()
 	if err != nil { //lobby setup failed, delete lobby and corresponding server record
-		qerr := db.DB.Where("id = ?", lob.ID).Delete(&models.Lobby{}).Error
-		if qerr != nil {
-			logrus.Warning(qerr.Error())
-		}
-		db.DB.Delete(&lob.ServerInfo)
+		lob.Delete()
 		return helpers.NewTPErrorFromError(err)
 	}
 
@@ -242,7 +237,7 @@ func (Lobby) ServerVerify(so *wsevent.Client, args struct {
 		RconPassword: *args.Rconpwd,
 	}
 	db.DB.Save(info)
-	defer db.DB.Where("host = ?", info.Host).Delete(models.ServerRecord{})
+	defer db.DB.Delete(info)
 
 	err := models.VerifyInfo(*info)
 	if err != nil {
@@ -336,17 +331,13 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 		lob.Save()
 
 		time.AfterFunc(time.Second*30, func() {
-			lobby := &models.Lobby{}
-			db.DB.First(lobby, lob.ID)
-
+			state := lob.CurrentState()
 			//if all player's haven't readied up,
 			//remove unreadied players and unready the
 			//rest.
-			if lobby.State != models.LobbyStateInProgress && lobby.State != models.LobbyStateEnded {
-				removeUnreadyPlayers(lobby)
-
-				lobby.State = models.LobbyStateWaiting
-				lobby.Save()
+			if state != models.LobbyStateInProgress && state != models.LobbyStateEnded {
+				removeUnreadyPlayers(lob)
+				lob.SetState(models.LobbyStateWaiting)
 			}
 		})
 
@@ -367,10 +358,10 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 	return emptySuccess
 }
 
+//get list of unready players, remove them from lobby (and add them as spectators)
+//plus, call the after lobby leave hook for each player removed
 func removeUnreadyPlayers(lobby *models.Lobby) {
-	var players []*models.Player
-
-	db.DB.Table("players").Joins("INNER JOIN lobby_slots ON lobby_slots.player_id = players.id").Where("lobby_slots.lobby_id = ? AND lobby_slots.ready = ?", lobby.ID, false).Find(&players)
+	players := lobby.GetUnreadyPlayers()
 	lobby.RemoveUnreadyPlayers(true)
 
 	for _, player := range players {
@@ -565,9 +556,7 @@ func (Lobby) LobbySpectatorLeave(so *wsevent.Client, args struct {
 }
 
 func (Lobby) RequestLobbyListData(so *wsevent.Client, _ struct{}) interface{} {
-	var lobbies []models.Lobby
-	db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
-	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(lobbies)))
+	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(models.GetWaitingLobbies())))
 
 	return emptySuccess
 }
@@ -622,8 +611,7 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 		return helpers.NewTPError("Invalid slot.", -1)
 	}
 
-	req := &models.Requirement{}
-	err := db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", *args.ID, *args.Slot).First(req).Error
+	req, err := lobby.GetSlotRequirement(*args.Slot)
 	if err != nil { //requirement doesn't exist. create one
 		req.Slot = *args.Slot
 		req.LobbyID = *args.ID

@@ -88,7 +88,7 @@ func (Chat) ChatDelete(so *wsevent.Client, args struct {
 	}
 
 	message := &models.ChatMessage{}
-	err := db.DB.Table("chat_messages").Where("room = ? AND id = ?", args.Room, args.ID).First(message).Error
+	err := db.DB.First(message, *args.ID).Error
 	if message.Bot {
 		return helpers.NewTPError("Cannot delete notification messages", -1)
 	}
