@@ -273,6 +273,12 @@ func (lobby *Lobby) Delete() {
 	db.DB.Delete(&lobby.ServerInfo)
 }
 
+//GetWaitingLobbies returns a list of lobby objects that haven't been filled yet
+func GetWaitingLobbies() (lobbies []*Lobby) {
+	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)
+	return
+}
+
 //CurrentState returns the lobby's current state.
 //It's meant to be used for old lobby objects which might have their state change while the
 //object hasn't been updated.
