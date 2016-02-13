@@ -301,11 +301,11 @@ func (player *Player) GetSpectatingIds() ([]uint, *helpers.TPError) {
 
 //Retrieve the player's details using the Steam API. The object needs to be saved after this.
 func (player *Player) UpdatePlayerInfo() error {
-	player.SetExternalLinks()
-
 	if config.Constants.SteamDevAPIKey == "" {
 		return nil
 	}
+
+	player.SetExternalLinks()
 
 	scraper.SetSteamApiKey(config.Constants.SteamDevAPIKey)
 	p, _ := GetPlayerBySteamID(player.SteamID)
