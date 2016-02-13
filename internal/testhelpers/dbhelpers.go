@@ -12,7 +12,7 @@ import (
 	"github.com/TF2Stadium/Helen/config/stores"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/database/migrations"
-	"github.com/TF2Stadium/Helen/helpers/authority"
+	_ "github.com/TF2Stadium/Helen/helpers/authority"
 )
 
 var cleaningMutex sync.Mutex
@@ -42,7 +42,6 @@ func CleanupDB() {
 		}
 
 		database.Init()
-		authority.RegisterTypes()
 		migrations.Do()
 		stores.SetupStores()
 	})
