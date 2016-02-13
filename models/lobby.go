@@ -265,6 +265,14 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 	return lobby
 }
 
+//Delete removes the lobby object from the database.
+//Closed lobbies aren't deleted, this function is used for
+//lobbies where the game server had an error while being setup.
+func (lobby *Lobby) Delete() {
+	db.DB.Delete(lobby)
+	db.DB.Delete(&lobby.ServerInfo)
+}
+
 //CurrentState returns the lobby's current state.
 //It's meant to be used for old lobby objects which might have their state change while the
 //object hasn't been updated.
