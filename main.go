@@ -12,8 +12,6 @@ import (
 	"net"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
-	"strings"
 	"time"
 
 	"gopkg.in/tylerb/graceful.v1"
@@ -103,13 +101,6 @@ func main() {
 	routes.SetupHTTP(mux)
 	socket.RegisterHandlers()
 
-	if val := os.Getenv("DEPLOYMENT_ENV"); strings.ToLower(val) != "production" {
-		// init static FileServer
-		// TODO be careful to set this to correct location when deploying
-		mux.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, r.URL.Path[1:])
-		})
-	}
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   config.AllowedCorsOrigins,
 		AllowCredentials: true,

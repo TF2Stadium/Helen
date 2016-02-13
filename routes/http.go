@@ -55,4 +55,11 @@ func SetupHTTP(mux *http.ServeMux) {
 	for _, route := range routes {
 		mux.HandleFunc(route.pattern, route.handler)
 	}
+
+	if config.Constants.ServeStatic {
+		mux.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "views/static.html")
+		})
+
+	}
 }
