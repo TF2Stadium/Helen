@@ -31,6 +31,7 @@ type constants struct {
 	SteamIDWhitelist   string `envconfig:"STEAMID_WHITELIST"`
 	MockupAuth         bool   `envconfig:"MOCKUP_AUTH" default:"false"`
 	GeoIP              string `envconfig:"GEOIP_DB"`
+	ServeStatic        bool   `envconfig:"SERVE_STATIC" default:"true"`
 
 	// database
 	DbAddr     string `envconfig:"DATABASE_ADDR" default:"127.0.0.1:5432"`
