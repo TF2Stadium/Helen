@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -22,14 +21,7 @@ import (
 func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 	server.Join(so, fmt.Sprintf("%s_public", config.GlobalChatRoom)) //room for global chat
 
-	var lobbies []models.Lobby
-	err := db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies).Error
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-
-	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(lobbies)))
+	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(models.GetWaitingLobbies())))
 	chelpers.BroadcastScrollback(so, 0)
 	so.EmitJSON(helpers.NewRequest("subListData", models.DecorateSubstituteList()))
 }
@@ -46,8 +38,10 @@ func AfterConnectLoggedIn(so *wsevent.Client, player *models.Player) {
 		AfterLobbyJoin(so, lobby, player)
 		AfterLobbySpec(socket.AuthServer, so, lobby)
 		models.BroadcastLobbyToUser(lobby, chelpers.GetSteamId(so.ID))
+
 		slot := &models.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+
 		if err == nil {
 			if lobby.State == models.LobbyStateInProgress {
 				broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, slot.Slot))

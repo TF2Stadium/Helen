@@ -12,7 +12,6 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
-	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
@@ -64,13 +63,8 @@ func GetLobbyRoom(lobbyid uint) string {
 
 //Not really broadcast, since it sends each client a different LobbyStart JSON
 func BroadcastLobbyStart(lobby *models.Lobby) {
-	var slots []*models.LobbySlot
-
-	db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Find(&slots)
-
-	for _, slot := range slots {
-		var player models.Player
-		db.DB.First(&player, slot.PlayerID)
+	for _, slot := range lobby.GetAllSlots() {
+		player, _ := models.GetPlayerByID(slot.PlayerID)
 
 		connectInfo := models.DecorateLobbyConnect(lobby, player.Name, slot.Slot)
 		broadcaster.SendMessage(player.SteamID, "lobbyStart", connectInfo)
