@@ -9,7 +9,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
-	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"golang.org/x/net/xsrftoken"
@@ -166,8 +165,10 @@ func TwitchLogout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "You are not logged in.", http.StatusUnauthorized)
 	}
 
-	db.DB.Table("players").Where("steam_id = ?", steamID).UpdateColumn(map[string]interface{}{
-		"twitch_access_token": "",
-		"twitch_name":         ""})
+	player, _ := models.GetPlayerBySteamID(steamID.(string))
+	player.TwitchName = ""
+	player.TwitchAccessToken = ""
+	player.Save()
+
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, http.StatusTemporaryRedirect)
 }
