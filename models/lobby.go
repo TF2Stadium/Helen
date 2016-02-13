@@ -528,6 +528,13 @@ func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
 	return nil
 }
 
+//GetUnreadyPlayers returns a list of unready players in the lobby.
+//only used when lobby state == LobbyStateReadyingUp
+func (lobby *Lobby) GetUnreadyPlayers() (players []*Player) {
+	db.DB.Table("players").Joins("INNER JOIN lobby_slots ON lobby_slots.player_id = players.id").Where("lobby_slots.lobby_id = ? AND lobby_slots.ready = ?", lobby.ID, false).Find(&players)
+	return
+}
+
 //RemoveUnreadyPlayers removes players who haven't removed. If spec == true, move them to spectators
 func (lobby *Lobby) RemoveUnreadyPlayers(spec bool) error {
 	playerids := []uint{}
