@@ -795,11 +795,9 @@ func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
 
 //BroadcastLobbyList broadcasts the lobby list to all users
 func BroadcastLobbyList() {
-	lobbies := []Lobby{}
-	db.DB.Where("state = ?", LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	broadcaster.SendMessageToRoom(
 		fmt.Sprintf("%s_public", config.GlobalChatRoom),
-		"lobbyListData", DecorateLobbyListData(lobbies))
+		"lobbyListData", DecorateLobbyListData(GetWaitingLobbies()))
 }
 
 func (l *Lobby) LobbyData(include bool) LobbyData {
