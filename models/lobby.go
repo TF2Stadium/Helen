@@ -653,6 +653,12 @@ func (lobby *Lobby) IsSlotFilled(slot int) bool {
 	return true
 }
 
+//GetAllSlots returns a list of all occupied slots in the lobby
+func (lobby *Lobby) GetAllSlots() []LobbySlot {
+	db.DB.Preload("Slots").First(lobby, lobby.ID)
+	return lobby.Slots
+}
+
 //SetupServer setups the TF2 server for the lobby, calls Pauling.SetupServer()
 func (lobby *Lobby) SetupServer() error {
 	if lobby.State == LobbyStateEnded {
