@@ -26,6 +26,7 @@ func ConnectRPC() {
 		}
 
 		pauling.Call("Pauling.Ping", struct{}{}, &struct{}{})
+		logrus.Info("Connected to Pauling")
 	}
 
 	if config.Constants.FumbleAddr != "" {
@@ -33,5 +34,6 @@ func ConnectRPC() {
 		if err != nil {
 			logrus.Fatal(err)
 		}
+		logrus.Info("Connected to Fumble")
 	}
 }
