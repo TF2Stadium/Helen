@@ -288,6 +288,10 @@ func (l *Lobby) CurrentState() LobbyState {
 	return LobbyState(state)
 }
 
+func (l *Lobby) SetState(s LobbyState) {
+	db.DB.Table("lobbies").Where("id = ?", l.ID).UpdateColumn("state", s)
+}
+
 //GetPlayerSlotObj returns the LobbySlot object if the given player occupies a slot in the lobby.
 func (lobby *Lobby) GetPlayerSlotObj(player *Player) (*LobbySlot, error) {
 	slotObj := &LobbySlot{}
