@@ -51,7 +51,7 @@ func (Player) PlayerReady(so *wsevent.Client, _ struct{}) interface{} {
 		models.BroadcastLobbyList()
 	}
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Player) PlayerNotReady(so *wsevent.Client, _ struct{}) interface{} {
@@ -86,7 +86,7 @@ func (Player) PlayerNotReady(so *wsevent.Client, _ struct{}) interface{} {
 	}
 
 	lobby.UnreadyAllPlayers()
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Player) PlayerSettingsGet(so *wsevent.Client, args struct {
@@ -96,11 +96,11 @@ func (Player) PlayerSettingsGet(so *wsevent.Client, args struct {
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
 	if *args.Key == "*" {
-		return chelpers.NewResponse(player.Settings)
+		return newResponse(player.Settings)
 	}
 
 	setting := player.GetSetting(*args.Key)
-	return chelpers.NewResponse(setting)
+	return newResponse(setting)
 }
 
 var reMumbleNick = regexp.MustCompile(`\w+`)
@@ -130,7 +130,7 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 		}
 	}
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Player) PlayerProfile(so *wsevent.Client, args struct {
@@ -149,5 +149,5 @@ func (Player) PlayerProfile(so *wsevent.Client, args struct {
 	}
 
 	result := models.DecoratePlayerProfileJson(player)
-	return chelpers.NewResponse(result)
+	return newResponse(result)
 }

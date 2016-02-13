@@ -69,13 +69,13 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 
 	if strings.HasPrefix(*args.Message, "!admin") {
 		chelpers.SendToSlack(*args.Message, player.Name, player.SteamID)
-		return chelpers.EmptySuccessJS
+		return emptySuccess
 	}
 
 	message.Save()
 	message.Send()
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Chat) ChatDelete(so *wsevent.Client, args struct {
@@ -105,5 +105,5 @@ func (Chat) ChatDelete(so *wsevent.Client, args struct {
 	message.Player.Tags = append(message.Player.Tags, "deleted")
 	message.Send()
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }

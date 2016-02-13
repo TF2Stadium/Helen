@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 
-	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -33,8 +32,7 @@ func (Unauth) LobbySpectatorJoin(so *wsevent.Client, args struct {
 
 	so.EmitJSON(helpers.NewRequest("lobbyData", models.DecorateLobbyData(lob, true)))
 
-	return chelpers.EmptySuccessJS
-
+	return emptySuccess
 }
 
 func (Unauth) LobbySpectatorLeave(so *wsevent.Client, args struct {
@@ -47,5 +45,5 @@ func (Unauth) LobbySpectatorLeave(so *wsevent.Client, args struct {
 		sessions.RemoveSpectator(so.ID)
 	}
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }

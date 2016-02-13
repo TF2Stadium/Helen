@@ -188,7 +188,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 		}
 	}
-	return chelpers.NewResponse(
+	return newResponse(
 		struct {
 			ID uint `json:"id"`
 		}{lob.ID})
@@ -217,8 +217,7 @@ func (Lobby) LobbyServerReset(so *wsevent.Client, args struct {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	return chelpers.EmptySuccessJS
-
+	return emptySuccess
 }
 
 var validAddress = regexp.MustCompile(`.+\:\d+`)
@@ -250,7 +249,7 @@ func (Lobby) ServerVerify(so *wsevent.Client, args struct {
 		return helpers.NewTPErrorFromError(err)
 	}
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Lobby) LobbyClose(so *wsevent.Client, args struct {
@@ -277,7 +276,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, args struct {
 	notify := fmt.Sprintf("Lobby closed by %s", player.Alias())
 	models.SendNotification(notify, int(lob.ID))
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
@@ -365,7 +364,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 		so.EmitJSON(helpers.NewRequest("lobbyStart", models.DecorateLobbyConnect(lob, player.Name, slot)))
 	}
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func removeUnreadyPlayers(lobby *models.Lobby) {
@@ -419,7 +418,7 @@ func (Lobby) LobbySpectatorJoin(so *wsevent.Client, args struct {
 
 	hooks.AfterLobbySpec(socket.AuthServer, so, lob)
 	models.BroadcastLobbyToUser(lob, player.SteamID)
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func removePlayerFromLobby(lobbyId uint, steamId string) (*models.Lobby, *models.Player, *helpers.TPError) {
@@ -493,7 +492,7 @@ func (Lobby) LobbyKick(so *wsevent.Client, args struct {
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Lobby) LobbyBan(so *wsevent.Client, args struct {
@@ -523,7 +522,7 @@ func (Lobby) LobbyBan(so *wsevent.Client, args struct {
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Lobby) LobbyLeave(so *wsevent.Client, args struct {
@@ -539,7 +538,7 @@ func (Lobby) LobbyLeave(so *wsevent.Client, args struct {
 
 	hooks.AfterLobbyLeave(lob, player)
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Lobby) LobbySpectatorLeave(so *wsevent.Client, args struct {
@@ -555,14 +554,14 @@ func (Lobby) LobbySpectatorLeave(so *wsevent.Client, args struct {
 	if !player.IsSpectatingID(lob.ID) {
 		if id, _ := player.GetLobbyID(false); id == *args.Id {
 			hooks.AfterLobbySpecLeave(so, lob)
-			return chelpers.EmptySuccessJS
+			return emptySuccess
 		}
 	}
 
 	lob.RemoveSpectator(player, true)
 	hooks.AfterLobbySpecLeave(so, lob)
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Lobby) RequestLobbyListData(so *wsevent.Client, _ struct{}) interface{} {
@@ -570,7 +569,7 @@ func (Lobby) RequestLobbyListData(so *wsevent.Client, _ struct{}) interface{} {
 	db.DB.Where("state = ?", models.LobbyStateWaiting).Order("id desc").Find(&lobbies)
 	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(lobbies)))
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Lobby) LobbyChangeOwner(so *wsevent.Client, args struct {
@@ -598,7 +597,7 @@ func (Lobby) LobbyChangeOwner(so *wsevent.Client, args struct {
 	models.BroadcastLobbyList()
 	models.NewBotMessage(fmt.Sprintf("Lobby leader changed to %s", player.Alias()), int(*args.ID)).Send()
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }
 
 func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
@@ -655,5 +654,5 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 	models.BroadcastLobby(lobby)
 	models.BroadcastLobbyList()
 
-	return chelpers.EmptySuccessJS
+	return emptySuccess
 }

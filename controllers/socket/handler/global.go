@@ -5,7 +5,6 @@
 package handler
 
 import (
-	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
@@ -30,7 +29,7 @@ func (Global) GetConstant(so *wsevent.Client, args struct {
 		return helpers.NewTPError("Unknown constant.", -1)
 	}
 
-	return chelpers.NewResponse(output)
+	return newResponse(output)
 }
 
 // func (Global) GetSocketInfo(so *wsevent.Client, data []byte) interface{} {
