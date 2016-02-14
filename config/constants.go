@@ -30,7 +30,7 @@ type constants struct {
 	MumblePassword     string `envconfig:"MUMBLE_PASSWORD"`
 	SteamIDWhitelist   string `envconfig:"STEAMID_WHITELIST"`
 	MockupAuth         bool   `envconfig:"MOCKUP_AUTH" default:"false"`
-	GeoIP              string `envconfig:"GEOIP_DB"`
+	GeoIP              bool   `envconfig:"GEOIP" default:"false"`
 	ServeStatic        bool   `envconfig:"SERVE_STATIC" default:"true"`
 
 	// database
