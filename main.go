@@ -86,7 +86,10 @@ func main() {
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()
-	models.InitializeLobbySettings("./lobbySettingsData.json")
+	err = models.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
 	models.ConnectRPC()
 	models.DeleteUnusedServerRecords()
