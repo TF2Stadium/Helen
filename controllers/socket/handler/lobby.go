@@ -139,7 +139,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	lob.TwitchChannel = twitchChan
 	lob.CreatedBySteamID = player.SteamID
 	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
-	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP != "" {
+	if (lob.RegionCode == "" || lob.RegionName == "") && !config.Constants.GeoIP {
 		return helpers.NewTPError("Couldn't find region server.", 1)
 	}
 	lob.Save()
