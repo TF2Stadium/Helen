@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/TF2Stadium/Helen/assets"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/oschwald/geoip2-golang"
 )
@@ -12,12 +13,12 @@ import (
 var geodb *geoip2.Reader
 
 func InitGeoIPDB() {
-	if config.Constants.GeoIP == "" {
+	if !config.Constants.GeoIP {
 		return
 	}
 
 	var err error
-	geodb, err = geoip2.Open(config.Constants.GeoIP)
+	geodb, err = geoip2.FromBytes(assets.MustAsset("assets/geoip.mmdb"))
 
 	if err != nil {
 		logrus.Fatal(err.Error())
@@ -25,7 +26,7 @@ func InitGeoIPDB() {
 }
 
 func GetRegion(server string) (string, string) {
-	if config.Constants.GeoIP == "" {
+	if !config.Constants.GeoIP {
 		return "", ""
 	}
 
