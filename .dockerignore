@@ -1,0 +1,16 @@
+assets
+controllers
+docker
+internal
+models
+rpc
+COPYING
+Makefile
+circle.yml
+Dockerfile
+README.md
+config
+database
+helpers
+main.go
+routes
