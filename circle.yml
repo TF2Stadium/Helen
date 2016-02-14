@@ -10,6 +10,7 @@ machine:
 dependencies:
   pre:
     - go get github.com/tools/godep
+    - go get github.com/jteeuwen/go-bindata/...
 test:
   override:
       - case $CIRCLE_NODE_INDEX in 0) go test ./controllers/... -v -race ;; 1) go test -v -race ./models/... ./database/... ./helpers/... ./config/... ./rpc/... ;; esac:
@@ -19,9 +20,8 @@ deployment:
     branch: master
     commands:
       - mkdir binaries
-      - cp lobbySettingsData.json binaries/lobbySettingsData.json
-      - cp -R views/ binaries/
-      - go build -o binaries/helen-prod *.go
+      - make -B
+      - cp Helen binaries/helen-prod
       - cp binaries/helen-prod $CIRCLE_ARTIFACTS/helen 
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_PROD
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_PROD
@@ -32,9 +32,8 @@ deployment:
     branch: dev
     commands:
       - mkdir binaries
-      - cp lobbySettingsData.json binaries/lobbySettingsData.json
-      - cp -R views/ binaries/
-      - go build -race -o binaries/helen-dev *.go
+      - make -B
+      - cp Helen binaries/helen-dev
       - cp binaries/helen-dev $CIRCLE_ARTIFACTS/helen
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_DEV
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_DEV
