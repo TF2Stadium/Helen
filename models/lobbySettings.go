@@ -8,10 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/TF2Stadium/Helen/assets"
 	"github.com/bitly/go-simplejson"
 )
 
@@ -120,25 +118,8 @@ func GetLobbyWhitelist(whitelistId int) (*LobbyWhitelist, bool) {
 	return nil, false
 }
 
-func InitializeLobbySettings(fileName string) {
-	realPath, err := filepath.Abs(fileName)
-	if err != nil {
-		logrus.Fatal(err.Error())
-		return
-	}
-
-	err = LoadLobbySettingsFromFile(realPath)
-	if err != nil {
-		logrus.Fatal(err.Error())
-	}
-}
-
 func LoadLobbySettingsFromFile(fileName string) error {
-	data, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return err
-	}
-
+	data := assets.MustAsset(fileName)
 	return LoadLobbySettings(data)
 }
 
