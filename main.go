@@ -9,7 +9,6 @@ import (
 	_ "expvar"
 	"flag"
 	"fmt"
-	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"time"
@@ -31,7 +30,6 @@ import (
 	"github.com/TF2Stadium/Helen/models/event"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
-	"github.com/TF2Stadium/Helen/rpc"
 	"github.com/TF2Stadium/etcd"
 	"github.com/gorilla/context"
 	"github.com/gorilla/securecookie"
@@ -59,11 +57,6 @@ func main() {
 	}
 
 	config.SetupConstants()
-	l, err := net.Listen("tcp", config.Constants.RPCAddr)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	go rpc.StartRPC(l)
 
 	if config.Constants.ProfilerAddr != "" {
 		go graceful.Run(config.Constants.ProfilerAddr, 1*time.Second, nil)
@@ -134,7 +127,6 @@ func main() {
 
 		ShutdownInitiated: func() {
 			logrus.Info("Received SIGINT/SIGTERM, closing RPC")
-			l.Close()
 			logrus.Info("waiting for socket requests to complete.")
 			socketServer.Wait()
 		},
