@@ -28,6 +28,7 @@ import (
 	_ "github.com/TF2Stadium/Helen/helpers/authority" // to register authority types
 	_ "github.com/TF2Stadium/Helen/internal/pprof"    // to setup expvars
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/event"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/Helen/rpc"
@@ -38,7 +39,8 @@ import (
 )
 
 var (
-	flagGen = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
+	flagGen          = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
+	flagDisableQueue = flag.Bool("disable-queue", false, "don't connect to RabbitMQ")
 )
 
 func main() {
@@ -80,6 +82,12 @@ func main() {
 		}
 
 		logrus.Info("Wrote key ", node.Key, "=", node.Value)
+	}
+
+	if !*flagDisableQueue {
+		event.StartListening()
+	} else {
+		logrus.Warning("Not listening for events on RabbitMQ.")
 	}
 
 	helpers.InitAuthorization()
