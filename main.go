@@ -87,7 +87,7 @@ func main() {
 	database.Init()
 	migrations.Do()
 	stores.SetupStores()
-	err = models.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
+	err := models.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -133,7 +133,7 @@ func main() {
 	}
 
 	logrus.Info("Serving on ", config.Constants.ListenAddress)
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		logrus.Fatal(err)
 	}
