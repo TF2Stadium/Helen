@@ -15,7 +15,5 @@ func BroadcastScrollback(so *wsevent.Client, room uint) {
 		return
 	}
 
-	for i := len(messages) - 1; i != -1; i-- {
-		so.EmitJSON(helpers.NewRequest("chatReceive", messages[i]))
-	}
+	so.EmitJSON(helpers.NewRequest("chatScrollback", messages))
 }
