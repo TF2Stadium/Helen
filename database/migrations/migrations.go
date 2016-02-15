@@ -5,10 +5,14 @@
 package migrations
 
 import (
+	"bytes"
 	"sync"
 
+	"github.com/Sirupsen/logrus"
+	"github.com/TF2Stadium/Helen/assets"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/gchaincl/dotsql"
 )
 
 var once = new(sync.Once)
@@ -28,5 +32,16 @@ func Do() {
 	database.DB.AutoMigrate(&models.Requirement{})
 	database.DB.AutoMigrate(&Constant{})
 
-	once.Do(checkSchema)
+	once.Do(func() {
+		checkSchema()
+		dot, err := dotsql.Load(bytes.NewBuffer(assets.MustAsset("assets/views.sql")))
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		_, err = dot.Exec(database.DB.DB(), "create-player-slots-view")
+		if err != nil {
+			logrus.Fatal(err)
+		}
+	})
 }
