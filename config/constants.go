@@ -32,6 +32,8 @@ type constants struct {
 	MockupAuth         bool   `envconfig:"MOCKUP_AUTH" default:"false"`
 	GeoIP              bool   `envconfig:"GEOIP" default:"false"`
 	ServeStatic        bool   `envconfig:"SERVE_STATIC" default:"true"`
+	RabbitMQURL        string `envconfig:"RABBITMQ_URL" default:"amqp://guest:guest@localhost:5672/"`
+	RabbitMQQueue      string `envconfig:"RABBITMQ_QUEUE" default:"events"`
 
 	// database
 	DbAddr     string `envconfig:"DATABASE_ADDR" default:"127.0.0.1:5432"`
