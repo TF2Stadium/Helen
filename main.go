@@ -133,7 +133,7 @@ func main() {
 	}
 
 	logrus.Info("Serving on ", config.Constants.ListenAddress)
-	err = server.ListenAndServe()
+	err := server.ListenAndServe()
 	if err != nil {
 		logrus.Fatal(err)
 	}
