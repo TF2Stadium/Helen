@@ -112,10 +112,12 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 
 	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
 
-	player.SetSetting(*args.Key, *args.Value)
-
 	switch *args.Key {
 	case "siteAlias":
+		if len(*args.Value) > 32 {
+			return helpers.NewTPError("Site alias must be under 32 characters long.", -1)
+		}
+
 		profile := models.DecoratePlayerProfileJson(player)
 		so.EmitJSON(helpers.NewRequest("playerProfile", profile))
 
@@ -129,6 +131,8 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 			return helpers.NewTPError("Invalid Mumble nick.", -1)
 		}
 	}
+
+	player.SetSetting(*args.Key, *args.Value)
 
 	return emptySuccess
 }
