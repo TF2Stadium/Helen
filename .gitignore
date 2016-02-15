@@ -40,3 +40,4 @@ runTestsWithKeys.sh
 bower_components
 assets/bindata.go
 assets/geoip.mmdb
+assets/geoip.mmdb.gz
