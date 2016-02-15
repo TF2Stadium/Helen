@@ -2,6 +2,7 @@ default: assets static
 
 clean:
 	rm assets/bindata.go assets/geoip.mmdb
+	go clean
 assets:
 	wget "http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.mmdb.gz" -O "assets/geoip.mmdb.gz"
 	gzip -d assets/geoip.mmdb.gz
