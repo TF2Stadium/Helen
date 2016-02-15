@@ -1,20 +1,22 @@
-package rpc
+package event
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/streadway/amqp"
 )
 
-// Event represents an event triggered by Pauling
 type Event struct {
-	Name string
+	Name    string
+	SteamID string
 
-	LobbyID  uint
-	PlayerID uint
-	LogsID   int //logs.tf ID
+	LobbyID uint
+	LogsID  int //logs.tf ID
 }
 
 //Event names
@@ -29,26 +31,57 @@ const (
 	Test                   string = "test"
 )
 
-// Handle event e
-func (Event) Handle(e Event, nop *struct{}) error {
-	switch e.Name {
-	case PlayerDisconnected:
-		playerDisc(e.PlayerID, e.LobbyID)
-	case PlayerSubstituted:
-		playerSub(e.PlayerID, e.LobbyID)
-	case PlayerConnected:
-		playerConn(e.PlayerID, e.LobbyID)
-	case DisconnectedFromServer:
-		disconnectedFromServer(e.LobbyID)
-	case MatchEnded:
-		matchEnded(e.LobbyID, e.LogsID)
+func StartListening() {
+	conn, err := amqp.Dial(config.Constants.RabbitMQURL)
+	if err != nil {
+		logrus.Fatal(err)
 	}
 
-	return nil
+	ch, err := conn.Channel()
+	if err != nil {
+		logrus.Fatal("Couldn't open channel: ", err)
+	}
+
+	q, err := ch.QueueDeclare(config.Constants.RabbitMQQueue, false, false, false, false, nil)
+	if err != nil {
+		logrus.Fatal("Cannot declare queue ", err)
+	}
+
+	msgs, err := ch.Consume(q.Name, "", true, false, false, false, nil)
+	if err != nil {
+		logrus.Fatal("Cannot consume messages ", err)
+	}
+
+	logrus.Info("Connected to RabbitMQ, listening on queue ", q.Name)
+
+	go func() {
+		for msg := range msgs {
+			var event Event
+
+			err := json.Unmarshal(msg.Body, &event)
+			if err != nil {
+				logrus.Error(err)
+				continue
+			}
+			switch event.Name {
+			case PlayerDisconnected:
+				playerDisc(event.SteamID, event.LobbyID)
+			case PlayerSubstituted:
+				playerSub(event.SteamID, event.LobbyID)
+			case PlayerConnected:
+				playerConn(event.SteamID, event.LobbyID)
+			case DisconnectedFromServer:
+				disconnectedFromServer(event.LobbyID)
+			case MatchEnded:
+				matchEnded(event.LobbyID, event.LogsID)
+
+			}
+		}
+	}()
 }
 
-func playerDisc(playerID, lobbyID uint) {
-	player, _ := models.GetPlayerByID(playerID)
+func playerDisc(steamID string, lobbyID uint) {
+	player, _ := models.GetPlayerBySteamID(steamID)
 	lobby, _ := models.GetLobbyByID(lobbyID)
 
 	lobby.SetNotInGame(player)
@@ -65,25 +98,25 @@ func playerDisc(playerID, lobbyID uint) {
 	})
 }
 
-func playerConn(playerID, lobbyID uint) {
-	player, _ := models.GetPlayerByID(playerID)
+func playerConn(steamID string, lobbyID uint) {
+	player, _ := models.GetPlayerBySteamID(steamID)
 	lobby, _ := models.GetLobbyByID(lobbyID)
 
 	lobby.SetInGame(player)
 	models.SendNotification(fmt.Sprintf("%s has connected to the server.", player.Alias()), int(lobby.ID))
 }
 
-func playerSub(playerID, lobbyID uint) {
-	player, _ := models.GetPlayerByID(playerID)
+func playerSub(steamID string, lobbyID uint) {
+	player, _ := models.GetPlayerBySteamID(steamID)
 	lobby, _ := models.GetLobbyByID(lobbyID)
 	lobby.Substitute(player)
 
 	models.SendNotification(fmt.Sprintf("%s has been reported.", player.Alias()), int(lobby.ID))
 }
 
-func playerChat(lobbyID uint, playerID uint, message string) {
+func playerChat(lobbyID uint, steamID string, message string) {
 	lobby, _ := models.GetLobbyByIDServer(lobbyID)
-	player, _ := models.GetPlayerByID(playerID)
+	player, _ := models.GetPlayerBySteamID(steamID)
 
 	chatMessage := models.NewInGameChatMessage(lobby, player, message)
 	chatMessage.Save()
