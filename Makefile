@@ -19,4 +19,4 @@ docker:
 	docker build -t tf2stadium/helen .
 
 cover:
-	sh -ex cover.sh
+#	sh -ex cover.sh
