@@ -380,6 +380,20 @@ func (lobby *Lobby) FillSubstitute(slot int) error {
 	return err
 }
 
+//IsPlayerBanned returns whether the given player is banned from joining the lobby.
+func (lobby *Lobby) IsPlayerBanned(player *Player) bool {
+	var count int
+	db.DB.Table("banned_players_lobbies").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).Count(&count)
+	return count != 0
+}
+
+//IsSlotOccupied returns whether the given slot is occupied by a player.
+func (lobby *Lobby) IsSlotOccupied(slot int) bool {
+	var count int
+	db.DB.Table("lobby_slots").Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Count(&count)
+	return count != 0
+}
+
 //AddPlayer adds the given player to lobby, If the player occupies a slot in the lobby already, switch slots.
 //If the player is in another lobby, removes them from that lobby before adding them.
 func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helpers.TPError {
@@ -393,20 +407,16 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 	if lobby.SlotPassword != "" && lobby.SlotPassword != password {
 		return InvalidPasswordErr
 	}
-
-	num := 0
-
 	//Check if player is banned
-	//TODO(nonagon): It should really be possible to do this query using relations
-	if err := db.DB.Table("banned_players_lobbies").
-		Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).
-		Count(&num).Error; num > 0 || err != nil {
-		//logrus.Debug(fmt.Sprint(err))
+	if lobby.IsPlayerBanned(player) {
 		return LobbyBanErr
 	}
-
 	if slot >= 2*NumberOfClassesMap[lobby.Type] || slot < 0 {
 		return BadSlotErr
+	}
+	//Check whether the slot is occupied
+	if lobby.IsSlotOccupied(slot) {
+		return FilledErr
 	}
 
 	var slotChange bool
@@ -477,8 +487,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
 		//allow player in mumble
 		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
-	} else if _, err := lobby.GetPlayerIDBySlot(slot); err == nil {
-		return FilledErr
 	} else {
 		FumbleLobbyPlayerJoined(lobby, player, slot) // no errors, al
 	}
