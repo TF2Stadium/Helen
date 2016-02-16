@@ -118,6 +118,8 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 			return helpers.NewTPError("Site alias must be under 32 characters long.", -1)
 		}
 
+		player.SetSetting(*args.Key, *args.Value)
+
 		profile := models.DecoratePlayerProfileJson(player)
 		so.EmitJSON(helpers.NewRequest("playerProfile", profile))
 
@@ -132,7 +134,9 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 		}
 	}
 
-	player.SetSetting(*args.Key, *args.Value)
+	if *args.Key != "siteAlias" {
+		player.SetSetting(*args.Key, *args.Value)
+	}
 
 	return emptySuccess
 }
