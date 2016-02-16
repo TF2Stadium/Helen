@@ -5,7 +5,7 @@ clean:
 	go clean
 assets:
 	wget "http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.mmdb.gz" -O "assets/geoip.mmdb.gz"
-	gzip -d assets/geoip.mmdb.gz
+	gzip -d -f assets/geoip.mmdb.gz
 
 	go-bindata -ignore="bindata\.go" \
 	-pkg assets -tags bindata 	 \
