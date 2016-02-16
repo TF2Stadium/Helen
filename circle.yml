@@ -11,6 +11,8 @@ dependencies:
   pre:
     - go get github.com/tools/godep
     - go get github.com/jteeuwen/go-bindata/...
+  post:
+    - make assets -B
 test:
   override:
       - case $CIRCLE_NODE_INDEX in 0) go test -tags bindata ./controllers/... -v -race ;; 1) go test -tags bindata -v -race ./models/... ./database/... ./helpers/... ./config/... ;; esac:
