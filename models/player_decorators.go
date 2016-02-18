@@ -62,7 +62,7 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	db.DB.Table("lobby_slots").Where("player_id = ?", p.ID).Order("id desc").Limit("5").Find(&slots)
 	for _, slot := range slots {
 		lobby, _ := GetLobbyByID(slot.LobbyID)
-		profile.Lobbies = append(profile.Lobbies, DecorateLobbyData(lobby, false))
+		profile.Lobbies = append(profile.Lobbies, DecorateLobbyData(lobby, true))
 	}
 	return profile
 }
