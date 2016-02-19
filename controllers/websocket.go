@@ -37,28 +37,28 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, err := chelpers.GetSessionHTTP(r)
-	var so *wsevent.Client
 
-	if err == nil {
-		_, ok := session.Values["steam_id"]
-		if ok {
-			so, err = socket.AuthServer.NewClient(upgrader, w, r)
-		} else {
-			so, err = socket.UnauthServer.NewClient(upgrader, w, r)
-		}
-		pprof.Clients.Add(1)
-
+	loggedIn := false
+	if err != nil {
+		login.LogoutSession(w, r)
 	} else {
-		var estr = "Couldn't create WebSocket connection."
-		//estr = err.Error()
-
-		logrus.Error(err.Error())
-		http.Error(w, estr, 500)
-		return
+		_, loggedIn = session.Values["steam_id"]
 	}
 
-	if err != nil || so == nil {
-		login.LogoutSession(w, r)
+	var so *wsevent.Client
+	if loggedIn {
+		so, err = socket.AuthServer.NewClient(upgrader, w, r)
+	} else {
+		so, err = socket.UnauthServer.NewClient(upgrader, w, r)
+	}
+
+	if err != nil {
+		pprof.Clients.Add(1)
+	} else {
+		var estr = "Couldn't create WebSocket connection."
+
+		logrus.Error(err)
+		http.Error(w, estr, 500)
 		return
 	}
 
