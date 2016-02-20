@@ -19,6 +19,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/config/stores"
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
 	"github.com/TF2Stadium/Helen/database"
@@ -36,10 +37,7 @@ import (
 	"github.com/rs/cors"
 )
 
-var (
-	flagGen          = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
-	flagDisableQueue = flag.Bool("disable-queue", false, "don't connect to RabbitMQ")
-)
+var flagGen = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
 
 func main() {
 	helpers.InitLogger()
@@ -77,11 +75,9 @@ func main() {
 		logrus.Info("Wrote key ", node.Key, "=", node.Value)
 	}
 
-	if !*flagDisableQueue {
-		event.StartListening()
-	} else {
-		logrus.Warning("Not listening for events on RabbitMQ.")
-	}
+	helpers.ConnectAMQP()
+	event.StartListening()
+	broadcaster.StartListening()
 
 	helpers.InitAuthorization()
 	database.Init()
