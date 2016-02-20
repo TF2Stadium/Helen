@@ -7,8 +7,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/streadway/amqp"
 )
 
 type Event struct {
@@ -32,27 +32,15 @@ const (
 )
 
 func StartListening() {
-	conn, err := amqp.Dial(config.Constants.RabbitMQURL)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	ch, err := conn.Channel()
-	if err != nil {
-		logrus.Fatal("Couldn't open channel: ", err)
-	}
-
-	q, err := ch.QueueDeclare(config.Constants.RabbitMQQueue, false, false, false, false, nil)
+	q, err := helpers.AMQPChannel.QueueDeclare(config.Constants.RabbitMQQueue, false, false, false, false, nil)
 	if err != nil {
 		logrus.Fatal("Cannot declare queue ", err)
 	}
 
-	msgs, err := ch.Consume(q.Name, "", true, false, false, false, nil)
+	msgs, err := helpers.AMQPChannel.Consume(q.Name, "", true, false, false, false, nil)
 	if err != nil {
 		logrus.Fatal("Cannot consume messages ", err)
 	}
-
-	logrus.Info("Connected to RabbitMQ, listening on queue ", q.Name)
 
 	go func() {
 		for msg := range msgs {
