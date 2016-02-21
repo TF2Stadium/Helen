@@ -7,14 +7,17 @@ import (
 )
 
 var AMQPChannel *amqp.Channel
+var AMQPConn *amqp.Connection
 
 func ConnectAMQP() {
-	conn, err := amqp.Dial(config.Constants.RabbitMQURL)
+	var err error
+
+	AMQPConn, err = amqp.Dial(config.Constants.RabbitMQURL)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	AMQPChannel, err = conn.Channel()
+	AMQPChannel, err = AMQPConn.Channel()
 	if err != nil {
 		logrus.Fatal(err)
 	}
