@@ -23,18 +23,18 @@ type constants struct {
 	CookieStoreSecret  string `envconfig:"COOKIE_STORE_SECRET" default:"secret"`
 	StaticFileLocation string
 	SessionName        string `envconfig:"COOKIE_SESSION_NAME" default:"defaultSession"`
-	RPCAddr            string `envconfig:"RPC_ADDR" default:"localhost:8081"`
-	PaulingAddr        string `envconfig:"PAULING_ADDR"`
-	FumbleAddr         string `envconfig:"FUMBLE_ADDR"`
-	MumbleAddr         string `envconfig:"MUMBLE_ADDR"`
-	MumblePassword     string `envconfig:"MUMBLE_PASSWORD"`
-	SteamIDWhitelist   string `envconfig:"STEAMID_WHITELIST"`
-	MockupAuth         bool   `envconfig:"MOCKUP_AUTH" default:"false"`
-	GeoIP              bool   `envconfig:"GEOIP" default:"false"`
-	ServeStatic        bool   `envconfig:"SERVE_STATIC" default:"true"`
-	RabbitMQURL        string `envconfig:"RABBITMQ_URL" default:"amqp://guest:guest@localhost:5672/"`
-	RabbitMQQueue      string `envconfig:"RABBITMQ_QUEUE" default:"events"`
-	RabbitMQExchange   string `envconfig:"RABBITMQ_EXCHANGE" default:"helen-fanout"`
+	//RPCAddr            string `envconfig:"RPC_ADDR" default:"localhost:8081"`
+	MumbleAddr       string `envconfig:"MUMBLE_ADDR"`
+	MumblePassword   string `envconfig:"MUMBLE_PASSWORD"`
+	SteamIDWhitelist string `envconfig:"STEAMID_WHITELIST"`
+	MockupAuth       bool   `envconfig:"MOCKUP_AUTH" default:"false"`
+	GeoIP            bool   `envconfig:"GEOIP" default:"false"`
+	ServeStatic      bool   `envconfig:"SERVE_STATIC" default:"true"`
+	RabbitMQURL      string `envconfig:"RABBITMQ_URL" default:"amqp://guest:guest@localhost:5672/"`
+	PaulingQueue     string `envconfig:"PAULING_QUEUE" default:"pauling"`
+	FumbleQueue      string `envconfig:"FUMBLE_QUEUE" default:"fumble"`
+	RabbitMQQueue    string `envconfig:"RABBITMQ_QUEUE" default:"events"`
+	RabbitMQExchange string `envconfig:"RABBITMQ_EXCHANGE" default:"helen-fanout"`
 
 	// database
 	DbAddr     string `envconfig:"DATABASE_ADDR" default:"127.0.0.1:5432"`
@@ -50,8 +50,8 @@ type constants struct {
 	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID"`
 	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET"`
 
-	EtcdAddr    string `envconfig:"ETCD_ADDR"`
-	EtcdService string `envconfig:"ETCD_SERVICE"`
+	// EtcdAddr    string `envconfig:"ETCD_ADDR"`
+	// EtcdService string `envconfig:"ETCD_SERVICE"`
 }
 
 var Constants = constants{}
@@ -68,9 +68,5 @@ func SetupConstants() {
 
 	if Constants.PublicAddress == "" {
 		Constants.PublicAddress = "http://" + Constants.ListenAddress
-	}
-
-	if Constants.EtcdAddr != "" && Constants.EtcdService == "" {
-		logrus.Fatal("No Etcd service name provided.")
 	}
 }
