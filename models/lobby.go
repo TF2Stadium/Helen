@@ -486,9 +486,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 		class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
 		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
 		//allow player in mumble
-		FumbleLobbyPlayerJoinedSub(lobby, player, slot)
-	} else {
-		FumbleLobbyPlayerJoined(lobby, player, slot) // no errors, al
 	}
 
 	//try to remove them from spectators
@@ -677,7 +674,12 @@ func (lobby *Lobby) SetupServer() error {
 		return nil
 	}
 
+	fumbleLobbyCreated(lobby.ID)
 	err := SetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.Whitelist, lobby.MapName)
+	if err != nil {
+		logrus.Error(err)
+		fumbleLobbyEnded(lobby.ID)
+	}
 	return err
 }
 
@@ -706,7 +708,7 @@ func (lobby *Lobby) Close(rpc bool) {
 	BroadcastSubList()
 	BroadcastLobby(lobby)
 	BroadcastLobbyList() // has to be done manually for now
-	FumbleLobbyEnded(lobby)
+	fumbleLobbyEnded(lobby.ID)
 }
 
 //UpdateStats updates the PlayerStats records for all players in the lobby

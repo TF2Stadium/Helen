@@ -153,8 +153,6 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	lob.State = models.LobbyStateWaiting
 	lob.Save()
 
-	models.FumbleLobbyCreated(lob)
-
 	if args.Requirements != nil {
 		for class, requirement := range (*args.Requirements).Classes {
 			if requirement.Restricted.Blu {
