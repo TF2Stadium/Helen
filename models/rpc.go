@@ -5,35 +5,34 @@
 package models
 
 import (
+	"flag"
+	"net/rpc"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/etcd"
-	"github.com/vibhavp/rpcconn"
+	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/vibhavp/amqp-rpc"
 )
 
 var (
-	pauling *rpcconn.Client
-	fumble  *rpcconn.Client
+	pauling        *rpc.Client
+	fumble         *rpc.Client
+	paulingEnabled = flag.Bool("pauling", true, "enable pauling")
+	fumbleEnabled  = flag.Bool("fumble", true, "enable fumble")
 )
 
 func ConnectRPC() {
-	var err error
-
-	if config.Constants.PaulingAddr != "" {
-		pauling, err = rpcconn.DialHTTP("tcp", etcd.Address{Address: config.Constants.PaulingAddr})
-		if err != nil {
-			logrus.Fatal(err)
-		}
-
-		pauling.Call("Pauling.Ping", struct{}{}, &struct{}{})
-		logrus.Info("Connected to Pauling")
+	codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
+	if err != nil {
+		logrus.Fatal(err)
 	}
 
-	if config.Constants.FumbleAddr != "" {
-		fumble, err = rpcconn.DialHTTP("tcp", etcd.Address{Address: config.Constants.FumbleAddr})
-		if err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.Info("Connected to Fumble")
+	pauling = rpc.NewClientWithCodec(codec)
+
+	codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
+	fumble = rpc.NewClientWithCodec(codec)
+	if err != nil {
+		logrus.Fatal(err)
 	}
+
 }
