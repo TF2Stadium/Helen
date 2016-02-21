@@ -31,7 +31,6 @@ import (
 	"github.com/TF2Stadium/Helen/models/event"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
-	"github.com/TF2Stadium/etcd"
 	"github.com/gorilla/context"
 	"github.com/gorilla/securecookie"
 	"github.com/rs/cors"
@@ -59,20 +58,6 @@ func main() {
 	if config.Constants.ProfilerAddr != "" {
 		go graceful.Run(config.Constants.ProfilerAddr, 1*time.Second, nil)
 		logrus.Info("Running Profiler at ", config.Constants.ProfilerAddr)
-	}
-
-	if config.Constants.EtcdAddr != "" {
-		err := etcd.ConnectEtcd(config.Constants.EtcdAddr)
-		if err != nil {
-			logrus.Fatal(err)
-		}
-
-		node, err := etcd.SetAddr(config.Constants.EtcdService, config.Constants.RPCAddr)
-		if err != nil {
-			logrus.Fatal(err)
-		}
-
-		logrus.Info("Wrote key ", node.Key, "=", node.Value)
 	}
 
 	helpers.ConnectAMQP()
