@@ -5,6 +5,10 @@
 package config
 
 import (
+	"os"
+	"reflect"
+	"text/template"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -12,46 +16,48 @@ import (
 var (
 	GlobalChatRoom     string = "0"
 	AllowedCorsOrigins        = []string{"*"}
+	SessionName        string = "defaultSession"
+	mdTableTemplate           = template.Must(template.New("doc").Parse(`
+| Environment Variable | Description |
+|----------------------|-------------|{{range .}}
+|    ` + "`{{index . 0}}`" + `     |{{index . 1}}|{{end}}
+`))
 )
 
 type constants struct {
-	ListenAddress      string `envconfig:"SERVER_ADDR" default:"localhost:8080"`
-	PublicAddress      string `envconfig:"PUBLIC_ADDR"` // should include schema
-	OpenIDRealm        string `envconfig:"SERVER_OPENID_REALM" default:"http://localhost:8080"`
-	CookieDomain       string `envconfig:"SERVER_COOKIE_DOMAIN" default:""`
-	LoginRedirectPath  string `envconfig:"SERVER_REDIRECT_PATH" default:"http://localhost:8080/"`
-	CookieStoreSecret  string `envconfig:"COOKIE_STORE_SECRET" default:"secret"`
+	ListenAddress      string `envconfig:"SERVER_ADDR" default:"localhost:8080" doc:"Address to serve on."`
+	PublicAddress      string `envconfig:"PUBLIC_ADDR" doc:"Publicly accessible address for the server, requires schema"`
+	OpenIDRealm        string `envconfig:"SERVER_OPENID_REALM" default:"http://localhost:8080" doc:"The OpenID Realm (See: [Section 9.2 of the OpenID Spec](https://openid.net/specs/openid-authentication-2_0-12.html#realms))"`
+	CookieDomain       string `envconfig:"SERVER_COOKIE_DOMAIN" default:"" doc:"Cookie URL domain"`
+	LoginRedirectPath  string `envconfig:"SERVER_REDIRECT_PATH" default:"http://localhost:8080/" doc:"URL to redirect user to after a successful login"`
+	CookieStoreSecret  string `envconfig:"COOKIE_STORE_SECRET" default:"secret" doc:"base64 encoded key to use for encrypting cookies"`
 	StaticFileLocation string
-	SessionName        string `envconfig:"COOKIE_SESSION_NAME" default:"defaultSession"`
 	//RPCAddr            string `envconfig:"RPC_ADDR" default:"localhost:8081"`
-	MumbleAddr       string `envconfig:"MUMBLE_ADDR"`
-	MumblePassword   string `envconfig:"MUMBLE_PASSWORD"`
-	SteamIDWhitelist string `envconfig:"STEAMID_WHITELIST"`
-	MockupAuth       bool   `envconfig:"MOCKUP_AUTH" default:"false"`
-	GeoIP            bool   `envconfig:"GEOIP" default:"false"`
-	ServeStatic      bool   `envconfig:"SERVE_STATIC" default:"true"`
-	RabbitMQURL      string `envconfig:"RABBITMQ_URL" default:"amqp://guest:guest@localhost:5672/"`
-	PaulingQueue     string `envconfig:"PAULING_QUEUE" default:"pauling"`
-	FumbleQueue      string `envconfig:"FUMBLE_QUEUE" default:"fumble"`
-	RabbitMQQueue    string `envconfig:"RABBITMQ_QUEUE" default:"events"`
-	RabbitMQExchange string `envconfig:"RABBITMQ_EXCHANGE" default:"helen-fanout"`
+	MumbleAddr       string `envconfig:"MUMBLE_ADDR" doc:"Mumble Address"`
+	MumblePassword   string `envconfig:"MUMBLE_PASSWORD" doc:"Mumble Password"`
+	SteamIDWhitelist string `envconfig:"STEAMID_WHITELIST" doc:"SteamID Group XML page to use to filter logins"`
+	MockupAuth       bool   `envconfig:"MOCKUP_AUTH" default:"false" doc:"Enable Mockup Authentication"`
+	GeoIP            bool   `envconfig:"GEOIP" default:"false" doc:"Enable geoip support for getting the location of game servers"`
+	ServeStatic      bool   `envconfig:"SERVE_STATIC" default:"true" doc:"Serve /static/"`
+	RabbitMQURL      string `envconfig:"RABBITMQ_URL" default:"amqp://guest:guest@localhost:5672/" doc:"URL for AMQP server"`
+	PaulingQueue     string `envconfig:"PAULING_QUEUE" default:"pauling" doc:"Name of queue over which RPC calls to Pauling are sent"`
+	FumbleQueue      string `envconfig:"FUMBLE_QUEUE" default:"fumble" doc:"Name of queue over which RPC calls to Fumble are sent"`
+	RabbitMQQueue    string `envconfig:"RABBITMQ_QUEUE" default:"events" doc:"Name of queue over which events are sent"`
+	RabbitMQExchange string `envconfig:"RABBITMQ_EXCHANGE" default:"helen-fanout" doc:"Name of queue over which socket messages are fanned out to other Helen instances"`
 
 	// database
-	DbAddr     string `envconfig:"DATABASE_ADDR" default:"127.0.0.1:5432"`
-	DbDatabase string `envconfig:"DATABASE_NAME" default:"tf2stadium"`
-	DbUsername string `envconfig:"DATABASE_USERNAME" default:"tf2stadium"`
-	DbPassword string `envconfig:"DATABASE_PASSWORD" default:"dickbutt"`
+	DbAddr     string `envconfig:"DATABASE_ADDR" default:"127.0.0.1:5432" doc:"Database Address"`
+	DbDatabase string `envconfig:"DATABASE_NAME" default:"tf2stadium" doc:"Database Name"`
+	DbUsername string `envconfig:"DATABASE_USERNAME" default:"tf2stadium" doc:"Database username"`
+	DbPassword string `envconfig:"DATABASE_PASSWORD" default:"dickbutt" doc:"Database password"`
 
-	SteamDevAPIKey string `envconfig:"STEAM_API_KEY"`
+	SteamDevAPIKey string `envconfig:"STEAM_API_KEY" doc:"Steam API Key"`
 
-	ProfilerAddr string `envconfig:"PROFILER_ADDR"`
+	ProfilerAddr string `envconfig:"PROFILER_ADDR" doc:"Address to serve the web-based profiler over"`
 
-	SlackbotURL        string `envconfig:"SLACK_URL"`
-	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID"`
-	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET"`
-
-	// EtcdAddr    string `envconfig:"ETCD_ADDR"`
-	// EtcdService string `envconfig:"ETCD_SERVICE"`
+	SlackbotURL        string `envconfig:"SLACK_URL" doc:"Slack webhook URL"`
+	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
+	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
 }
 
 var Constants = constants{}
@@ -69,4 +75,18 @@ func SetupConstants() {
 	if Constants.PublicAddress == "" {
 		Constants.PublicAddress = "http://" + Constants.ListenAddress
 	}
+}
+
+func PrintConfigDoc() {
+	var data [][]string
+	t := reflect.TypeOf(constants{})
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Tag.Get("envconfig") == "" {
+			continue
+		}
+		data = append(data, []string{field.Tag.Get("envconfig"), field.Tag.Get("doc")})
+	}
+
+	mdTableTemplate.Execute(os.Stdout, data)
 }

@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
 	"time"
 
 	"gopkg.in/tylerb/graceful.v1"
@@ -36,7 +37,10 @@ import (
 	"github.com/rs/cors"
 )
 
-var flagGen = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
+var (
+	flagGen  = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
+	docPrint = flag.Bool("printdoc", false, "print the docs for environment variables, and exit.")
+)
 
 func main() {
 	helpers.InitLogger()
@@ -51,6 +55,10 @@ func main() {
 		base64Key := base64.StdEncoding.EncodeToString(key)
 		fmt.Println(base64Key)
 		return
+	}
+	if *docPrint {
+		config.PrintConfigDoc()
+		os.Exit(0)
 	}
 
 	config.SetupConstants()
