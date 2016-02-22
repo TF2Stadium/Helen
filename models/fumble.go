@@ -3,7 +3,7 @@ package models
 import "github.com/Sirupsen/logrus"
 
 func fumbleLobbyCreated(lobbyID uint) error {
-	if !*fumbleEnabled {
+	if *fumbleDisabled {
 		return nil
 	}
 
@@ -18,7 +18,7 @@ func fumbleLobbyCreated(lobbyID uint) error {
 }
 
 func fumbleLobbyEnded(lobbyID uint) {
-	if !*fumbleEnabled {
+	if *fumbleDisabled {
 		return
 	}
 

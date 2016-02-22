@@ -25,7 +25,7 @@ type Args struct {
 }
 
 func DisallowPlayer(lobbyId uint, steamId string) error {
-	if !*paulingEnabled {
+	if *paulingDisabled {
 		return nil
 	}
 	return pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
@@ -33,7 +33,7 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 
 func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
 	whitelist string, mapName string) error {
-	if !*paulingEnabled {
+	if *paulingDisabled {
 		return nil
 	}
 
@@ -48,35 +48,35 @@ func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league st
 }
 
 func ReExecConfig(lobbyId uint) error {
-	if !*paulingEnabled {
+	if *paulingDisabled {
 		return nil
 	}
 	return pauling.Call("Pauling.ReExecConfig", &Args{Id: lobbyId}, &Args{})
 }
 
 func VerifyInfo(info ServerRecord) error {
-	if !*paulingEnabled {
+	if *paulingDisabled {
 		return nil
 	}
 	return pauling.Call("Pauling.VerifyInfo", &info, &Args{})
 }
 
 func End(lobbyId uint) {
-	if !*paulingEnabled {
+	if *paulingDisabled {
 		return
 	}
 	pauling.Call("Pauling.End", &Args{Id: lobbyId}, &Args{})
 }
 
 func Say(lobbyId uint, text string) {
-	if !*paulingEnabled {
+	if *paulingDisabled {
 		return
 	}
 	pauling.Call("Pauling.Say", &Args{Id: lobbyId, Text: text}, &Args{})
 }
 
 func serverExists(lobbyID uint) (exists bool) {
-	if !*paulingEnabled {
+	if *paulingDisabled {
 		return false
 	}
 	pauling.Call("Pauling.Exists", lobbyID, &exists)
