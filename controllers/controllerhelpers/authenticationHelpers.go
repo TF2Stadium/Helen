@@ -44,7 +44,7 @@ func IsLoggedInHTTP(r *http.Request) bool {
 }
 
 func GetSessionHTTP(r *http.Request) (*sessions.Session, error) {
-	return stores.SessionStore.Get(r, config.Constants.SessionName)
+	return stores.SessionStore.Get(r, config.SessionName)
 }
 
 func GetSessionSocket(socketid string) (*sessions.Session, error) {
