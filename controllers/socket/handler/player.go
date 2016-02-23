@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"regexp"
 
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -35,7 +36,7 @@ func (Player) PlayerReady(so *wsevent.Client, _ struct{}) interface{} {
 	}
 
 	if lobby.State != models.LobbyStateReadyingUp {
-		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4)
+		return errors.New("Lobby hasn't been filled up yet.")
 	}
 
 	tperr = lobby.ReadyPlayer(player)
@@ -72,7 +73,7 @@ func (Player) PlayerNotReady(so *wsevent.Client, _ struct{}) interface{} {
 	}
 
 	if lobby.State != models.LobbyStateReadyingUp {
-		return helpers.NewTPError("Lobby hasn't been filled up yet.", 4)
+		return errors.New("Lobby hasn't been filled up yet.")
 	}
 
 	tperr = lobby.UnreadyPlayer(player)
@@ -115,7 +116,7 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 	switch *args.Key {
 	case "siteAlias":
 		if len(*args.Value) > 32 {
-			return helpers.NewTPError("Site alias must be under 32 characters long.", -1)
+			return errors.New("Site alias must be under 32 characters long.")
 		}
 
 		player.SetSetting(*args.Key, *args.Value)
@@ -130,7 +131,7 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 		}
 	case "mumbleNick":
 		if !reMumbleNick.MatchString(*args.Value) {
-			return helpers.NewTPError("Invalid Mumble nick.", -1)
+			return errors.New("Invalid Mumble nick.")
 		}
 	}
 

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/TF2Stadium/Helen/helpers"
 )
 
 type JSONCodec struct{}
@@ -63,5 +61,8 @@ outer:
 }
 
 func (JSONCodec) Error(err error) interface{} {
-	return helpers.NewTPErrorFromError(err)
+	return struct {
+		Message string `json:"message"`
+		Success bool   `json:"success"`
+	}{err.Error(), false}
 }

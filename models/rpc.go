@@ -17,8 +17,8 @@ import (
 var (
 	pauling         *rpc.Client
 	fumble          *rpc.Client
-	paulingDisabled = flag.Bool("pauling", true, "disable pauling")
-	fumbleDisabled  = flag.Bool("fumble", true, "disable fumble")
+	paulingDisabled = flag.Bool("disable_pauling", true, "disable pauling")
+	fumbleDisabled  = flag.Bool("disable_fumble", true, "disable fumble")
 )
 
 func ConnectRPC() {

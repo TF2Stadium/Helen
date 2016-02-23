@@ -4,9 +4,7 @@
 
 package models
 
-import (
-	"github.com/TF2Stadium/Helen/helpers"
-)
+import "errors"
 
 var (
 	teamMap  = map[string]int{"red": 0, "blu": 1}
@@ -97,22 +95,22 @@ var (
 	}
 )
 
-func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (int, *helpers.TPError) {
+func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (int, error) {
 	team, ok := teamMap[teamStr]
 	if !ok {
-		return -1, helpers.NewTPError("Invalid team", -1)
+		return -1, errors.New("Invalid team")
 	}
 
 	class, ok := typeClassMap[lobbytype][classStr]
 	if !ok {
-		return -1, helpers.NewTPError("Invalid class", -1)
+		return -1, errors.New("Invalid class")
 	}
 
 	return team*NumberOfClassesMap[lobbytype] + class, nil
 }
 
 // team, class
-func LobbyGetSlotInfoString(lobbytype LobbyType, slot int) (team, class string, err *helpers.TPError) {
+func LobbyGetSlotInfoString(lobbytype LobbyType, slot int) (team, class string, err error) {
 	classList := typeClassList[lobbytype]
 
 	teamI, classI, err := LobbyGetSlotInfo(lobbytype, slot)
@@ -122,7 +120,7 @@ func LobbyGetSlotInfoString(lobbytype LobbyType, slot int) (team, class string, 
 	return
 }
 
-func LobbyGetSlotInfo(lobbytype LobbyType, slot int) (int, int, *helpers.TPError) {
+func LobbyGetSlotInfo(lobbytype LobbyType, slot int) (int, int, error) {
 	classList := typeClassList[lobbytype]
 
 	if slot < len(classList) {
@@ -130,6 +128,6 @@ func LobbyGetSlotInfo(lobbytype LobbyType, slot int) (int, int, *helpers.TPError
 	} else if slot < 2*len(classList) {
 		return 1, slot - len(classList), nil
 	} else {
-		return 0, 0, helpers.NewTPError("Invalid slot", -1)
+		return 0, 0, errors.New("Invalid slot")
 	}
 }

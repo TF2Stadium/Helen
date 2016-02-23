@@ -5,7 +5,8 @@
 package handler
 
 import (
-	"github.com/TF2Stadium/Helen/helpers"
+	"errors"
+
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
@@ -26,7 +27,7 @@ func (Global) GetConstant(so *wsevent.Client, args struct {
 	case "lobbySettingsList":
 		output = models.LobbySettingsToJSON()
 	default:
-		return helpers.NewTPError("Unknown constant.", -1)
+		return errors.New("Unknown constant.")
 	}
 
 	return newResponse(output)

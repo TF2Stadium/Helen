@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -44,7 +45,7 @@ type Requirement struct {
 	Restricted Restriction `json:"restricted"`
 }
 
-func newRequirement(team, class string, requirement Requirement, lobby *models.Lobby) *helpers.TPError {
+func newRequirement(team, class string, requirement Requirement, lobby *models.Lobby) error {
 	slot, err := models.LobbyGetPlayerSlot(lobby.Type, team, class)
 	if err != nil {
 		return err
@@ -82,8 +83,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
-		str := fmt.Sprintf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
-		return helpers.NewTPError(str, -1)
+		return fmt.Errorf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
 	}
 
 	var steamGroup string
@@ -92,14 +92,14 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		if reSteamGroup.MatchString(*args.SteamGroupWhitelist) {
 			steamGroup = reSteamGroup.FindStringSubmatch(*args.SteamGroupWhitelist)[1]
 		} else {
-			return helpers.NewTPError("Invalid Steam group URL", -1)
+			return errors.New("Invalid Steam group URL")
 		}
 	}
 	if *args.TwitchWhitelist != "" {
 		if reTwitchChan.MatchString(*args.TwitchWhitelist) {
 			twitchChan = reTwitchChan.FindStringSubmatch(*args.TwitchWhitelist)[1]
 		} else {
-			return helpers.NewTPError("Invalid Twitch channel URL", -1)
+			return errors.New("Invalid Twitch channel URL")
 		}
 	}
 
@@ -117,7 +117,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	var count int
 	db.DB.Table("server_records").Where("host = ?", *args.Server).Count(&count)
 	if count != 0 {
-		return helpers.NewTPError("A lobby is already using this server.", -1)
+		return errors.New("A lobby is already using this server.")
 	}
 
 	randBytes := make([]byte, 6)
@@ -140,14 +140,14 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	lob.CreatedBySteamID = player.SteamID
 	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP {
-		return helpers.NewTPError("Couldn't find region server.", 1)
+		return errors.New("Couldn't find region server.")
 	}
 	lob.Save()
 
 	err := lob.SetupServer()
 	if err != nil { //lobby setup failed, delete lobby and corresponding server record
 		lob.Delete()
-		return helpers.NewTPErrorFromError(err)
+		return err
 	}
 
 	lob.State = models.LobbyStateWaiting
@@ -195,7 +195,7 @@ func (Lobby) LobbyServerReset(so *wsevent.Client, args struct {
 	lobby, tperr := models.GetLobbyByID(*args.ID)
 
 	if player.SteamID != lobby.CreatedBySteamID || player.Role != helpers.RoleAdmin {
-		return helpers.NewTPError("Player not authorized to reset server.", -1)
+		return errors.New("Player not authorized to reset server.")
 	}
 
 	if tperr != nil {
@@ -203,11 +203,11 @@ func (Lobby) LobbyServerReset(so *wsevent.Client, args struct {
 	}
 
 	if lobby.State == models.LobbyStateEnded {
-		return helpers.NewTPError("Lobby has ended", 1)
+		return errors.New("Lobby has ended")
 	}
 
 	if err := models.ReExecConfig(lobby.ID); err != nil {
-		return helpers.NewTPErrorFromError(err)
+		return err
 	}
 
 	return emptySuccess
@@ -221,13 +221,13 @@ func (Lobby) ServerVerify(so *wsevent.Client, args struct {
 }) interface{} {
 
 	if !validAddress.MatchString(*args.Server) {
-		return helpers.NewTPError("Invalid Server Address", -1)
+		return errors.New("Invalid Server Address")
 	}
 
 	var count int
 	db.DB.Table("server_records").Where("host = ?", *args.Server).Count(&count)
 	if count != 0 {
-		return helpers.NewTPError("A lobby is already using this server.", -1)
+		return errors.New("A lobby is already using this server.")
 	}
 
 	info := &models.ServerRecord{
@@ -239,7 +239,7 @@ func (Lobby) ServerVerify(so *wsevent.Client, args struct {
 
 	err := models.VerifyInfo(*info)
 	if err != nil {
-		return helpers.NewTPErrorFromError(err)
+		return err
 	}
 
 	return emptySuccess
@@ -256,12 +256,12 @@ func (Lobby) LobbyClose(so *wsevent.Client, args struct {
 	}
 
 	if player.SteamID != lob.CreatedBySteamID && player.Role != helpers.RoleAdmin {
-		return helpers.NewTPError("Player not authorized to close lobby.", -1)
+		return errors.New("Player not authorized to close lobby.")
 
 	}
 
 	if lob.State == models.LobbyStateEnded {
-		return helpers.NewTPError("Lobby already closed.", -1)
+		return errors.New("Lobby already closed.")
 	}
 
 	lob.Close(true)
@@ -281,8 +281,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanJoin); banned {
-		str := fmt.Sprintf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
-		return helpers.NewTPError(str, -1)
+		return fmt.Errorf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
 	}
 
 	//logrus.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
@@ -292,7 +291,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 	}
 
 	if lob.State == models.LobbyStateEnded {
-		return helpers.NewTPError("Cannot join a closed lobby.", -1)
+		return errors.New("Cannot join a closed lobby.")
 
 	}
 
@@ -410,7 +409,7 @@ func (Lobby) LobbySpectatorJoin(so *wsevent.Client, args struct {
 	return emptySuccess
 }
 
-func removePlayerFromLobby(lobbyId uint, steamId string) (*models.Lobby, *models.Player, *helpers.TPError) {
+func removePlayerFromLobby(lobbyId uint, steamId string) (*models.Lobby, *models.Player, error) {
 	player, tperr := models.GetPlayerBySteamID(steamId)
 	if tperr != nil {
 		return nil, nil, tperr
@@ -423,14 +422,14 @@ func removePlayerFromLobby(lobbyId uint, steamId string) (*models.Lobby, *models
 
 	switch lob.State {
 	case models.LobbyStateInProgress:
-		return lob, player, helpers.NewTPError("Lobby is in progress.", 1)
+		return lob, player, errors.New("Lobby is in progress.")
 	case models.LobbyStateEnded:
-		return lob, player, helpers.NewTPError("Lobby has closed.", 1)
+		return lob, player, errors.New("Lobby has closed.")
 	}
 
 	_, err := lob.GetPlayerSlot(player)
 	if err != nil {
-		return lob, player, helpers.NewTPError("Player not playing", 2)
+		return lob, player, errors.New("Player not playing")
 	}
 
 	if err := lob.RemovePlayer(player); err != nil {
@@ -440,7 +439,7 @@ func removePlayerFromLobby(lobbyId uint, steamId string) (*models.Lobby, *models
 	return lob, player, lob.AddSpectator(player)
 }
 
-func playerCanKick(lobbyId uint, steamId string) (bool, *helpers.TPError) {
+func playerCanKick(lobbyId uint, steamId string) (bool, error) {
 	lob, tperr := models.GetLobbyByID(lobbyId)
 	if tperr != nil {
 		return false, tperr
@@ -451,7 +450,7 @@ func playerCanKick(lobbyId uint, steamId string) (bool, *helpers.TPError) {
 		return false, tperr2
 	}
 	if steamId != lob.CreatedBySteamID && player.Role != helpers.RoleAdmin {
-		return false, helpers.NewTPError("Not authorized to kick players", 1)
+		return false, errors.New("Not authorized to kick players")
 	}
 	return true, nil
 }
@@ -465,7 +464,7 @@ func (Lobby) LobbyKick(so *wsevent.Client, args struct {
 	selfSteamId := chelpers.GetSteamId(so.ID)
 
 	if steamId == selfSteamId {
-		return helpers.NewTPError("Player can't kick himself.", -1)
+		return errors.New("Player can't kick himself.")
 	}
 	if ok, tperr := playerCanKick(*args.Id, selfSteamId); !ok {
 		return tperr
@@ -493,7 +492,7 @@ func (Lobby) LobbyBan(so *wsevent.Client, args struct {
 	selfSteamId := chelpers.GetSteamId(so.ID)
 
 	if steamId == selfSteamId {
-		return helpers.NewTPError("Player can't kick himself.", -1)
+		return errors.New("Player can't kick himself.")
 	}
 	if ok, tperr := playerCanKick(*args.Id, selfSteamId); !ok {
 		return tperr
@@ -570,7 +569,7 @@ func (Lobby) LobbyChangeOwner(so *wsevent.Client, args struct {
 
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	if lobby.CreatedBySteamID != player.SteamID {
-		return helpers.NewTPError("You aren't authorized to change lobby owner.", -1)
+		return errors.New("You aren't authorized to change lobby owner.")
 	}
 
 	player2, err := models.GetPlayerBySteamID(*args.SteamID)
@@ -602,11 +601,11 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 
 	player := chelpers.GetPlayerFromSocket(so.ID)
 	if lobby.CreatedBySteamID != player.SteamID {
-		return helpers.NewTPError("Only lobby owners can change requirements.", -1)
+		return errors.New("Only lobby owners can change requirements.")
 	}
 
 	if !(*args.Slot >= 0 && *args.Slot < models.NumberOfClassesMap[lobby.Type]) {
-		return helpers.NewTPError("Invalid slot.", -1)
+		return errors.New("Invalid slot.")
 	}
 
 	req, err := lobby.GetSlotRequirement(*args.Slot)
@@ -629,11 +628,11 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 		f, err = (*args.Value).Float64()
 		req.Reliability = f
 	default:
-		return helpers.NewTPError("Invalid requirement type.", -1)
+		return errors.New("Invalid requirement type.")
 	}
 
 	if err != nil {
-		return helpers.NewTPError("Invalid requirement.", -1)
+		return errors.New("Invalid requirement.")
 	}
 
 	req.Save()

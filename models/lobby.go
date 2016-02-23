@@ -5,6 +5,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -37,32 +38,17 @@ const (
 )
 
 var (
-	stateString = map[LobbyState]string{
-		LobbyStateWaiting:    "Waiting For Players",
-		LobbyStateInProgress: "Lobby in Progress",
-		LobbyStateEnded:      "Lobby Ended",
-	}
+	ErrLobbyNotFound   = errors.New("Couldn't find lobby with given ID")
+	ErrLobbyBan        = errors.New("You have been banned from this lobby")
+	ErrBadSlot         = errors.New("This slot does not exist")
+	ErrFilled          = errors.New("This slot has been filled")
+	ErrNotWhitelisted  = errors.New("You aren't allowed in this lobby")
+	ErrInvalidPassword = errors.New("Invalid slot password")
+	ErrNeedsSub        = errors.New("This slot needs a substitute")
 
-	formatMap = map[LobbyType]string{
-		LobbyTypeSixes:      "6s",
-		LobbyTypeHighlander: "Highlander",
-		LobbyTypeFours:      "4v4",
-		LobbyTypeUltiduo:    "Ultiduo",
-		LobbyTypeBball:      "Bball",
-		LobbyTypeDebug:      "Debug",
-	}
-)
-var (
-	LobbyBanErr        = helpers.NewTPError("You have been banned from this lobby", 4)
-	BadSlotErr         = helpers.NewTPError("This slot does not exist", 3)
-	FilledErr          = helpers.NewTPError("This slot has been filled", 2)
-	NotWhitelistedErr  = helpers.NewTPError("You aren't allowed in this lobby", 3)
-	InvalidPasswordErr = helpers.NewTPError("Invalid slot password", 3)
-	NeedsSubErr        = helpers.NewTPError("This slot needs a substitute", 3)
-
-	ReqHoursErr       = helpers.NewTPError("You don't have sufficient hours to join this lobby", 3)
-	ReqLobbiesErr     = helpers.NewTPError("You haven't played sufficient lobbies to join this lobby", 3)
-	ReqReliabilityErr = helpers.NewTPError("You have insufficient reliability to join this lobby", 3)
+	ErrReqHours       = errors.New("You don't have sufficient hours to join this lobby")
+	ErrReqLobbies     = errors.New("You haven't played sufficient lobbies to join this lobby")
+	ErrReqReliability = errors.New("You have insufficient reliability to join this lobby")
 )
 
 // Represents an occupied player slot in a lobby
@@ -183,7 +169,7 @@ func (lobby *Lobby) HasRequirements(slot int) bool {
 }
 
 //FitsRequirements checks if the player fits the requirement to be added to the given slot in the lobby
-func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPError) {
+func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, error) {
 	//BUG(vibhavp): FitsRequirements doesn't check reliability
 	var req *Requirement
 
@@ -202,11 +188,11 @@ func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, *helpers.TPErr
 	}
 
 	if player.GameHours < req.Hours {
-		return false, ReqHoursErr
+		return false, ErrReqHours
 	}
 
 	if player.Stats.TotalLobbies() < req.Lobbies {
-		return false, ReqLobbiesErr
+		return false, ErrReqLobbies
 	}
 
 	return true, nil
@@ -331,31 +317,27 @@ func (lobby *Lobby) Save() error {
 }
 
 //GetLobbyByIdServer returns the lobby object, plus the ServerInfo object inside it
-func GetLobbyByIDServer(id uint) (*Lobby, *helpers.TPError) {
-	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
-
+func GetLobbyByIDServer(id uint) (*Lobby, error) {
 	lob := &Lobby{}
 	err := db.DB.Preload("ServerInfo").First(lob, id).Error
 
-	if err != nil {
-		return nil, nonExistentLobby
+	if err == gorm.RecordNotFound {
+		return nil, ErrLobbyNotFound
 	}
 
 	return lob, nil
 }
 
 //GetLobbyByID returns lobby object, without the ServerInfo object inside it.
-func GetLobbyByID(id uint) (*Lobby, *helpers.TPError) {
-	nonExistentLobby := helpers.NewTPError("Lobby not in the database", -1)
-
+func GetLobbyByID(id uint) (*Lobby, error) {
 	lob := &Lobby{}
 	err := db.DB.First(lob, id).Error
 
-	if err != nil {
-		return nil, nonExistentLobby
+	if err == gorm.RecordNotFound {
+		return nil, ErrLobbyNotFound
 	}
 
-	return lob, nil
+	return lob, err
 }
 
 //HasPlayer returns true if the given player occupies a slot in the lobby
@@ -396,7 +378,7 @@ func (lobby *Lobby) IsSlotOccupied(slot int) bool {
 
 //AddPlayer adds the given player to lobby, If the player occupies a slot in the lobby already, switch slots.
 //If the player is in another lobby, removes them from that lobby before adding them.
-func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helpers.TPError {
+func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 	/* Possible errors while joining
 	 * Slot has been filled
 	 * Player has already joined a lobby
@@ -405,18 +387,18 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 
 	//check if slot password is valid
 	if lobby.SlotPassword != "" && lobby.SlotPassword != password {
-		return InvalidPasswordErr
+		return ErrInvalidPassword
 	}
 	//Check if player is banned
 	if lobby.IsPlayerBanned(player) {
-		return LobbyBanErr
+		return ErrLobbyBan
 	}
 	if slot >= 2*NumberOfClassesMap[lobby.Type] || slot < 0 {
-		return BadSlotErr
+		return ErrBadSlot
 	}
 	//Check whether the slot is occupied
 	if lobby.IsSlotOccupied(slot) {
-		return FilledErr
+		return ErrFilled
 	}
 
 	var slotChange bool
@@ -439,7 +421,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 			if lobby.SlotNeedsSubstitute(slot) {
 				//the slot needs a substitute (which happens when the lobby is in progress),
 				//so players already in the lobby cannot fill it.
-				return NeedsSubErr
+				return ErrNeedsSub
 			}
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
 			slotChange = true
@@ -452,7 +434,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 			lobby.PlayerWhitelist)
 
 		if lobby.PlayerWhitelist != "" && !helpers.IsWhitelisted(player.SteamID, url) {
-			return NotWhitelistedErr
+			return ErrNotWhitelisted
 		}
 
 		if lobby.HasRequirements(slot) {
@@ -466,11 +448,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 		if lobby.TwitchChannel != "" {
 			//check if player has connected their twitch account
 			if player.TwitchAccessToken == "" {
-				return helpers.NewTPError("You need to connect your Twitch Account first to join the lobby.", -1)
+				return errors.New("You need to connect your Twitch Account first to join the lobby.")
 			}
 			if !player.IsSubscribed(lobby.TwitchChannel) {
-				err := fmt.Sprintf("You aren't subscribed to %s", lobby.TwitchChannel)
-				return helpers.NewTPError(err, -1)
+				return fmt.Errorf("You aren't subscribed to %s", lobby.TwitchChannel)
 			}
 		}
 	}
@@ -505,10 +486,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) *helper
 }
 
 //RemovePlayer removes a given player from the lobby
-func (lobby *Lobby) RemovePlayer(player *Player) *helpers.TPError {
+func (lobby *Lobby) RemovePlayer(player *Player) error {
 	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{}).Error
 	if err != nil {
-		return helpers.NewTPError(err.Error(), -1)
+		return err
 	}
 
 	DisallowPlayer(lobby.ID, player.SteamID)
@@ -523,20 +504,20 @@ func (lobby *Lobby) BanPlayer(player *Player) {
 }
 
 //ReadyPlayer readies up given player, use when lobby.State == LobbyStateWaiting
-func (lobby *Lobby) ReadyPlayer(player *Player) *helpers.TPError {
+func (lobby *Lobby) ReadyPlayer(player *Player) error {
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).UpdateColumn("ready", true).Error
 	if err != nil {
-		return helpers.NewTPError("Player is not in the lobby.", 5)
+		return errors.New("Player is not in the lobby.")
 	}
 	lobby.OnChange(false)
 	return nil
 }
 
 //UnreadyPlayer unreadies given player, use when lobby.State == LobbyStateWaiting
-func (lobby *Lobby) UnreadyPlayer(player *Player) *helpers.TPError {
+func (lobby *Lobby) UnreadyPlayer(player *Player) error {
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).UpdateColumn("ready", false).Error
 	if err != nil {
-		return helpers.NewTPError("Player is not in the lobby.", 5)
+		return errors.New("Player is not in the lobby.")
 	}
 
 	lobby.OnChange(false)
@@ -616,10 +597,10 @@ func (lobby *Lobby) IsEveryoneReady() bool {
 }
 
 //AddSpectator adds a given player as a lobby spectator
-func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
+func (lobby *Lobby) AddSpectator(player *Player) error {
 	err := db.DB.Model(lobby).Association("Spectators").Append(player).Error
 	if err != nil {
-		return helpers.NewTPError(err.Error(), -1)
+		return err
 	}
 	lobby.OnChange(false)
 	return nil
@@ -627,10 +608,10 @@ func (lobby *Lobby) AddSpectator(player *Player) *helpers.TPError {
 
 //RemoveSpectator removes the given player from the lobby spectators list. If broadcast, then
 //broadcast the change to other players
-func (lobby *Lobby) RemoveSpectator(player *Player, broadcast bool) *helpers.TPError {
+func (lobby *Lobby) RemoveSpectator(player *Player, broadcast bool) error {
 	err := db.DB.Model(lobby).Association("Spectators").Delete(player).Error
 	if err != nil {
-		return helpers.NewTPError(err.Error(), -1)
+		return err
 	}
 	if broadcast {
 		lobby.OnChange(false)

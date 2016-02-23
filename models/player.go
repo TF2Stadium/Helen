@@ -38,6 +38,8 @@ const (
 	PlayerBanFull
 )
 
+var ErrPlayerNotFound = errors.New("Player not found")
+
 //PlayerBan represents a player ban
 type PlayerBan struct {
 	gorm.Model
@@ -234,28 +236,28 @@ func GetPlayerByID(ID uint) (*Player, error) {
 }
 
 // Get a player object by it's Steam id
-func GetPlayerBySteamID(steamid string) (*Player, *helpers.TPError) {
+func GetPlayerBySteamID(steamid string) (*Player, error) {
 	var player = Player{}
 	err := db.DB.Where("steam_id = ?", steamid).First(&player).Error
 	if err != nil {
-		return nil, helpers.NewTPError("Player is not in the database", -1)
+		return nil, ErrPlayerNotFound
 	}
 	return &player, nil
 }
 
 // Get a player object by it's Steam ID, with the Stats field
-func GetPlayerWithStats(steamid string) (*Player, *helpers.TPError) {
+func GetPlayerWithStats(steamid string) (*Player, error) {
 	var player = Player{}
 	err := db.DB.Where("steam_id = ?", steamid).Preload("Stats").First(&player).Error
 	if err != nil {
-		return nil, helpers.NewTPError("Player is not in the database", -1)
+		return nil, ErrPlayerNotFound
 	}
 	return &player, nil
 }
 
 // Get the ID of the lobby the player occupies a slot in. Only works for lobbies which aren't closed (LobbyStateEnded).
 //If inProrgess, exclude lobbies which are in progress
-func (player *Player) GetLobbyID(inProgress bool) (uint, *helpers.TPError) {
+func (player *Player) GetLobbyID(inProgress bool) (uint, error) {
 	playerSlot := &LobbySlot{}
 	states := []LobbyState{LobbyStateEnded}
 	if inProgress {
@@ -268,7 +270,7 @@ func (player *Player) GetLobbyID(inProgress bool) (uint, *helpers.TPError) {
 
 	// if the player is not in any lobby or the player has been reported/needs sub, return error
 	if err != nil || playerSlot.NeedsSub {
-		return 0, helpers.NewTPError("Player not in any lobby", 1)
+		return 0, ErrPlayerNotFound
 	}
 
 	return playerSlot.LobbyID, nil
@@ -285,7 +287,7 @@ func (player *Player) IsSpectatingID(lobbyid uint) bool {
 }
 
 //Get ID(s) of lobbies (which aren't clsoed) the player is spectating
-func (player *Player) GetSpectatingIds() ([]uint, *helpers.TPError) {
+func (player *Player) GetSpectatingIds() ([]uint, error) {
 	var ids []uint
 	err := db.DB.Model(&Lobby{}).
 		Joins("INNER JOIN spectators_players_lobbies l ON l.lobby_id = lobbies.id").
@@ -293,7 +295,7 @@ func (player *Player) GetSpectatingIds() ([]uint, *helpers.TPError) {
 		Pluck("id", &ids).Error
 
 	if err != nil {
-		return nil, helpers.NewTPError(err.Error(), 1)
+		return nil, err
 	}
 
 	return ids, nil

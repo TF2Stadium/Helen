@@ -5,6 +5,7 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -33,7 +34,7 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 	playerID := chelpers.GetPlayerID(so.ID)
 	now := time.Now().Unix()
 	if now-lastChatTime[playerID] == 0 {
-		return helpers.NewTPError("You're sending messages too quickly", -1)
+		return errors.New("You're sending messages too quickly")
 	}
 
 	lastChatTime[playerID] = now
@@ -48,7 +49,7 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 		db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", *args.Room, player.ID).Count(&count)
 
 		if !spec && count == 0 {
-			return helpers.NewTPError("Player is not in the lobby.", 5)
+			return errors.New("Player is not in the lobby.")
 		}
 	} else {
 		// else room is the lobby list room
@@ -56,13 +57,13 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 	}
 	switch {
 	case len(*args.Message) == 0:
-		return helpers.NewTPError("Cannot send an empty message", 4)
+		return errors.New("Cannot send an empty message")
 
 	case (*args.Message)[0] == '\n':
-		return helpers.NewTPError("Cannot send messages prefixed with newline", 4)
+		return errors.New("Cannot send messages prefixed with newline")
 
 	case len(*args.Message) > 150:
-		return helpers.NewTPError("Message too long", 4)
+		return errors.New("Message too long")
 	}
 
 	message := models.NewChatMessage(*args.Message, *args.Room, player)
@@ -90,10 +91,10 @@ func (Chat) ChatDelete(so *wsevent.Client, args struct {
 	message := &models.ChatMessage{}
 	err := db.DB.First(message, *args.ID).Error
 	if message.Bot {
-		return helpers.NewTPError("Cannot delete notification messages", -1)
+		return errors.New("Cannot delete notification messages")
 	}
 	if err != nil {
-		return helpers.NewTPError("Can't find message", -1)
+		return errors.New("Can't find message")
 	}
 
 	player, _ := models.GetPlayerByID(message.PlayerID)

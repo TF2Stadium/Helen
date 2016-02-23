@@ -130,6 +130,23 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 	return j
 }
 
+var (
+	stateString = map[LobbyState]string{
+		LobbyStateWaiting:    "Waiting For Players",
+		LobbyStateInProgress: "Lobby in Progress",
+		LobbyStateEnded:      "Lobby Ended",
+	}
+
+	formatMap = map[LobbyType]string{
+		LobbyTypeSixes:      "6s",
+		LobbyTypeHighlander: "Highlander",
+		LobbyTypeFours:      "4v4",
+		LobbyTypeUltiduo:    "Ultiduo",
+		LobbyTypeBball:      "Bball",
+		LobbyTypeDebug:      "Debug",
+	}
+)
+
 func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyData := LobbyData{
 		ID:            lobby.ID,
