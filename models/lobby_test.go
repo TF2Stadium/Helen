@@ -447,13 +447,13 @@ func TestSlotRequirements(t *testing.T) {
 
 	assert.True(t, lobby.HasRequirements(0))
 	err := lobby.AddPlayer(player, 0, "")
-	assert.Equal(t, err, ReqHoursErr)
+	assert.Equal(t, err, ErrReqHours)
 
 	player.GameHours = 2
 	player.Save()
 
 	err = lobby.AddPlayer(player, 0, "")
-	assert.Equal(t, err, ReqLobbiesErr)
+	assert.Equal(t, err, ErrReqLobbies)
 
 	player, _ = GetPlayerWithStats(player.SteamID)
 	player.Stats.PlayedCountIncrease(lobby.Type)
