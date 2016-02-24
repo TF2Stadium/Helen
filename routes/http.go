@@ -17,7 +17,7 @@ import (
 
 type route struct {
 	pattern string
-	handler func(http.ResponseWriter, *http.Request)
+	handler http.HandlerFunc
 }
 
 var routes = []route{
@@ -35,6 +35,8 @@ var routes = []route{
 	{"/admin/ban", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.BanPlayer)},
 	{"/admin/chatlogs", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetChatLogs)},
 	{"/admin/banlogs", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetBanLogs)},
+
+	{"/health", controllers.Health},
 }
 
 func SetupHTTP(mux *http.ServeMux) {
