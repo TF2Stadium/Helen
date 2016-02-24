@@ -8,9 +8,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/TF2Stadium/Helen/config"
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
+	"golang.org/x/net/xsrftoken"
 )
 
 func ChangeRole(w http.ResponseWriter, r *http.Request) {
@@ -23,6 +26,17 @@ func ChangeRole(w http.ResponseWriter, r *http.Request) {
 	values := r.Form
 	steamid := values.Get("steamid")
 	remove := values.Get("remove")
+	token := values.Get("xsfr-token")
+	gResponse := values.Get("g-recaptcha-response")
+	if !xsrftoken.Valid(token, config.Constants.CookieStoreSecret, "admin", "POST") {
+		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
+		return
+	}
+	if config.Constants.ReCaptchaSecret != "" && !chelpers.VerifyResponse(gResponse, r.RemoteAddr) {
+		http.Error(w, "Invalid captcha response", http.StatusBadRequest)
+		return
+	}
+
 	role, ok := map[string]authority.AuthRole{
 		"admin": helpers.RoleAdmin,
 		"mod":   helpers.RoleMod,

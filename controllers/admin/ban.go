@@ -10,7 +10,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/TF2Stadium/Helen/config"
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/models"
+	"golang.org/x/net/xsrftoken"
 )
 
 var banlogsTempl *template.Template
@@ -30,6 +33,17 @@ func BanPlayer(w http.ResponseWriter, r *http.Request) {
 	reason := values.Get("reason")
 	banType := values.Get("type")
 	remove := values.Get("remove")
+	token := values.Get("xsfr-token")
+	gResponse := values.Get("g-recaptcha-response")
+	if !xsrftoken.Valid(token, config.Constants.CookieStoreSecret, "admin", "POST") {
+		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
+		return
+	}
+	if config.Constants.ReCaptchaSecret != "" && !chelpers.VerifyResponse(gResponse, r.RemoteAddr) {
+		http.Error(w, "Invalid captcha response", http.StatusBadRequest)
+		return
+	}
+
 	ban, ok := map[string]models.PlayerBanType{
 		"joinLobby":   models.PlayerBanJoin,
 		"createLobby": models.PlayerBanCreate,

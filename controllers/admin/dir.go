@@ -7,6 +7,9 @@ package admin
 import (
 	"html/template"
 	"net/http"
+
+	"github.com/TF2Stadium/Helen/config"
+	"golang.org/x/net/xsrftoken"
 )
 
 var banForm = map[string]string{
@@ -28,8 +31,10 @@ func init() {
 }
 
 func ServeAdminPage(w http.ResponseWriter, r *http.Request) {
-	adminPagetempl.Execute(w, map[string](map[string]string){
+	adminPagetempl.Execute(w, map[string]interface{}{
 		"BanForms":  banForm,
 		"RoleForms": roleForm,
+		"XSRFToken": xsrftoken.Generate(config.Constants.CookieStoreSecret, "admin", "POST"),
+		"SiteKey":   config.Constants.ReCaptchaSiteKey,
 	})
 }
