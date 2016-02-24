@@ -21,8 +21,12 @@ import (
 
 var (
 	dateRegex     = regexp.MustCompile(`(\d{2})-(\d{2})-(\d{4})`)
-	chatLogsTempl = template.Must(template.ParseFiles("views/admin/templates/chatlogs.html"))
+	chatLogsTempl *template.Template
 )
+
+func init() {
+	chatLogsTempl, _ = template.ParseFiles("views/admin/templates/chatlogs.html")
+}
 
 func getPlayerID(steamID string) (playerID uint) {
 	db.DB.Table("players").Select("id").Where("steam_id = ?", steamID).Row().Scan(&playerID)

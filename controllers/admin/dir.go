@@ -21,7 +21,11 @@ var roleForm = map[string]string{
 	"mod":   "Add Moderator",
 }
 
-var adminPagetempl = template.Must(template.ParseFiles("./views/admin/index.html"))
+var adminPagetempl *template.Template
+
+func init() {
+	adminPagetempl, _ = template.ParseFiles("./views/admin/index.html")
+}
 
 func ServeAdminPage(w http.ResponseWriter, r *http.Request) {
 	adminPagetempl.Execute(w, map[string](map[string]string){

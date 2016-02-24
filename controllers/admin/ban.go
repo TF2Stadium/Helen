@@ -13,6 +13,12 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 )
 
+var banlogsTempl *template.Template
+
+func init() {
+	banlogsTempl, _ = template.ParseFiles("views/admin/templates/ban_logs.html")
+}
+
 func BanPlayer(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -68,8 +74,6 @@ func BanPlayer(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "Player %s (%s) has been banned (%s) till %v", player.Name, player.SteamID, ban.String(), until)
 }
-
-var banlogsTempl = template.Must(template.ParseFiles("views/admin/templates/ban_logs.html"))
 
 type BanData struct {
 	Player *models.Player
