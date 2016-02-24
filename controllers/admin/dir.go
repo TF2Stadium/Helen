@@ -35,6 +35,5 @@ func ServeAdminPage(w http.ResponseWriter, r *http.Request) {
 		"BanForms":  banForm,
 		"RoleForms": roleForm,
 		"XSRFToken": xsrftoken.Generate(config.Constants.CookieStoreSecret, "admin", "POST"),
-		"SiteKey":   config.Constants.ReCaptchaSiteKey,
 	})
 }

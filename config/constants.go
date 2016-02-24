@@ -58,8 +58,6 @@ type constants struct {
 	SlackbotURL        string `envconfig:"SLACK_URL" doc:"Slack webhook URL"`
 	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
 	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
-	ReCaptchaSiteKey   string `envconfig:"RECAPTCHA_SITE_KEY" doc:"reCAPTCHA site key"`
-	ReCaptchaSecret    string `envconfig:"RECAPTCHA_SECRET" doc:"reCAPTCHA secret"`
 }
 
 var Constants = constants{}
@@ -76,12 +74,6 @@ func SetupConstants() {
 
 	if Constants.PublicAddress == "" {
 		Constants.PublicAddress = "http://" + Constants.ListenAddress
-	}
-
-	if Constants.ReCaptchaSiteKey != "" && Constants.ReCaptchaSecret == "" {
-		logrus.Fatal("reCAPTCHA secret missing")
-	} else if Constants.ReCaptchaSecret != "" && Constants.ReCaptchaSiteKey == "" {
-		logrus.Fatal("reCAPTCHA site key missing")
 	}
 }
 
