@@ -31,20 +31,10 @@ var routes = []route{
 	{"/websocket/", controllers.SocketHandler},
 
 	{"/admin", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminPage)},
-
-	{"/admin/roles", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminRolePage)},
-	{"/admin/roles/addadmin", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddAdmin)},
-	{"/admin/roles/addmod", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddMod)},
-	{"/admin/roles/remove", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.Remove)},
-	{"/admin/roles/adddev", chelpers.FilterHTTPRequest(helpers.ActionChangeRole, admin.AddDeveloper)},
-
-	{"/admin/ban", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminBanPage)},
-	{"/admin/ban/join", chelpers.FilterHTTPRequest(helpers.ActionBanJoin, admin.BanJoin)},
-	{"/admin/ban/create", chelpers.FilterHTTPRequest(helpers.ActionBanCreate, admin.BanCreate)},
-	{"/admin/ban/chat", chelpers.FilterHTTPRequest(helpers.ActionBanChat, admin.BanChat)},
-
+	{"/admin/roles", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ChangeRole)},
+	{"/admin/ban", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.BanPlayer)},
 	{"/admin/chatlogs", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetChatLogs)},
-	{"/admin/banlogs", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.DisplayLogs)},
+	{"/admin/banlogs", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.GetBanLogs)},
 }
 
 func SetupHTTP(mux *http.ServeMux) {

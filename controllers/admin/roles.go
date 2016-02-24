@@ -13,56 +13,42 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 )
 
-func changeRole(w http.ResponseWriter, r *http.Request, role authority.AuthRole) error {
-	player, terr := models.GetPlayerBySteamID(r.URL.Query().Get("steamid"))
-	if terr != nil {
-		return terr
-	}
-
+func ChangeRole(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	switch r.Form.Get("confirm") {
-	case "yes":
-		if err := verifyToken(r, "changeRole"); err != nil {
-			return err
-		}
+	values := r.Form
+	steamid := values.Get("steamid")
+	remove := values.Get("remove")
+	role, ok := map[string]authority.AuthRole{
+		"admin": helpers.RoleAdmin,
+		"mod":   helpers.RoleMod,
+	}[values.Get("role")]
+	if !ok {
+		http.Error(w, "invalid role", http.StatusBadRequest)
+		return
+	}
 
-		player.Role = role
+	player, err := models.GetPlayerBySteamID(steamid)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if remove == "true" {
+		player.Role = 0
 		player.Save()
-		fmt.Fprintf(w, "%s (%s) has been made a %s", player.Name, player.SteamID, helpers.RoleNames[role])
-	default:
-		title := fmt.Sprintf("Make %s (%s) a %s?", player.Name, player.SteamID, helpers.RoleNames[role])
-		confirmReq(w, r, "changeRole", title)
-	}
-
-	return nil
-}
-
-func AddAdmin(w http.ResponseWriter, r *http.Request) {
-	err := changeRole(w, r, helpers.RoleAdmin)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
+		fmt.Fprintf(w, "Player %s (%s) has been removed as %s", player.Name, player.SteamID, helpers.RoleNames[role])
 		return
 	}
-}
 
-func AddMod(w http.ResponseWriter, r *http.Request) {
-	err := changeRole(w, r, helpers.RoleMod)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
-	}
-}
-
-func AddDeveloper(w http.ResponseWriter, r *http.Request) {
-	err := changeRole(w, r, helpers.RoleDeveloper)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
-	}
+	player.Role = role
+	player.Save()
+	fmt.Fprintf(w, "Player %s (%s) has been made a %s", player.Name, player.SteamID, helpers.RoleNames[role])
+	return
 }
 
 func Remove(w http.ResponseWriter, r *http.Request) {

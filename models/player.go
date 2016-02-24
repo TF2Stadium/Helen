@@ -362,6 +362,15 @@ func (player *Player) GetSetting(key string) string {
 	return *value
 }
 
+func (t PlayerBanType) String() string {
+	return map[PlayerBanType]string{
+		PlayerBanJoin:   "lobby join ban",
+		PlayerBanCreate: "lobby create ban",
+		PlayerBanChat:   "chat ban",
+		PlayerBanFull:   "full ban",
+	}[t]
+}
+
 func (player *Player) IsBannedWithTime(t PlayerBanType) (bool, time.Time) {
 	ban := &PlayerBan{}
 	err := db.DB.Where("type = ? AND until > now() AND player_id = ? AND active = TRUE", t, player.ID).
@@ -379,6 +388,11 @@ func (player *Player) IsBanned(t PlayerBanType) bool {
 }
 
 func (player *Player) BanUntil(tim time.Time, t PlayerBanType, reason string) error {
+	// first check if player is already banned
+	if banned := player.IsBanned(t); banned {
+		db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE AND until > now()", player.ID, t).Update("until", tim)
+		return nil
+	}
 	ban := PlayerBan{
 		PlayerID: player.ID,
 		Type:     t,

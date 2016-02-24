@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	dateRegex = regexp.MustCompile(`(\d{2})-(\d{2})-(\d{4})`)
+	dateRegex     = regexp.MustCompile(`(\d{2})-(\d{2})-(\d{4})`)
+	chatLogsTempl = template.Must(template.ParseFiles("views/admin/templates/chatlogs.html"))
 )
 
 func getPlayerID(steamID string) (playerID uint) {
@@ -29,13 +30,6 @@ func getPlayerID(steamID string) (playerID uint) {
 }
 
 func GetChatLogs(w http.ResponseWriter, r *http.Request) {
-	chatLogsTempl, err := template.ParseFiles("views/admin/templates/chatlogs.html")
-	if err != nil {
-		logrus.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	var messages []*models.ChatMessage
 	values := r.URL.Query()
 

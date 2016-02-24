@@ -164,14 +164,10 @@ func TestPlayerBanning(t *testing.T) {
 
 	future2 := time.Now().Add(time.Second * 20)
 	player2.BanUntil(future2, PlayerBanJoin, "they suck")
-	isBannedJoin2, untilJoin2 := player2.IsBannedWithTime(PlayerBanJoin)
-	assert.True(t, isBannedJoin2)
-	assert.True(t, future2.Sub(untilJoin2) < time.Second)
-	assert.True(t, untilJoin.Sub(future2) < time.Second)
 
 	bans, err := player2.GetActiveBans()
 	assert.Nil(t, err)
-	assert.Equal(t, 3, len(bans))
+	assert.Equal(t, 1, len(bans))
 
 	player2.Unban(PlayerBanJoin)
 	player2.Unban(PlayerBanFull)

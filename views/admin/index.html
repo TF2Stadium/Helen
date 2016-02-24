@@ -7,10 +7,36 @@
   <center>
   <b>Admin Control Panel</b><br>
   </center>
-  <a class="pure-button pure-button-primary" href="/admin/ban">Ban Players</a>
-  <a class="pure-button pure-button-primary" href="/admin/roles">Change player roles</a>
-  <a class="pure-button pure-button-primary" href="/admin/banlogs">View Ban logs</a>
+  
+  <form method="post" action="admin/ban" class="pure-form">
+    <legend>Bans</legend>
 
+    <input placeholder="Steam ID" type="text" name="steamid" required>
+    <input placeholder="Reason" type="text" name="reason" required>
+    <label for="state">Ban From</label>
+    <select id="type" name="type">{{range $type, $name := .BanForms}}
+      <option value="{{print $type}}">{{print $name}}</option>{{end}}
+    </select>
+    <label for="state">Ban Until</label>
+    <input placeholder="Date" type="date" name="date">
+    <input placeholder="Time" type="time" name="time">
+    <input type="checkbox" name="remove" value="true">Remove<br>
+    <button type="submit" class="pure-button pure-button-primary">Ban</button>
+  </form>
+
+  <form method="post" action="admin/roles" class="pure-form">
+    <legend>Change Player Roles</legend>
+
+    <input placeholder="Steam ID" type="text" name="steamid" required>
+    <label for="role">Role</label>
+    <select id="role" name="role">{{range $type, $name := .RoleForms}}
+      <option value="{{print $type}}">{{print $name}}</option>{{end}}
+    </select>
+    <input type="checkbox" name="remove" value="true">Remove<br>
+    <button type="submit" class="pure-button pure-button-primary">Add</button>
+  </form>
+
+  <a class="pure-button pure-button-primary" href="/admin/banlogs">View Ban logs</a>
   <form method="get" action="admin/chatlogs" class="pure-form pure-form-aligned">
     <fieldset class="pure-control-group">
       <legend>Chat Logs</legend>
@@ -33,4 +59,5 @@
     </fieldset>
       <button type="submit" class="pure-button pure-button-primary">View</button>
   </form>
+
 </html>

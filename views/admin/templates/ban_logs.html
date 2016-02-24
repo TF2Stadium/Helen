@@ -18,7 +18,7 @@
 	{{range .}}
 	<tr>
 	  <td>{{.Player.Name}} ({{.Player.SteamID}})</td>
-	  <td>{{.BanName}}</td>
+	  <td>{{.Ban.Type.String}}</td>
 	  <td>{{.Ban.Reason}}</td>
 	  <td>{{.Ban.CreatedAt.Format "Mon Jan _2 15:04:05 2006"}}</td>
 	  <td>{{.Ban.Until.Format "Mon Jan _2 15:04:05 2006"}}</td>
