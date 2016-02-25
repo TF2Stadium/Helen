@@ -5,7 +5,6 @@
 package admin
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -46,8 +45,8 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 	steamID := values.Get("steamid")
 	var from, to time.Time
 
-	if values.Get("from") != "" {
-		from, err = timestamp(values.Get("from"))
+	if values.Get("from") != "" { //2006-01-02
+		from, err = time.Parse("2006-01-02", values.Get("from"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -57,7 +56,7 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if values.Get("to") != "" {
-		to, err = timestamp(values.Get("to"))
+		to, err = time.Parse("2006-01-02", values.Get("to"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -107,10 +106,7 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 
 	for _, message := range messages {
 		//err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
-		err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
-		if err != nil {
-			logrus.Warning(err.Error())
-		}
+		db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
 	}
 
 	err = chatLogsTempl.Execute(w, messages)
@@ -118,33 +114,4 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 		logrus.Error(err.Error())
 		return
 	}
-}
-
-//date regex - MM-DD-YYYY
-func timestamp(date string) (time.Time, error) {
-	if !dateRegex.MatchString(date) {
-		return time.Time{}, errors.New("timestamp: invalid date")
-	}
-
-	var t time.Time
-	matches := dateRegex.FindStringSubmatch(date)
-
-	month, err := strconv.Atoi(matches[1])
-	if err != nil {
-		return t, err
-	}
-
-	day, err := strconv.Atoi(matches[2])
-	if err != nil {
-		return t, err
-	}
-
-	year, err := strconv.Atoi(matches[3])
-	if err != nil {
-		return t, err
-	}
-
-	t = time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
-
-	return t, nil
 }
