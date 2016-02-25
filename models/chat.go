@@ -12,10 +12,7 @@ import (
 type ChatMessage struct {
 	// Message ID
 	ID        uint      `json:"id"`
-	CreatedAt time.Time `json:"-"`
-
-	// Because the frontend needs the unix timestamp for the message. Not stored in the DB
-	Timestamp int64 `sql:"-" json:"timestamp"`
+	CreatedAt time.Time `json:"timestamp"`
 
 	// ID of the player who sent the message
 	PlayerID uint `json:"-"`
@@ -42,8 +39,6 @@ var botSummary = PlayerSummary{
 // Return a new ChatMessage sent from specficied player
 func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	record := &ChatMessage{
-		Timestamp: time.Now().Unix(),
-
 		PlayerID: player.ID,
 		Player:   DecoratePlayerSummary(player),
 
@@ -56,8 +51,6 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 
 func NewInGameChatMessage(lobby *Lobby, player *Player, message string) *ChatMessage {
 	return &ChatMessage{
-		Timestamp: time.Now().Unix(),
-
 		PlayerID: player.ID,
 		Player:   DecoratePlayerSummary(player),
 
@@ -78,8 +71,6 @@ func (m *ChatMessage) Send() {
 
 func NewBotMessage(message string, room int) *ChatMessage {
 	m := &ChatMessage{
-		Timestamp: time.Now().Unix(),
-
 		Player:  botSummary,
 		Room:    room,
 		Message: message,
@@ -129,7 +120,6 @@ func GetScrollback(room int) ([]*ChatMessage, error) {
 			db.DB.First(&player, message.PlayerID)
 			message.Player = DecoratePlayerSummary(&player)
 		}
-		message.Timestamp = message.CreatedAt.Unix()
 	}
 	return messages, err
 }
