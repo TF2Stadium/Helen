@@ -50,7 +50,6 @@ func CleanupDB() {
 		"admin_log_entries",
 		"banned_players_lobbies",
 		"chat_messages",
-		"http_sessions",
 		"lobbies",
 		"lobby_slots",
 		"player_bans",

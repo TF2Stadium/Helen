@@ -8,6 +8,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -71,7 +72,7 @@ func IsSteamIDWhitelisted(steamid string) bool {
 // shitlord
 func CheckPrivilege(so *wsevent.Client, action authority.AuthAction) error {
 	//Checks if the client has the neccesary authority to perform action
-	player, _ := models.GetPlayerBySteamID(GetSteamId(so.ID))
+	player, _ := models.GetPlayerBySteamID(so.Token.Claims["steam_id"].(string))
 	if !player.Role.Can(action) {
 		return errors.New("You are not authorized to perform this action")
 	}
@@ -81,20 +82,15 @@ func CheckPrivilege(so *wsevent.Client, action authority.AuthAction) error {
 func FilterHTTPRequest(action authority.AuthAction, f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := GetSessionHTTP(r)
+		token, err := GetToken(r)
 		if err != nil {
-			http.Error(w, "Internal Server Error: No session found", 500)
+			http.Error(w, "You're not logged in, or your JWT cookie is invalid.", http.StatusBadRequest)
 			return
 		}
 
-		steamid, ok := session.Values["steam_id"]
-		if !ok {
-			http.Error(w, "Player not logged in", 401)
-			return
-		}
+		role, _ := strconv.Atoi(token.Claims["role"].(string))
 
-		player, _ := models.GetPlayerBySteamID(steamid.(string))
-		if !(player.Role.Can(action)) {
+		if !(authority.AuthRole(role).Can(action)) {
 			http.Error(w, "Not authorized", 403)
 			return
 		}

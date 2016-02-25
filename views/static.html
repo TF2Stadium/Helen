@@ -46,7 +46,7 @@ var createBox = function(so, messageName, messageFields) {
 
 var getCookie = function C(k){return(document.cookie.match('(^|; )'+k+'=([^;]*)')||0)[2]}
 
-var url = 'ws://' + window.location.hostname + ':' + window.location.port + '/websocket/';
+var url = 'ws://' + window.location.hostname + ':' + window.location.port + '/websocket/'
 
 var extract = function(obj) {
   return obj["request"]
@@ -55,7 +55,6 @@ var opts = {}
 opts.extractor = extract;
 
 var so = new Socket(url, opts)
-
 
 so.On("asdf", function() {
   console.log("asdf received");

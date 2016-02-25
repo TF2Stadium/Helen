@@ -31,14 +31,14 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 	Room    *int    `json:"room"`
 }) interface{} {
 
-	playerID := chelpers.GetPlayerID(so.ID)
+	playerID, _ := strconv.ParseUint(so.Token.Claims["player_id"].(string), 10, 32)
 	now := time.Now().Unix()
-	if now-lastChatTime[playerID] == 0 {
+	if now-lastChatTime[uint(playerID)] == 0 {
 		return errors.New("You're sending messages too quickly")
 	}
 
-	lastChatTime[playerID] = now
-	player, _ := models.GetPlayerByID(playerID)
+	lastChatTime[uint(playerID)] = now
+	player, _ := models.GetPlayerByID(uint(playerID))
 
 	//logrus.Debug("received chat message: %s %s", *args.Message, player.Name)
 

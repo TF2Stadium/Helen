@@ -12,7 +12,7 @@ import (
 
 //follows semantic versioning scheme
 var schemaVersion = semver.Version{
-	Major: 9,
+	Major: 10,
 	Minor: 0,
 	Patch: 0,
 }

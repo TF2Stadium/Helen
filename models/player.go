@@ -307,6 +307,7 @@ func (player *Player) UpdatePlayerInfo() error {
 		return nil
 	}
 
+	defer player.Save()
 	player.SetExternalLinks()
 
 	scraper.SetSteamApiKey(config.Constants.SteamDevAPIKey)

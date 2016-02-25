@@ -8,19 +8,18 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/internal/pprof"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/dgrijalva/jwt-go"
 )
 
 //OnDisconnect is connected when a player with a given socketID disconnects
-func OnDisconnect(socketID string) {
+func OnDisconnect(socketID string, token *jwt.Token) {
 	pprof.Clients.Add(-1)
-	defer chelpers.DeauthenticateSocket(socketID)
-	if chelpers.IsLoggedInSocket(socketID) {
-		steamid := chelpers.GetSteamId(socketID)
+	if token != nil { //player was logged in
+		steamid := token.Claims["steam_id"].(string)
 		sessions.RemoveSocket(socketID, steamid)
 		player, tperr := models.GetPlayerBySteamID(steamid)
 		if tperr != nil || player == nil {

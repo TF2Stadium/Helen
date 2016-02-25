@@ -19,7 +19,6 @@ import (
 	"github.com/DSchalla/go-pid"
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/config/stores"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket"
@@ -62,6 +61,7 @@ func main() {
 	}
 
 	config.SetupConstants()
+	chelpers.SetupJWTSigning()
 
 	if config.Constants.ProfilerAddr != "" {
 		go graceful.Run(config.Constants.ProfilerAddr, 1*time.Second, nil)
@@ -75,7 +75,6 @@ func main() {
 	helpers.InitAuthorization()
 	database.Init()
 	migrations.Do()
-	stores.SetupStores()
 	err := models.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
 	if err != nil {
 		logrus.Fatal(err)

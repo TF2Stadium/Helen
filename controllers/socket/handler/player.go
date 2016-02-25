@@ -19,12 +19,7 @@ func (Player) Name(s string) string {
 }
 
 func (Player) PlayerReady(so *wsevent.Client, _ struct{}) interface{} {
-	steamid := chelpers.GetSteamId(so.ID)
-	player, tperr := models.GetPlayerBySteamID(steamid)
-	if tperr != nil {
-		return tperr
-	}
-
+	player := chelpers.GetPlayer(so.Token)
 	lobbyid, tperr := player.GetLobbyID(false)
 	if tperr != nil {
 		return tperr
@@ -56,12 +51,7 @@ func (Player) PlayerReady(so *wsevent.Client, _ struct{}) interface{} {
 }
 
 func (Player) PlayerNotReady(so *wsevent.Client, _ struct{}) interface{} {
-	player, tperr := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
-
-	if tperr != nil {
-		return tperr
-	}
-
+	player := chelpers.GetPlayer(so.Token)
 	lobbyid, tperr := player.GetLobbyID(false)
 	if tperr != nil {
 		return tperr
@@ -94,8 +84,7 @@ func (Player) PlayerSettingsGet(so *wsevent.Client, args struct {
 	Key *string `json:"key"`
 }) interface{} {
 
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
-
+	player := chelpers.GetPlayer(so.Token)
 	if *args.Key == "*" {
 		return newResponse(player.Settings)
 	}
@@ -111,7 +100,7 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 	Value *string `json:"value"`
 }) interface{} {
 
-	player, _ := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
+	player := chelpers.GetPlayer(so.Token)
 
 	switch *args.Key {
 	case "siteAlias":
@@ -148,7 +137,7 @@ func (Player) PlayerProfile(so *wsevent.Client, args struct {
 
 	steamid := *args.Steamid
 	if steamid == "" {
-		steamid = chelpers.GetSteamId(so.ID)
+		steamid = so.Token.Claims["steam_id"].(string)
 	}
 
 	player, playErr := models.GetPlayerWithStats(steamid)

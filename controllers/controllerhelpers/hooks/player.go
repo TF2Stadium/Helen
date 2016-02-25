@@ -37,7 +37,7 @@ func AfterConnectLoggedIn(so *wsevent.Client, player *models.Player) {
 		lobby, _ := models.GetLobbyByIDServer(lobbyID)
 		AfterLobbyJoin(so, lobby, player)
 		AfterLobbySpec(socket.AuthServer, so, lobby)
-		models.BroadcastLobbyToUser(lobby, chelpers.GetSteamId(so.ID))
+		models.BroadcastLobbyToUser(lobby, so.Token.Claims["steam_id"].(string))
 
 		slot := &models.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error

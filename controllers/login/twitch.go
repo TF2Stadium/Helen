@@ -25,19 +25,18 @@ type userInfo struct {
 }
 
 func TwitchLogin(w http.ResponseWriter, r *http.Request) {
-	session, err := controllerhelpers.GetSessionHTTP(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	steamID, ok := session.Values["steam_id"]
-	if !ok {
+	token, err := controllerhelpers.GetToken(r)
+	if err == http.ErrNoCookie {
 		http.Error(w, "You are not logged in.", http.StatusUnauthorized)
 		return
+	} else if err != nil {
+		http.Error(w, "Invalid jwt", http.StatusBadRequest)
+		return
 	}
 
-	player, _ := models.GetPlayerBySteamID(steamID.(string))
+	steamID := token.Claims["steam_id"].(string)
+
+	player, _ := models.GetPlayerBySteamID(steamID)
 
 	loginURL := url.URL{
 		Scheme: "https",
@@ -59,17 +58,17 @@ func TwitchLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func TwitchAuth(w http.ResponseWriter, r *http.Request) {
-	session, err := controllerhelpers.GetSessionHTTP(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-
-	steamID, ok := session.Values["steam_id"]
-	if !ok {
+	token, err := controllerhelpers.GetToken(r)
+	if err == http.ErrNoCookie {
 		http.Error(w, "You are not logged in.", http.StatusUnauthorized)
+		return
+	} else if err != nil {
+		http.Error(w, "Invalid jwt", http.StatusBadRequest)
+		return
 	}
 
-	player, _ := models.GetPlayerBySteamID(steamID.(string))
+	steamID := token.Claims["steam_id"].(string)
+	player, _ := models.GetPlayerBySteamID(steamID)
 
 	values := r.URL.Query()
 	code := values.Get("code")
@@ -155,17 +154,18 @@ func getUserInfo(token string) (*userInfo, error) {
 }
 
 func TwitchLogout(w http.ResponseWriter, r *http.Request) {
-	session, err := controllerhelpers.GetSessionHTTP(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-
-	steamID, ok := session.Values["steam_id"]
-	if !ok {
+	token, err := controllerhelpers.GetToken(r)
+	if err == http.ErrNoCookie {
 		http.Error(w, "You are not logged in.", http.StatusUnauthorized)
+		return
+	} else if err != nil {
+		http.Error(w, "Invalid jwt", http.StatusBadRequest)
+		return
 	}
 
-	player, _ := models.GetPlayerBySteamID(steamID.(string))
+	steamID := token.Claims["steam_id"].(string)
+
+	player, _ := models.GetPlayerBySteamID(steamID)
 	player.TwitchName = ""
 	player.TwitchAccessToken = ""
 	player.Save()

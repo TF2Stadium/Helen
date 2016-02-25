@@ -11,7 +11,6 @@ import (
 	"html/template"
 
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
-	"github.com/TF2Stadium/Helen/models"
 )
 
 var playerTempl = template.Must(template.New("player").Parse(
@@ -31,11 +30,10 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if controllerhelpers.IsLoggedInHTTP(r) {
-		session, _ := controllerhelpers.GetSessionHTTP(r)
-		var steamid = session.Values["steam_id"].(string)
+	token, err := controllerhelpers.GetToken(r)
 
-		player, _ := models.GetPlayerBySteamID(steamid)
+	if err == nil {
+		player := controllerhelpers.GetPlayer(token)
 		playerTempl.Execute(w, player)
 	} else {
 		fmt.Fprintf(w, `<html><head></head><body>hello! You can log in <a href='/startLogin'>here</a></body></html>`)

@@ -2,16 +2,15 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
-	"github.com/TF2Stadium/Helen/controllers/login"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/internal/pprof"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
@@ -21,51 +20,45 @@ import (
 var upgrader = websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool { return true }}
 
 func SocketHandler(w http.ResponseWriter, r *http.Request) {
+	token, err := chelpers.GetToken(r)
+	if err != nil && err != http.ErrNoCookie { //invalid jwt token
+		http.Error(w, "invalid jwt token", http.StatusBadRequest)
+		return
+	}
+
 	//check if player is in the whitelist
 	if config.Constants.SteamIDWhitelist != "" {
-		allowed := false
-
-		session, err := chelpers.GetSessionHTTP(r)
-		if err == nil {
-			steamid, ok := session.Values["steam_id"]
-			allowed = ok && chelpers.IsSteamIDWhitelisted(steamid.(string))
+		if token == nil {
+			// player isn't logged in,
+			// and access is restricted to logged in people
+			http.Error(w, "Not logged in", http.StatusForbidden)
+			return
 		}
-		if !allowed {
-			http.Error(w, "Sorry, but you're not in the closed alpha", 403)
+
+		if !chelpers.IsSteamIDWhitelisted(token.Claims["steam_id"].(string)) {
+			http.Error(w, "you're not in the beta", http.StatusForbidden)
 			return
 		}
 	}
 
-	session, err := chelpers.GetSessionHTTP(r)
 	var so *wsevent.Client
 
-	if err == nil {
-		_, ok := session.Values["steam_id"]
-		if ok {
-			so, err = socket.AuthServer.NewClient(upgrader, w, r)
-		} else {
-			so, err = socket.UnauthServer.NewClient(upgrader, w, r)
-		}
-		pprof.Clients.Add(1)
-
+	if token != nil { //received valid jwt
+		so, err = socket.AuthServer.NewClient(upgrader, w, r)
 	} else {
-		var estr = "Couldn't create WebSocket connection."
-		//estr = err.Error()
+		so, err = socket.UnauthServer.NewClient(upgrader, w, r)
+	}
 
-		logrus.Error(err.Error())
-		http.Error(w, estr, 500)
+	if err != nil {
 		return
 	}
 
-	if err != nil || so == nil {
-		login.LogoutSession(w, r)
-		return
-	}
+	so.Token = token
 
 	//logrus.Debug("Connected to Socket")
 	err = SocketInit(so)
 	if err != nil {
-		login.LogoutSession(w, r)
+		logrus.Error(err)
 		so.Close()
 	}
 }
@@ -74,24 +67,20 @@ var ErrRecordNotFound = errors.New("Player record for found.")
 
 //SocketInit initializes the websocket connection for the provided socket
 func SocketInit(so *wsevent.Client) error {
-	chelpers.AuthenticateSocket(so.ID, so.Request)
-	loggedIn := chelpers.IsLoggedInSocket(so.ID)
+	loggedIn := so.Token != nil
+	var steamid string
+
 	if loggedIn {
-		steamid := chelpers.GetSteamId(so.ID)
+		steamid = so.Token.Claims["steam_id"].(string)
 		sessions.AddSocket(steamid, so)
 	}
 
 	if loggedIn {
 		hooks.AfterConnect(socket.AuthServer, so)
 
-		player, err := models.GetPlayerBySteamID(chelpers.GetSteamId(so.ID))
+		player, err := models.GetPlayerBySteamID(steamid)
 		if err != nil {
-			logrus.Warning(
-				"User has a cookie with but a matching player record doesn't exist: %s",
-				chelpers.GetSteamId(so.ID))
-			chelpers.DeauthenticateSocket(so.ID)
-			hooks.AfterConnect(socket.UnauthServer, so)
-			return ErrRecordNotFound
+			return fmt.Errorf("Couldn't find player record for %s", steamid)
 		}
 
 		hooks.AfterConnectLoggedIn(so, player)

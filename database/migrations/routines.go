@@ -15,14 +15,15 @@ import (
 
 // major ver -> migration routine
 var migrationRoutines = map[uint64]func(){
-	2: lobbyTypeChange,
-	3: dropSubtituteTable,
-	4: increaseChatMessageLength,
-	5: updateAllPlayerInfo,
-	6: truncateHTTPSessions,
-	7: setMumbleInfo,
-	8: setPlayerExternalLinks,
-	9: setPlayerSettings,
+	2:  lobbyTypeChange,
+	3:  dropSubtituteTable,
+	4:  increaseChatMessageLength,
+	5:  updateAllPlayerInfo,
+	6:  truncateHTTPSessions,
+	7:  setMumbleInfo,
+	8:  setPlayerExternalLinks,
+	9:  setPlayerSettings,
+	10: dropTableSessions,
 }
 
 func whitelist_id_string() {
@@ -132,4 +133,8 @@ func setPlayerSettings() {
 	}
 
 	db.DB.Exec("DROP TABLE player_settings")
+}
+
+func dropTableSessions() {
+	db.DB.Exec("DROP TABLE http_sessions")
 }

@@ -81,7 +81,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	} `json:"requirements" empty:"-"`
 }) interface{} {
 
-	player := chelpers.GetPlayerFromSocket(so.ID)
+	player := chelpers.GetPlayer(so.Token)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
 		return fmt.Errorf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
 	}
@@ -191,7 +191,7 @@ func (Lobby) LobbyServerReset(so *wsevent.Client, args struct {
 	ID *uint `json:"id"`
 }) interface{} {
 
-	player := chelpers.GetPlayerFromSocket(so.ID)
+	player := chelpers.GetPlayer(so.Token)
 	lobby, tperr := models.GetLobbyByID(*args.ID)
 
 	if player.SteamID != lobby.CreatedBySteamID || player.Role != helpers.RoleAdmin {
@@ -249,7 +249,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, args struct {
 	Id *uint `json:"id"`
 }) interface{} {
 
-	player := chelpers.GetPlayerFromSocket(so.ID)
+	player := chelpers.GetPlayer(so.Token)
 	lob, tperr := models.GetLobbyByIDServer(uint(*args.Id))
 	if tperr != nil {
 		return tperr
@@ -279,7 +279,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 	Password *string `json:"password" empty:"-"`
 }) interface{} {
 
-	player := chelpers.GetPlayerFromSocket(so.ID)
+	player := chelpers.GetPlayer(so.Token)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanJoin); banned {
 		return fmt.Errorf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
 	}
@@ -377,7 +377,7 @@ func (Lobby) LobbySpectatorJoin(so *wsevent.Client, args struct {
 		return tperr
 	}
 
-	player := chelpers.GetPlayerFromSocket(so.ID)
+	player := chelpers.GetPlayer(so.Token)
 	var specSameLobby bool
 
 	arr, tperr := player.GetSpectatingIds()
@@ -461,7 +461,7 @@ func (Lobby) LobbyKick(so *wsevent.Client, args struct {
 }) interface{} {
 
 	steamId := *args.Steamid
-	selfSteamId := chelpers.GetSteamId(so.ID)
+	selfSteamId := so.Token.Claims["steam_id"].(string)
 
 	if steamId == selfSteamId {
 		return errors.New("Player can't kick himself.")
@@ -489,7 +489,7 @@ func (Lobby) LobbyBan(so *wsevent.Client, args struct {
 }) interface{} {
 
 	steamId := *args.Steamid
-	selfSteamId := chelpers.GetSteamId(so.ID)
+	selfSteamId := so.Token.Claims["steam_id"].(string)
 
 	if steamId == selfSteamId {
 		return errors.New("Player can't kick himself.")
@@ -517,7 +517,7 @@ func (Lobby) LobbyLeave(so *wsevent.Client, args struct {
 	Id *uint `json:"id"`
 }) interface{} {
 
-	steamId := chelpers.GetSteamId(so.ID)
+	steamId := so.Token.Claims["steam_id"].(string)
 
 	lob, player, tperr := removePlayerFromLobby(*args.Id, steamId)
 	if tperr != nil {
@@ -533,7 +533,7 @@ func (Lobby) LobbySpectatorLeave(so *wsevent.Client, args struct {
 	Id *uint `json:"id"`
 }) interface{} {
 
-	player := chelpers.GetPlayerFromSocket(so.ID)
+	player := chelpers.GetPlayer(so.Token)
 	lob, tperr := models.GetLobbyByID(*args.Id)
 	if tperr != nil {
 		return tperr
@@ -567,7 +567,7 @@ func (Lobby) LobbyChangeOwner(so *wsevent.Client, args struct {
 		return err
 	}
 
-	player := chelpers.GetPlayerFromSocket(so.ID)
+	player := chelpers.GetPlayer(so.Token)
 	if lobby.CreatedBySteamID != player.SteamID {
 		return errors.New("You aren't authorized to change lobby owner.")
 	}
@@ -599,7 +599,7 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 		return tperr
 	}
 
-	player := chelpers.GetPlayerFromSocket(so.ID)
+	player := chelpers.GetPlayer(so.Token)
 	if lobby.CreatedBySteamID != player.SteamID {
 		return errors.New("Only lobby owners can change requirements.")
 	}
