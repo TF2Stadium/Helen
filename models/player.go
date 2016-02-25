@@ -157,11 +157,13 @@ func (player *Player) SetExternalLinks() {
 	}
 
 	var tftvReply struct {
-		UserName string `json:"user_name"`
+		UserName     string `json:"user_name"`
+		Banned       string `json:"banned"`
+		RegisteredOn string `json:"registered_on"`
 	}
 
 	dec = json.NewDecoder(resp.Body)
-	err = dec.Decode(&reply)
+	err = dec.Decode(&tftvReply)
 	if err != nil {
 		logrus.Error(err)
 		return
