@@ -29,7 +29,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		config.Constants.OpenIDRealm); err == nil {
 		http.Redirect(w, r, url, 303)
 	} else {
-		logrus.Debug(err.Error())
+		logrus.Error(err)
 	}
 }
 
@@ -56,7 +56,7 @@ func MockLoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
-func LogoutSession(w http.ResponseWriter, r *http.Request) {
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("auth-jwt")
 	if err != nil { //user wasn't even logged in ಠ_ಠ
 		return
@@ -65,14 +65,7 @@ func LogoutSession(w http.ResponseWriter, r *http.Request) {
 	cookie.MaxAge = -1
 	cookie.Expires = time.Time{}
 	http.SetCookie(w, cookie)
-
 	http.Redirect(w, r, config.Constants.PublicAddress, 303)
-}
-
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	LogoutSession(w, r)
-
-	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
