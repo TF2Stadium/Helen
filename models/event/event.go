@@ -11,6 +11,7 @@ import (
 	"github.com/TF2Stadium/Helen/models"
 )
 
+//Mirrored across github.com/Pauling/server
 type Event struct {
 	Name    string
 	SteamID string
