@@ -14,10 +14,8 @@ type ChatMessage struct {
 	ID        uint      `json:"id"`
 	CreatedAt time.Time `json:"timestamp"`
 
-	// ID of the player who sent the message
-	PlayerID uint `json:"-"`
-	// Not in the DB, used by frontend to retrieve player information
-	Player PlayerSummary `json:"player" sql:"-"`
+	Player   Player `json:"player"` // not in the DB, used by frontend to retrieve player information
+	PlayerID uint   `json:"-"`      // ID of the player who sent the message
 
 	// Room to which the message was sent
 	Room int `json:"room"`
@@ -31,16 +29,21 @@ type ChatMessage struct {
 	InGame bool `json:"ingame"`
 }
 
-var botSummary = PlayerSummary{
-	Name: "TF2Stadium",
-	Tags: []string{"tf2stadium"},
+var botSummary = Player{
+	Tags: new([]string),
+}
+
+func init() {
+	botSummary.Name = "TF2Stadium"
+	*botSummary.Tags = []string{"tf2stadium"}
 }
 
 // Return a new ChatMessage sent from specficied player
 func NewChatMessage(message string, room int, player *Player) *ChatMessage {
+	player.SetPlayerSummary()
 	record := &ChatMessage{
 		PlayerID: player.ID,
-		Player:   DecoratePlayerSummary(player),
+		Player:   *player,
 
 		Room:    room,
 		Message: message,
@@ -52,7 +55,7 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 func NewInGameChatMessage(lobby *Lobby, player *Player, message string) *ChatMessage {
 	return &ChatMessage{
 		PlayerID: player.ID,
-		Player:   DecoratePlayerSummary(player),
+		Player:   *player,
 
 		Room:    int(lobby.ID),
 		Message: message,
@@ -118,7 +121,7 @@ func GetScrollback(room int) ([]*ChatMessage, error) {
 			message.Player = botSummary
 		} else {
 			db.DB.First(&player, message.PlayerID)
-			message.Player = DecoratePlayerSummary(&player)
+			message.Player = player
 		}
 	}
 	return messages, err
