@@ -52,10 +52,7 @@ func (p *Player) SetPlayerProfile() {
 	p.setJSONFields(true, true)
 }
 
-var emptyStats = PlayerStats{}
-
 func (p *Player) SetPlayerSummary() {
 	p.setJSONFields(false, false)
 	p.ExternalLinks = nil
-	p.Stats = emptyStats
 }
