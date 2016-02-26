@@ -20,7 +20,7 @@ func init() {
 func TestNewChatMessage(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 
 	player := testhelpers.CreatePlayer()

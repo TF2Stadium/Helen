@@ -24,7 +24,7 @@ func TestDeleteUnusedServerRecords(t *testing.T) {
 	var count int
 
 	lobby := testhelpers.CreateLobby()
-	lobby.Close(false)
+	lobby.Close(false, true)
 	db.DB.Save(&ServerRecord{})
 
 	DeleteUnusedServerRecords()
@@ -37,7 +37,7 @@ func TestDeleteUnusedServerRecords(t *testing.T) {
 func TestLobbyCreation(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 
 	lobby2, _ := GetLobbyByIDServer(lobby.ID)
@@ -62,7 +62,7 @@ func TestLobbyClose(t *testing.T) {
 		LobbyID: lobby.ID,
 	}
 	req.Save()
-	lobby.Close(true)
+	lobby.Close(true, true)
 	var count int
 	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Count(&count)
 	assert.Zero(t, count)
@@ -76,7 +76,7 @@ func TestLobbyClose(t *testing.T) {
 func TestLobbyAdd(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 
 	var players []*Player
@@ -119,7 +119,7 @@ func TestLobbyAdd(t *testing.T) {
 	assert.NotNil(t, err)
 
 	lobby2 := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby2.Save()
 
 	// try to add a player while they're in another lobby
@@ -137,7 +137,7 @@ func TestLobbyAdd(t *testing.T) {
 func TestLobbyRemove(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 
 	player := testhelpers.CreatePlayer()
@@ -162,7 +162,7 @@ func TestLobbyRemove(t *testing.T) {
 func TestLobbyBan(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 
 	player := testhelpers.CreatePlayer()
@@ -186,7 +186,7 @@ func TestReadyPlayer(t *testing.T) {
 	player := testhelpers.CreatePlayer()
 
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 	lobby.AddPlayer(player, 0, "")
 
@@ -207,7 +207,7 @@ func TestSetInGame(t *testing.T) {
 	player := testhelpers.CreatePlayer()
 
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 	lobby.AddPlayer(player, 0, "")
 	lobby.SetInGame(player)
@@ -222,7 +222,7 @@ func TestSetNotInGame(t *testing.T) {
 	player := testhelpers.CreatePlayer()
 
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 	lobby.AddPlayer(player, 0, "")
 	lobby.SetInGame(player)
@@ -238,7 +238,7 @@ func TestIsPlayerInGame(t *testing.T) {
 	player := testhelpers.CreatePlayer()
 
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 	lobby.AddPlayer(player, 0, "")
 	lobby.SetInGame(player)
@@ -253,7 +253,7 @@ func TestIsEveryoneReady(t *testing.T) {
 	player := testhelpers.CreatePlayer()
 
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 	lobby.AddPlayer(player, 0, "")
 	lobby.ReadyPlayer(player)
@@ -273,7 +273,7 @@ func TestUnreadyPlayer(t *testing.T) {
 
 	player.Save()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 	lobby.AddPlayer(player, 0, "")
 
@@ -292,7 +292,7 @@ func TestSpectators(t *testing.T) {
 	player2 := testhelpers.CreatePlayer()
 
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 
 	err := lobby.AddSpectator(player)
@@ -334,7 +334,7 @@ func TestUnreadyAllPlayers(t *testing.T) {
 	t.Parallel()
 
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 
 	for i := 0; i < 12; i++ {
@@ -352,7 +352,7 @@ func TestUnreadyAllPlayers(t *testing.T) {
 func TestRemoveUnreadyPlayers(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	lobby.Save()
 
 	var players []*Player
@@ -379,7 +379,7 @@ func TestRemoveUnreadyPlayers(t *testing.T) {
 func TestUpdateStats(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	var players []*Player
 
 	for i := 0; i < 6; i++ {
@@ -400,7 +400,7 @@ func TestUpdateStats(t *testing.T) {
 func TestNotInGameSub(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	var (
 		players                  []*Player
 		ingame, subbed, subcount int
@@ -429,13 +429,13 @@ func TestNotInGameSub(t *testing.T) {
 
 	db.DB.Table("lobby_slots").Where("lobby_id = ? AND needs_sub = ?", lobby.ID, true).Count(&subcount)
 	//assert.Equal(t, subcount, len(subs))
-	lobby.Close(false)
+	lobby.Close(false, true)
 }
 
 func TestSlotRequirements(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	player := testhelpers.CreatePlayer()
 	req := &Requirement{
 		LobbyID: lobby.ID,
@@ -476,7 +476,7 @@ func TestSlotRequirements(t *testing.T) {
 func TestHasPlayer(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	player := testhelpers.CreatePlayer()
 
 	lobby.AddPlayer(player, 1, "")
@@ -492,7 +492,7 @@ func TestHasPlayer(t *testing.T) {
 func TestSlotNeedsSubstitute(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	player := testhelpers.CreatePlayer()
 
 	lobby.AddPlayer(player, 1, "")
@@ -504,7 +504,7 @@ func TestSlotNeedsSubstitute(t *testing.T) {
 func TestFillSubstitute(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 
 	player := testhelpers.CreatePlayer()
 
@@ -519,7 +519,7 @@ func TestFillSubstitute(t *testing.T) {
 func TestStart(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 
 	lobby.Start()
 	assert.Equal(t, lobby.CurrentState(), LobbyStateInProgress)
@@ -528,7 +528,7 @@ func TestStart(t *testing.T) {
 func TestIsSubNeeded(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false)
+	defer lobby.Close(false, true)
 	player := testhelpers.CreatePlayer()
 	lobby.AddPlayer(player, 1, "")
 
