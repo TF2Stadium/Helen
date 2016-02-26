@@ -24,6 +24,7 @@ deployment:
       - mkdir binaries
       - make -B
       - cp Helen binaries/helen-prod
+      - cp -R views binaries/views
       - cp binaries/helen-prod $CIRCLE_ARTIFACTS/helen 
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_PROD
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_PROD
@@ -36,6 +37,7 @@ deployment:
       - mkdir binaries
       - make -B
       - cp Helen binaries/helen-dev
+      - cp -R views binaries/views
       - cp binaries/helen-dev $CIRCLE_ARTIFACTS/helen
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_DEV
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_DEV
