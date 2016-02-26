@@ -16,7 +16,7 @@ var (
 	//UnauthServer is the wsevent server where unauthenticated users/sockets
 	//are added to
 	UnauthServer = wsevent.NewServer(middleware.JSONCodec{}, func(_ *wsevent.Client, _ struct{}) interface{} {
-		return errors.New("You arne't logged in.")
+		return errors.New("You aren't logged in.")
 	})
 )
 
