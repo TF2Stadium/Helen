@@ -58,10 +58,10 @@ func DecoratePlayerProfileJson(p *Player) PlayerProfile {
 	profile.ExternalLinks = p.ExternalLinks
 
 	// TODO ban info
-	var slots []*LobbySlot
-	db.DB.Table("lobby_slots").Where("player_id = ?", p.ID).Order("id desc").Limit("5").Find(&slots)
-	for _, slot := range slots {
-		lobby, _ := GetLobbyByID(slot.LobbyID)
+	var lobbies []*Lobby
+
+	db.DB.Exec("SELECT lobbies.* FROM lobbies INNER JOIN lobby_slots ON lobbies.id = lobby_slots.lobby_id WHERE lobbies.match_ended = true AND lobby_slots.player_id = ? ORDER BY lobbies.ID DESC LIMIT 5", p.ID).Find(&lobbies)
+	for _, lobby := range lobbies {
 		profile.Lobbies = append(profile.Lobbies, DecorateLobbyData(lobby, true))
 	}
 	return profile
