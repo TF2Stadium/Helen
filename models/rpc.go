@@ -22,17 +22,20 @@ var (
 )
 
 func ConnectRPC() {
-	codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
-	if err != nil {
-		logrus.Fatal(err)
+	if !*paulingDisabled {
+		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		pauling = rpc.NewClientWithCodec(codec)
+
 	}
-
-	pauling = rpc.NewClientWithCodec(codec)
-
-	codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
-	fumble = rpc.NewClientWithCodec(codec)
-	if err != nil {
-		logrus.Fatal(err)
+	if !*fumbleDisabled {
+		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
+		fumble = rpc.NewClientWithCodec(codec)
+		if err != nil {
+			logrus.Fatal(err)
+		}
 	}
-
 }
