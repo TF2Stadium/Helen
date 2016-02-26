@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/config/stores"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/database/migrations"
 	_ "github.com/TF2Stadium/Helen/helpers/authority"
@@ -43,7 +42,6 @@ func CleanupDB() {
 
 		database.Init()
 		migrations.Do()
-		stores.SetupStores()
 	})
 
 	tables := []string{
