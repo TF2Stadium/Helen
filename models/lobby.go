@@ -121,6 +121,7 @@ type Lobby struct {
 	CreatedBySteamID string // SteamID of the lobby leader/creator
 
 	ReadyUpTimestamp int64 // (Unix) Timestamp at which the ready up timeout started
+	MatchEnded       bool  // if true, the lobby ended with the match ending in the game server
 }
 
 // Requirement stores a requirement for a particular slot in a lobby
@@ -671,8 +672,9 @@ func (lobby *Lobby) SetupServer() error {
 //
 //If rpc == true, the log listener in Pauling for the corresponding server is stopped, this is
 //used when the lobby is closed manually by a player
-func (lobby *Lobby) Close(rpc bool) {
+func (lobby *Lobby) Close(rpc, matchEnded bool) {
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
+	db.DB.First(&lobby).UpdateColumn("match_ended", matchEnded)
 	db.DB.Table("server_records").Where("id = ?", lobby.ServerInfoID).Delete(&ServerRecord{})
 	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Delete(&Requirement{})
 	//db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)

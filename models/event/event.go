@@ -119,7 +119,7 @@ func disconnectedFromServer(lobbyID uint) {
 		return
 	}
 
-	lobby.Close(false)
+	lobby.Close(false, false)
 	models.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
 }
 
@@ -127,7 +127,7 @@ func matchEnded(lobbyID uint, logsID int) {
 	lobby, _ := models.GetLobbyByIDServer(lobbyID)
 
 	lobby.UpdateStats()
-	lobby.Close(false)
+	lobby.Close(false, true)
 
 	msg := fmt.Sprintf("Lobby Ended. Logs: http://logs.tf/%d", logsID)
 	models.SendNotification(msg, int(lobby.ID))

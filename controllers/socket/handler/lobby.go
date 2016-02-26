@@ -264,7 +264,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, args struct {
 		return errors.New("Lobby already closed.")
 	}
 
-	lob.Close(true)
+	lob.Close(true, false)
 
 	notify := fmt.Sprintf("Lobby closed by %s", player.Alias())
 	models.SendNotification(notify, int(lob.ID))
