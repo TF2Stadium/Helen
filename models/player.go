@@ -78,13 +78,15 @@ type Player struct {
 
 	ExternalLinks gorm.Hstore `json:"external_links,omitempty"`
 
-	//These are fields sent to clients
-	//and aren't used by Helen
+	// these are fields sent to clients and aren't used by Helen (hence ignored by ORM).
+	// Use (*Player).SetPlayerProfile and (*Player) to set them.
+	// pointers allow un-needed structs to be set to null, so null is sent instead
+	// of the struct
 	LobbiesPlayed *int         `sql:"-" json:"lobbiesPlayed"`
 	Tags          *[]string    `sql:"-" json:"tags"`
 	RoleStr       *string      `sql:"-" json:"role"`
-	Lobbies       *[]LobbyData `sql:"-" json:"lobbies,omitempty"`
-	PStats        *PlayerStats `sql:"-" json:"stats,omitempty"` // make it a pointer, so it can be excluded
+	Lobbies       *[]LobbyData `sql:"-" json:"lobbies"`
+	PStats        *PlayerStats `sql:"-" json:"stats"`
 }
 
 // Create a new player with the given steam id.
