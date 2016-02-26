@@ -78,15 +78,19 @@ type Player struct {
 
 	ExternalLinks gorm.Hstore `json:"external_links,omitempty"`
 
-	// these are fields sent to clients and aren't used by Helen (hence ignored by ORM).
-	// Use (*Player).SetPlayerProfile and (*Player).SetPlayerSummary to set them.
-	// pointers allow un-needed structs to be set to null, so null is sent instead
-	// of the struct
-	LobbiesPlayed *int         `sql:"-" json:"lobbiesPlayed"`
-	Tags          *[]string    `sql:"-" json:"tags"`
-	RoleStr       *string      `sql:"-" json:"role"`
-	Lobbies       *[]LobbyData `sql:"-" json:"lobbies"`
-	PStats        *PlayerStats `sql:"-" json:"stats"`
+	JSONFields
+}
+
+// these are fields sent to clients and aren't used by Helen (hence ignored by ORM).
+// Use (*Player).SetPlayerProfile and (*Player).SetPlayerSummary to set them.
+// pointers allow un-needed structs to be set to null, so null is sent instead
+// of the zeroed struct
+type JSONFields struct {
+	PlaceholderLobbiesPlayed *int         `sql:"-" json:"lobbiesPlayed"`
+	PlaceholderTags          *[]string    `sql:"-" json:"tags"`
+	PlaceholderRoleStr       *string      `sql:"-" json:"role"`
+	PlaceholderLobbies       *[]LobbyData `sql:"-" json:"lobbies"`
+	PlaceholderStats         *PlayerStats `sql:"-" json:"stats"`
 }
 
 // Create a new player with the given steam id.

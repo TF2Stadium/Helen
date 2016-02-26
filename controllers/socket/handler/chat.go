@@ -103,7 +103,7 @@ func (Chat) ChatDelete(so *wsevent.Client, args struct {
 	message.Message = "<deleted>"
 	player.SetPlayerSummary()
 	message.Player = *player
-	*message.Player.Tags = append(*message.Player.Tags, "deleted")
+	*message.Player.PlaceholderTags = append(*message.Player.PlaceholderTags, "deleted")
 	message.Send()
 
 	return emptySuccess

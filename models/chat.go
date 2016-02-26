@@ -30,12 +30,14 @@ type ChatMessage struct {
 }
 
 var botSummary = Player{
-	Tags: new([]string),
+	JSONFields: JSONFields{
+		PlaceholderTags: new([]string),
+	},
 }
 
 func init() {
 	botSummary.Name = "TF2Stadium"
-	*botSummary.Tags = []string{"tf2stadium"}
+	*botSummary.PlaceholderTags = []string{"tf2stadium"}
 }
 
 // Return a new ChatMessage sent from specficied player
