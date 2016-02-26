@@ -71,9 +71,11 @@ func SetupConstants() {
 	if Constants.SteamDevAPIKey == "" {
 		logrus.Warning("Steam api key not provided, setting SteamApiMockUp to true")
 	}
-
 	if Constants.PublicAddress == "" {
 		Constants.PublicAddress = "http://" + Constants.ListenAddress
+	}
+	if Constants.MockupAuth {
+		logrus.Warning("Mockup authentication enabled.")
 	}
 }
 
