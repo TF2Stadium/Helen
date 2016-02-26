@@ -106,7 +106,7 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 
 	for _, message := range messages {
 		//err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
-		db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
+		db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.Profileurl)
 	}
 
 	err = chatLogsTempl.Execute(w, messages)

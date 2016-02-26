@@ -15,12 +15,12 @@ import (
 )
 
 type SlotDetails struct {
-	Slot         int            `json:"slot"`
-	Filled       bool           `json:"filled"`
-	Player       *PlayerSummary `json:"player,omitempty"`
-	Ready        *bool          `json:"ready,omitempty"`
-	InGame       *bool          `json:"ingame,omitempty"`
-	Requirements *Requirement   `json:"requirements,omitempty"`
+	Slot         int          `json:"slot"`
+	Filled       bool         `json:"filled"`
+	Player       *Player      `json:"player,omitempty"`
+	Ready        *bool        `json:"ready,omitempty"`
+	InGame       *bool        `json:"ingame,omitempty"`
+	Requirements *Requirement `json:"requirements,omitempty"`
 }
 
 type ClassDetails struct {
@@ -55,10 +55,10 @@ type LobbyData struct {
 
 	Classes []ClassDetails `json:"classes"`
 
-	Leader      PlayerSummary `json:"leader"`
-	CreatedAt   int64         `json:"createdAt"`
-	State       int           `json:"state"`
-	WhitelistID string        `json:"whitelistId"`
+	Leader      Player `json:"leader"`
+	CreatedAt   int64  `json:"createdAt"`
+	State       int    `json:"state"`
+	WhitelistID string `json:"whitelistId"`
 
 	Spectators []SpecDetails `json:"spectators,omitempty"`
 }
@@ -111,9 +111,9 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 	if err == nil && includeDetails {
 		var player Player
 		db.DB.First(&player, playerId)
-		db.DB.Preload("Stats").First(&player, player.ID)
+		player.SetPlayerSummary()
 
-		summary := DecoratePlayerSummary(&player)
+		summary := player
 		j.Player = &summary
 
 		ready, _ := lobby.IsPlayerReady(&player)
@@ -189,8 +189,9 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 
 	var leader Player
 	db.DB.Where("steam_id = ?", lobby.CreatedBySteamID).First(&leader)
+	leader.SetPlayerSummary()
 
-	lobbyData.Leader = DecoratePlayerSummary(&leader)
+	lobbyData.Leader = leader
 	lobbyData.CreatedAt = lobby.CreatedAt.Unix()
 	lobbyData.State = int(lobby.State)
 

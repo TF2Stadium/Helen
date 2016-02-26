@@ -52,28 +52,45 @@ type PlayerBan struct {
 
 //Player represents a player object
 type Player struct {
-	gorm.Model
-	Debug   bool   // true if player is a dummy one.
-	SteamID string `sql:"unique"` // Players steam ID
-	Stats   PlayerStats
-	StatsID uint
+	ID        uint      `gorm:"primary_key" json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"-"`
+
+	Debug   bool        // true if player is a dummy one.
+	SteamID string      `sql:"unique" json:"steamid"` // Players steam ID
+	Stats   PlayerStats `json:"-"`
+	StatsID uint        `json:"-"`
 
 	// info from steam api
-	Avatar     string
-	Profileurl string
-	GameHours  int
-	Name       string             // Player name
-	Role       authority.AuthRole `sql:"default:0"` // Role is player by default
+	Avatar     string             `json:"avatar"`
+	Profileurl string             `json:"profileUrl"`
+	GameHours  int                `json:"gameHours"`
+	Name       string             `json:"name"`              // Player name
+	Role       authority.AuthRole `sql:"default:0" json:"-"` // Role is player by default
 
-	Settings gorm.Hstore
+	Settings gorm.Hstore `json:"-"`
 
-	MumbleUsername string `sql:"unique"`
-	MumbleAuthkey  string `sql:"not null;unique"`
+	MumbleUsername string `sql:"unique" json:"-"`
+	MumbleAuthkey  string `sql:"not null;unique" json:"-"`
 
-	TwitchAccessToken string
-	TwitchName        string
+	TwitchAccessToken string `json:"-"`
+	TwitchName        string `json:"twitchName,omitempty"`
 
-	ExternalLinks gorm.Hstore
+	ExternalLinks gorm.Hstore `json:"external_links,omitempty"`
+
+	JSONFields
+}
+
+// these are fields sent to clients and aren't used by Helen (hence ignored by ORM).
+// Use (*Player).SetPlayerProfile and (*Player).SetPlayerSummary to set them.
+// pointers allow un-needed structs to be set to null, so null is sent instead
+// of the zeroed struct
+type JSONFields struct {
+	PlaceholderLobbiesPlayed *int         `sql:"-" json:"lobbiesPlayed"`
+	PlaceholderTags          *[]string    `sql:"-" json:"tags"`
+	PlaceholderRoleStr       *string      `sql:"-" json:"role"`
+	PlaceholderLobbies       *[]LobbyData `sql:"-" json:"lobbies"`
+	PlaceholderStats         *PlayerStats `sql:"-" json:"stats"`
 }
 
 // Create a new player with the given steam id.
@@ -272,7 +289,7 @@ func (player *Player) GetLobbyID(inProgress bool) (uint, error) {
 
 	// if the player is not in any lobby or the player has been reported/needs sub, return error
 	if err != nil || playerSlot.NeedsSub {
-		return 0, ErrPlayerNotFound
+		return 0, err
 	}
 
 	return playerSlot.LobbyID, nil

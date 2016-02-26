@@ -110,8 +110,8 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 
 		player.SetSetting(*args.Key, *args.Value)
 
-		profile := models.DecoratePlayerProfileJson(player)
-		so.EmitJSON(helpers.NewRequest("playerProfile", profile))
+		player.SetPlayerProfile()
+		so.EmitJSON(helpers.NewRequest("playerProfile", player))
 
 		if lobbyID, _ := player.GetLobbyID(true); lobbyID != 0 {
 			lobby, _ := models.GetLobbyByID(lobbyID)
@@ -146,6 +146,6 @@ func (Player) PlayerProfile(so *wsevent.Client, args struct {
 		return playErr
 	}
 
-	result := models.DecoratePlayerProfileJson(player)
-	return newResponse(result)
+	player.SetPlayerProfile()
+	return newResponse(player)
 }

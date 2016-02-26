@@ -59,9 +59,7 @@ func AfterConnectLoggedIn(so *wsevent.Client, player *models.Player) {
 	if settings != nil {
 		broadcaster.SendMessage(player.SteamID, "playerSettings", settings)
 	}
-	profilePlayer, err3 := models.GetPlayerWithStats(player.SteamID)
-	if err3 == nil {
-		broadcaster.SendMessage(player.SteamID, "playerProfile", models.DecoratePlayerProfileJson(profilePlayer))
-	}
 
+	player.SetPlayerProfile()
+	broadcaster.SendMessage(player.SteamID, "playerProfile", player)
 }
