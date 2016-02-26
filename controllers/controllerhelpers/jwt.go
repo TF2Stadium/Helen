@@ -26,7 +26,7 @@ func SetupJWTSigning() {
 	}
 
 	var err error
-	signingKey, err = base64.URLEncoding.DecodeString(config.Constants.CookieStoreSecret)
+	signingKey, err = base64.StdEncoding.DecodeString(config.Constants.CookieStoreSecret)
 	if err != nil {
 		logrus.Fatal(err)
 	}
