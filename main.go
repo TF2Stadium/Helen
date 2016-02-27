@@ -61,7 +61,7 @@ func main() {
 
 	config.SetupConstants()
 	helpers.SetServemeContext()
-	models.ReadServers()
+	//models.ReadServers()
 	chelpers.SetupJWTSigning()
 
 	if config.Constants.ProfilerAddr != "" {
