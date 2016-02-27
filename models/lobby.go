@@ -108,6 +108,7 @@ type Lobby struct {
 	SlotPassword    string // Slot password, if any
 	PlayerWhitelist string // URL of steam group
 	TwitchChannel   string // twitch channel, slots will be restricted to channel subs
+	ServemeID       int    // if serveme was used to get this server, stores the server ID
 
 	// TF2 Server Info
 	ServerInfo   ServerRecord

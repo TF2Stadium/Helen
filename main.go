@@ -6,7 +6,6 @@ package main
 
 import (
 	"encoding/base64"
-	_ "expvar"
 	"flag"
 	"fmt"
 	"net/http"
@@ -43,8 +42,8 @@ var (
 
 func main() {
 	helpers.InitLogger()
-
 	flag.Parse()
+
 	if *flagGen {
 		key := securecookie.GenerateRandomKey(64)
 		if len(key) == 0 {
@@ -61,6 +60,8 @@ func main() {
 	}
 
 	config.SetupConstants()
+	helpers.SetServemeContext()
+	models.ReadServers()
 	chelpers.SetupJWTSigning()
 
 	if config.Constants.ProfilerAddr != "" {

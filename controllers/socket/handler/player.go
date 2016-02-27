@@ -140,10 +140,9 @@ func (Player) PlayerProfile(so *wsevent.Client, args struct {
 		steamid = so.Token.Claims["steam_id"].(string)
 	}
 
-	player, playErr := models.GetPlayerWithStats(steamid)
-
-	if playErr != nil {
-		return playErr
+	player, err := models.GetPlayerBySteamID(steamid)
+	if err != nil {
+		return err
 	}
 
 	player.SetPlayerProfile()

@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -21,6 +22,7 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes/socket"
+	"github.com/TF2Stadium/servemetf"
 	"github.com/TF2Stadium/wsevent"
 )
 
@@ -33,6 +35,15 @@ func (Lobby) Name(s string) string {
 var (
 	reSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
 	reTwitchChan = regexp.MustCompile(`twitch.tv\/(.+)`)
+	reServer     = regexp.MustCompile(`\w+\:\d+`)
+	playermap    = map[string]models.LobbyType{
+		"debug":      models.LobbyTypeDebug,
+		"6s":         models.LobbyTypeSixes,
+		"highlander": models.LobbyTypeHighlander,
+		"ultiduo":    models.LobbyTypeUltiduo,
+		"bball":      models.LobbyTypeBball,
+		"4v4":        models.LobbyTypeFours,
+	}
 )
 
 type Restriction struct {
@@ -45,6 +56,12 @@ type Requirement struct {
 	Restricted Restriction `json:"restricted"`
 }
 
+type servemeServer struct {
+	StartsAt string `json:"startsAt"`
+	EndsAt   string `json:"endsAt"`
+	Server   servemetf.Server
+}
+
 func newRequirement(team, class string, requirement Requirement, lobby *models.Lobby) error {
 	slot, err := models.LobbyGetPlayerSlot(lobby.Type, team, class)
 	if err != nil {
@@ -53,8 +70,8 @@ func newRequirement(team, class string, requirement Requirement, lobby *models.L
 	slotReq := &models.Requirement{
 		LobbyID: lobby.ID,
 		Slot:    slot,
-		Hours:   requirement.Hours,
-		Lobbies: requirement.Lobbies,
+		Hours:   int(requirement.Hours),
+		Lobbies: int(requirement.Lobbies),
 	}
 	slotReq.Save()
 
@@ -62,13 +79,15 @@ func newRequirement(team, class string, requirement Requirement, lobby *models.L
 }
 
 func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
-	Map         *string `json:"map"`
-	Type        *string `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
-	League      *string `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
-	Server      *string `json:"server"`
-	RconPwd     *string `json:"rconpwd"`
-	WhitelistID *string `json:"whitelistID"`
-	Mumble      *bool   `json:"mumbleRequired"`
+	Map         *string        `json:"map"`
+	Type        *string        `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
+	League      *string        `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
+	ServerType  *string        `json:"serverType" valid:"server,storedServer,serveme"`
+	Serveme     *servemeServer `json:"serveme" empty:"-"`
+	Server      *string        `json:"server" empty:"-"`
+	RconPwd     *string        `json:"rconpwd"`
+	WhitelistID *string        `json:"whitelistID"`
+	Mumble      *bool          `json:"mumbleRequired"`
 
 	Password            *string `json:"password" empty:"-"`
 	SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
@@ -88,6 +107,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 	var steamGroup string
 	var twitchChan string
+	var servemeID int
 	if *args.SteamGroupWhitelist != "" {
 		if reSteamGroup.MatchString(*args.SteamGroupWhitelist) {
 			steamGroup = reSteamGroup.FindStringSubmatch(*args.SteamGroupWhitelist)[1]
@@ -102,19 +122,55 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			return errors.New("Invalid Twitch channel URL")
 		}
 	}
+	if *args.ServerType == "serveme" {
+		if args.Serveme == nil {
+			return errors.New("No serveme info given.")
+		}
+		var err error
+		var start, end time.Time
 
-	var playermap = map[string]models.LobbyType{
-		"debug":      models.LobbyTypeDebug,
-		"6s":         models.LobbyTypeSixes,
-		"highlander": models.LobbyTypeHighlander,
-		"ultiduo":    models.LobbyTypeUltiduo,
-		"bball":      models.LobbyTypeBball,
-		"4v4":        models.LobbyTypeFours,
+		if start, err = time.Parse((*args.Serveme).StartsAt, servemetf.TimeFormat); err != nil {
+			return err
+		}
+		if end, err = time.Parse((*args.Serveme).EndsAt, servemetf.TimeFormat); err != nil {
+			return err
+		}
+
+		randBytes := make([]byte, 6)
+		rand.Read(randBytes)
+		*args.RconPwd = base64.URLEncoding.EncodeToString(randBytes)
+
+		reservation := servemetf.Reservation{
+			StartsAt:    start.Format(servemetf.TimeFormat),
+			EndsAt:      end.Format(servemetf.TimeFormat),
+			ServerID:    (*args.Serveme).Server.ID,
+			WhitelistID: 1,
+			RCON:        *args.RconPwd,
+			Password:    "foobar",
+		}
+
+		resp, err := helpers.ServemeContext.Create(reservation)
+		if err != nil || resp.Reservation.Errors != nil {
+			if err != nil {
+				logrus.Error(err)
+			} else {
+				logrus.Error(resp.Reservation.Errors)
+			}
+
+			return errors.New("Couldn't get serveme reservation")
+		}
+
+		*args.Server = resp.Reservation.Server.IPAndPort
+		servemeID = resp.Reservation.ID
+	} else if *args.ServerType == "storedServer" {
+		if *args.Server == "" {
+			return errors.New("No server ID given")
+		}
+		//get stored server here
 	}
 
-	lobbyType := playermap[*args.Type]
-
 	var count int
+	lobbyType := playermap[*args.Type]
 	db.DB.Table("server_records").Where("host = ?", *args.Server).Count(&count)
 	if count != 0 {
 		return errors.New("A lobby is already using this server.")
@@ -128,12 +184,8 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	info := models.ServerRecord{
 		Host:           *args.Server,
 		RconPassword:   *args.RconPwd,
-		ServerPassword: serverPwd}
-	// err = models.VerifyInfo(info)
-	// if err != nil {
-	// 	bytes, _ := helpers.NewTPErrorFromError(err).Encode()
-	// 	return string(bytes)
-	// }
+		ServerPassword: serverPwd,
+	}
 
 	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, *args.WhitelistID, *args.Mumble, steamGroup, *args.Password)
 	lob.TwitchChannel = twitchChan
@@ -142,6 +194,10 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP {
 		return errors.New("Couldn't find region server.")
 	}
+	if *args.ServerType == "serveme" {
+		lob.ServemeID = servemeID
+	}
+
 	lob.Save()
 
 	err := lob.SetupServer()
@@ -156,16 +212,10 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	if args.Requirements != nil {
 		for class, requirement := range (*args.Requirements).Classes {
 			if requirement.Restricted.Blu {
-				err := newRequirement("blu", class, requirement, lob)
-				if err != nil {
-					return err
-				}
+				newRequirement("blu", class, requirement, lob)
 			}
 			if requirement.Restricted.Red {
-				err := newRequirement("red", class, requirement, lob)
-				if err != nil {
-					return err
-				}
+				newRequirement("red", class, requirement, lob)
 			}
 		}
 		if args.Requirements.General.Hours != 0 || args.Requirements.General.Lobbies != 0 {

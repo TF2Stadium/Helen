@@ -16,6 +16,7 @@ func RegisterHandlers() {
 	socket.AuthServer.Register(handler.Lobby{})  //Lobby Handlers
 	socket.AuthServer.Register(handler.Player{}) //Player Handlers
 	socket.AuthServer.Register(handler.Chat{})   //Chat Handlers
+	socket.AuthServer.Register(handler.Serveme{})
 
 	socket.UnauthServer.Register(handler.Unauth{})
 }

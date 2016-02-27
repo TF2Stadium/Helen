@@ -44,6 +44,7 @@ type constants struct {
 	FumbleQueue      string `envconfig:"FUMBLE_QUEUE" default:"fumble" doc:"Name of queue over which RPC calls to Fumble are sent"`
 	RabbitMQQueue    string `envconfig:"RABBITMQ_QUEUE" default:"events" doc:"Name of queue over which events are sent"`
 	RabbitMQExchange string `envconfig:"RABBITMQ_EXCHANGE" default:"helen-fanout" doc:"Name of queue over which socket messages are fanned out to other Helen instances"`
+	Servers          string `envconfig:"SERVERS"`
 
 	// database
 	DbAddr     string `envconfig:"DATABASE_ADDR" default:"127.0.0.1:5432" doc:"Database Address"`
@@ -58,6 +59,7 @@ type constants struct {
 	SlackbotURL        string `envconfig:"SLACK_URL" doc:"Slack webhook URL"`
 	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
 	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
+	ServemeAPIKey      string `envconfig:"SERVEME_API_KEY" doc:"serveme.tf API Key"`
 }
 
 var Constants = constants{}
