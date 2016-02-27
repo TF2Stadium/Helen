@@ -47,3 +47,16 @@ func (Unauth) LobbySpectatorLeave(so *wsevent.Client, args struct {
 
 	return emptySuccess
 }
+
+func (Unauth) PlayerProfile(so *wsevent.Client, args struct {
+	Steamid *string `json:"steamid"`
+}) interface{} {
+
+	player, err := models.GetPlayerBySteamID(*args.Steamid)
+	if err != nil {
+		return err
+	}
+
+	player.SetPlayerProfile()
+	return newResponse(player)
+}
