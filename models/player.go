@@ -74,7 +74,7 @@ type Player struct {
 	MumbleAuthkey  string `sql:"not null;unique" json:"-"`
 
 	TwitchAccessToken string `json:"-"`
-	TwitchName        string `json:"twitchName,omitempty"`
+	TwitchName        string `json:"twitchName"`
 
 	ExternalLinks gorm.Hstore `json:"external_links,omitempty"`
 
