@@ -683,6 +683,10 @@ func (lobby *Lobby) Close(rpc, matchEnded bool) {
 		End(lobby.ID)
 	}
 
+	if lobby.ServemeID != 0 {
+		helpers.ServemeContext.Delete(lobby.ServemeID, lobby.CreatedBySteamID)
+	}
+
 	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
 	broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", DecorateLobbyLeave(lobby))
 
