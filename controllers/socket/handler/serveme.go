@@ -30,7 +30,8 @@ func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
 	for i, server := range reservations.Servers {
 		//Out of respect for TF2Center, we don't use their servers with serveme integration.
 		if strings.HasPrefix(server.Name, "TF2Center") {
-			reservations.Servers = append(reservations.Servers[:i], reservations.Servers[i+1:]...)
+			reservations.Servers[i] = reservations.Servers[len(reservations.Servers)-1]
+			reservations.Servers = reservations.Servers[:len(reservations.Servers)-1]
 		}
 	}
 
