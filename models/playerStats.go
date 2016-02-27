@@ -63,6 +63,7 @@ func (ps *PlayerStats) IncreaseSubCount() {
 func (ps *PlayerStats) IncreaseClassCount(lobby *Lobby, slot int) {
 	_, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)
 	classes := map[string]*int{
+		"scout":    &ps.Scout,
 		"scout1":   &ps.Scout,
 		"scout2":   &ps.Scout,
 		"roamer":   &ps.Soldier,

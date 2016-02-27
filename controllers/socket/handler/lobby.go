@@ -149,7 +149,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			Password:    "foobar",
 		}
 
-		resp, err := helpers.ServemeContext.Create(reservation)
+		resp, err := helpers.ServemeContext.Create(reservation, so.Token.Claims["steam_id"].(string))
 		if err != nil || resp.Reservation.Errors != nil {
 			if err != nil {
 				logrus.Error(err)
