@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net"
+	"strings"
 
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/servemetf"
@@ -24,6 +25,13 @@ func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
 	reservations, err := helpers.ServemeContext.FindServers(starts, ends, so.Token.Claims["steam_id"].(string))
 	if _, ok := err.(*net.OpError); ok {
 		return errors.New("Cannot access serveme.tf")
+	}
+
+	for i, server := range reservations.Servers {
+		//Out of respect for TF2Center, we don't use their servers with serveme integration.
+		if strings.HasPrefix(server.Name, "TF2Center") {
+			reservations.Servers = append(reservations.Servers[:i], reservations.Servers[i+1:]...)
+		}
 	}
 
 	resp := struct {
