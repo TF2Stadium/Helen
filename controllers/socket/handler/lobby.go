@@ -377,6 +377,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 		lob.ReadyUpTimestamp = time.Now().Unix() + 30
 		lob.Save()
 
+		helpers.GlobalWait.Add(1)
 		time.AfterFunc(time.Second*30, func() {
 			state := lob.CurrentState()
 			//if all player's haven't readied up,
@@ -386,6 +387,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 				removeUnreadyPlayers(lob)
 				lob.SetState(models.LobbyStateWaiting)
 			}
+			helpers.GlobalWait.Done()
 		})
 
 		room := fmt.Sprintf("%s_private",

@@ -790,10 +790,13 @@ func (lobby *Lobby) SubNotInGamePlayers() {
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes
 func (lobby *Lobby) Start() {
 	db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", LobbyStateInProgress)
+
+	helpers.GlobalWait.Add(1)
 	time.AfterFunc(time.Minute*5, func() {
 		if lobby.CurrentState() != LobbyStateEnded {
 			lobby.SubNotInGamePlayers()
 		}
+		helpers.GlobalWait.Done()
 	})
 }
 
