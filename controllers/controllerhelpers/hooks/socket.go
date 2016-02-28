@@ -52,19 +52,17 @@ func OnDisconnect(socketID string, token *jwt.Token) {
 		//if player is in a waiting lobby, and hasn't connected for > 30 seconds,
 		//remove him from it. Here, connected = player isn't connected from any tab/window
 		if id != 0 && sessions.ConnectedSockets(player.SteamID) == 0 {
-			time.AfterFunc(time.Second*30, func() {
-				if !sessions.IsConnected(player.SteamID) {
-					//player may have changed lobbies during this time
-					//fetch lobby ID again
-					id, err := player.GetLobbyID(true)
-					if err != nil {
-						return
-					}
-
-					lobby := &models.Lobby{}
-					db.DB.First(lobby, id)
-					lobby.RemovePlayer(player)
+			sessions.AfterDisconnectedFunc(player.SteamID, time.Second*30, func() {
+				//player may have changed lobbies during this time
+				//fetch lobby ID again
+				id, err := player.GetLobbyID(true)
+				if err != nil {
+					return
 				}
+
+				lobby := &models.Lobby{}
+				db.DB.First(lobby, id)
+				lobby.RemovePlayer(player)
 			})
 		}
 	}

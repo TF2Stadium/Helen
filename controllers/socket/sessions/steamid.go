@@ -5,6 +5,7 @@ package sessions
 
 import (
 	"sync"
+	"time"
 
 	"github.com/TF2Stadium/wsevent"
 )
@@ -15,6 +16,7 @@ var (
 	steamIDSockets = make(map[string][]*wsevent.Client)
 	//socketid -> id of lobby the socket is spectating
 	socketSpectating = make(map[string]uint)
+	steamIDConnected = make(map[string](chan struct{}))
 )
 
 //AddSocket adds so to the list of sockets connected from steamid
@@ -23,6 +25,12 @@ func AddSocket(steamid string, so *wsevent.Client) {
 	defer mapMu.Unlock()
 
 	steamIDSockets[steamid] = append(steamIDSockets[steamid], so)
+	if len(steamIDSockets[steamid]) == 1 {
+		stop, ok := steamIDConnected[steamid]
+		if ok {
+			stop <- struct{}{}
+		}
+	}
 }
 
 //RemoveSocket removes so from the list of sockets connected from steamid
@@ -66,4 +74,30 @@ func IsConnected(steamid string) bool {
 //ConnectedSockets returns the number of socket connections from steamid
 func ConnectedSockets(steamid string) int {
 	return len(steamIDSockets[steamid])
+}
+
+//AfterDisconnectedFunc waits the duration to elapse, and if the player with the given
+//steamid is still disconnected, calls f in it's own goroutine.
+func AfterDisconnectedFunc(steamid string, d time.Duration, f func()) {
+	mapMu.Lock()
+	stop := make(chan struct{}, 1)
+	steamIDConnected[steamid] = stop
+	mapMu.Unlock()
+
+	c := time.After(d)
+
+	go func() {
+		select {
+		case <-c:
+			if !IsConnected(steamid) {
+				f()
+			}
+		case <-stop:
+			return
+		}
+
+		mapMu.Lock()
+		delete(steamIDConnected, steamid)
+		mapMu.Unlock()
+	}()
 }
