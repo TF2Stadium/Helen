@@ -17,6 +17,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
+	"sync"
 )
 
 type LobbyType int
@@ -558,6 +559,37 @@ func (lobby *Lobby) RemoveUnreadyPlayers(spec bool) error {
 	return err
 }
 
+var (
+	playerInGame = make(map[uint](chan struct{}))
+	mapMu        = new(sync.RWMutex)
+)
+
+//AfterPlayerNotInGameFunc waits the duration to elapse, and if the given player
+//is still not in the game server, calls f in it's own goroutine.
+func (lobby *Lobby) AfterPlayerNotInGameFunc(player *Player, d time.Duration, f func()) {
+	mapMu.Lock()
+	stop := make(chan struct{}, 1)
+	playerInGame[player.ID] = stop
+	mapMu.Unlock()
+
+	c := time.After(d)
+	go func() {
+		select {
+		case <-c:
+			if ok, _ := lobby.IsPlayerInGame(player); !ok {
+				f()
+			}
+		case <-stop:
+			return
+		}
+
+		mapMu.Lock()
+		delete(playerInGame, player.ID)
+		mapMu.Unlock()
+	}()
+
+}
+
 //IsPlayerInGame returns true if the player is in-game
 func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
 	var ingame bool
@@ -681,6 +713,10 @@ func (lobby *Lobby) Close(rpc, matchEnded bool) {
 	//db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
 	if rpc {
 		End(lobby.ID)
+	}
+
+	if matchEnded {
+		lobby.UpdateStats()
 	}
 
 	if lobby.ServemeID != 0 {
