@@ -123,6 +123,9 @@ func GetScrollback(room int) ([]*ChatMessage, error) {
 			message.Player = botSummary
 		} else {
 			db.DB.First(&player, message.PlayerID)
+			player.PlaceholderTags = new([]string)
+			*player.PlaceholderTags = decoratePlayerTags(&player)
+
 			message.Player = player
 		}
 	}
