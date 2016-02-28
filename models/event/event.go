@@ -32,6 +32,8 @@ const (
 	Test                   string = "test"
 )
 
+var stop = make(chan struct{})
+
 func StartListening() {
 	q, err := helpers.AMQPChannel.QueueDeclare(config.Constants.RabbitMQQueue, false, false, false, false, nil)
 	if err != nil {
@@ -44,29 +46,37 @@ func StartListening() {
 	}
 
 	go func() {
-		for msg := range msgs {
-			var event Event
+		for {
+			select {
+			case msg := <-msgs:
+				var event Event
 
-			err := json.Unmarshal(msg.Body, &event)
-			if err != nil {
-				logrus.Error(err)
-				continue
-			}
-			switch event.Name {
-			case PlayerDisconnected:
-				playerDisc(event.SteamID, event.LobbyID)
-			case PlayerSubstituted:
-				playerSub(event.SteamID, event.LobbyID)
-			case PlayerConnected:
-				playerConn(event.SteamID, event.LobbyID)
-			case DisconnectedFromServer:
-				disconnectedFromServer(event.LobbyID)
-			case MatchEnded:
-				matchEnded(event.LobbyID, event.LogsID)
-
+				err := json.Unmarshal(msg.Body, &event)
+				if err != nil {
+					logrus.Error(err)
+					continue
+				}
+				switch event.Name {
+				case PlayerDisconnected:
+					playerDisc(event.SteamID, event.LobbyID)
+				case PlayerSubstituted:
+					playerSub(event.SteamID, event.LobbyID)
+				case PlayerConnected:
+					playerConn(event.SteamID, event.LobbyID)
+				case DisconnectedFromServer:
+					disconnectedFromServer(event.LobbyID)
+				case MatchEnded:
+					matchEnded(event.LobbyID, event.LogsID)
+				}
+			case <-stop:
+				return
 			}
 		}
 	}()
+}
+
+func StopListening() {
+	stop <- struct{}{}
 }
 
 func playerDisc(steamID string, lobbyID uint) {
@@ -76,7 +86,8 @@ func playerDisc(steamID string, lobbyID uint) {
 	lobby.SetNotInGame(player)
 
 	models.SendNotification(fmt.Sprintf("%s has disconected from the server.", player.Alias()), int(lobby.ID))
-	time.AfterFunc(time.Minute*2, func() {
+
+	lobby.AfterPlayerNotInGameFunc(player, 2*time.Minute, func() {
 		ingame, err := lobby.IsPlayerInGame(player)
 		if err != nil {
 			logrus.Error(err.Error())
@@ -125,8 +136,6 @@ func disconnectedFromServer(lobbyID uint) {
 
 func matchEnded(lobbyID uint, logsID int) {
 	lobby, _ := models.GetLobbyByIDServer(lobbyID)
-
-	lobby.UpdateStats()
 	lobby.Close(false, true)
 
 	msg := fmt.Sprintf("Lobby Ended. Logs: http://logs.tf/%d", logsID)
