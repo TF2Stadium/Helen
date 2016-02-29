@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-
 	"strconv"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
@@ -37,6 +37,9 @@ func NewToken(playerid uint, steamid string, role authority.AuthRole) string {
 	token.Claims["player_id"] = strconv.FormatUint(uint64(playerid), 10)
 	token.Claims["steam_id"] = steamid
 	token.Claims["role"] = strconv.Itoa(int(role))
+	token.Claims["iat"] = time.Now().Unix()
+	token.Claims["iss"] = config.Constants.PublicAddress
+
 	str, err := token.SignedString([]byte(signingKey))
 	if err != nil {
 		logrus.Error(err)
