@@ -65,7 +65,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie.MaxAge = -1
 	cookie.Expires = time.Time{}
 	http.SetCookie(w, cookie)
-	http.Redirect(w, r, config.Constants.PublicAddress, 303)
+	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
