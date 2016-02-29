@@ -44,12 +44,14 @@ func TwitchLogin(w http.ResponseWriter, r *http.Request) {
 		Path:   "kraken/oauth2/authorize",
 	}
 
-	twitchRedirectURL := config.Constants.PublicAddress + "/" + "twitchAuth"
+	//twitchRedirectURL := config.Constants.PublicAddress + "/" + "twitchAuth"
+	twitchRedirectURL, _ := url.Parse(config.Constants.PublicAddress)
+	twitchRedirectURL.Path = "twitchAuth"
 
 	values := loginURL.Query()
 	values.Set("response_type", "code")
 	values.Set("client_id", config.Constants.TwitchClientID)
-	values.Set("redirect_uri", twitchRedirectURL)
+	values.Set("redirect_uri", twitchRedirectURL.String())
 	values.Set("scope", "channel_check_subscription user_subscriptions channel_subscriptions user_read")
 	values.Set("state", xsrftoken.Generate(config.Constants.CookieStoreSecret, player.SteamID, "GET"))
 	loginURL.RawQuery = values.Encode()
@@ -83,7 +85,8 @@ func TwitchAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	twitchRedirectURL := config.Constants.PublicAddress + "/" + "twitchAuth"
+	twitchRedirectURL, _ := url.Parse(config.Constants.PublicAddress)
+	twitchRedirectURL.Path = "twitchAuth"
 
 	// successful login, try getting access token now
 	tokenURL := url.URL{
@@ -95,7 +98,7 @@ func TwitchAuth(w http.ResponseWriter, r *http.Request) {
 	values.Set("client_id", config.Constants.TwitchClientID)
 	values.Set("client_secret", config.Constants.TwitchClientSecret)
 	values.Set("grant_type", "authorization_code")
-	values.Set("redirect_uri", twitchRedirectURL)
+	values.Set("redirect_uri", twitchRedirectURL.String())
 	values.Set("code", code)
 	values.Set("state", state)
 
