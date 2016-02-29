@@ -7,6 +7,7 @@ package models
 import (
 	"flag"
 	"net/rpc"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
@@ -24,8 +25,17 @@ var (
 func ConnectRPC() {
 	if !*paulingDisabled {
 		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
-		if err != nil {
-			logrus.Fatal(err)
+		i := 0
+		for {
+			codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
+			if err == nil {
+				break
+			}
+			if i == 5 {
+				logrus.Fatal(err)
+			}
+			time.Sleep(1 * time.Second)
+			i++
 		}
 
 		pauling = rpc.NewClientWithCodec(codec)
@@ -33,9 +43,19 @@ func ConnectRPC() {
 	}
 	if !*fumbleDisabled {
 		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
-		fumble = rpc.NewClientWithCodec(codec)
-		if err != nil {
-			logrus.Fatal(err)
+		i := 0
+		for {
+			codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
+			if err == nil {
+				break
+			}
+			if i == 5 {
+				logrus.Fatal(err)
+			}
+			time.Sleep(1 * time.Second)
+			i++
 		}
+
+		fumble = rpc.NewClientWithCodec(codec)
 	}
 }
