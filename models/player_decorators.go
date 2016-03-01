@@ -47,6 +47,10 @@ func (p *Player) setJSONFields(stats, lobbies bool) {
 
 	p.Name = p.Alias()
 	if p.TwitchName != "" {
+		if p.ExternalLinks == nil {
+			p.ExternalLinks = make(map[string]*string)
+		}
+
 		twitchURL := "https://twitch.tv/" + p.TwitchName
 		p.ExternalLinks["twitch"] = &twitchURL
 	}
