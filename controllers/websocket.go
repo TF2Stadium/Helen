@@ -11,6 +11,7 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/internal/pprof"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
@@ -61,6 +62,7 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 		logrus.Error(err)
 		so.Close()
 	}
+	pprof.Clients.Add(1)
 }
 
 var ErrRecordNotFound = errors.New("Player record for found.")
