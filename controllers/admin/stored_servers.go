@@ -68,7 +68,11 @@ func RemoveServer(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Server successfully deleted.")
 }
 
-var serverPage = template.Must(template.ParseFiles("views/admin/templates/server.html"))
+var serverPage *template.Template
+
+func init() {
+	serverPage, _ = template.ParseFiles("views/admin/templates/server.html")
+}
 
 func ViewServerPage(w http.ResponseWriter, r *http.Request) {
 	serverPage.Execute(w, map[string]interface{}{
