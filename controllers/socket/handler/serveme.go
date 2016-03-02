@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/servemetf"
 	"github.com/TF2Stadium/wsevent"
 )
@@ -42,4 +43,9 @@ func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
 	}{starts.Format(servemetf.TimeFormat), ends.Format(servemetf.TimeFormat), reservations.Servers}
 
 	return newResponse(resp)
+}
+
+func (Serveme) GetStoredServers(so *wsevent.Client, _ struct{}) interface{} {
+	servers := models.GetAvailableServers()
+	return servers
 }
