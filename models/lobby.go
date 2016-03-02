@@ -631,6 +631,14 @@ func (lobby *Lobby) SetupServer() error {
 //If rpc == true, the log listener in Pauling for the corresponding server is stopped, this is
 //used when the lobby is closed manually by a player
 func (lobby *Lobby) Close(rpc, matchEnded bool) {
+	var count int
+
+	db.DB.Preload("ServerInfo").First(lobby, lobby.ID)
+	db.DB.Model(&ServerRecord{}).Where("host = ?", lobby.ServerInfo.Host).Count(&count)
+	if count != 0 {
+		putStoredServer(lobby.ServerInfo.Host)
+	}
+
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.First(&lobby).UpdateColumn("match_ended", matchEnded)
 	db.DB.Table("server_records").Where("id = ?", lobby.ServerInfoID).Delete(&ServerRecord{})
@@ -639,11 +647,9 @@ func (lobby *Lobby) Close(rpc, matchEnded bool) {
 	if rpc {
 		End(lobby.ID)
 	}
-
 	if matchEnded {
 		lobby.UpdateStats()
 	}
-
 	if lobby.ServemeID != 0 {
 		helpers.ServemeContext.Delete(lobby.ServemeID, lobby.CreatedBySteamID)
 	}
