@@ -6,7 +6,6 @@ import (
 
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
-	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes/socket"
@@ -119,28 +118,6 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 			lobbyData := lobby.LobbyData(true)
 			lobbyData.Send()
 		}
-	case "mumbleNick":
-		if !reMumbleNick.MatchString(*args.Value) {
-			return errors.New("Invalid Mumble nick.")
-		}
-		if len(*args.Value) > 32 {
-			return errors.New("Username is too long.")
-		}
-
-		if player.MumbleUsername == *args.Value {
-			return emptySuccess
-		} else if player.MumbleUsername == "" {
-			return errors.New("Username cannot be empty.")
-		}
-
-		var count int
-		db.DB.Model(&models.Player{}).Where("mumble_username = ?", *args.Value).Count(&count)
-		if count != 0 {
-			return errors.New("This username has already been taken.")
-		}
-
-		player.MumbleUsername = *args.Value
-		player.Save()
 	default:
 		player.SetSetting(*args.Key, *args.Value)
 	}
