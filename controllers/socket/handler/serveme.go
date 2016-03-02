@@ -47,5 +47,5 @@ func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
 
 func (Serveme) GetStoredServers(so *wsevent.Client, _ struct{}) interface{} {
 	servers := models.GetAvailableServers()
-	return servers
+	return newResponse(servers)
 }
