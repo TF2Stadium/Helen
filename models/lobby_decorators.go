@@ -6,8 +6,6 @@ package models
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -237,21 +235,27 @@ func DecorateLobbyListData(lobbies []*Lobby) []LobbyData {
 	return lobbyList
 }
 
-func DecorateLobbyConnect(lobby *Lobby, name string, slot int) LobbyConnectData {
+func DecorateLobbyConnect(lobby *Lobby, player *Player, slot int) LobbyConnectData {
 	l := LobbyConnectData{}
 	l.ID = lobby.ID
 	l.Time = lobby.CreatedAt.Unix()
 	l.Pass = lobby.ServerInfo.ServerPassword
-
 	l.Game.Host = lobby.ServerInfo.Host
 
 	l.Mumble.Address = config.Constants.MumbleAddr
-	l.Mumble.Password = config.Constants.MumblePassword
-	l.Mumble.Channel = "match" + strconv.FormatUint(uint64(lobby.ID), 10)
-	team, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)
-	nick := strings.ToUpper(team) + "_" + strings.ToUpper(class)
-	l.Mumble.Nick = nick
+	l.Mumble.Password = player.MumbleAuthkey
+	l.Mumble.Channel = fmt.Sprintf("Lobby #%d", lobby.ID)
+	_, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)
+	var mumbleUsername string
 
+	if alias := player.GetSetting("siteAlias"); alias != "" {
+		mumbleUsername = class + "_" + alias
+	} else {
+		mumbleUsername = class + "_" + player.SteamID
+	}
+
+	db.DB.Model(&Player{}).Where("id = ?", player.ID).UpdateColumn("mumble_username", mumbleUsername)
+	l.Mumble.Nick = mumbleUsername
 	return l
 }
 

@@ -44,7 +44,7 @@ func AfterConnectLoggedIn(so *wsevent.Client, player *models.Player) {
 
 		if err == nil {
 			if lobby.State == models.LobbyStateInProgress {
-				broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player.Name, slot.Slot))
+				broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player, slot.Slot))
 			} else if lobby.State == models.LobbyStateReadyingUp && !slot.Ready {
 				data := struct {
 					Timeout int64 `json:"timeout"`

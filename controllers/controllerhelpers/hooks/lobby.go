@@ -66,7 +66,7 @@ func BroadcastLobbyStart(lobby *models.Lobby) {
 	for _, slot := range lobby.GetAllSlots() {
 		player, _ := models.GetPlayerByID(slot.PlayerID)
 
-		connectInfo := models.DecorateLobbyConnect(lobby, player.Name, slot.Slot)
+		connectInfo := models.DecorateLobbyConnect(lobby, player, slot.Slot)
 		broadcaster.SendMessage(player.SteamID, "lobbyStart", connectInfo)
 	}
 }
