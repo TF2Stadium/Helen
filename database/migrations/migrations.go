@@ -32,6 +32,7 @@ func Do() {
 	database.DB.AutoMigrate(&models.ChatMessage{})
 	database.DB.AutoMigrate(&models.Requirement{})
 	database.DB.AutoMigrate(&Constant{})
+	database.DB.AutoMigrate(&models.StoredServer{})
 
 	once.Do(func() {
 		checkSchema()
