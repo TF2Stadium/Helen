@@ -70,7 +70,7 @@ type Player struct {
 
 	Settings gorm.Hstore `json:"-"`
 
-	MumbleUsername string `sql:"unique" json:"-"`
+	MumbleUsername string `sql:"unique" json:"mumbleUsername"`
 	MumbleAuthkey  string `sql:"not null;unique" json:"-"`
 
 	TwitchAccessToken string `json:"-"`
