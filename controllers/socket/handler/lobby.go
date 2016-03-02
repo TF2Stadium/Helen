@@ -656,7 +656,7 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 		return errors.New("Only lobby owners can change requirements.")
 	}
 
-	if !(*args.Slot >= 0 && *args.Slot < models.NumberOfClassesMap[lobby.Type]) {
+	if !(*args.Slot >= 0 && *args.Slot < 2*models.NumberOfClassesMap[lobby.Type]) {
 		return errors.New("Invalid slot.")
 	}
 
