@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+  </head>
+
+  <form method="post" action="add" class="pure-form">
+    <legend>Add</legend>
+   
+    <input placeholder="Name" type="text" name="name" required>
+    <input placeholder="Address" type="text" name="address" required>
+    <input placeholder="Password" type="text" name="password" required>
+    <input type="hidden" name="xsfr-token" value="{{.XSRFToken}}">
+    <button type="submit" class="pure-button pure-button-primary">Add</button>
+  </form>
+
+  <p>Servers</p>
+  <body>
+    <table class="pure-table" >
+      <thead>
+	<tr>
+	  <td>ID</td>
+	  <td>Name</td>
+	  <td>Address</td>
+	  <td>RCON</td>
+	  <td>Used</td>
+	</tr>
+      </thead>
+      <tbody>
+	{{range .Servers}}
+	<tr>
+	  <td> {{.ID}}</td>
+	  <td> {{.Name}}</td>
+	  <td> {{.Address}}</td>
+	  <td> {{.RCONPassword}}</td>
+	  <td> {{.Used}}</td>
+	{{end}}
+      </tbody>
+    </table>
+  </body>
+</html>

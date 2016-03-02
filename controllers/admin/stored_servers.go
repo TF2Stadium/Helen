@@ -1,0 +1,78 @@
+package admin
+
+import (
+	"fmt"
+	"html/template"
+	"net/http"
+
+	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/models"
+	"golang.org/x/net/xsrftoken"
+)
+
+func AddServer(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	values := r.Form
+
+	token := values.Get("xsfr-token")
+	if !xsrftoken.Valid(token, config.Constants.CookieStoreSecret, "admin", "POST") {
+		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
+		return
+	}
+
+	name := values.Get("name")
+	if name == "" {
+		http.Error(w, "Empty name not allowed", http.StatusBadRequest)
+		return
+	}
+
+	addr := values.Get("address")
+	if addr == "" {
+		http.Error(w, "Empty address not allowed", http.StatusBadRequest)
+		return
+	}
+
+	passwd := values.Get("password")
+	if passwd == "" {
+		http.Error(w, "Empty password not allowed", http.StatusBadRequest)
+		return
+	}
+
+	server, err := models.NewStoredServer(name, addr, passwd)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Server successfully added (ID: #%d)", server.ID)
+}
+
+func RemoveServer(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	values := r.Form
+
+	token := values.Get("xsfr-token")
+	if !xsrftoken.Valid(token, config.Constants.CookieStoreSecret, "admin", "POST") {
+		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
+		return
+	}
+
+	addr := values.Get("address")
+	if addr == "" {
+		http.Error(w, "Empty address not allowed", http.StatusBadRequest)
+		return
+	}
+
+	models.RemoveStoredServer(addr)
+	fmt.Fprintf(w, "Server successfully deleted.")
+}
+
+var serverPage = template.Must(template.ParseFiles("views/admin/templates/server.html"))
+
+func ViewServerPage(w http.ResponseWriter, r *http.Request) {
+	serverPage.Execute(w, map[string]interface{}{
+		"XSRFToken": xsrftoken.Generate(config.Constants.CookieStoreSecret, "admin", "POST"),
+		"Servers":   models.GetAllServers(),
+	})
+}
