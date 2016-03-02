@@ -187,11 +187,10 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		return lobbyData
 	}
 
-	var leader Player
-	db.DB.Where("steam_id = ?", lobby.CreatedBySteamID).First(&leader)
+	leader, _ := GetPlayerBySteamID(lobby.CreatedBySteamID)
 	leader.SetPlayerSummary()
 
-	lobbyData.Leader = leader
+	lobbyData.Leader = *leader
 	lobbyData.CreatedAt = lobby.CreatedAt.Unix()
 	lobbyData.State = int(lobby.State)
 
