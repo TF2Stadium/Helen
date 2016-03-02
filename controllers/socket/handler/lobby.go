@@ -24,6 +24,7 @@ import (
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/servemetf"
 	"github.com/TF2Stadium/wsevent"
+	"strconv"
 )
 
 type Lobby struct{}
@@ -166,6 +167,17 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		if *args.Server == "" {
 			return errors.New("No server ID given")
 		}
+
+		id, err := strconv.ParseUint(*args.Server, 10, 64)
+		if err != nil {
+			return err
+		}
+		server, err := models.GetStoredServer(uint(id))
+		if err != nil {
+			return err
+		}
+		*args.Server = server.Address
+		*args.RconPwd = server.RCONPassword
 		//get stored server here
 	}
 
