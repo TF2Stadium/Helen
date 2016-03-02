@@ -45,7 +45,7 @@ func ConnectRPC() {
 		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
 		i := 0
 		for {
-			codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
+			codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
 			if err == nil {
 				break
 			}
