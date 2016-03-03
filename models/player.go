@@ -53,9 +53,10 @@ type PlayerBan struct {
 
 //Player represents a player object
 type Player struct {
-	ID               uint      `gorm:"primary_key" json:"id"`
-	CreatedAt        time.Time `json:"createdAt"`
-	ProfileUpdatedAt time.Time `json:"-"`
+	ID                    uint      `gorm:"primary_key" json:"id"`
+	CreatedAt             time.Time `json:"createdAt"`
+	ProfileUpdatedAt      time.Time `json:"-"`
+	StreamStatusUpdatedAt time.Time `json:"-"`
 
 	Debug   bool        // true if player is a dummy one.
 	SteamID string      `sql:"unique" json:"steamid"` // Players steam ID
@@ -76,6 +77,7 @@ type Player struct {
 
 	TwitchAccessToken string `json:"-"`
 	TwitchName        string `json:"twitchName"`
+	IsStreaming       bool   `json:"isStreaming"`
 
 	ExternalLinks gorm.Hstore `json:"external_links,omitempty"`
 
@@ -92,7 +94,6 @@ type JSONFields struct {
 	PlaceholderRoleStr       *string      `sql:"-" json:"role"`
 	PlaceholderLobbies       *[]LobbyData `sql:"-" json:"lobbies"`
 	PlaceholderStats         *PlayerStats `sql:"-" json:"stats"`
-	PlaceholderIsStreaming   bool         `sql:"-" json:"isStreaming"`
 }
 
 // Create a new player with the given steam id.
@@ -474,9 +475,13 @@ func (p *Player) IsSubscribed(channel string) bool {
 
 //if the player has connected their twitch account, and
 //is currently streaming Team Fortress 2, returns true
-func (p *Player) isStreaming() bool {
+func (p *Player) setStreamingStatus() {
 	if p.TwitchName == "" {
-		return false
+		return
+	}
+
+	if time.Since(p.StreamStatusUpdatedAt) < 3*time.Minute {
+		return
 	}
 
 	u := &url.URL{
@@ -497,7 +502,7 @@ func (p *Player) isStreaming() bool {
 	resp, err := helpers.HTTPClient.Do(req)
 	if err != nil {
 		logrus.Error(err)
-		return false
+		return
 	}
 
 	var reply struct {
@@ -505,5 +510,7 @@ func (p *Player) isStreaming() bool {
 	}
 
 	json.NewDecoder(resp.Body).Decode(&reply)
-	return reply.Total != 0
+	p.StreamStatusUpdatedAt = time.Now()
+	p.IsStreaming = reply.Total != 0
+	p.Save()
 }
