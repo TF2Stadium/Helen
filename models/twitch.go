@@ -11,7 +11,7 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 )
 
-func StreamStatusUpdater() {
+func TFTVStreamStatusUpdater() {
 	ticker := time.NewTicker(5 * time.Minute)
 	u := &url.URL{
 		Scheme: "https",
