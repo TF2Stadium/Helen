@@ -12,7 +12,7 @@ assets:
 	-o assets/bindata.go assets/
 
 static: assets/geoip.mmdb assets/bindata.go
-	go build -tags bindata -ldflags "-w -linkmode external -extldflags -static" -v -o Helen
+	go build -tags "netgo bindata" -ldflags "-w -linkmode external -extldflags -static" -v -o Helen
 
 docker: 
 	go build -tags "netgo bindata" -ldflags "-w -linkmode external -extldflags -static" -v -o Helen

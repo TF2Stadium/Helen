@@ -29,7 +29,8 @@ deployment:
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_PROD
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_PROD
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-      - make docker -B
+      - make static -B
+      - docker build -t tf2stadium/helen:latest .
       - docker push tf2stadium/helen:latest
   dev:
     branch: dev
@@ -42,5 +43,6 @@ deployment:
       - rsync -rl -e "ssh -p $SSH_PORT" binaries/* $BACKEND_USER@tf2stadium.com:$BACKEND_DEPLOY_PATH_DEV
       - ssh -p $SSH_PORT $BACKEND_USER@tf2stadium.com $BACKEND_DEPLOY_SCRIPT_DEV
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-      - make docker -B
+      - make static -B
+      - docker build -t tf2stadium/helen:dev .
       - docker push tf2stadium/helen:dev
