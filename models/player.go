@@ -482,14 +482,13 @@ func (p *Player) isStreaming() bool {
 	u := &url.URL{
 		Scheme: "https",
 		Host:   "api.twitch.tv",
-		Path:   "kraken/streams/",
+		Path:   "kraken/streams",
 	}
 
 	values := u.Query()
 	values.Set("game", "Team Fortress 2")
 	values.Set("channel", p.TwitchName)
 	values.Set("stream_type", "live")
-
 	u.RawQuery = values.Encode()
 
 	req, _ := http.NewRequest("GET", u.String(), nil)
