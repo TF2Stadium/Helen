@@ -49,6 +49,8 @@ func StreamStatusUpdater() {
 			message := NewBotMessage(str, 0)
 			message.Send()
 			streaming = true
+		} else {
+			streaming = false
 		}
 		<-ticker.C
 	}
