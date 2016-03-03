@@ -80,9 +80,9 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		results = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to)
+		results = db.DB.Preload("Player").Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to)
 	} else if steamID == "" { //Retrieve all messages sent to a specfic room
-		results = db.DB.Where("room = ? AND (created_at >= ? AND created_at <= ?)", room, from, to)
+		results = db.DB.Preload("Player").Where("room = ? AND (created_at >= ? AND created_at <= ?)", room, from, to)
 	} else { //Retrieve all messages sent to a specific room and a speficic player
 		playerID := getPlayerID(steamID)
 		if playerID == 0 {
@@ -90,7 +90,7 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		results = db.DB.Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to)
+		results = db.DB.Preload("Player").Where("player_id = ? AND room = ? AND created_at >= ? AND created_at <= ?", playerID, room, from, to)
 	}
 
 	if order == "Ascending" {
@@ -102,11 +102,6 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	}
-
-	for _, message := range messages {
-		//err := db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.ProfileURL)
-		db.DB.DB().QueryRow("SELECT name, profileurl FROM players WHERE id = $1", message.PlayerID).Scan(&message.Player.Name, &message.Player.Profileurl)
 	}
 
 	err = chatLogsTempl.Execute(w, messages)
