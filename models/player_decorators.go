@@ -11,6 +11,9 @@ import (
 
 func decoratePlayerTags(p *Player) []string {
 	tags := []string{helpers.RoleNames[p.Role]}
+	if p.IsStreaming {
+		tags = append(tags, "twitch")
+	}
 	return tags
 }
 
@@ -54,9 +57,8 @@ func (p *Player) setJSONFields(stats, lobbies, streaming bool) {
 		twitchURL := "https://twitch.tv/" + p.TwitchName
 		p.ExternalLinks["twitch"] = &twitchURL
 	}
-	if streaming {
-		p.PlaceholderIsStreaming = p.isStreaming()
-	}
+
+	p.setStreamingStatus()
 }
 
 func (p *Player) SetPlayerProfile() {
