@@ -24,6 +24,7 @@ var migrationRoutines = map[uint64]func(){
 	8:  setPlayerExternalLinks,
 	9:  setPlayerSettings,
 	10: dropTableSessions,
+	11: dropColumnUpdatedAt,
 }
 
 func whitelist_id_string() {
@@ -137,4 +138,8 @@ func setPlayerSettings() {
 
 func dropTableSessions() {
 	db.DB.Exec("DROP TABLE http_sessions")
+}
+
+func dropColumnUpdatedAt() {
+	db.DB.Exec("ALTER TABLE players DROP COLUMN updated_at")
 }

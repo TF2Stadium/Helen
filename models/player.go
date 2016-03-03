@@ -52,9 +52,9 @@ type PlayerBan struct {
 
 //Player represents a player object
 type Player struct {
-	ID        uint      `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"-"`
+	ID               uint      `gorm:"primary_key" json:"id"`
+	CreatedAt        time.Time `json:"createdAt"`
+	ProfileUpdatedAt time.Time `json:"-"`
 
 	Debug   bool        // true if player is a dummy one.
 	SteamID string      `sql:"unique" json:"steamid"` // Players steam ID
@@ -355,6 +355,7 @@ func (player *Player) UpdatePlayerInfo() error {
 	player.Profileurl = playerInfo.Profileurl
 	player.Avatar = playerInfo.Avatar
 	player.Name = playerInfo.Name
+	player.ProfileUpdatedAt = time.Now()
 
 	return nil
 }

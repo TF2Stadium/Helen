@@ -27,7 +27,7 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 }
 
 func AfterConnectLoggedIn(so *wsevent.Client, player *models.Player) {
-	if time.Since(player.UpdatedAt) >= time.Hour*1 {
+	if time.Since(player.ProfileUpdatedAt) >= time.Hour*1 {
 		player.UpdatePlayerInfo()
 		player.Save()
 	}

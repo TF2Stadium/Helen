@@ -63,7 +63,7 @@ func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, error) {
 
 	db.DB.Preload("Stats").First(player, player.ID)
 
-	if time.Since(player.UpdatedAt) < time.Hour*time.Duration(req.Hours-player.GameHours) {
+	if time.Since(player.ProfileUpdatedAt) < time.Hour*time.Duration(req.Hours-player.GameHours) {
 		//update player info only if the number of hours needed > the number of hours
 		//passed since player info was last updated
 		player.UpdatePlayerInfo()
