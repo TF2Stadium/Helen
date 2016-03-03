@@ -23,17 +23,6 @@ type ChatMessage struct {
 	InGame    bool      `json:"ingame"`                          // true if the message is in-game
 }
 
-var botPlayer = Player{
-	JSONFields: JSONFields{
-		PlaceholderTags: new([]string),
-	},
-}
-
-func init() {
-	botPlayer.Name = "TF2Stadium"
-	*botPlayer.PlaceholderTags = []string{"tf2stadium"}
-}
-
 // Return a new ChatMessage sent from specficied player
 func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	player.SetPlayerSummary()
@@ -80,20 +69,24 @@ type sentMessage ChatMessage
 
 func (m *sentMessage) MarshalJSON() ([]byte, error) {
 	var player *Player
-	if m.Bot {
-		player = &botPlayer
-	} else {
+
+	if !m.Bot {
 		player, _ = GetPlayerByID(m.PlayerID)
 	}
 
 	message := struct {
 		*ChatMessage
 		Player *minPlayer `json:"player"`
-	}{(*ChatMessage)(m), &minPlayer{
-		Name:    player.Alias(),
-		SteamID: player.SteamID,
-		Tags:    decoratePlayerTags(player),
-	}}
+	}{(*ChatMessage)(m), &minPlayer{}}
+
+	if m.Bot {
+		message.Player.Name = "TF2Stadium"
+		message.Player.Tags = []string{"tf2stadium"}
+	} else {
+		message.Player.Name = player.Name
+		message.Player.SteamID = player.SteamID
+		message.Player.Tags = decoratePlayerTags(player)
+	}
 
 	if m.Deleted {
 		message.Message = "<deleted>"
