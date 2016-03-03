@@ -97,13 +97,8 @@ func (Chat) ChatDelete(so *wsevent.Client, args struct {
 		return errors.New("Can't find message")
 	}
 
-	player, _ := models.GetPlayerByID(message.PlayerID)
 	message.Deleted = true
 	message.Save()
-	message.Message = "<deleted>"
-	player.SetPlayerSummary()
-	message.Player = *player
-	*message.Player.PlaceholderTags = append(*message.Player.PlaceholderTags, "deleted")
 	message.Send()
 
 	return emptySuccess
