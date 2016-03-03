@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -91,6 +92,7 @@ type JSONFields struct {
 	PlaceholderRoleStr       *string      `sql:"-" json:"role"`
 	PlaceholderLobbies       *[]LobbyData `sql:"-" json:"lobbies"`
 	PlaceholderStats         *PlayerStats `sql:"-" json:"stats"`
+	PlaceholderIsStreaming   bool         `sql:"-" json:"isStreaming"`
 }
 
 // Create a new player with the given steam id.
@@ -444,8 +446,6 @@ func GetAllActiveBans() []*PlayerBan {
 	return bans
 }
 
-var client = &http.Client{Timeout: 5 * time.Second}
-
 //IsSubscribed returns whether if the player has subscribed to the given twitch channel.
 //The player object should have a valid access token and twitch name
 func (p *Player) IsSubscribed(channel string) bool {
@@ -455,7 +455,7 @@ func (p *Player) IsSubscribed(channel string) bool {
 	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
 	req.Header.Add("Authorization", "OAuth "+p.TwitchAccessToken)
 
-	resp, err := client.Do(req)
+	resp, err := helpers.HTTPClient.Do(req)
 	if err != nil {
 		logrus.Error(err)
 		return false
@@ -470,4 +470,41 @@ func (p *Player) IsSubscribed(channel string) bool {
 
 	//if status code is 404, the user isn't subscribed
 	return err == nil && resp.StatusCode != 404
+}
+
+//if the player has connected their twitch account, and
+//is currently streaming Team Fortress 2, returns true
+func (p *Player) isStreaming() bool {
+	if p.TwitchName == "" {
+		return false
+	}
+
+	u := &url.URL{
+		Scheme: "https",
+		Host:   "api.twitch.tv",
+		Path:   "kraken/streams/",
+	}
+
+	values := u.Query()
+	values.Set("game", "Team Fortress 2")
+	values.Set("channel", p.TwitchName)
+	values.Set("stream_type", "live")
+
+	u.RawQuery = values.Encode()
+
+	req, _ := http.NewRequest("GET", u.String(), nil)
+	req.Header.Set("Accept", "application/vnd.twitchtv.v3+json")
+
+	resp, err := helpers.HTTPClient.Do(req)
+	if err != nil {
+		logrus.Error(err)
+		return false
+	}
+
+	var reply struct {
+		Total int `json:"total"`
+	}
+
+	json.NewDecoder(resp.Body).Decode(&reply)
+	return reply.Total != 0
 }

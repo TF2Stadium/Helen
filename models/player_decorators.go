@@ -14,7 +14,7 @@ func decoratePlayerTags(p *Player) []string {
 	return tags
 }
 
-func (p *Player) setJSONFields(stats, lobbies bool) {
+func (p *Player) setJSONFields(stats, lobbies, streaming bool) {
 	db.DB.Preload("Stats").First(p, p.ID)
 	p.PlaceholderLobbiesPlayed = new(int)
 	*p.PlaceholderLobbiesPlayed = p.Stats.TotalLobbies()
@@ -54,13 +54,16 @@ func (p *Player) setJSONFields(stats, lobbies bool) {
 		twitchURL := "https://twitch.tv/" + p.TwitchName
 		p.ExternalLinks["twitch"] = &twitchURL
 	}
+	if streaming {
+		p.PlaceholderIsStreaming = p.isStreaming()
+	}
 }
 
 func (p *Player) SetPlayerProfile() {
-	p.setJSONFields(true, true)
+	p.setJSONFields(true, true, true)
 }
 
 func (p *Player) SetPlayerSummary() {
-	p.setJSONFields(false, false)
+	p.setJSONFields(false, false, false)
 	p.ExternalLinks = nil
 }
