@@ -502,7 +502,7 @@ func (p *Player) isStreaming() bool {
 	}
 
 	var reply struct {
-		Total int `json:"total"`
+		Total int `json:"_total"`
 	}
 
 	json.NewDecoder(resp.Body).Decode(&reply)
