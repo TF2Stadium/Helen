@@ -6,6 +6,7 @@ package models
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
@@ -76,7 +77,6 @@ type LobbyConnectData struct {
 
 	Mumble struct {
 		Address  string `json:"address"`
-		Nick     string `json:"nick"`
 		Port     string `json:"port"`
 		Password string `json:"password"`
 		Channel  string `json:"channel"`
@@ -244,8 +244,8 @@ func DecorateLobbyConnect(lobby *Lobby, player *Player, slot int) LobbyConnectDa
 
 	l.Mumble.Address = config.Constants.MumbleAddr
 	l.Mumble.Password = player.MumbleAuthkey
-	l.Mumble.Channel = fmt.Sprintf("Lobby #%d", lobby.ID)
-	_, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)
+	team, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)
+	l.Mumble.Channel = fmt.Sprintf("Lobby #%d/%s", lobby.ID, strings.ToUpper(team))
 	var mumbleUsername string
 
 	if alias := player.GetSetting("siteAlias"); alias != "" {
@@ -255,7 +255,6 @@ func DecorateLobbyConnect(lobby *Lobby, player *Player, slot int) LobbyConnectDa
 	}
 
 	db.DB.Model(&Player{}).Where("id = ?", player.ID).UpdateColumn("mumble_username", mumbleUsername)
-	l.Mumble.Nick = mumbleUsername
 	return l
 }
 
