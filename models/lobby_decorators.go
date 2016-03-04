@@ -244,17 +244,8 @@ func DecorateLobbyConnect(lobby *Lobby, player *Player, slot int) LobbyConnectDa
 
 	l.Mumble.Address = config.Constants.MumbleAddr
 	l.Mumble.Password = player.MumbleAuthkey
-	team, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)
+	team, _, _ := LobbyGetSlotInfoString(lobby.Type, slot)
 	l.Mumble.Channel = fmt.Sprintf("Lobby #%d/%s", lobby.ID, strings.ToUpper(team))
-	var mumbleUsername string
-
-	if alias := player.GetSetting("siteAlias"); alias != "" {
-		mumbleUsername = class + "_" + alias
-	} else {
-		mumbleUsername = class + "_" + player.SteamID
-	}
-
-	db.DB.Model(&Player{}).Where("id = ?", player.ID).UpdateColumn("mumble_username", mumbleUsername)
 	return l
 }
 
