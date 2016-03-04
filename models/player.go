@@ -23,6 +23,7 @@ import (
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/PlayerStatsScraper"
 	"github.com/jinzhu/gorm"
+	"strings"
 )
 
 // Stores types of bans
@@ -113,7 +114,10 @@ func NewPlayer(steamId string) (*Player, error) {
 		player.Stats = PlayerStats{}
 	}
 
-	player.MumbleUsername = player.GenMumbleUsername()
+	last := &Player{}
+	db.DB.Table("players").Last(last)
+
+	player.MumbleUsername = fmt.Sprintf("TF2Stadium%d", last.ID+1)
 	player.MumbleAuthkey = player.GenAuthKey()
 
 	return player, nil
@@ -218,12 +222,27 @@ func (player *Player) GenAuthKey() string {
 	return authKey
 }
 
-func (player *Player) GenMumbleUsername() string {
-	last := &Player{}
-	db.DB.Table("players").Last(last)
+func (player *Player) SetMumbleUsername(lobbyType LobbyType, slot int) {
+	_, class, _ := LobbyGetSlotInfoString(lobbyType, slot)
+	username := strings.ToUpper(class) + "_"
 
-	mumbleNick := fmt.Sprintf("TF2Stadium%d", last.ID+1)
-	return mumbleNick
+	alias := player.GetSetting("siteAlias")
+	if alias == "" {
+		index := strings.Index(player.Profileurl, "http://steamcommunity.com/id/")
+		profileid := player.Profileurl[index+1 : len(player.Profileurl)-2]
+		username += profileid
+	} else {
+		username += strings.Replace(alias, " ", "_", -1)
+	}
+
+	var count int
+	db.DB.Model(&Player{}).Where("mumble_username = ?", username).Count(&count)
+	for count != 0 {
+		username += "_"
+		db.DB.Model(&Player{}).Where("mumble_username = ?", username).Count(&count)
+	}
+
+	db.DB.Model(&Player{}).Where("id = ?", player.ID).UpdateColumn("mumble_username", username)
 }
 
 //if the player has an alias, return that. Else, return their steam name
