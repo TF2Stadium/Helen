@@ -317,15 +317,20 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 	if lobby.SlotPassword != "" && lobby.SlotPassword != password {
 		return ErrInvalidPassword
 	}
+
 	//Check if player is banned
 	if lobby.IsPlayerBanned(player) {
 		return ErrLobbyBan
 	}
+
 	if slot >= 2*NumberOfClassesMap[lobby.Type] || slot < 0 {
 		return ErrBadSlot
 	}
+
+	isSubstitution := lobby.SlotNeedsSubstitute(slot)
+
 	//Check whether the slot is occupied
-	if lobby.IsSlotOccupied(slot) {
+	if !isSubstitution && lobby.IsSlotOccupied(slot) {
 		return ErrFilled
 	}
 
@@ -346,7 +351,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 
 		} else { //player is in the same lobby, they're changing their slots
 			//assign the player to a new slot
-			if lobby.SlotNeedsSubstitute(slot) {
+			if isSubstitution {
 				//the slot needs a substitute (which happens when the lobby is in progress),
 				//so players already in the lobby cannot fill it.
 				return ErrNeedsSub
@@ -385,7 +390,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 	}
 
 	// Check if player is a substitute (the slot needs a subtitute)
-	if lobby.SlotNeedsSubstitute(slot) {
+	if isSubstitution {
 		//kicks previous slot occupant if they're in-game, resets their !rep count, removes them from the lobby
 		DisallowPlayer(lobby.ID, player.SteamID)
 		//delete previous slot
