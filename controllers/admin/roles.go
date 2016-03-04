@@ -25,7 +25,7 @@ func ChangeRole(w http.ResponseWriter, r *http.Request) {
 	values := r.Form
 	steamid := values.Get("steamid")
 	remove := values.Get("remove")
-	token := values.Get("xsfr-token")
+	token := values.Get("xsrf-token")
 	if !xsrftoken.Valid(token, config.Constants.CookieStoreSecret, "admin", "POST") {
 		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
 		return

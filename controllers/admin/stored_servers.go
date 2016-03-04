@@ -14,7 +14,7 @@ func AddServer(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	values := r.Form
 
-	token := values.Get("xsfr-token")
+	token := values.Get("xsrf-token")
 	if !xsrftoken.Valid(token, config.Constants.CookieStoreSecret, "admin", "POST") {
 		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
 		return
@@ -52,7 +52,7 @@ func RemoveServer(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	values := r.Form
 
-	token := values.Get("xsfr-token")
+	token := values.Get("xsrf-token")
 	if !xsrftoken.Valid(token, config.Constants.CookieStoreSecret, "admin", "POST") {
 		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
 		return
