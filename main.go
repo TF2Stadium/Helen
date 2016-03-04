@@ -109,8 +109,8 @@ func main() {
 		Server: &http.Server{
 			Addr:         config.Constants.ListenAddress,
 			Handler:      corsHandler,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 5 * time.Second,
 		},
 
 		ShutdownInitiated: func() {

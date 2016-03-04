@@ -5,16 +5,16 @@
 package controllers
 
 import (
-	"fmt"
+	"html/template"
 	"net/http"
 
-	"html/template"
-
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 )
 
-var playerTempl = template.Must(template.New("player").Parse(
-	`
+var (
+	playerTempl = template.Must(template.New("player").Parse(
+		`
 <html>
   <body>
     <a href="/logout">Logout here</a> <br>
@@ -23,6 +23,25 @@ var playerTempl = template.Must(template.New("player").Parse(
   </body>
 </html>
 `))
+	login = template.Must(template.New("login").Parse(
+		`
+<html>
+<body>
+<a href='/startLogin'>Login</a> <br>
+{{if .mocklogin}}
+<form action="/startMockLogin" method="get">
+  <fieldset>
+    <legend>Mock Login:</legend>
+    SteamID:<br>
+    <input type="text" name="steamid"><br>
+    <input type="submit" value="Submit">
+  </fieldset>
+</form>
+{{end}}
+</body>
+</html>
+`))
+)
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -36,6 +55,8 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		player := controllerhelpers.GetPlayer(token)
 		playerTempl.Execute(w, player)
 	} else {
-		fmt.Fprintf(w, `<html><head></head><body>hello! You can log in <a href='/startLogin'>here</a></body></html>`)
+		login.Execute(w, map[string]bool{
+			"mocklogin": config.Constants.MockupAuth,
+		})
 	}
 }

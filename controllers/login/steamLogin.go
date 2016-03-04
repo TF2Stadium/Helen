@@ -7,7 +7,6 @@ package login
 import (
 	"net/http"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -34,7 +33,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func MockLoginHandler(w http.ResponseWriter, r *http.Request) {
-	steamid := r.URL.Path[strings.Index(r.URL.Path, "Login/")+6:]
+	if !config.Constants.MockupAuth {
+		http.NotFound(w, r)
+		return
+	}
+
+	steamid := r.URL.Query().Get("steamid")
+	if steamid == "" {
+		http.Error(w, "No SteamID given", http.StatusBadRequest)
+		return
+	}
 
 	var player *models.Player
 	var err error
@@ -52,6 +60,17 @@ func MockLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	player.UpdatePlayerInfo()
+	key := controllerhelpers.NewToken(player.ID, steamid, player.Role)
+	cookie := &http.Cookie{
+		Name:    "auth-jwt",
+		Value:   key,
+		Path:    "/",
+		Domain:  config.Constants.CookieDomain,
+		Expires: time.Now().Add(30 * 24 * time.Hour),
+		//Secure: true,
+	}
+
+	http.SetCookie(w, cookie)
 
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }

@@ -29,6 +29,7 @@ var routes = []route{
 	{"/twitchLogout", login.TwitchLogout},
 	{"/logout", login.LogoutHandler},
 	{"/websocket/", controllers.SocketHandler},
+	{"/startMockLogin", login.MockLoginHandler},
 
 	{"/admin", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminPage)},
 	{"/admin/roles", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ChangeRole)},
@@ -43,10 +44,6 @@ var routes = []route{
 }
 
 func SetupHTTP(mux *http.ServeMux) {
-	if config.Constants.MockupAuth {
-		mux.HandleFunc("/startMockLogin/", login.MockLoginHandler)
-	}
-
 	for _, route := range routes {
 		mux.HandleFunc(route.pattern, route.handler)
 	}
