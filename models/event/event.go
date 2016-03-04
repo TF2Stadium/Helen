@@ -88,11 +88,7 @@ func playerDisc(steamID string, lobbyID uint) {
 	models.SendNotification(fmt.Sprintf("%s has disconected from the server.", player.Alias()), int(lobby.ID))
 
 	lobby.AfterPlayerNotInGameFunc(player, 2*time.Minute, func() {
-		ingame, err := lobby.IsPlayerInGame(player)
-		if err != nil {
-			logrus.Error(err.Error())
-		}
-		if !ingame && lobby.CurrentState() != models.LobbyStateEnded {
+		if lobby.CurrentState() != models.LobbyStateEnded {
 			lobby.Substitute(player)
 		}
 	})
