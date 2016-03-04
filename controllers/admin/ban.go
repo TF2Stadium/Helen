@@ -32,7 +32,7 @@ func BanPlayer(w http.ResponseWriter, r *http.Request) {
 	reason := values.Get("reason")
 	banType := values.Get("type")
 	remove := values.Get("remove")
-	token := values.Get("xsfr-token")
+	token := values.Get("xsrf-token")
 	if !xsrftoken.Valid(token, config.Constants.CookieStoreSecret, "admin", "POST") {
 		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
 		return
@@ -91,9 +91,30 @@ type BanData struct {
 func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 	allBans := models.GetAllActiveBans()
 	var bans []BanData
+	var player *models.Player
+	var err error
+
+	values := r.URL.Query()
+
+	if !xsrftoken.Valid(values.Get("xsrf-token"), config.Constants.CookieStoreSecret, "admin", "POST") {
+		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
+		return
+	}
+
+	steamid := values.Get("steamid")
+	if steamid != "" {
+		player, err = models.GetPlayerBySteamID(steamid)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+	}
 
 	for _, ban := range allBans {
-		player, _ := models.GetPlayerByID(ban.PlayerID)
+		if steamid != "" && ban.PlayerID != player.ID {
+			continue
+		}
+
 		banData := BanData{
 			Player: player,
 			Ban:    ban}

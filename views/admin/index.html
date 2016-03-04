@@ -21,7 +21,7 @@
     <input placeholder="Date" type="date" name="date">
     <input placeholder="Time" type="time" name="time">
     <input type="checkbox" name="remove" value="true">Remove<br>
-    <input type="hidden" name="xsfr-token" value="{{.XSRFToken}}">
+    <input type="hidden" name="xsrf-token" value="{{.XSRFToken}}">
     <button type="submit" class="pure-button pure-button-primary">Ban</button>
   </form>
 
@@ -34,12 +34,19 @@
       <option value="{{print $type}}">{{print $name}}</option>{{end}}
     </select>
     <input type="checkbox" name="remove" value="true">Remove<br>
-    <input type="hidden" name="xsfr-token" value="{{.XSRFToken}}">
+    <input type="hidden" name="xsrf-token" value="{{.XSRFToken}}">
     <button type="submit" class="pure-button pure-button-primary">Add</button>
   </form>
 
-  <a class="pure-button pure-button-primary" href="/admin/banlogs">View Ban logs</a>
-    <a class="pure-button pure-button-primary" href="/admin/server/">Manage Stored Servers</a>
+  <form method="get" action="admin/banlogs" class="pure-form">
+    <legend> Ban Logs </legend>
+    <input placeholder="Steam ID (optional)" type="text" name="steamid">
+    <input type="hidden" name="xsrf-token" value="{{.XSRFToken}}">
+    <button type="submit" class="pure-button pure-button-primary">View</button>
+  </form>
+  
+  <a class="pure-button pure-button-primary" href="/admin/server/">Manage Stored Servers</a>
+  
   <form method="get" action="admin/chatlogs" class="pure-form pure-form-aligned">
     <fieldset class="pure-control-group">
       <legend>Chat Logs</legend>
