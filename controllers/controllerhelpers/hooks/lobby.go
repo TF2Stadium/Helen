@@ -8,6 +8,7 @@ package hooks
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -24,6 +25,13 @@ func AfterLobbyJoin(so *wsevent.Client, lobby *models.Lobby, player *models.Play
 	sockets, _ := sessions.GetSockets(player.SteamID)
 	for _, so := range sockets {
 		socket.AuthServer.Join(so, room)
+	}
+	if lobby.State == models.LobbyStateInProgress { // player is a substitute
+		lobby.AfterPlayerNotInGameFunc(player, 5*time.Minute, func() {
+			// if player doesn't join game server in 5 minutes,
+			// substitute them
+			lobby.Substitute(player)
+		})
 	}
 
 	broadcaster.SendMessage(player.SteamID, "lobbyJoined", models.DecorateLobbyData(lobby, false))
