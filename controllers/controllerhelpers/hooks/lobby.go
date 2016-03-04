@@ -75,6 +75,7 @@ func BroadcastLobbyStart(lobby *models.Lobby) {
 		player, _ := models.GetPlayerByID(slot.PlayerID)
 
 		connectInfo := models.DecorateLobbyConnect(lobby, player, slot.Slot)
+		player.SetMumbleUsername(lobby.Type, slot.Slot)
 		broadcaster.SendMessage(player.SteamID, "lobbyStart", connectInfo)
 	}
 }
