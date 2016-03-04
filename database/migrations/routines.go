@@ -5,6 +5,7 @@
 package migrations
 
 import (
+	"math/rand"
 	"strconv"
 
 	"github.com/Sirupsen/logrus"
@@ -101,7 +102,7 @@ func setMumbleInfo() {
 
 	db.DB.Table("players").Find(&players)
 	for _, player := range players {
-		player.MumbleUsername = player.GenMumbleUsername()
+		player.MumbleUsername = strconv.Itoa(rand.Int())
 		player.MumbleAuthkey = player.GenAuthKey()
 		player.Save()
 	}
