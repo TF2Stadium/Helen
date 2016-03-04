@@ -40,6 +40,7 @@ const (
 )
 
 var ErrPlayerNotFound = errors.New("Player not found")
+var ErrPlayerInReportedSlot = errors.New("Player in reported slot")
 
 //PlayerBan represents a player ban
 type PlayerBan struct {
@@ -291,8 +292,12 @@ func (player *Player) GetLobbyID(inProgress bool) (uint, error) {
 		First(playerSlot).Error
 
 	// if the player is not in any lobby or the player has been reported/needs sub, return error
-	if err != nil || playerSlot.NeedsSub {
+	if err != nil {
 		return 0, err
+	}
+
+	if playerSlot.NeedsSub {
+		return 0, ErrPlayerInReportedSlot
 	}
 
 	return playerSlot.LobbyID, nil
