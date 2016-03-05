@@ -7,14 +7,10 @@ package models_test
 import (
 	"testing"
 
-	"github.com/TF2Stadium/Helen/helpers"
+	_ "github.com/TF2Stadium/Helen/helpers"
 	. "github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	helpers.InitLogger()
-}
 
 func TestClassMaps(t *testing.T) {
 	res, err := LobbyGetPlayerSlot(LobbyTypeSixes, "red", "scout1")

@@ -11,15 +11,11 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
+	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/stretchr/testify/assert"
 )
 
 var steamid = "76561198074578368"
-
-func init() {
-	helpers.InitLogger()
-}
 
 func TestDatabasePing(t *testing.T) {
 	if os.Getenv("DEPLOYMENT_ENV") == "" {

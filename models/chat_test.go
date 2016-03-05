@@ -6,14 +6,13 @@ import (
 	"time"
 
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/helpers"
+	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	. "github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func init() {
-	helpers.InitLogger()
 	testhelpers.CleanupDB()
 }
 

@@ -9,13 +9,9 @@ import (
 	"testing"
 
 	. "github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
+	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	helpers.InitLogger()
-}
 
 func TestEnvVariablesOverrideConfig(t *testing.T) {
 	os.Unsetenv("SERVER_ADDR")
