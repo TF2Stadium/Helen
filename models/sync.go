@@ -9,6 +9,11 @@ var (
 	lobbyLocks = make(map[uint]*sync.RWMutex)
 )
 
+//Lock aquires the lock for the given lobby.
+//Be careful while using Lock outside of models,
+//since it could potentially result in a deadlock
+//if the function call after the lock would try
+//acquiring it too
 func (lobby *Lobby) Lock() {
 	mu.RLock()
 	lock, ok := lobbyLocks[lobby.ID]
@@ -18,6 +23,7 @@ func (lobby *Lobby) Lock() {
 	}
 }
 
+//Unlock releases the lock for the given lobby
 func (lobby *Lobby) Unlock() {
 	mu.RLock()
 	lock, ok := lobbyLocks[lobby.ID]
