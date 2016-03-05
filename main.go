@@ -69,7 +69,6 @@ func main() {
 
 	helpers.ConnectAMQP()
 	event.StartListening()
-	models.CreateLocks()
 
 	database.Init()
 	migrations.Do()
@@ -78,6 +77,7 @@ func main() {
 		logrus.Fatal(err)
 	}
 
+	models.CreateLocks()
 	models.ConnectRPC()
 	models.DeleteUnusedServerRecords()
 	//go models.TFTVStreamStatusUpdater()
