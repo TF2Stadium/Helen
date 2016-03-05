@@ -160,6 +160,7 @@ func getGamemode(mapName string, lobbyType LobbyType) string {
 }
 
 // Returns a new lobby object with the given parameters
+// Call CreateLock after saving this lobby.
 func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist string, mumble bool, whitelistGroup, password string) *Lobby {
 	lobby := &Lobby{
 		Mode:            getGamemode(mapName, lobbyType),
