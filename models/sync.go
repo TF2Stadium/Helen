@@ -18,7 +18,7 @@ func (lobby *Lobby) Lock() {
 	mu.RLock()
 	lock, ok := lobbyLocks[lobby.ID]
 	mu.RUnlock()
-	if !ok {
+	if ok {
 		lock.Lock()
 	}
 }
@@ -28,12 +28,13 @@ func (lobby *Lobby) Unlock() {
 	mu.RLock()
 	lock, ok := lobbyLocks[lobby.ID]
 	mu.RUnlock()
-	if !ok {
+	if ok {
 		lock.Unlock()
 	}
 }
 
-func (lobby *Lobby) createLock() {
+//CreateLock creates a lock for lobby
+func (lobby *Lobby) CreateLock() {
 	mu.Lock()
 	lobbyLocks[lobby.ID] = new(sync.RWMutex)
 	mu.Unlock()

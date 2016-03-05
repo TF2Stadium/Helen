@@ -175,7 +175,6 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 	}
 
 	// Must specify CreatedBy manually if the lobby is created by a player
-	lobby.createLock()
 	return lobby
 }
 

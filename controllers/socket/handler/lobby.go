@@ -200,8 +200,6 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	}
 
 	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, *args.WhitelistID, *args.Mumble, steamGroup, *args.Password)
-	lob.Lock()
-	defer lob.Unlock()
 
 	lob.TwitchChannel = twitchChan
 	lob.CreatedBySteamID = player.SteamID
@@ -214,6 +212,10 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	}
 
 	lob.Save()
+
+	lob.CreateLock()
+	lob.Lock()
+	defer lob.Unlock()
 
 	err := lob.SetupServer()
 	if err != nil { //lobby setup failed, delete lobby and corresponding server record
