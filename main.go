@@ -69,6 +69,7 @@ func main() {
 
 	helpers.ConnectAMQP()
 	event.StartListening()
+	models.CreateLocks()
 
 	database.Init()
 	migrations.Do()

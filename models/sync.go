@@ -1,6 +1,7 @@
 package models
 
 import (
+	db "github.com/TF2Stadium/Helen/database"
 	"sync"
 )
 
@@ -44,4 +45,17 @@ func (lobby *Lobby) deleteLock() {
 	mu.Lock()
 	delete(lobbyLocks, lobby.ID)
 	mu.Unlock()
+}
+
+//CreateLocks creates locks for all lobbies that haven't ended yet
+func CreateLocks() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var ids []uint
+
+	db.DB.Model(&Lobby{}).Where("state <> ?", LobbyStateEnded).Pluck("id", &ids)
+	for _, id := range ids {
+		lobbyLocks[id] = new(sync.RWMutex)
+	}
 }
