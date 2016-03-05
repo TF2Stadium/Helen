@@ -686,6 +686,7 @@ func (lobby *Lobby) Close(rpc, matchEnded bool) {
 	BroadcastLobby(lobby)
 	BroadcastLobbyList() // has to be done manually for now
 	fumbleLobbyEnded(lobby.ID)
+	lobby.deleteLock()
 }
 
 //UpdateStats updates the PlayerStats records for all players in the lobby
