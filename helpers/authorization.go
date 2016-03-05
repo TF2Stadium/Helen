@@ -48,7 +48,7 @@ var ActionNames = map[authority.AuthAction]string{
 	ActionChangeRole: "ActionChangeRole",
 }
 
-func InitAuthorization() {
+func init() {
 	RoleDeveloper.Allow(ActionViewPage)
 
 	RoleMod.Inherit(RolePlayer)

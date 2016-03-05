@@ -40,7 +40,6 @@ var (
 )
 
 func main() {
-	helpers.InitLogger()
 	flag.Parse()
 
 	if *flagGen {
@@ -71,7 +70,6 @@ func main() {
 	helpers.ConnectAMQP()
 	event.StartListening()
 
-	helpers.InitAuthorization()
 	database.Init()
 	migrations.Do()
 	err := models.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
@@ -87,7 +85,6 @@ func main() {
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
 	}
-	// lobby := models.NewLobby("cp_badlands", 10, "a", "a", 1)
 
 	mux := http.NewServeMux()
 	routes.SetupHTTP(mux)

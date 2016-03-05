@@ -45,6 +45,6 @@ func (formatter) Format(e *logrus.Entry) ([]byte, error) {
 	return f.Format(e)
 }
 
-func InitLogger() {
+func init() {
 	logrus.SetFormatter(&formatter{})
 }
