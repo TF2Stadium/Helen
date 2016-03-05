@@ -175,7 +175,7 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 	}
 
 	// Must specify CreatedBy manually if the lobby is created by a player
-
+	lobby.createLock()
 	return lobby
 }
 
@@ -185,6 +185,7 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 func (lobby *Lobby) Delete() {
 	db.DB.Delete(lobby)
 	db.DB.Delete(&lobby.ServerInfo)
+	lobby.deleteLock()
 }
 
 //GetWaitingLobbies returns a list of lobby objects that haven't been filled yet
@@ -312,7 +313,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 	 * Player has already joined a lobby
 	 * anything else?
 	 */
-
 	//check if slot password is valid
 	if lobby.SlotPassword != "" && lobby.SlotPassword != password {
 		return ErrInvalidPassword
@@ -345,7 +345,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 			if curLobby.State == LobbyStateInProgress {
 				curLobby.Substitute(player)
 			} else {
-				curLobby.RemovePlayer(player)
+				lobby.Lock()
+				db.DB.Where("player_id = ?", player.ID).Delete(&LobbySlot{})
+				lobby.Unlock()
+
 				curLobby.AddSpectator(player)
 			}
 
@@ -356,7 +359,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 				//so players already in the lobby cannot fill it.
 				return ErrNeedsSub
 			}
+			lobby.Lock()
 			db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{})
+			lobby.Unlock()
+
 			slotChange = true
 		}
 	}
@@ -394,7 +400,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 		//kicks previous slot occupant if they're in-game, resets their !rep count, removes them from the lobby
 		DisallowPlayer(lobby.ID, player.SteamID)
 		//delete previous slot
+		lobby.Lock()
 		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Delete(&LobbySlot{})
+		lobby.Unlock()
+
 		BroadcastSubList() //since the sub slot has been deleted, broadcast the updated substitute list
 		//notify players in game server of subtitute
 		class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
@@ -411,7 +420,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 		Slot:     slot,
 	}
 
+	lobby.Lock()
 	db.DB.Create(newSlotObj)
+	lobby.Unlock()
 
 	lobby.OnChange(true)
 
@@ -420,7 +431,10 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 
 //RemovePlayer removes a given player from the lobby
 func (lobby *Lobby) RemovePlayer(player *Player) error {
+	lobby.Lock()
 	err := db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).Delete(&LobbySlot{}).Error
+	lobby.Unlock()
+
 	if err != nil {
 		return err
 	}
@@ -477,7 +491,10 @@ func (lobby *Lobby) RemoveUnreadyPlayers(spec bool) error {
 	}
 
 	//remove players which aren't ready
+	lobby.Lock()
 	err := db.DB.Where("lobby_id = ? AND ready = ?", lobby.ID, false).Delete(&LobbySlot{}).Error
+	lobby.Unlock()
+
 	if spec {
 		for _, id := range playerids {
 			player := &Player{}
@@ -725,7 +742,13 @@ func (lobby *Lobby) SubNotInGamePlayers() {
 
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes
 func (lobby *Lobby) Start() {
+	if lobby.State == LobbyStateInProgress {
+		return
+	}
+
+	lobby.Lock()
 	db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", LobbyStateInProgress)
+	lobby.Unlock()
 
 	helpers.GlobalWait.Add(1)
 	time.AfterFunc(time.Minute*5, func() {
@@ -780,6 +803,9 @@ func (l *Lobby) LobbyData(include bool) LobbyData {
 //Substitute sets the needs_sub column of the given slot to true, and broadcasts the new
 //substitute list
 func (lobby *Lobby) Substitute(player *Player) {
+	lobby.Lock()
+	defer lobby.Unlock()
+
 	db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).UpdateColumn("needs_sub", true)
 
 	db.DB.Preload("Stats").First(player, player.ID)

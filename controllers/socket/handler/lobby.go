@@ -200,6 +200,9 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	}
 
 	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, *args.WhitelistID, *args.Mumble, steamGroup, *args.Password)
+	lob.Lock()
+	defer lob.Unlock()
+
 	lob.TwitchChannel = twitchChan
 	lob.CreatedBySteamID = player.SteamID
 	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
@@ -348,6 +351,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 
 	//logrus.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
 	lob, tperr := models.GetLobbyByID(*args.Id)
+
 	if tperr != nil {
 		return tperr
 	}
@@ -384,7 +388,8 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 	}
 
 	//check if lobby isn't already in progress (which happens when the player is subbing)
-	if lob.IsFull() && lob.State != models.LobbyStateInProgress {
+	lob.Lock()
+	if lob.IsFull() && lob.State != models.LobbyStateInProgress && lob.State != models.LobbyStateReadyingUp {
 		lob.State = models.LobbyStateReadyingUp
 		lob.ReadyUpTimestamp = time.Now().Unix() + 30
 		lob.Save()
@@ -410,6 +415,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 			}{30})
 		models.BroadcastLobbyList()
 	}
+	lob.Unlock()
 
 	if lob.State == models.LobbyStateInProgress { //this happens when the player is a substitute
 		db.DB.Preload("ServerInfo").First(lob, lob.ID)
