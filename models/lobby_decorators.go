@@ -96,6 +96,10 @@ type SubstituteData struct {
 	Mumble bool   `json:"mumbleRequired"`
 	Team   string `sql:"-" json:"team"`
 	Class  string `sql:"-" json:"class"`
+
+	TwitchChannel string `json:"twitchChannel"`
+	SteamGroup    string `json:"steamGroup"`
+	Password      bool   `json:"password"`
 }
 
 type LobbyEvent struct {
@@ -275,6 +279,9 @@ func DecorateSubstitute(slot *LobbySlot) SubstituteData {
 	substitute.Region.Code = lobby.RegionCode
 
 	substitute.Team, substitute.Class, _ = LobbyGetSlotInfoString(lobby.Type, slot.Slot)
+	substitute.Password = lobby.SlotPassword != ""
+	substitute.TwitchChannel = lobby.TwitchChannel
+	substitute.SteamGroup = lobby.PlayerWhitelist
 
 	return substitute
 }
