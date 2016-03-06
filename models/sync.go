@@ -43,7 +43,10 @@ func (lobby *Lobby) CreateLock() {
 
 func (lobby *Lobby) deleteLock() {
 	mu.Lock()
+	lock := lobbyLocks[lobby.ID]
+	lock.Lock()
 	delete(lobbyLocks, lobby.ID)
+	lock.Unlock()
 	mu.Unlock()
 }
 
