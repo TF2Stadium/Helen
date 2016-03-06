@@ -7,7 +7,7 @@ import (
 
 var (
 	mu         = new(sync.RWMutex)
-	lobbyLocks = make(map[uint]*sync.RWMutex)
+	lobbyLocks = make(map[uint]*sync.Mutex)
 )
 
 //Lock aquires the lock for the given lobby.
@@ -37,16 +37,18 @@ func (lobby *Lobby) Unlock() {
 //CreateLock creates a lock for lobby
 func (lobby *Lobby) CreateLock() {
 	mu.Lock()
-	lobbyLocks[lobby.ID] = new(sync.RWMutex)
+	lobbyLocks[lobby.ID] = new(sync.Mutex)
 	mu.Unlock()
 }
 
 func (lobby *Lobby) deleteLock() {
 	mu.Lock()
-	lock := lobbyLocks[lobby.ID]
-	lock.Lock()
-	delete(lobbyLocks, lobby.ID)
-	lock.Unlock()
+	lock, ok := lobbyLocks[lobby.ID]
+	if ok {
+		lock.Lock()
+		delete(lobbyLocks, lobby.ID)
+		lock.Unlock()
+	}
 	mu.Unlock()
 }
 
@@ -59,6 +61,6 @@ func CreateLocks() {
 
 	db.DB.Model(&Lobby{}).Where("state <> ?", LobbyStateEnded).Pluck("id", &ids)
 	for _, id := range ids {
-		lobbyLocks[id] = new(sync.RWMutex)
+		lobbyLocks[id] = new(sync.Mutex)
 	}
 }
