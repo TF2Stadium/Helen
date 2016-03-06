@@ -118,7 +118,7 @@ func TestLobbyAdd(t *testing.T) {
 	assert.NotNil(t, err)
 
 	lobby2 := testhelpers.CreateLobby()
-	defer lobby.Close(false, true)
+	defer lobby2.Close(false, true)
 	lobby2.Save()
 
 	// try to add a player while they're in another lobby
