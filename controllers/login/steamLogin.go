@@ -6,6 +6,7 @@ package login
 
 import (
 	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 
@@ -23,8 +24,11 @@ var (
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	redirecturl, _ := url.Parse(config.Constants.PublicAddress)
+	redirecturl.Path = "openidcallback"
+
 	if url, err := openid.RedirectURL("http://steamcommunity.com/openid",
-		config.Constants.PublicAddress+"/openidcallback",
+		redirecturl.String(),
 		config.Constants.OpenIDRealm); err == nil {
 		http.Redirect(w, r, url, 303)
 	} else {
@@ -90,8 +94,12 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	regex := regexp.MustCompile(`http://steamcommunity.com/openid/id/(\d+)`)
 
-	fullURL := config.Constants.PublicAddress + r.URL.String()
-	idURL, err := openid.Verify(fullURL, discoveryCache, nonceStore)
+	publicURL, _ := url.Parse(config.Constants.PublicAddress)
+	// this wouldnt be used anymore, so modify it directly
+	r.URL.Scheme = publicURL.Scheme
+	r.URL.Host = publicURL.Host
+
+	idURL, err := openid.Verify(r.URL.String(), discoveryCache, nonceStore)
 	if err != nil {
 		http.Error(w, "Steam Authentication failed, please try again.", 500)
 		logrus.Error(err)
