@@ -205,6 +205,7 @@ func (l *Lobby) CurrentState() LobbyState {
 
 func (l *Lobby) SetState(s LobbyState) {
 	db.DB.Table("lobbies").Where("id = ?", l.ID).UpdateColumn("state", s)
+	l.State = s
 }
 
 //GetPlayerSlotObj returns the LobbySlot object if the given player occupies a slot in the lobby.
@@ -745,11 +746,12 @@ func (lobby *Lobby) SubNotInGamePlayers() {
 
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes
 func (lobby *Lobby) Start() {
+	lobby.Lock()
 	if lobby.State == LobbyStateInProgress {
+		lobby.Unlock()
 		return
 	}
 
-	lobby.Lock()
 	db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", LobbyStateInProgress)
 	lobby.Unlock()
 
