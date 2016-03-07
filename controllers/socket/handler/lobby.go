@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -24,7 +25,6 @@ import (
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/servemetf"
 	"github.com/TF2Stadium/wsevent"
-	"strconv"
 )
 
 type Lobby struct{}
@@ -94,6 +94,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
 	// restrict lobby slots to twitch subs for a particular channel
 	TwitchWhitelist *string `json:"twitchWhitelist" empty:"-"`
+	//TwitchRestrictionType *string `json:"twitchRestrictionType" empty:"-" valid:"subscriber,follower"`
 
 	Requirements *struct {
 		Classes map[string]Requirement `json:"classes,omitempty"`
@@ -403,8 +404,10 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 			//remove unreadied players and unready the
 			//rest.
 			if state != models.LobbyStateInProgress && state != models.LobbyStateEnded {
-				removeUnreadyPlayers(lob)
 				lob.SetState(models.LobbyStateWaiting)
+				removeUnreadyPlayers(lob)
+				lob.UnreadyAllPlayers()
+				//get updated lobby object
 				lob, _ = models.GetLobbyByID(lob.ID)
 				models.BroadcastLobby(lob)
 			}
