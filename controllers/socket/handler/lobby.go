@@ -405,6 +405,8 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 			if state != models.LobbyStateInProgress && state != models.LobbyStateEnded {
 				removeUnreadyPlayers(lob)
 				lob.SetState(models.LobbyStateWaiting)
+				lob, _ = models.GetLobbyByID(lob.ID)
+				models.BroadcastLobby(lob)
 			}
 			helpers.GlobalWait.Done()
 		})
