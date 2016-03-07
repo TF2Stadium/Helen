@@ -85,6 +85,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cookie.Domain = config.Constants.CookieDomain
 	cookie.MaxAge = -1
 	cookie.Expires = time.Time{}
 	http.SetCookie(w, cookie)
