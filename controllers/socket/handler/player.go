@@ -76,7 +76,9 @@ func (Player) PlayerNotReady(so *wsevent.Client, _ struct{}) interface{} {
 		return tperr
 	}
 
+	lobby.SetState(models.LobbyStateWaiting)
 	lobby.UnreadyAllPlayers()
+	models.BroadcastLobby(lobby)
 	return emptySuccess
 }
 
