@@ -156,49 +156,31 @@ func (player *Player) SetExternalLinks() {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	resp, err = helpers.HTTPClient.Do(req)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
+	if err == nil {
+		json.NewDecoder(resp.Body).Decode(&reply)
 
-	dec := json.NewDecoder(resp.Body)
-	err = dec.Decode(&reply)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-
-	if reply.Player != nil {
-		url := fmt.Sprintf(`http://beta.etf2l.org/forum/user/%d/`, reply.Player.ID)
-		player.ExternalLinks["etf2l"] = &url
+		if reply.Player != nil {
+			url := fmt.Sprintf(`http://beta.etf2l.org/forum/user/%d/`, reply.Player.ID)
+			player.ExternalLinks["etf2l"] = &url
+		}
 	}
 
 	// teamfortress.tv
 	tftv := fmt.Sprintf("http://www.teamfortress.tv/api/users/%s", player.SteamID)
 	resp, err = helpers.HTTPClient.Get(tftv)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
+	if err == nil {
+		var tftvReply struct {
+			UserName     string `json:"user_name"`
+			Banned       string `json:"banned"`
+			RegisteredOn string `json:"registered_on"`
+		}
 
-	var tftvReply struct {
-		UserName     string `json:"user_name"`
-		Banned       string `json:"banned"`
-		RegisteredOn string `json:"registered_on"`
+		json.NewDecoder(resp.Body).Decode(&tftvReply)
+		if tftvReply.UserName != "" {
+			uname := fmt.Sprintf("http://teamfortress.tv/user/%s", tftvReply.UserName)
+			player.ExternalLinks["tftv"] = &uname
+		}
 	}
-
-	dec = json.NewDecoder(resp.Body)
-	err = dec.Decode(&tftvReply)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-
-	if tftvReply.UserName != "" {
-		uname := fmt.Sprintf("http://teamfortress.tv/user/%s", tftvReply.UserName)
-		player.ExternalLinks["tftv"] = &uname
-	}
-
 }
 
 func (player *Player) GenAuthKey() string {
