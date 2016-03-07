@@ -403,7 +403,11 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 			//if all player's haven't readied up,
 			//remove unreadied players and unready the
 			//rest.
-			if state != models.LobbyStateInProgress && state != models.LobbyStateEnded {
+			//don't do this when:
+			//  lobby.State == Waiting (someone already unreadied up, so all players have been unreadied)
+			// lobby.State == InProgress (all players have readied up, so the lobby has started)
+			// lobby.State == Ended (the lobby has been closed)
+			if state != models.LobbyStateWaiting && state != models.LobbyStateInProgress && state != models.LobbyStateEnded {
 				lob.SetState(models.LobbyStateWaiting)
 				removeUnreadyPlayers(lob)
 				lob.UnreadyAllPlayers()
