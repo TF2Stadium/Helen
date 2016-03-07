@@ -557,7 +557,9 @@ func (lobby *Lobby) IsPlayerReady(player *Player) (bool, error) {
 
 //UnreadyAllPlayers unreadies all players in the lobby
 func (lobby *Lobby) UnreadyAllPlayers() error {
+	lobby.Lock()
 	err := db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).UpdateColumn("ready", false).Error
+	lobby.Unlock()
 
 	lobby.OnChange(false)
 	return err
