@@ -25,6 +25,7 @@ import (
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/servemetf"
 	"github.com/TF2Stadium/wsevent"
+	"net/http"
 )
 
 type Lobby struct{}
@@ -79,6 +80,11 @@ func newRequirement(team, class string, requirement Requirement, lobby *models.L
 	return nil
 }
 
+func isTwitchChannelValid(name string) bool {
+	resp, err := helpers.HTTPClient.Get("https://api.twitch.tv/kraken/channels/" + name)
+	return err == nil && resp.StatusCode != 404
+}
+
 func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	Map         *string        `json:"map"`
 	Type        *string        `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
@@ -110,6 +116,18 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	var steamGroup string
 	var twitchChan string
 	var servemeID int
+	if *args.TwitchWhitelist != "" {
+		if player.TwitchName == "" {
+			return errors.New("Please connect your Twitch account first")
+		}
+		if !isTwitchChannelValid(*args.TwitchWhitelist) {
+			return errors.New("Twitch channel is not valid")
+		}
+		if !player.IsSubscribed(*args.TwitchWhitelist) && player.TwitchName != *args.TwitchWhitelist {
+			return fmt.Errorf("You need to either be subscribed or connect with %s", *args.TwitchWhitelist)
+		}
+	}
+
 	if *args.SteamGroupWhitelist != "" {
 		if reSteamGroup.MatchString(*args.SteamGroupWhitelist) {
 			steamGroup = reSteamGroup.FindStringSubmatch(*args.SteamGroupWhitelist)[1]
