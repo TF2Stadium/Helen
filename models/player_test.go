@@ -5,7 +5,6 @@
 package models_test
 
 import (
-	"log"
 	"testing"
 	"time"
 
@@ -16,10 +15,6 @@ import (
 	. "github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	testhelpers.CleanupDB()
-}
 
 func TestGetPlayer(t *testing.T) {
 	t.Parallel()
@@ -154,7 +149,7 @@ func TestPlayerBanning(t *testing.T) {
 	assert.True(t, isBannedFull)
 	assert.True(t, future.Sub(untilFull) < time.Second)
 	assert.True(t, untilFull.Sub(future) < time.Second)
-	log.Println(future.Sub(untilFull))
+	t.Log(future.Sub(untilFull))
 
 	isBannedJoin, untilJoin := player2.IsBannedWithTime(PlayerBanJoin)
 	assert.True(t, isBannedJoin)
@@ -165,8 +160,8 @@ func TestPlayerBanning(t *testing.T) {
 	player2.BanUntil(future2, PlayerBanJoin, "they suck")
 
 	bans, err := player2.GetActiveBans()
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(bans))
+	assert.NoError(t, err)
+	assert.Len(t, bans, 2)
 
 	player2.Unban(PlayerBanJoin)
 	player2.Unban(PlayerBanFull)
