@@ -64,7 +64,7 @@ func MockLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	player.UpdatePlayerInfo()
-	key := controllerhelpers.NewToken(player.ID, steamid, player.Role)
+	key := controllerhelpers.NewToken(player)
 	cookie := &http.Cookie{
 		Name:    "auth-jwt",
 		Value:   key,
@@ -136,7 +136,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	player.UpdatePlayerInfo()
-	key := controllerhelpers.NewToken(player.ID, steamid, player.Role)
+	key := controllerhelpers.NewToken(player)
 	cookie := &http.Cookie{
 		Name:    "auth-jwt",
 		Value:   key,

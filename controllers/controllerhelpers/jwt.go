@@ -9,7 +9,6 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/dgrijalva/jwt-go"
 )
@@ -32,11 +31,11 @@ func SetupJWTSigning() {
 	}
 }
 
-func NewToken(playerid uint, steamid string, role authority.AuthRole) string {
+func NewToken(player *models.Player) string {
 	token := jwt.New(jwt.SigningMethodHS512)
-	token.Claims["player_id"] = strconv.FormatUint(uint64(playerid), 10)
-	token.Claims["steam_id"] = steamid
-	token.Claims["role"] = strconv.Itoa(int(role))
+	token.Claims["player_id"] = strconv.FormatUint(uint64(player.ID), 10)
+	token.Claims["steam_id"] = player.SteamID
+	token.Claims["role"] = strconv.Itoa(int(player.Role))
 	token.Claims["iat"] = time.Now().Unix()
 	token.Claims["iss"] = config.Constants.PublicAddress
 
