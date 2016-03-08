@@ -4,7 +4,11 @@
 
 package models
 
-import "github.com/TF2Stadium/Helen/database"
+import (
+	"time"
+
+	"github.com/TF2Stadium/Helen/database"
+)
 
 type PlayerStats struct {
 	ID uint `json:"-"`
@@ -16,17 +20,28 @@ type PlayerStats struct {
 	PlayedUltiduoCount    int `sql:"played_ultiduo_count",json:"playedUltiduoCount"`
 	PlayedBballCount      int `sql:"played_bball_count",json:"playedBballCount"`
 
-	Scout    int `json:"scout"`
-	Soldier  int `json:"soldier"`
-	Pyro     int `json:"pyro"`
-	Engineer int `json:"engineer"`
-	Heavy    int `json:"heavy"`
-	Demoman  int `json:"demoman"`
-	Sniper   int `json:"sniper"`
-	Medic    int `json:"medic"`
-	Spy      int `json:"spy"`
+	Scout         int           `json:"scout"`
+	ScoutHours    time.Duration `json:"scoutHours"`
+	Soldier       int           `json:"soldier"`
+	SoldierHours  time.Duration `json:"soldierHours"`
+	Pyro          int           `json:"pyro"`
+	PyroHours     time.Duration `json:"pyroHours"`
+	Engineer      int           `json:"engineer"`
+	EngineerHours time.Duration `json:"engineerHours"`
+	Heavy         int           `json:"heavy"`
+	HeavyHours    time.Duration `json:"heavyHours"`
+	Demoman       int           `json:"demoman"`
+	DemoHours     time.Duration `json:"demomanHours"`
+	Sniper        int           `json:"sniper"`
+	SniperHours   time.Duration `json:"sniperHours"`
+	Medic         int           `json:"medic"`
+	MedicHours    time.Duration `json:"medicHours"`
+	Spy           int           `json:"spy"`
+	SpyHours      time.Duration `json:"spyHours"`
 
 	Substitutes int `json:"substitutes"`
+	Headshots   int `json:"headshots"`
+	Airshots    int `json:"airshots"`
 }
 
 func NewPlayerStats() PlayerStats {
@@ -62,24 +77,25 @@ func (ps *PlayerStats) IncreaseSubCount() {
 
 func (ps *PlayerStats) IncreaseClassCount(lobby *Lobby, slot int) {
 	_, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)
-	classes := map[string]*int{
-		"scout":    &ps.Scout,
-		"scout1":   &ps.Scout,
-		"scout2":   &ps.Scout,
-		"roamer":   &ps.Soldier,
-		"pocket":   &ps.Soldier,
-		"soldier":  &ps.Soldier,
-		"soldier1": &ps.Soldier,
-		"soldier2": &ps.Soldier,
-		"pyro":     &ps.Pyro,
-		"engineer": &ps.Engineer,
-		"heavy":    &ps.Heavy,
-		"demoman":  &ps.Demoman,
-		"sniper":   &ps.Sniper,
-		"medic":    &ps.Medic,
-		"spy":      &ps.Spy,
+	switch class {
+	case "scout", "scout1", "scout2":
+		ps.Scout++
+	case "roamer", "pocket", "soldier", "soldier1", "soldier2":
+		ps.Soldier++
+	case "pyro":
+		ps.Pyro++
+	case "engineer":
+		ps.Engineer++
+	case "heavy":
+		ps.Heavy++
+	case "demoman":
+		ps.Demoman++
+	case "sniper":
+		ps.Sniper++
+	case "medic":
+		ps.Medic++
+	case "spy":
+		ps.Spy++
 	}
-
-	*(classes[class])++
 	database.DB.Save(ps)
 }
