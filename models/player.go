@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -23,7 +24,7 @@ import (
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/PlayerStatsScraper"
 	"github.com/jinzhu/gorm"
-	"strings"
+	"github.com/jinzhu/gorm/dialects/postgres"
 )
 
 // Stores types of bans
@@ -72,7 +73,7 @@ type Player struct {
 	Name       string             `json:"name"`              // Player name
 	Role       authority.AuthRole `sql:"default:0" json:"-"` // Role is player by default
 
-	Settings gorm.Hstore `json:"-"`
+	Settings postgres.Hstore `json:"-"`
 
 	MumbleUsername string `sql:"unique" json:"mumbleUsername"`
 	MumbleAuthkey  string `sql:"not null;unique" json:"-"`
@@ -81,7 +82,7 @@ type Player struct {
 	TwitchName        string `json:"twitchName"`
 	IsStreaming       bool   `json:"isStreaming"`
 
-	ExternalLinks gorm.Hstore `json:"external_links,omitempty"`
+	ExternalLinks postgres.Hstore `json:"external_links,omitempty"`
 
 	JSONFields
 }
@@ -124,7 +125,7 @@ func NewPlayer(steamId string) (*Player, error) {
 }
 
 func (player *Player) SetExternalLinks() {
-	player.ExternalLinks = make(gorm.Hstore)
+	player.ExternalLinks = make(postgres.Hstore)
 	defer player.Save()
 
 	// logs.tf
@@ -371,7 +372,7 @@ func (player *Player) UpdatePlayerInfo() error {
 
 func (player *Player) SetSetting(key string, value string) {
 	if player.Settings == nil {
-		player.Settings = make(gorm.Hstore)
+		player.Settings = make(postgres.Hstore)
 	}
 
 	player.Settings[key] = &value

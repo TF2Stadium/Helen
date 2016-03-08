@@ -19,7 +19,7 @@ import (
 // will only use to change main db name
 var (
 	IsTest      bool = false
-	DB          gorm.DB
+	DB          *gorm.DB
 	dbMutex     sync.Mutex
 	initialized = false
 	DBUrl       url.URL

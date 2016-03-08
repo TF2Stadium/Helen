@@ -11,7 +11,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/jinzhu/gorm"
+	"github.com/jinzhu/gorm/dialects/postgres"
 )
 
 // major ver -> migration routine
@@ -113,7 +113,7 @@ func setPlayerExternalLinks() {
 	db.DB.Table("players").Find(&players)
 
 	for _, player := range players {
-		player.ExternalLinks = make(gorm.Hstore)
+		player.ExternalLinks = make(postgres.Hstore)
 		player.SetExternalLinks()
 		player.Save()
 	}

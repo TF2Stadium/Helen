@@ -251,7 +251,7 @@ func GetLobbyByIDServer(id uint) (*Lobby, error) {
 	lob := &Lobby{}
 	err := db.DB.Preload("ServerInfo").First(lob, id).Error
 
-	if err == gorm.RecordNotFound {
+	if err == gorm.ErrRecordNotFound {
 		return nil, ErrLobbyNotFound
 	}
 
@@ -263,7 +263,7 @@ func GetLobbyByID(id uint) (*Lobby, error) {
 	lob := &Lobby{}
 	err := db.DB.First(lob, id).Error
 
-	if err == gorm.RecordNotFound {
+	if err == gorm.ErrRecordNotFound {
 		return nil, ErrLobbyNotFound
 	}
 
