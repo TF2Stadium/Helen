@@ -25,7 +25,6 @@ import (
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/servemetf"
 	"github.com/TF2Stadium/wsevent"
-	"net/http"
 )
 
 type Lobby struct{}
