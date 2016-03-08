@@ -213,10 +213,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	}
 
 	lob.Save()
-
 	lob.CreateLock()
-	lob.Lock()
-	defer lob.Unlock()
 
 	err := lob.SetupServer()
 	if err != nil { //lobby setup failed, delete lobby and corresponding server record
