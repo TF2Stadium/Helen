@@ -7,6 +7,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
+	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 )
@@ -16,8 +17,21 @@ type Event struct {
 	Name    string
 	SteamID string
 
-	LobbyID uint
-	LogsID  int //logs.tf ID
+	LobbyID    uint
+	LogsID     int //logs.tf ID
+	ClassTimes map[string]*classTime
+}
+
+type classTime struct {
+	Scout    time.Duration
+	Soldier  time.Duration
+	Pyro     time.Duration
+	Demoman  time.Duration
+	Heavy    time.Duration
+	Engineer time.Duration
+	Sniper   time.Duration
+	Medic    time.Duration
+	Spy      time.Duration
 }
 
 //Event names
@@ -66,7 +80,7 @@ func StartListening() {
 				case DisconnectedFromServer:
 					disconnectedFromServer(event.LobbyID)
 				case MatchEnded:
-					matchEnded(event.LobbyID, event.LogsID)
+					matchEnded(event.LobbyID, event.LogsID, event.ClassTimes)
 				}
 			case <-stop:
 				return
@@ -130,10 +144,28 @@ func disconnectedFromServer(lobbyID uint) {
 	models.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
 }
 
-func matchEnded(lobbyID uint, logsID int) {
+func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
 	lobby, _ := models.GetLobbyByIDServer(lobbyID)
 	lobby.Close(false, true)
 
 	msg := fmt.Sprintf("Lobby Ended. Logs: http://logs.tf/%d", logsID)
 	models.SendNotification(msg, int(lobby.ID))
+	for steamid, times := range classTimes {
+		player, err := models.GetPlayerWithStats(steamid)
+		if err != nil {
+			logrus.Error("Couldn't find player ", steamid)
+			continue
+		}
+
+		player.Stats.ScoutHours += times.Scout
+		player.Stats.SoldierHours += times.Soldier
+		player.Stats.PyroHours += times.Pyro
+		player.Stats.DemoHours += times.Demoman
+		player.Stats.HeavyHours += times.Heavy
+		player.Stats.EngineerHours += times.Engineer
+		player.Stats.SpyHours += times.Spy
+		player.Stats.MedicHours += times.Medic
+		player.Stats.SniperHours += times.Sniper
+		db.DB.Save(player.Stats)
+	}
 }
