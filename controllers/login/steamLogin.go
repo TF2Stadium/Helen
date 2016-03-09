@@ -102,8 +102,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	idURL, err := openid.Verify(r.URL.String(), discoveryCache, nonceStore)
 	if err != nil {
-		http.Error(w, "Steam Authentication failed, please try again.", 500)
-		logrus.Error(err)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
