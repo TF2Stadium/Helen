@@ -11,18 +11,17 @@ import (
 )
 
 var (
-	mapMu = new(sync.RWMutex)
-	//steamid -> client array, since players can have multiple tabs open
-	steamIDSockets = make(map[string][]*wsevent.Client)
-	//socketid -> id of lobby the socket is spectating
-	socketSpectating = make(map[string]uint)
+	socketsMu        = new(sync.RWMutex)
+	steamIDSockets   = make(map[string][]*wsevent.Client) //steamid -> client array, since players can have multiple tabs open
+	socketSpectating = make(map[string]uint)              //socketid -> id of lobby the socket is spectating
+	connectedMu      = new(sync.RWMutex)
 	steamIDConnected = make(map[string](chan struct{}))
 )
 
 //AddSocket adds so to the list of sockets connected from steamid
 func AddSocket(steamid string, so *wsevent.Client) {
-	mapMu.Lock()
-	defer mapMu.Unlock()
+	socketsMu.Lock()
+	defer socketsMu.Unlock()
 
 	steamIDSockets[steamid] = append(steamIDSockets[steamid], so)
 	if len(steamIDSockets[steamid]) == 1 {
@@ -35,8 +34,8 @@ func AddSocket(steamid string, so *wsevent.Client) {
 
 //RemoveSocket removes so from the list of sockets connected from steamid
 func RemoveSocket(sessionID, steamID string) {
-	mapMu.Lock()
-	defer mapMu.Unlock()
+	socketsMu.Lock()
+	defer socketsMu.Unlock()
 
 	clients := steamIDSockets[steamID]
 	for i, socket := range clients {
@@ -58,8 +57,8 @@ func RemoveSocket(sessionID, steamID string) {
 //GetSockets returns a list of sockets connected from steamid. The second return value is
 //false if they player has no sockets connected
 func GetSockets(steamid string) (sockets []*wsevent.Client, success bool) {
-	mapMu.RLock()
-	defer mapMu.RUnlock()
+	socketsMu.RLock()
+	defer socketsMu.RUnlock()
 
 	sockets, success = steamIDSockets[steamid]
 	return
@@ -79,10 +78,10 @@ func ConnectedSockets(steamid string) int {
 //AfterDisconnectedFunc waits the duration to elapse, and if the player with the given
 //steamid is still disconnected, calls f in it's own goroutine.
 func AfterDisconnectedFunc(steamid string, d time.Duration, f func()) {
-	mapMu.Lock()
+	connectedMu.Lock()
 	stop := make(chan struct{}, 1)
 	steamIDConnected[steamid] = stop
-	mapMu.Unlock()
+	connectedMu.Unlock()
 
 	c := time.After(d)
 
@@ -96,8 +95,8 @@ func AfterDisconnectedFunc(steamid string, d time.Duration, f func()) {
 			return
 		}
 
-		mapMu.Lock()
+		connectedMu.Lock()
 		delete(steamIDConnected, steamid)
-		mapMu.Unlock()
+		connectedMu.Unlock()
 	}()
 }
