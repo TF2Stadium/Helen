@@ -23,6 +23,7 @@ func (p *Player) setJSONFields(stats, lobbies, streaming bool) {
 	*p.PlaceholderLobbiesPlayed = p.Stats.TotalLobbies()
 
 	if stats {
+		p.Stats.Total = p.Stats.TotalLobbies()
 		p.PlaceholderStats = &p.Stats
 	}
 
