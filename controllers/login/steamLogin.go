@@ -99,7 +99,6 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// this wouldnt be used anymore, so modify it directly
 	r.URL.Scheme = publicURL.Scheme
 	r.URL.Host = publicURL.Host
-
 	idURL, err := openid.Verify(r.URL.String(), discoveryCache, nonceStore)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -134,7 +133,12 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		database.DB.Create(player)
 	}
 
-	player.UpdatePlayerInfo()
+	go func() {
+		if time.Since(player.ProfileUpdatedAt) >= 1*time.Hour {
+			player.UpdatePlayerInfo()
+		}
+	}()
+
 	key := controllerhelpers.NewToken(player)
 	cookie := &http.Cookie{
 		Name:    "auth-jwt",
