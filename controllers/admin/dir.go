@@ -24,14 +24,10 @@ var roleForm = map[string]string{
 	"mod":   "Add Moderator",
 }
 
-var adminPagetempl *template.Template
-
-func init() {
-	adminPagetempl, _ = template.ParseFiles("./views/admin/index.html")
-}
+var adminPageTempl *template.Template
 
 func ServeAdminPage(w http.ResponseWriter, r *http.Request) {
-	adminPagetempl.Execute(w, map[string]interface{}{
+	adminPageTempl.Execute(w, map[string]interface{}{
 		"BanForms":  banForm,
 		"RoleForms": roleForm,
 		"XSRFToken": xsrftoken.Generate(config.Constants.CookieStoreSecret, "admin", "POST"),

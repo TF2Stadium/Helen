@@ -23,10 +23,6 @@ var (
 	chatLogsTempl *template.Template
 )
 
-func init() {
-	chatLogsTempl, _ = template.ParseFiles("views/admin/templates/chatlogs.html")
-}
-
 func getPlayerID(steamID string) (playerID uint) {
 	db.DB.Table("players").Select("id").Where("steam_id = ?", steamID).Row().Scan(&playerID)
 	return

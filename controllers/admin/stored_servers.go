@@ -10,6 +10,8 @@ import (
 	"golang.org/x/net/xsrftoken"
 )
 
+var serverPage *template.Template
+
 func AddServer(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	values := r.Form
@@ -66,12 +68,6 @@ func RemoveServer(w http.ResponseWriter, r *http.Request) {
 
 	models.RemoveStoredServer(addr)
 	fmt.Fprintf(w, "Server successfully deleted.")
-}
-
-var serverPage *template.Template
-
-func init() {
-	serverPage, _ = template.ParseFiles("views/admin/templates/server.html")
 }
 
 func ViewServerPage(w http.ResponseWriter, r *http.Request) {

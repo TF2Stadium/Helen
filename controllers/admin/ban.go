@@ -17,10 +17,6 @@ import (
 
 var banlogsTempl *template.Template
 
-func init() {
-	banlogsTempl, _ = template.ParseFiles("views/admin/templates/ban_logs.html")
-}
-
 func BanPlayer(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
