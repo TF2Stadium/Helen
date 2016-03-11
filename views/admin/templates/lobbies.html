@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+  </head>
+
+  <body>
+    <table class="pure-table">
+      <thead>
+	<tr>
+	  <td>ID</td>
+	  <td>Server</td>
+	  <td>RCON</td>
+	</tr>
+      </thead>
+      <tbody>
+	{{range .Lobbies}}
+	<tr>
+	  <td><a href="{{.FrontendURL}}/lobby/{{.ID}}">Lobby #{{.ID}}</td>
+	</tr>
+	{{end}}
+      </tbody>
+      
+    </table>
+  </body>
+</html>

@@ -39,6 +39,7 @@ var routes = []route{
 	{"/admin/server/", chelpers.FilterHTTPRequest(helpers.ModifyServers, admin.ViewServerPage)},
 	{"/admin/server/add", chelpers.FilterHTTPRequest(helpers.ModifyServers, admin.AddServer)},
 	{"/admin/server/remove", chelpers.FilterHTTPRequest(helpers.ModifyServers, admin.RemoveServer)},
+	{"/admin/lobbies", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.ViewOpenLobbies)},
 
 	{"/health", controllers.Health},
 }
