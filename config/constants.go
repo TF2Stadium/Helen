@@ -41,9 +41,9 @@ type constants struct {
 	ServeStatic      bool   `envconfig:"SERVE_STATIC" default:"true" doc:"Serve /static/"`
 	RabbitMQURL      string `envconfig:"RABBITMQ_URL" default:"amqp://guest:guest@localhost:5672/" doc:"URL for AMQP server"`
 	PaulingQueue     string `envconfig:"PAULING_QUEUE" default:"pauling" doc:"Name of queue over which RPC calls to Pauling are sent"`
+	TwitchBotQueue   string `envconfig:"TWITCHBOT_QUEUE" default:"twitchbot"`
 	FumbleQueue      string `envconfig:"FUMBLE_QUEUE" default:"fumble" doc:"Name of queue over which RPC calls to Fumble are sent"`
 	RabbitMQQueue    string `envconfig:"RABBITMQ_QUEUE" default:"events" doc:"Name of queue over which events are sent"`
-	RabbitMQExchange string `envconfig:"RABBITMQ_EXCHANGE" default:"helen-fanout" doc:"Name of queue over which socket messages are fanned out to other Helen instances"`
 	Servers          string `envconfig:"SERVERS"`
 
 	// database
