@@ -42,6 +42,7 @@ var routes = []route{
 	{"/admin/lobbies", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.ViewOpenLobbies)},
 
 	{"/health", controllers.Health},
+	{"/badge/", controllers.TwitchBadge},
 }
 
 func SetupHTTP(mux *http.ServeMux) {
