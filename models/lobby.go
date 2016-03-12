@@ -390,7 +390,8 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 			if player.TwitchAccessToken == "" {
 				return errors.New("You need to connect your Twitch Account first to join the lobby.")
 			}
-			if !player.IsSubscribed(lobby.TwitchChannel) {
+			// allow channel owners
+			if player.TwitchName != lobby.TwitchChannel && !player.IsSubscribed(lobby.TwitchChannel) {
 				return fmt.Errorf("You aren't subscribed to %s", lobby.TwitchChannel)
 			}
 		}
@@ -398,17 +399,19 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 
 	// Check if player is a substitute (the slot needs a subtitute)
 	if isSubstitution {
-		//kicks previous slot occupant if they're in-game, resets their !rep count, removes them from the lobby
-		DisallowPlayer(lobby.ID, player.SteamID)
 		//delete previous slot
 		lobby.Lock()
 		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Delete(&LobbySlot{})
 		lobby.Unlock()
 
-		BroadcastSubList() //since the sub slot has been deleted, broadcast the updated substitute list
-		//notify players in game server of subtitute
-		class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
-		Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
+		go func() {
+			//kicks previous slot occupant if they're in-game, resets their !rep count, removes them from the lobby
+			DisallowPlayer(lobby.ID, player.SteamID)
+			BroadcastSubList() //since the sub slot has been deleted, broadcast the updated substitute list
+			//notify players in game server of subtitute
+			class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
+			Say(lobby.ID, fmt.Sprintf("Substitute found for %s %s: %s (%s)", team, class, player.Name, player.SteamID))
+		}()
 		//allow player in mumble
 	}
 
@@ -424,6 +427,14 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 	lobby.Lock()
 	db.DB.Create(newSlotObj)
 	lobby.Unlock()
+	if !slotChange {
+		if !*twitchbotDisabled && player.TwitchName != "" {
+			go twitchbot.Call("TwitchBot.Announce", struct {
+				Channel string
+				LobbyID uint
+			}{player.TwitchName, lobby.ID}, &struct{}{})
+		}
+	}
 
 	lobby.OnChange(true)
 
@@ -773,9 +784,9 @@ func (lobby *Lobby) RealAfterSave() {
 func (lobby *Lobby) OnChange(base bool) {
 	switch lobby.State {
 	case LobbyStateWaiting, LobbyStateInProgress, LobbyStateReadyingUp:
-		BroadcastLobby(lobby)
+		go BroadcastLobby(lobby)
 		if base {
-			BroadcastLobbyList()
+			go BroadcastLobbyList()
 		}
 	}
 }
