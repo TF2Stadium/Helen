@@ -92,7 +92,6 @@ func AfterDisconnectedFunc(steamid string, d time.Duration, f func()) {
 				f()
 			}
 		case <-stop:
-			return
 		}
 
 		connectedMu.Lock()
