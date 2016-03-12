@@ -6,5 +6,5 @@ import (
 )
 
 var HTTPClient = &http.Client{
-	Timeout: 5 * time.Second,
+	Timeout: 20 * time.Second,
 }
