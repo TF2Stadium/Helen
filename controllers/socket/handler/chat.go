@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TF2Stadium/Helen/config"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -65,7 +64,7 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 		}
 	} else {
 		// else room is the lobby list room
-		*args.Room, _ = strconv.Atoi(config.GlobalChatRoom)
+		*args.Room = 0
 	}
 	switch {
 	case len(*args.Message) == 0:

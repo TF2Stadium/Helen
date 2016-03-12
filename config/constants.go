@@ -14,10 +14,8 @@ import (
 )
 
 var (
-	GlobalChatRoom     string = "0"
-	AllowedCorsOrigins        = []string{"*"}
-	SessionName        string = "defaultSession"
-	mdTableTemplate           = template.Must(template.New("doc").Parse(`
+	SessionName     string = "defaultSession"
+	mdTableTemplate        = template.Must(template.New("doc").Parse(`
 | Environment Variable | Description |
 |----------------------|-------------|{{range .}}
 |    ` + "`{{index . 0}}`" + `     |{{index . 1}}|{{end}}
@@ -28,6 +26,7 @@ type constants struct {
 	ListenAddress      string `envconfig:"SERVER_ADDR" default:"localhost:8080" doc:"Address to serve on."`
 	PublicAddress      string `envconfig:"PUBLIC_ADDR" doc:"Publicly accessible address for the server, requires schema"`
 	OpenIDRealm        string `envconfig:"SERVER_OPENID_REALM" default:"http://localhost:8080" doc:"The OpenID Realm (See: [Section 9.2 of the OpenID Spec](https://openid.net/specs/openid-authentication-2_0-12.html#realms))"`
+	CORSWhitelist      string `envconfig:"CORS_WHITELIST" default:"*"`
 	CookieDomain       string `envconfig:"SERVER_COOKIE_DOMAIN" default:"" doc:"Cookie URL domain"`
 	LoginRedirectPath  string `envconfig:"SERVER_REDIRECT_PATH" default:"http://localhost:8080/" doc:"URL to redirect user to after a successful login"`
 	CookieStoreSecret  string `envconfig:"COOKIE_STORE_SECRET" default:"secret" doc:"base64 encoded key to use for encrypting cookies"`
@@ -44,7 +43,6 @@ type constants struct {
 	TwitchBotQueue   string `envconfig:"TWITCHBOT_QUEUE" default:"twitchbot"`
 	FumbleQueue      string `envconfig:"FUMBLE_QUEUE" default:"fumble" doc:"Name of queue over which RPC calls to Fumble are sent"`
 	RabbitMQQueue    string `envconfig:"RABBITMQ_QUEUE" default:"events" doc:"Name of queue over which events are sent"`
-	Servers          string `envconfig:"SERVERS"`
 
 	// database
 	DbAddr     string `envconfig:"DATABASE_ADDR" default:"127.0.0.1:5432" doc:"Database Address"`

@@ -5,10 +5,8 @@
 package hooks
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
@@ -19,7 +17,7 @@ import (
 )
 
 func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
-	server.Join(so, fmt.Sprintf("%s_public", config.GlobalChatRoom)) //room for global chat
+	server.Join(so, "0_public") //room for global chat
 
 	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(models.GetWaitingLobbies())))
 	chelpers.BroadcastScrollback(so, 0)

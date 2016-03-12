@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -808,7 +807,7 @@ func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
 //BroadcastLobbyList broadcasts the lobby list to all users
 func BroadcastLobbyList() {
 	broadcaster.SendMessageToRoom(
-		fmt.Sprintf("%s_public", config.GlobalChatRoom),
+		"0_public",
 		"lobbyListData", DecorateLobbyListData(GetWaitingLobbies()))
 }
 
