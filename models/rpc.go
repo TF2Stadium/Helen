@@ -16,10 +16,13 @@ import (
 )
 
 var (
-	pauling         *rpc.Client
-	fumble          *rpc.Client
-	paulingDisabled = flag.Bool("disable_pauling", true, "disable pauling")
-	fumbleDisabled  = flag.Bool("disable_fumble", true, "disable fumble")
+	pauling   *rpc.Client
+	fumble    *rpc.Client
+	twitchbot *rpc.Client
+
+	paulingDisabled   = flag.Bool("disable_pauling", true, "disable pauling")
+	fumbleDisabled    = flag.Bool("disable_fumble", true, "disable fumble")
+	twitchbotDisabled = flag.Bool("disable_twitchbot", true, "disable twitch bot")
 )
 
 func ConnectRPC() {
@@ -57,5 +60,21 @@ func ConnectRPC() {
 		}
 
 		fumble = rpc.NewClientWithCodec(codec)
+	}
+	if !*twitchbotDisabled {
+		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.TwitchBotQueue, amqprpc.JSONCodec{})
+		i := 0
+		for {
+			codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.TwitchBotQueue, amqprpc.JSONCodec{})
+			if err == nil {
+				break
+			}
+			if i == 5 {
+				logrus.Fatal(err)
+			}
+			time.Sleep(1 * time.Second)
+			i++
+		}
+		twitchbot = rpc.NewClientWithCodec(codec)
 	}
 }
