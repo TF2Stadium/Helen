@@ -3,6 +3,8 @@ package handler
 import (
 	"errors"
 	"regexp"
+	"sync"
+	"time"
 
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
@@ -143,4 +145,55 @@ func (Player) PlayerProfile(so *wsevent.Client, args struct {
 
 	player.SetPlayerProfile()
 	return newResponse(player)
+}
+
+var (
+	changeMu = new(sync.RWMutex)
+	//stores the last time the player made a change to
+	//the twitch bot's status (leave/join their channel)
+	lastTwitchBotChange = make(map[uint]time.Time)
+)
+
+func (Player) PlayerEnableTwitchBot(so *wsevent.Client, _ struct{}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+	if player.TwitchName == "" {
+		return errors.New("Please connect your Twitch Account first.")
+	}
+
+	changeMu.RLock()
+	last := lastTwitchBotChange[player.ID]
+	changeMu.RUnlock()
+	if time.Since(last) < time.Minute {
+		return errors.New("Please wait for a minute before changing the bot's status")
+	}
+
+	models.TwitchBotJoin(player.TwitchName)
+
+	changeMu.Lock()
+	lastTwitchBotChange[player.ID] = time.Now()
+	changeMu.Unlock()
+
+	return emptySuccess
+}
+
+func (Player) PlayerDisableTwitchBot(so *wsevent.Client, _ struct{}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+	if player.TwitchName == "" {
+		return errors.New("Please connect your Twitch Account first.")
+	}
+
+	changeMu.RLock()
+	last := lastTwitchBotChange[player.ID]
+	changeMu.RUnlock()
+	if time.Since(last) < time.Minute {
+		return errors.New("Please wait for a minute before changing the bot's status")
+	}
+
+	models.TwitchBotLeave(player.TwitchName)
+
+	changeMu.Lock()
+	lastTwitchBotChange[player.ID] = time.Now()
+	changeMu.Unlock()
+
+	return emptySuccess
 }
