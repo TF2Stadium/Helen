@@ -11,6 +11,13 @@ import (
 var (
 	twitchBadge *template.Template
 	reValidPath = regexp.MustCompile(`badge/(\d+)`)
+	emptyPage   = `
+<html>
+<head>
+<meta http-equiv="refresh" content="5">
+</head>
+</html>
+`
 )
 
 func TwitchBadge(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +37,8 @@ func TwitchBadge(w http.ResponseWriter, r *http.Request) {
 
 	id, err := player.GetLobbyID(false)
 	if err != nil {
-		//player not in lobby right now
+		//player not in lobby right now, just serve a page that refreshes every 5 seconds
+		w.Write([]byte(emptyPage))
 		return
 	}
 
