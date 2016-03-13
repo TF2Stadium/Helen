@@ -91,7 +91,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	ServerType  *string        `json:"serverType" valid:"server,storedServer,serveme"`
 	Serveme     *servemeServer `json:"serveme" empty:"-"`
 	Server      *string        `json:"server" empty:"-"`
-	RconPwd     *string        `json:"rconpwd"`
+	RconPwd     *string        `json:"rconpwd" empty:"-"`
 	WhitelistID *string        `json:"whitelistID"`
 	Mumble      *bool          `json:"mumbleRequired"`
 
@@ -196,7 +196,13 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		}
 		*args.Server = server.Address
 		*args.RconPwd = server.RCONPassword
-		//get stored server here
+	} else { // *args.ServerType == "server"
+		if args.RconPwd == nil || *args.RconPwd == "" {
+			return errors.New("RCON Password cannot be empty")
+		}
+		if args.Server == nil || *args.Server == "" {
+			return errors.New("Server Address cannot be empty")
+		}
 	}
 
 	var count int
