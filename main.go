@@ -30,7 +30,6 @@ import (
 	"github.com/TF2Stadium/Helen/models/event"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
-	"github.com/gorilla/context"
 	"github.com/gorilla/securecookie"
 	"github.com/rs/cors"
 )
@@ -97,7 +96,7 @@ func main() {
 		AllowedOrigins:   []string{config.Constants.CORSWhitelist},
 		AllowedMethods:   []string{"GET", "POST", "DELETE"},
 		AllowCredentials: true,
-	}).Handler(context.ClearHandler(mux))
+	}).Handler(mux)
 
 	pid := &pid.Instance{}
 	if pid.Create() == nil {
