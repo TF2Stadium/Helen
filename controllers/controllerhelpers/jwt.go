@@ -35,6 +35,7 @@ func NewToken(player *models.Player) string {
 	token := jwt.New(jwt.SigningMethodHS512)
 	token.Claims["player_id"] = strconv.FormatUint(uint64(player.ID), 10)
 	token.Claims["steam_id"] = player.SteamID
+	token.Claims["mumble_password"] = player.MumbleAuthkey
 	token.Claims["role"] = strconv.Itoa(int(player.Role))
 	token.Claims["iat"] = time.Now().Unix()
 	token.Claims["iss"] = config.Constants.PublicAddress
