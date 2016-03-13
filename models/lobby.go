@@ -783,16 +783,15 @@ func (lobby *Lobby) RealAfterSave() {
 func (lobby *Lobby) OnChange(base bool) {
 	switch lobby.State {
 	case LobbyStateWaiting, LobbyStateInProgress, LobbyStateReadyingUp:
-		go BroadcastLobby(lobby)
+		BroadcastLobby(lobby)
 		if base {
-			go BroadcastLobbyList()
+			BroadcastLobbyList()
 		}
 	}
 }
 
 //BroadcastLobby broadcasts the lobby to the lobby's public room (id_public)
 func BroadcastLobby(lobby *Lobby) {
-	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
 	room := strconv.FormatUint(uint64(lobby.ID), 10)
 
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%s_public", room), "lobbyData", DecorateLobbyData(lobby, true))
@@ -800,7 +799,6 @@ func BroadcastLobby(lobby *Lobby) {
 
 //BroadcastLobbyToUser broadcasts the lobby to the a user with the given steamID
 func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
-	//db.DB.Preload("Spectators").First(&lobby, lobby.ID)
 	broadcaster.SendMessage(steamid, "lobbyData", DecorateLobbyData(lobby, true))
 }
 
