@@ -14,8 +14,7 @@ import (
 )
 
 var (
-	SessionName     string = "defaultSession"
-	mdTableTemplate        = template.Must(template.New("doc").Parse(`
+	mdTableTemplate = template.Must(template.New("doc").Parse(`
 | Environment Variable | Description |
 |----------------------|-------------|{{range .}}
 |    ` + "`{{index . 0}}`" + `     |{{index . 1}}|{{end}}
