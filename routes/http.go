@@ -43,6 +43,7 @@ var routes = []route{
 
 	{"/health", controllers.Health},
 	{"/badge/", controllers.TwitchBadge},
+	{"/resetMumblePassword", controllers.ResetMumblePassword},
 }
 
 func SetupHTTP(mux *http.ServeMux) {
