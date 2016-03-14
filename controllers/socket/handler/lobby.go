@@ -87,7 +87,7 @@ func isTwitchChannelValid(name string) bool {
 func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	Map         *string        `json:"map"`
 	Type        *string        `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
-	League      *string        `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress"`
+	League      *string        `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress,bballtf"`
 	ServerType  *string        `json:"serverType" valid:"server,storedServer,serveme"`
 	Serveme     *servemeServer `json:"serveme" empty:"-"`
 	Server      *string        `json:"server" empty:"-"`
