@@ -98,7 +98,10 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	Password            *string `json:"password" empty:"-"`
 	SteamGroupWhitelist *string `json:"steamGroupWhitelist" empty:"-"`
 	// restrict lobby slots to twitch subs for a particular channel
-	TwitchWhitelist *string `json:"twitchWhitelist" empty:"-"`
+	// not a pointer, since it is set to false when the argument json
+	// string doesn't have the field
+	TwitchWhitelistSubscribers bool `json:"twitchWhitelistSubs"`
+	TwitchWhitelistFollowers   bool `json:"twitchWhitelistFollows"`
 	//TwitchRestrictionType *string `json:"twitchRestrictionType" empty:"-" valid:"subscriber,follower"`
 
 	Requirements *struct {
@@ -120,19 +123,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	}
 
 	var steamGroup string
-	var twitchChan string
 	var servemeID int
-	if *args.TwitchWhitelist != "" {
-		if player.TwitchName == "" {
-			return errors.New("Please connect your Twitch account first")
-		}
-		if !isTwitchChannelValid(*args.TwitchWhitelist) {
-			return errors.New("Twitch channel is not valid")
-		}
-		if player.TwitchName != *args.TwitchWhitelist {
-			return fmt.Errorf("You aren't the channel owner for %s", *args.TwitchWhitelist)
-		}
-	}
 
 	if *args.SteamGroupWhitelist != "" {
 		if reSteamGroup.MatchString(*args.SteamGroupWhitelist) {
@@ -141,13 +132,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			return errors.New("Invalid Steam group URL")
 		}
 	}
-	if *args.TwitchWhitelist != "" {
-		if reTwitchChan.MatchString(*args.TwitchWhitelist) {
-			twitchChan = reTwitchChan.FindStringSubmatch(*args.TwitchWhitelist)[1]
-		} else {
-			return errors.New("Invalid Twitch channel URL")
-		}
-	}
+
 	if *args.ServerType == "serveme" {
 		if args.Serveme == nil {
 			return errors.New("No serveme info given.")
@@ -231,7 +216,19 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 	lob := models.NewLobby(*args.Map, lobbyType, *args.League, info, *args.WhitelistID, *args.Mumble, steamGroup, *args.Password)
 
-	lob.TwitchChannel = twitchChan
+	if args.TwitchWhitelistSubscribers || args.TwitchWhitelistFollowers {
+		if player.TwitchName == "" {
+			return errors.New("Please connect your twitch account first.")
+		}
+
+		lob.TwitchChannel = player.TwitchName
+		if args.TwitchWhitelistFollowers {
+			lob.TwitchRestriction = models.TwitchFollowers
+		} else {
+			lob.TwitchRestriction = models.TwitchSubscribers
+		}
+	}
+
 	lob.CreatedBySteamID = player.SteamID
 	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP {
