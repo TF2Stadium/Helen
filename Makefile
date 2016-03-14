@@ -12,10 +12,10 @@ assets:
 	-o assets/bindata.go assets/
 
 static: assets/geoip.mmdb assets/bindata.go
-	go build -tags "netgo bindata" -ldflags "-w -linkmode external -extldflags -static" -v -o Helen
+	CGO_ENABLED=0 go build -tags "netgo bindata" -v -o Helen
 
 docker: 
-	go build -tags "netgo bindata" -ldflags "-w -linkmode external -extldflags -static" -v -o Helen
+	CGO_ENABLED=0 go build -tags "netgo bindata" -v -o Helen
 	docker build -t tf2stadium/helen .
 
 cover:
