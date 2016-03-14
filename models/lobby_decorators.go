@@ -34,15 +34,16 @@ type SpecDetails struct {
 }
 
 type LobbyData struct {
-	ID            uint   `json:"id"`
-	Mode          string `json:"gamemode"`
-	Type          string `json:"type"`
-	Players       int    `json:"players"`
-	Map           string `json:"map"`
-	League        string `json:"league"`
-	Mumble        bool   `json:"mumbleRequired"`
-	MaxPlayers    int    `json:"maxPlayers"`
-	TwitchChannel string `json:"twitchChannel"`
+	ID                uint   `json:"id"`
+	Mode              string `json:"gamemode"`
+	Type              string `json:"type"`
+	Players           int    `json:"players"`
+	Map               string `json:"map"`
+	League            string `json:"league"`
+	Mumble            bool   `json:"mumbleRequired"`
+	MaxPlayers        int    `json:"maxPlayers"`
+	TwitchChannel     string `json:"twitchChannel"`
+	TwitchRestriction string `json:"twitchRestriction"`
 
 	SteamGroup string `json:"steamGroup"`
 	Password   bool   `json:"password"`
@@ -97,9 +98,10 @@ type SubstituteData struct {
 	Team   string `sql:"-" json:"team"`
 	Class  string `sql:"-" json:"class"`
 
-	TwitchChannel string `json:"twitchChannel"`
-	SteamGroup    string `json:"steamGroup"`
-	Password      bool   `json:"password"`
+	TwitchChannel     string `json:"twitchChannel"`
+	TwitchRestriction string `json:"twitchRestriction"`
+	SteamGroup        string `json:"steamGroup"`
+	Password          bool   `json:"password"`
 }
 
 type LobbyEvent struct {
@@ -151,14 +153,15 @@ var (
 
 func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyData := LobbyData{
-		ID:            lobby.ID,
-		Mode:          lobby.Mode,
-		Type:          formatMap[lobby.Type],
-		Players:       lobby.GetPlayerNumber(),
-		Map:           lobby.MapName,
-		League:        lobby.League,
-		Mumble:        lobby.Mumble,
-		TwitchChannel: lobby.TwitchChannel,
+		ID:                lobby.ID,
+		Mode:              lobby.Mode,
+		Type:              formatMap[lobby.Type],
+		Players:           lobby.GetPlayerNumber(),
+		Map:               lobby.MapName,
+		League:            lobby.League,
+		Mumble:            lobby.Mumble,
+		TwitchChannel:     lobby.TwitchChannel,
+		TwitchRestriction: lobby.TwitchRestriction.String(),
 
 		SteamGroup: lobby.PlayerWhitelist,
 		Password:   lobby.SlotPassword != "",
