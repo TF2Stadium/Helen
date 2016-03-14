@@ -129,8 +129,8 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		if !isTwitchChannelValid(*args.TwitchWhitelist) {
 			return errors.New("Twitch channel is not valid")
 		}
-		if !player.IsSubscribed(*args.TwitchWhitelist) && player.TwitchName != *args.TwitchWhitelist {
-			return fmt.Errorf("You need to either be subscribed or connect with %s", *args.TwitchWhitelist)
+		if player.TwitchName != *args.TwitchWhitelist {
+			return fmt.Errorf("You aren't the channel owner for %s", *args.TwitchWhitelist)
 		}
 	}
 
