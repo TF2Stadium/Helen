@@ -5,6 +5,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"flag"
 	"fmt"
@@ -30,7 +31,6 @@ import (
 	"github.com/TF2Stadium/Helen/models/event"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
-	"github.com/gorilla/securecookie"
 	"github.com/rs/cors"
 )
 
@@ -43,9 +43,10 @@ func main() {
 	flag.Parse()
 
 	if *flagGen {
-		key := securecookie.GenerateRandomKey(64)
-		if len(key) == 0 {
-			logrus.Fatal("Couldn't generate random key")
+		key := make([]byte, 64)
+		_, err := rand.Read(key)
+		if err != nil {
+			logrus.Fatal(err)
 		}
 
 		base64Key := base64.StdEncoding.EncodeToString(key)
