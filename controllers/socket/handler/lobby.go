@@ -212,7 +212,6 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		}
 	}
 
-	var count int
 	lobbyType := playermap[*args.Type]
 	db.DB.Table("server_records").Where("host = ?", *args.Server).Count(&count)
 	if count != 0 {
