@@ -173,5 +173,11 @@ func TwitchLogout(w http.ResponseWriter, r *http.Request) {
 	player.TwitchAccessToken = ""
 	player.Save()
 
+	referer, ok := r.Header["Referer"]
+	if ok {
+		http.Redirect(w, r, referer[0], 303)
+		return
+	}
+
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, http.StatusTemporaryRedirect)
 }
