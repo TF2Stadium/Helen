@@ -97,12 +97,6 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie.Expires = time.Time{}
 	http.SetCookie(w, cookie)
 
-	referer, ok := r.Header["Referer"]
-	if ok {
-		http.Redirect(w, r, referer[0], 303)
-		return
-	}
-
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
