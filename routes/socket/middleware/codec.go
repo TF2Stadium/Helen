@@ -31,6 +31,10 @@ outer:
 		curField := stValue.Type().Field(i)
 		fieldPtrValue := stValue.Field(i) //The pointer field
 
+		if fieldPtrValue.Kind() != reflect.Ptr { //field isn't a pointer, continue
+			continue
+		}
+
 		if fieldPtrValue.IsNil() {
 			if curField.Tag.Get("empty") == "" {
 				return fmt.Errorf(`Field "%s" cannot be null`, strings.ToLower(curField.Name))
