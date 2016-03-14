@@ -27,7 +27,13 @@ func ResetMumblePassword(w http.ResponseWriter, r *http.Request) {
 		Domain:  config.Constants.CookieDomain,
 		Expires: time.Now().Add(30 * 24 * time.Hour),
 	}
-
 	http.SetCookie(w, cookie)
+
+	referer, ok := r.Header["Referer"]
+	if ok {
+		http.Redirect(w, r, referer[0], 303)
+		return
+	}
+
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
