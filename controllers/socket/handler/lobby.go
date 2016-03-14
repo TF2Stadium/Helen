@@ -389,6 +389,9 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 		return errors.New("Cannot join a closed lobby.")
 
 	}
+	if lob.State == models.LobbyStateInitializing {
+		return errors.New("Lobby is being setup right now.")
+	}
 
 	//Check if player is in the same lobby
 	var sameLobby bool
