@@ -88,6 +88,21 @@ func DeleteUnusedServerRecords() {
 	}
 }
 
+type TwitchRestriction int
+
+const (
+	TwitchSubscribers TwitchRestriction = iota
+	TwitchFollowers
+)
+
+func (t TwitchRestriction) String() string {
+	if t == TwitchSubscribers {
+		return "subscribers"
+	}
+
+	return "followers"
+}
+
 //Lobby represents a Lobby
 type Lobby struct {
 	gorm.Model
@@ -105,10 +120,11 @@ type Lobby struct {
 
 	Slots []LobbySlot // List of occupied slots
 
-	SlotPassword    string // Slot password, if any
-	PlayerWhitelist string // URL of steam group
-	TwitchChannel   string // twitch channel, slots will be restricted to channel subs
-	ServemeID       int    // if serveme was used to get this server, stores the server ID
+	SlotPassword      string            // Slot password, if any
+	PlayerWhitelist   string            // URL of steam group
+	TwitchChannel     string            // twitch channel, slots will be restricted
+	TwitchRestriction TwitchRestriction // restricted to either followers or subs
+	ServemeID         int               // if serveme was used to get this server, stores the server ID
 
 	// TF2 Server Info
 	ServerInfo   ServerRecord
@@ -384,14 +400,17 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 		}
 
 		//check if player has been subbed to the twitch channel (if any)
-		if lobby.TwitchChannel != "" {
+		//allow channel owners
+		if lobby.TwitchChannel != "" && player.TwitchName != lobby.TwitchChannel {
 			//check if player has connected their twitch account
 			if player.TwitchAccessToken == "" {
 				return errors.New("You need to connect your Twitch Account first to join the lobby.")
 			}
-			// allow channel owners
-			if player.TwitchName != lobby.TwitchChannel && !player.IsSubscribed(lobby.TwitchChannel) {
+			if lobby.TwitchRestriction == TwitchSubscribers && !player.IsSubscribed(lobby.TwitchChannel) {
 				return fmt.Errorf("You aren't subscribed to %s", lobby.TwitchChannel)
+			}
+			if lobby.TwitchRestriction == TwitchFollowers && !player.IsFollowing(lobby.TwitchChannel) {
+				return fmt.Errorf("You aren't following %s", lobby.TwitchChannel)
 			}
 		}
 	}
