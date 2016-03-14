@@ -27,6 +27,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	redirecturl, _ := url.Parse(config.Constants.PublicAddress)
 	redirecturl.Path = "openidcallback"
 
+	referer, ok := r.Header["Referer"]
+	if ok {
+		values := redirecturl.Query()
+		values.Set("referer", referer[0])
+		redirecturl.RawQuery = values.Encode()
+	}
+
 	if url, err := openid.RedirectURL("http://steamcommunity.com/openid",
 		redirecturl.String(),
 		config.Constants.OpenIDRealm); err == nil {
@@ -89,11 +96,20 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie.MaxAge = -1
 	cookie.Expires = time.Time{}
 	http.SetCookie(w, cookie)
+
+	referer, ok := r.Header["Referer"]
+	if ok {
+		http.Redirect(w, r, referer[0], 303)
+		return
+	}
+
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
+var reSteamID = regexp.MustCompile(`http://steamcommunity.com/openid/id/(\d+)`)
+
 func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	regex := regexp.MustCompile(`http://steamcommunity.com/openid/id/(\d+)`)
+	refererURL := r.URL.Query().Get("referer")
 
 	publicURL, _ := url.Parse(config.Constants.PublicAddress)
 	// this wouldnt be used anymore, so modify it directly
@@ -105,7 +121,7 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parts := regex.FindStringSubmatch(idURL)
+	parts := reSteamID.FindStringSubmatch(idURL)
 	if len(parts) != 2 {
 		http.Error(w, "Steam Authentication failed, please try again.", 500)
 		return
@@ -150,5 +166,10 @@ func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, cookie)
+	if refererURL != "" {
+		http.Redirect(w, r, refererURL, 303)
+		return
+	}
+
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
