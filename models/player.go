@@ -480,6 +480,24 @@ func (p *Player) IsSubscribed(channel string) bool {
 	return err == nil && resp.StatusCode != 404
 }
 
+//IsFollowing returns whether the player has subscribed to the given Twitch channel.
+//The player obejct should have a valid access token and twitch name
+func (p *Player) IsFollowing(channel string) bool {
+	url := fmt.Sprintf("https://api.twitch.tv/kraken/users/%s/follows/channels/%s", p.TwitchName, channel)
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
+	req.Header.Add("Authorization", "OAuth "+p.TwitchAccessToken)
+
+	resp, err := helpers.HTTPClient.Do(req)
+	if err != nil {
+		logrus.Error(err)
+		return false
+	}
+
+	return resp.StatusCode != 404
+}
+
 //if the player has connected their twitch account, and
 //is currently streaming Team Fortress 2, returns true
 func (p *Player) setStreamingStatus() {
