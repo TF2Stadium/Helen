@@ -110,7 +110,7 @@ func NewBotMessage(message string, room int) *ChatMessage {
 
 func SendNotification(message string, room int) {
 	pub := fmt.Sprintf("%d_public", room)
-	broadcaster.SendMessageToRoom(pub, "chatReceive", NewBotMessage(message, room))
+	broadcaster.SendMessageToRoom(pub, "chatReceive", (*sentMessage)(NewBotMessage(message, room)))
 }
 
 // Return a list of ChatMessages spoken in room
