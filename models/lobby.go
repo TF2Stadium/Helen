@@ -541,9 +541,9 @@ func (lobby *Lobby) AfterPlayerNotInGameFunc(player *Player, d time.Duration, f 
 	helpers.GlobalWait.Add(1)
 	time.AfterFunc(d, func() {
 		var count int
-		db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ? AND needs_sub = FALSE AND in_game = FALSE").Count(&count)
+		db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ? AND needs_sub = FALSE AND in_game = FALSE", lobby.ID, player.ID).Count(&count)
 
-		if count != 0 {
+		if count != 0 && lobby.CurrentState() != LobbyStateEnded {
 			f()
 		}
 		helpers.GlobalWait.Done()
