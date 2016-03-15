@@ -173,6 +173,12 @@ func (Player) PlayerEnableTwitchBot(so *wsevent.Client, _ struct{}) interface{} 
 	lastTwitchBotChange[player.ID] = time.Now()
 	changeMu.Unlock()
 
+	time.AfterFunc(1*time.Minute, func() {
+		changeMu.Lock()
+		delete(lastTwitchBotChange, player.ID)
+		changeMu.Unlock()
+	})
+
 	return emptySuccess
 }
 
@@ -195,5 +201,10 @@ func (Player) PlayerDisableTwitchBot(so *wsevent.Client, _ struct{}) interface{}
 	lastTwitchBotChange[player.ID] = time.Now()
 	changeMu.Unlock()
 
+	time.AfterFunc(1*time.Minute, func() {
+		changeMu.Lock()
+		delete(lastTwitchBotChange, player.ID)
+		changeMu.Unlock()
+	})
 	return emptySuccess
 }
