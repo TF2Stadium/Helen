@@ -16,7 +16,6 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/jinzhu/gorm"
-	"sync"
 )
 
 type LobbyType int
@@ -536,46 +535,30 @@ func (lobby *Lobby) RemoveUnreadyPlayers(spec bool) error {
 	return err
 }
 
-var (
-	playerInGame = make(map[uint](chan struct{}))
-	mapMu        = new(sync.RWMutex)
-)
-
 //AfterPlayerNotInGameFunc waits the duration to elapse, and if the given player
 //is still not in the game server, calls f in it's own goroutine.
 func (lobby *Lobby) AfterPlayerNotInGameFunc(player *Player, d time.Duration, f func()) {
-	mapMu.Lock()
-	stop := make(chan struct{}, 1)
-	playerInGame[player.ID] = stop
-	mapMu.Unlock()
+	helpers.GlobalWait.Add(1)
+	time.AfterFunc(d, func() {
+		var count int
+		db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ? AND needs_sub = FALSE AND in_game = FALSE").Count(&count)
 
-	c := time.After(d)
-	go func() {
-		select {
-		case <-c:
-			if ok, _ := lobby.IsPlayerInGame(player); !ok {
-				f()
-			}
-		case <-stop:
-			return
+		if count != 0 {
+			f()
 		}
-
-		mapMu.Lock()
-		delete(playerInGame, player.ID)
-		mapMu.Unlock()
-	}()
-
+		helpers.GlobalWait.Done()
+	})
 }
 
 //IsPlayerInGame returns true if the player is in-game
-func (lobby *Lobby) IsPlayerInGame(player *Player) (bool, error) {
+func (lobby *Lobby) IsPlayerInGame(player *Player) bool {
 	var ingame bool
 	err := db.DB.DB().QueryRow("SELECT in_game FROM lobby_slots WHERE lobby_id = $1 AND player_id = $2", lobby.ID, player.ID).Scan(&ingame)
 	if err != nil {
-		return false, err
+		return false
 	}
 
-	return ingame, err
+	return ingame
 }
 
 //IsPlayerReady returns true if the given player is ready
@@ -758,21 +741,6 @@ func (lobby *Lobby) SetNotInGame(player *Player) error {
 	return lobby.setInGameStatus(player, false)
 }
 
-//SubNotInGamePlayers substitutes players who haven't joined the game server yet.
-//Called 5 minutes after the lobby starts.
-func (lobby *Lobby) SubNotInGamePlayers() {
-	playerids := []uint{}
-	db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ?", lobby.ID, false).Pluck("player_id", &playerids)
-	db.DB.Table("lobby_slots").Where("lobby_id = ? AND in_game = ? AND needs_sub = ?", lobby.ID, false, false).UpdateColumn("needs_sub", true)
-
-	for _, id := range playerids {
-		player, _ := GetPlayerByID(id)
-		SendNotification(fmt.Sprintf("%s has been reported for not joining the game.", player.Alias()), int(lobby.ID))
-	}
-	BroadcastSubList()
-	return
-}
-
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes
 func (lobby *Lobby) Start() {
 	lobby.Lock()
@@ -784,13 +752,15 @@ func (lobby *Lobby) Start() {
 	db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", LobbyStateInProgress)
 	lobby.Unlock()
 
-	helpers.GlobalWait.Add(1)
-	time.AfterFunc(time.Minute*5, func() {
-		if lobby.CurrentState() != LobbyStateEnded {
-			lobby.SubNotInGamePlayers()
-		}
-		helpers.GlobalWait.Done()
-	})
+	var playerids []uint
+	db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &playerids)
+
+	for _, id := range playerids {
+		player, _ := GetPlayerByID(id)
+		lobby.AfterPlayerNotInGameFunc(player, 5*time.Minute, func() {
+			lobby.Substitute(player)
+		})
+	}
 }
 
 // manually called. Should be called after the change to lobby actually takes effect.
