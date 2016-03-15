@@ -114,8 +114,9 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
 		return fmt.Errorf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
 	}
+
 	var count int
-	db.DB.Model(&models.Lobby{}).Where("created_by_steam_id = ?", player.SteamID).Count(&count)
+	db.DB.Model(&models.Lobby{}).Where("created_by_steam_id = ? AND state <> ?", player.SteamID, models.LobbyStateEnded).Count(&count)
 	if count != 0 {
 		if player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod {
 			return errors.New("You have already created a lobby.")
