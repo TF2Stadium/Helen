@@ -123,7 +123,7 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 		ready, _ := lobby.IsPlayerReady(&player)
 		j.Ready = &ready
 
-		ingame, _ := lobby.IsPlayerInGame(&player)
+		ingame := lobby.IsPlayerInGame(&player)
 		j.InGame = &ingame
 	}
 
