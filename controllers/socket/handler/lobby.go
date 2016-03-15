@@ -688,7 +688,7 @@ func (Lobby) LobbyChangeOwner(so *wsevent.Client, args struct {
 	lobby.Save()
 	models.BroadcastLobby(lobby)
 	models.BroadcastLobbyList()
-	models.NewBotMessage(fmt.Sprintf("Lobby leader changed to %s", player.Alias()), int(*args.ID)).Send()
+	models.NewBotMessage(fmt.Sprintf("Lobby leader changed to %s", player2.Alias()), int(*args.ID)).Send()
 
 	return emptySuccess
 }
