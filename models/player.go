@@ -219,10 +219,10 @@ func (player *Player) SetMumbleUsername(lobbyType LobbyType, slot int) {
 	}
 
 	var count int
-	db.DB.Model(&Player{}).Where("mumble_username = ?", username).Count(&count)
+	db.DB.Model(&Player{}).Where("mumble_username = ? AND id <> ?", username, player.ID).Count(&count)
 	for count != 0 {
 		username += "_"
-		db.DB.Model(&Player{}).Where("mumble_username = ?", username).Count(&count)
+		db.DB.Model(&Player{}).Where("mumble_username = ? AND id <> ?", username, player.ID).Count(&count)
 	}
 
 	db.DB.Model(&Player{}).Where("id = ?", player.ID).UpdateColumn("mumble_username", username)
