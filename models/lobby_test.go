@@ -5,7 +5,6 @@
 package models_test
 
 import (
-	"math/rand"
 	"testing"
 
 	db "github.com/TF2Stadium/Helen/database"
@@ -238,8 +237,7 @@ func TestIsPlayerInGame(t *testing.T) {
 	lobby.AddPlayer(player, 0, "")
 	lobby.SetInGame(player)
 
-	ingame, err := lobby.IsPlayerInGame(player)
-	assert.NoError(t, err)
+	ingame := lobby.IsPlayerInGame(player)
 	assert.True(t, ingame)
 }
 
@@ -390,41 +388,6 @@ func TestUpdateStats(t *testing.T) {
 		db.DB.Preload("Stats").First(player, player.ID)
 		assert.Equal(t, player.Stats.PlayedSixesCount, 1)
 	}
-}
-
-func TestNotInGameSub(t *testing.T) {
-	t.Parallel()
-	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false, true)
-	var (
-		players                  []*Player
-		ingame, subbed, subcount int
-		//subs                     []int
-	)
-
-	for i := 0; i < 12; i++ {
-		players = append(players, testhelpers.CreatePlayer())
-	}
-	for i, player := range players {
-		err := lobby.AddPlayer(player, i, "")
-		assert.NoError(t, err)
-		r := rand.Intn(3)
-		if r == 1 {
-			ingame++
-			lobby.SetInGame(player)
-		} else if r == 2 {
-			lobby.Substitute(player)
-			subbed++
-		}
-
-	}
-
-	t.Logf("%d players are in-game, %d player have been substituted", ingame, subbed)
-	lobby.SubNotInGamePlayers()
-
-	db.DB.Table("lobby_slots").Where("lobby_id = ? AND needs_sub = ?", lobby.ID, true).Count(&subcount)
-	//assert.Equal(t, subcount, len(subs))
-	lobby.Close(false, true)
 }
 
 func TestSlotRequirements(t *testing.T) {
