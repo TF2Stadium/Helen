@@ -53,3 +53,4 @@ import:
   subpackages:
   - /xsrftoken
 - package: gopkg.in/tylerb/graceful.v1
+- package: github.com/stretchr/testify
