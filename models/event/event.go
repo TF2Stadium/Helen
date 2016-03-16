@@ -148,12 +148,14 @@ func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
 
 	msg := fmt.Sprintf("Lobby Ended. Logs: http://logs.tf/%d", logsID)
 	models.SendNotification(msg, int(lobby.ID))
+
 	for steamid, times := range classTimes {
-		player, err := models.GetPlayerWithStats(steamid)
+		player, err := models.GetPlayerBySteamID(steamid)
 		if err != nil {
 			logrus.Error("Couldn't find player ", steamid)
 			continue
 		}
+		db.DB.Preload("Stats").First(player, player.ID)
 
 		player.Stats.ScoutHours += times.Scout
 		player.Stats.SoldierHours += times.Soldier
@@ -164,6 +166,7 @@ func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
 		player.Stats.SpyHours += times.Spy
 		player.Stats.MedicHours += times.Medic
 		player.Stats.SniperHours += times.Sniper
-		db.DB.Save(player.Stats)
+
+		db.DB.Save(&player.Stats)
 	}
 }
