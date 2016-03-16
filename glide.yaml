@@ -1,0 +1,55 @@
+package: github.com/TF2Stadium/Helen
+import:
+- package: github.com/DSchalla/go-pid
+- package: github.com/Sirupsen/logrus
+  version: 0.9.0
+
+- package: github.com/TF2Stadium/PlayerStatsScraper
+- package: github.com/TF2Stadium/servemetf
+- package: github.com/TF2Stadium/wsevent
+
+- package: github.com/bitly/go-simplejson
+  version: aabad6e819789e569bd6aabf444c935aa9ba1e44
+
+- package: github.com/blang/semver
+  version: 3.1.0
+
+- package: github.com/dgrijalva/jwt-go
+  version: 2.4.0
+
+- package: github.com/facebookgo/stack
+  version: 751773369052141c013c6e827a71e8f35c07879c
+
+- package: github.com/gchaincl/dotsql
+  version: 0.1.0
+- package: github.com/gorilla/websocket
+  version: e2e3d8414d0fbae04004f151979f4e27c6747fe7
+
+- package: github.com/jinzhu/gorm
+  version: 83002c4d5f060f4819bfd2115b76a0e1429a7f32
+  subpackages:
+  - dialects/postgres
+
+- package: github.com/kelseyhightower/envconfig
+  version: dd8b03cb32326184ec2606104cd442e34bd272fd
+
+- package: github.com/lib/pq
+  version: 165a3529e799da61ab10faed1fabff3662d6193f
+
+- package: github.com/oschwald/geoip2-golang
+  version: ac55b72a85f5967224eb9d31d445a149e1508b16
+
+- package: github.com/rs/cors
+  version: 5950cf11d77f8a61b432a25dd4d444b4ced01379
+
+- package: github.com/streadway/amqp
+  version: 2e25825abdbd7752ff08b270d313b93519a0a232
+
+- package: github.com/vibhavp/amqp-rpc
+- package: github.com/yohcop/openid-go
+  version: f38c0087a377532505cb5b86418b1cc50d385f0d
+
+- package: golang.org/x/net
+  subpackages:
+  - /xsrftoken
+- package: gopkg.in/tylerb/graceful.v1

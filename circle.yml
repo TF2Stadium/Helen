@@ -6,13 +6,16 @@ machine:
     DATABASE_NAME: "circle_test"
     DATABASE_USERNAME: "ubuntu"
     DATABASE_PASSWORD: ""
+    GO15VENDOREXPERIMENT: 1
 
 dependencies:
   pre:
     - go get github.com/tools/godep
     - go get github.com/jteeuwen/go-bindata/...
+    - go get github.com/Masterminds/glide
   post:
     - make assets -B
+    - glide install
 test:
   override:
       - case $CIRCLE_NODE_INDEX in 0) go test -tags bindata ./controllers/... -v -race ;; 1) go test -tags bindata -v -race ./models/... ./database/... ./helpers/... ./config/... ;; esac:
