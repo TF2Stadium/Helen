@@ -84,7 +84,7 @@ func main() {
 	models.DeleteUnusedServerRecords()
 	//go models.TFTVStreamStatusUpdater()
 
-	chelpers.InitGeoIPDB()
+	helpers.InitGeoIPDB()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
 	}

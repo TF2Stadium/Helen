@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -161,7 +162,9 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			Password:    "foobar",
 		}
 
-		resp, err := helpers.ServemeContext.Create(reservation, so.Token.Claims["steam_id"].(string))
+		arr := strings.Split(so.Request.RemoteAddr, ":")
+		context := helpers.GetServemeContextIP(arr[0])
+		resp, err := context.Create(reservation, so.Token.Claims["steam_id"].(string))
 		if err != nil || resp.Reservation.Errors != nil {
 			if err != nil {
 				logrus.Error(err)
@@ -231,7 +234,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	}
 
 	lob.CreatedBySteamID = player.SteamID
-	lob.RegionCode, lob.RegionName = chelpers.GetRegion(*args.Server)
+	lob.RegionCode, lob.RegionName = helpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP {
 		return errors.New("Couldn't find region server.")
 	}

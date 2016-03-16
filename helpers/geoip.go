@@ -1,4 +1,4 @@
-package controllerhelpers
+package helpers
 
 import (
 	"net"
@@ -46,6 +46,5 @@ func GetRegion(server string) (string, string) {
 	if record.Country.Names["en"] == "Russia" {
 		return "ru", "Russia"
 	}
-
 	return strings.ToLower(record.Continent.Code), record.Continent.Names["en"]
 }

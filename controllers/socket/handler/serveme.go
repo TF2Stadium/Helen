@@ -18,12 +18,15 @@ func (Serveme) Name(s string) string {
 }
 
 func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
-	starts, ends, err := helpers.ServemeContext.GetReservationTime(so.Token.Claims["steam_id"].(string))
+	arr := strings.Split(so.Request.RemoteAddr, ":")
+	context := helpers.GetServemeContextIP(arr[0])
+
+	starts, ends, err := context.GetReservationTime(so.Token.Claims["steam_id"].(string))
 	if _, ok := err.(*net.OpError); ok {
 		return errors.New("Cannot access serveme.tf")
 	}
 
-	reservations, err := helpers.ServemeContext.FindServers(starts, ends, so.Token.Claims["steam_id"].(string))
+	reservations, err := context.FindServers(starts, ends, so.Token.Claims["steam_id"].(string))
 	if _, ok := err.(*net.OpError); ok {
 		return errors.New("Cannot access serveme.tf")
 	}

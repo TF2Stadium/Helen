@@ -679,7 +679,6 @@ func (lobby *Lobby) Close(rpc, matchEnded bool) {
 
 	db.DB.First(&lobby).UpdateColumn("state", LobbyStateEnded)
 	db.DB.First(&lobby).UpdateColumn("match_ended", matchEnded)
-	db.DB.Table("server_records").Where("id = ?", lobby.ServerInfoID).Delete(&ServerRecord{})
 	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Delete(&Requirement{})
 	//db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
 	if rpc {
@@ -689,7 +688,11 @@ func (lobby *Lobby) Close(rpc, matchEnded bool) {
 		lobby.UpdateStats()
 	}
 	if lobby.ServemeID != 0 {
-		helpers.ServemeContext.Delete(lobby.ServemeID, lobby.CreatedBySteamID)
+		context := helpers.GetServemeContext(lobby.ServerInfo.Host)
+		err := context.Delete(lobby.ServemeID, lobby.CreatedBySteamID)
+		if err != nil {
+			logrus.Error(err)
+		}
 	}
 
 	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
@@ -698,6 +701,7 @@ func (lobby *Lobby) Close(rpc, matchEnded bool) {
 	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
 	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", DecorateLobbyClosed(lobby))
 
+	db.DB.Table("server_records").Where("id = ?", lobby.ServerInfoID).Delete(&ServerRecord{})
 	BroadcastSubList()
 	BroadcastLobby(lobby)
 	BroadcastLobbyList() // has to be done manually for now
