@@ -57,6 +57,7 @@ type constants struct {
 	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
 	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
 	ServemeAPIKey      string `envconfig:"SERVEME_API_KEY" doc:"serveme.tf API Key"`
+	HealthChecks       bool   `envconfig:"HEALTH_CHECKS" default:"false"`
 }
 
 var Constants = constants{}

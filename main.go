@@ -128,8 +128,9 @@ func main() {
 	}
 
 	//start health checks
-	controllers.StartHealthCheck()
-
+	if config.Constants.HealthChecks {
+		controllers.StartHealthCheck()
+	}
 	logrus.Info("Serving on ", config.Constants.ListenAddress)
 	err = server.ListenAndServe()
 	if err != nil {
