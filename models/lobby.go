@@ -454,6 +454,7 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 	}
 
 	lobby.OnChange(true)
+	player.SetMumbleUsername(lobby.Type, slot)
 
 	return nil
 }
