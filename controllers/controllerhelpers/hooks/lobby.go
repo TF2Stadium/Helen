@@ -53,8 +53,8 @@ func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, player *models.P
 	if ok {
 		server.Leave(so, fmt.Sprintf("%d_public", lobbyID))
 		sessions.RemoveSpectator(so.ID)
-		prevLobby, _ := models.GetLobbyByID(lobbyID)
 		if player != nil {
+			prevLobby, _ := models.GetLobbyByID(lobbyID)
 			prevLobby.RemoveSpectator(player, true)
 		}
 	}
