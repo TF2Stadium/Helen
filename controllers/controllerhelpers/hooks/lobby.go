@@ -47,12 +47,16 @@ func AfterLobbyLeave(lobby *models.Lobby, player *models.Player) {
 	}
 }
 
-func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, lobby *models.Lobby) {
+func AfterLobbySpec(server *wsevent.Server, so *wsevent.Client, player *models.Player, lobby *models.Lobby) {
 	//remove socket from room of the previous lobby the socket was spectating (if any)
 	lobbyID, ok := sessions.GetSpectating(so.ID)
 	if ok {
 		server.Leave(so, fmt.Sprintf("%d_public", lobbyID))
 		sessions.RemoveSpectator(so.ID)
+		prevLobby, _ := models.GetLobbyByID(lobbyID)
+		if player != nil {
+			prevLobby.RemoveSpectator(player, true)
+		}
 	}
 
 	server.Join(so, fmt.Sprintf("%s_public", GetLobbyRoom(lobby.ID)))
