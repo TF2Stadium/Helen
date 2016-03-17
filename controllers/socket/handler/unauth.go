@@ -28,7 +28,7 @@ func (Unauth) LobbySpectatorJoin(so *wsevent.Client, args struct {
 		return tperr
 	}
 
-	hooks.AfterLobbySpec(socket.UnauthServer, so, lob)
+	hooks.AfterLobbySpec(socket.UnauthServer, so, nil, lob)
 
 	so.EmitJSON(helpers.NewRequest("lobbyData", models.DecorateLobbyData(lob, true)))
 

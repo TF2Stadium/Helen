@@ -515,7 +515,7 @@ func (Lobby) LobbySpectatorJoin(so *wsevent.Client, args struct {
 		}
 	}
 
-	hooks.AfterLobbySpec(socket.AuthServer, so, lob)
+	hooks.AfterLobbySpec(socket.AuthServer, so, player, lob)
 	models.BroadcastLobbyToUser(lob, player.SteamID)
 	return emptySuccess
 }
