@@ -2,7 +2,7 @@ Helen
 =====
 Helen is the backend server component for the tf2stadium.com project written in Go.
 
-[![Build Status](https://circleci.com/gh/TF2Stadium/Helen/tree/dev.svg?style=svg)](https://circleci.com/gh/TF2Stadium/Helen/tree/dev)
+[![Build Status](https://travis-ci.org/TF2Stadium/Helen.svg?branch=master)](https://travis-ci.org/TF2Stadium/Helen)
 [![](https://badge.imagelayers.io/tf2stadium/helen:latest.svg)](https://imagelayers.io/?images=tf2stadium/helen:latest 'Get your own badge on imagelayers.io')
 [![Go Report Card](https://img.shields.io/badge/go_report-A-brightgreen.svg)](http://goreportcard.com/report/TF2Stadium/Helen)
 [![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat-square)](https://raw.githubusercontent.com/TF2Stadium/Helen/master/COPYING)
