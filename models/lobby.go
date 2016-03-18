@@ -198,7 +198,22 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 //lobbies where the game server had an error while being setup.
 func (lobby *Lobby) Delete() {
 	db.DB.Delete(lobby)
+	var count int
+
+	db.DB.Model(&ServerRecord{}).Where("host = ?", lobby.ServerInfo.Host).Count(&count)
+	if count != 0 {
+		putStoredServer(lobby.ServerInfo.Host)
+	}
+
+	if lobby.ServemeID != 0 {
+		context := helpers.GetServemeContext(lobby.ServerInfo.Host)
+		err := context.Delete(lobby.ServemeID, lobby.CreatedBySteamID)
+		if err != nil {
+			logrus.Error(err)
+		}
+	}
 	db.DB.Delete(&lobby.ServerInfo)
+
 	lobby.deleteLock()
 }
 
@@ -646,19 +661,19 @@ func (lobby *Lobby) GetAllSlots() []LobbySlot {
 	return lobby.Slots
 }
 
-//SetupServer setups the TF2 server for the lobby, calls Pauling.SetupServer()
+//SetupServer setups the TF2 server for the lobby, creates the mumble channels for it
 func (lobby *Lobby) SetupServer() error {
 	if lobby.State == LobbyStateEnded {
 		return nil
 	}
 
-	fumbleLobbyCreated(lobby.ID)
-	err := SetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.Whitelist, lobby.MapName)
+	err := setupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.Whitelist, lobby.MapName)
 	if err != nil {
-		logrus.Error(err)
-		fumbleLobbyEnded(lobby.ID)
+		return err
 	}
-	return err
+
+	fumbleLobbyCreated(lobby.ID)
+	return nil
 }
 
 //Close closes the lobby, which has the following effects:
