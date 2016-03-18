@@ -31,7 +31,7 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 	return pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &Args{})
 }
 
-func SetupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
+func setupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
 	whitelist string, mapName string) error {
 	if *paulingDisabled {
 		return nil
