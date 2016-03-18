@@ -67,8 +67,7 @@ func StartListening() {
 
 				err := json.Unmarshal(msg.Body, &event)
 				if err != nil {
-					logrus.Error(err)
-					continue
+					logrus.Fatal(err)
 				}
 				switch event.Name {
 				case PlayerDisconnected:
