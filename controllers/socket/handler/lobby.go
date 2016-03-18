@@ -142,10 +142,10 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		var err error
 		var start, end time.Time
 
-		if start, err = time.Parse((*args.Serveme).StartsAt, servemetf.TimeFormat); err != nil {
+		if start, err = time.Parse(servemetf.TimeFormat, (*args.Serveme).StartsAt); err != nil {
 			return err
 		}
-		if end, err = time.Parse((*args.Serveme).EndsAt, servemetf.TimeFormat); err != nil {
+		if end, err = time.Parse(servemetf.TimeFormat, (*args.Serveme).EndsAt); err != nil {
 			return err
 		}
 
