@@ -197,7 +197,6 @@ func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo Ser
 //Closed lobbies aren't deleted, this function is used for
 //lobbies where the game server had an error while being setup.
 func (lobby *Lobby) Delete() {
-	db.DB.Delete(lobby)
 	var count int
 
 	db.DB.Model(&ServerRecord{}).Where("host = ?", lobby.ServerInfo.Host).Count(&count)
@@ -212,6 +211,8 @@ func (lobby *Lobby) Delete() {
 			logrus.Error(err)
 		}
 	}
+
+	db.DB.Delete(lobby)
 	db.DB.Delete(&lobby.ServerInfo)
 
 	lobby.deleteLock()
