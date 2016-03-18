@@ -84,6 +84,10 @@ type Player struct {
 
 	ExternalLinks postgres.Hstore `json:"external_links,omitempty"`
 
+	Substitutes []Lobby `gorm:"many2many:substitutes_player_lobbies"`
+	Reports     []Lobby `gorm:"many2many:reports_player_lobbies"`
+	RageQuits   []Lobby `gorm:"many2many:ragequits_player_lobbies"`
+
 	JSONFields
 }
 
