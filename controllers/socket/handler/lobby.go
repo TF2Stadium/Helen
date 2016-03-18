@@ -177,6 +177,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 		*args.Server = resp.Reservation.Server.IPAndPort
 		servemeID = resp.Reservation.ID
+		time.Sleep(1*time.Minute + 15*time.Second)
 	} else if *args.ServerType == "storedServer" {
 		if *args.Server == "" {
 			return errors.New("No server ID given")
