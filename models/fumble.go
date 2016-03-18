@@ -7,7 +7,7 @@ func fumbleLobbyCreated(lobbyID uint) error {
 		return nil
 	}
 
-	err := fumble.Call("Fumble.CreateLobby", lobbyID, nil)
+	err := fumble.Call("Fumble.CreateLobby", lobbyID, &struct{}{})
 
 	if err != nil {
 		logrus.Error(err)
@@ -22,7 +22,7 @@ func fumbleLobbyEnded(lobbyID uint) {
 		return
 	}
 
-	err := fumble.Call("Fumble.EndLobby", lobbyID, nil)
+	err := fumble.Call("Fumble.EndLobby", lobbyID, &struct{}{})
 	if err != nil {
 		logrus.Error(err)
 	}
