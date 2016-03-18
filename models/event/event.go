@@ -20,6 +20,8 @@ type Event struct {
 	LobbyID    uint
 	LogsID     int //logs.tf ID
 	ClassTimes map[string]*classTime
+
+	Self bool // true if
 }
 
 type classTime struct {
@@ -73,7 +75,7 @@ func StartListening() {
 				case PlayerDisconnected:
 					playerDisc(event.SteamID, event.LobbyID)
 				case PlayerSubstituted:
-					playerSub(event.SteamID, event.LobbyID)
+					playerSub(event.SteamID, event.LobbyID, event.Self)
 				case PlayerConnected:
 					playerConn(event.SteamID, event.LobbyID)
 				case DisconnectedFromServer:
@@ -102,6 +104,8 @@ func playerDisc(steamID string, lobbyID uint) {
 
 	lobby.AfterPlayerNotInGameFunc(player, 2*time.Minute, func() {
 		lobby.Substitute(player)
+		player.BanUntil(time.Now().Add(30*time.Minute), models.PlayerBanJoin, "For ragequiting a lobby in the last 30 minutes")
+		db.DB.Model(player).Association("RageQuits").Append(lobby)
 	})
 }
 
@@ -113,10 +117,35 @@ func playerConn(steamID string, lobbyID uint) {
 	models.SendNotification(fmt.Sprintf("%s has connected to the server.", player.Alias()), int(lobby.ID))
 }
 
-func playerSub(steamID string, lobbyID uint) {
+func playerSub(steamID string, lobbyID uint, self bool) {
 	player, _ := models.GetPlayerBySteamID(steamID)
-	lobby, _ := models.GetLobbyByID(lobbyID)
+	lobby, err := models.GetLobbyByID(lobbyID)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
 	lobby.Substitute(player)
+	if self {
+		var lobbyid uint
+
+		db.DB.DB().QueryRow("SELECT lobby_id FROM substitutes_player_lobbies WHERE player_id = $1 ORDER BY lobby_id DESC LIMIT 1", player.ID).Scan(&lobbyid)
+		db.DB.Model(player).Association("Substitutes").Append(lobby)
+
+		if lobbyid == 0 { // this is the first sub
+			return
+		}
+
+		lastLobby, _ := models.GetLobbyByID(lobbyid)
+		if time.Since(lastLobby.CreatedAt) < 30*time.Minute {
+			player.BanUntil(time.Now().Add(30*time.Minute), models.PlayerBanJoin, "For subbing twice in the last 30 minutes")
+		}
+
+	} else {
+		db.DB.Model(player).Association("Reports").Append(lobby)
+		// ban player from joining lobbies for 30 minutes
+		player.BanUntil(time.Now().Add(30*time.Minute), models.PlayerBanJoin, "For getting reported in the last 30 minutes")
+	}
 
 	models.SendNotification(fmt.Sprintf("%s has been reported.", player.Alias()), int(lobby.ID))
 }
@@ -142,7 +171,11 @@ func disconnectedFromServer(lobbyID uint) {
 }
 
 func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
-	lobby, _ := models.GetLobbyByIDServer(lobbyID)
+	lobby, err := models.GetLobbyByIDServer(lobbyID)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
 	lobby.Close(false, true)
 
 	msg := fmt.Sprintf("Lobby Ended. Logs: http://logs.tf/%d", logsID)
