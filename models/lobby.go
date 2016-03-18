@@ -673,7 +673,7 @@ func (lobby *Lobby) SetupServer() error {
 		return err
 	}
 
-	fumbleLobbyCreated(lobby.ID)
+	go fumbleLobbyCreated(lobby.ID)
 	return nil
 }
 
@@ -721,7 +721,7 @@ func (lobby *Lobby) Close(rpc, matchEnded bool) {
 	BroadcastSubList()
 	BroadcastLobby(lobby)
 	BroadcastLobbyList() // has to be done manually for now
-	fumbleLobbyEnded(lobby.ID)
+	go fumbleLobbyEnded(lobby.ID)
 	lobby.deleteLock()
 }
 
