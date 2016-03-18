@@ -31,18 +31,21 @@ func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
 		return errors.New("Cannot access serveme.tf")
 	}
 
-	for i, server := range reservations.Servers {
+	var servers []servemetf.Server
+
+	for _, server := range reservations.Servers {
 		//Out of respect for TF2Center, we don't use their servers with serveme integration.
 		if strings.HasPrefix(server.Name, "TF2Center") {
-			reservations.Servers = append(reservations.Servers[:i], reservations.Servers[i+1:]...)
+			continue
 		}
+		servers = append(servers, server)
 	}
 
 	resp := struct {
 		StartsAt string             `json:"startsAt"`
 		EndsAt   string             `json:"endsAt"`
 		Servers  []servemetf.Server `json:"servers"`
-	}{starts.Format(servemetf.TimeFormat), ends.Format(servemetf.TimeFormat), reservations.Servers}
+	}{starts.Format(servemetf.TimeFormat), ends.Format(servemetf.TimeFormat), servers}
 
 	return newResponse(resp)
 }
