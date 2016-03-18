@@ -115,11 +115,11 @@ func main() {
 		},
 
 		ShutdownInitiated: func() {
-			logrus.Info("Received SIGINT/SIGTERM, closing RPC")
-			logrus.Info("waiting for socket requests to complete.")
-			socketServer.Wait()
+			logrus.Info("Received SIGINT/SIGTERM")
 			logrus.Info("waiting for GlobalWait")
 			helpers.GlobalWait.Wait()
+			logrus.Info("waiting for socket requests to complete.")
+			socketServer.Wait()
 			logrus.Info("closing all active websocket connections")
 			socketServer.AuthServer.Close()
 			logrus.Info("stopping event listener")
