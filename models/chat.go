@@ -83,7 +83,7 @@ func (m *sentMessage) MarshalJSON() ([]byte, error) {
 		message.Player.Name = "TF2Stadium"
 		message.Player.Tags = []string{"tf2stadium"}
 	} else {
-		message.Player.Name = player.Name
+		message.Player.Name = player.Alias()
 		message.Player.SteamID = player.SteamID
 		message.Player.Tags = decoratePlayerTags(player)
 	}
