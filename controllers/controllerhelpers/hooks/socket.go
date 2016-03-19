@@ -20,6 +20,10 @@ func OnDisconnect(socketID string, token *jwt.Token) {
 	pprof.Clients.Add(-1)
 	if token != nil { //player was logged in
 		player := chelpers.GetPlayer(token)
+		if player == nil {
+			return
+		}
+
 		sessions.RemoveSocket(socketID, player.SteamID)
 		id, _ := sessions.GetSpectating(socketID)
 		if id != 0 {
