@@ -5,6 +5,9 @@
 package models
 
 import (
+	"encoding/json"
+	"time"
+
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 )
@@ -17,7 +20,7 @@ func decoratePlayerTags(p *Player) []string {
 	return tags
 }
 
-func (p *Player) setJSONFields(stats, lobbies, streaming bool) {
+func (p *Player) setJSONFields(stats, lobbies, streaming, bans bool) {
 	db.DB.Preload("Stats").First(p, p.ID)
 	p.PlaceholderLobbiesPlayed = new(int)
 	*p.PlaceholderLobbiesPlayed = p.Stats.TotalLobbies()
@@ -60,13 +63,24 @@ func (p *Player) setJSONFields(stats, lobbies, streaming bool) {
 	}
 
 	p.setStreamingStatus()
+	if bans {
+		p.PlaceholderBans, _ = p.GetActiveBans()
+	}
+}
+
+func (ban *PlayerBan) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Type   string    `json:"type"`
+		Until  time.Time `json:"until"`
+		Reason string    `json:"reason"`
+	}{ban.Type.String(), ban.Until, ban.Reason})
 }
 
 func (p *Player) SetPlayerProfile() {
-	p.setJSONFields(true, true, true)
+	p.setJSONFields(true, true, true, true)
 }
 
 func (p *Player) SetPlayerSummary() {
-	p.setJSONFields(false, false, false)
+	p.setJSONFields(false, false, false, false)
 	p.ExternalLinks = nil
 }
