@@ -81,6 +81,7 @@ func (m *sentMessage) MarshalJSON() ([]byte, error) {
 
 	if m.Bot {
 		message.Player.Name = "TF2Stadium"
+		message.Player.SteamID = "76561198275497635"
 		message.Player.Tags = []string{"tf2stadium"}
 	} else {
 		message.Player.Name = player.Alias()
