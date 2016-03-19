@@ -385,7 +385,6 @@ func (player *Player) SetSetting(key string, value string) {
 }
 
 func (player *Player) GetSetting(key string) string {
-	db.DB.First(player)
 	if player.Settings == nil {
 		return ""
 	}
