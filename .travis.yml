@@ -7,8 +7,6 @@ go:
   - 1.6
 env:
   - GO15VENDOREXPERIMENT=1
-  - HELEN_DATABASE_USERNAME=postgres
-  - HELEN_DATABASE_PASSWORD=dickbutt
 before_install:
   - go get github.com/jteeuwen/go-bindata/...
   - go get github.com/Masterminds/glide
