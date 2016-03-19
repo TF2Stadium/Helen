@@ -101,6 +101,7 @@ type JSONFields struct {
 	PlaceholderRoleStr       *string      `sql:"-" json:"role"`
 	PlaceholderLobbies       *[]LobbyData `sql:"-" json:"lobbies"`
 	PlaceholderStats         *PlayerStats `sql:"-" json:"stats"`
+	PlaceholderBans          []*PlayerBan `sql:"-" json:"bans"`
 }
 
 // Create a new player with the given steam id.
