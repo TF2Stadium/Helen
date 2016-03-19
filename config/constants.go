@@ -5,6 +5,7 @@
 package config
 
 import (
+	"net/url"
 	"os"
 	"reflect"
 	"text/template"
@@ -76,6 +77,15 @@ func SetupConstants() {
 	}
 	if Constants.MockupAuth {
 		logrus.Warning("Mockup authentication enabled.")
+	}
+
+	_, err = url.Parse(Constants.PublicAddress)
+	if err != nil {
+		logrus.Fatal("Couldn't parse HELEN_PUBLIC_ADDR - ", err)
+	}
+	_, err = url.Parse(Constants.LoginRedirectPath)
+	if err != nil {
+		logrus.Fatal("Couldn't parse HELEN_SERVER_REDIRECT_PATH - ", err)
 	}
 }
 
