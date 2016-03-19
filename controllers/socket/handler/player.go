@@ -121,6 +121,8 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 
 		if lobbyID, _ := player.GetLobbyID(true); lobbyID != 0 {
 			lobby, _ := models.GetLobbyByID(lobbyID)
+			slot, _ := lobby.GetPlayerSlot(player)
+			player.SetMumbleUsername(lobby.Type, slot)
 			lobbyData := lobby.LobbyData(true)
 			lobbyData.Send()
 		}
