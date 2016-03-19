@@ -24,7 +24,7 @@ type userInfo struct {
 	Name string `json:"name"`
 }
 
-func TwitchLogin(w http.ResponseWriter, r *http.Request) {
+func TwitchLoginHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := controllerhelpers.GetToken(r)
 	if err == http.ErrNoCookie {
 		http.Error(w, "You are not logged in.", http.StatusUnauthorized)
@@ -59,7 +59,7 @@ func TwitchLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, loginURL.String(), http.StatusTemporaryRedirect)
 }
 
-func TwitchAuth(w http.ResponseWriter, r *http.Request) {
+func TwitchAuthHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := controllerhelpers.GetToken(r)
 	if err == http.ErrNoCookie {
 		http.Error(w, "You are not logged in.", http.StatusUnauthorized)
@@ -156,7 +156,7 @@ func getUserInfo(token string) (*userInfo, error) {
 	return info, err
 }
 
-func TwitchLogout(w http.ResponseWriter, r *http.Request) {
+func TwitchLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := controllerhelpers.GetToken(r)
 	if err == http.ErrNoCookie {
 		http.Error(w, "You are not logged in.", http.StatusUnauthorized)

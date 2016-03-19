@@ -15,7 +15,7 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
-	"github.com/yohcop/openid-go"
+	openid "github.com/yohcop/openid-go"
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 	discoveryCache = openid.NewSimpleDiscoveryCache()
 )
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func SteamLoginHandler(w http.ResponseWriter, r *http.Request) {
 	redirecturl, _ := url.Parse(config.Constants.PublicAddress)
 	redirecturl.Path = "openidcallback"
 
@@ -43,7 +43,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func MockLoginHandler(w http.ResponseWriter, r *http.Request) {
+func SteamMockLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if !config.Constants.MockupAuth {
 		http.NotFound(w, r)
 		return
@@ -86,7 +86,7 @@ func MockLoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+func SteamLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("auth-jwt")
 	if err != nil { //user wasn't even logged in ಠ_ಠ
 		return
@@ -102,7 +102,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 var reSteamID = regexp.MustCompile(`http://steamcommunity.com/openid/id/(\d+)`)
 
-func LoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
+func SteamLoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	refererURL := r.URL.Query().Get("referer")
 
 	publicURL, _ := url.Parse(config.Constants.PublicAddress)

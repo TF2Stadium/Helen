@@ -22,14 +22,14 @@ type route struct {
 
 var routes = []route{
 	{"/", controllers.MainHandler},
-	{"/openidcallback", login.LoginCallbackHandler},
-	{"/startLogin", login.LoginHandler},
-	{"/startTwitchLogin", login.TwitchLogin},
-	{"/twitchAuth", login.TwitchAuth},
-	{"/twitchLogout", login.TwitchLogout},
-	{"/logout", login.LogoutHandler},
+	{"/openidcallback", login.SteamLoginCallbackHandler},
+	{"/startLogin", login.SteamLoginHandler},
+	{"/logout", login.SteamLogoutHandler},
 	{"/websocket/", controllers.SocketHandler},
-	{"/startMockLogin", login.MockLoginHandler},
+	{"/startMockLogin", login.SteamMockLoginHandler},
+	{"/startTwitchLogin", login.TwitchLoginHandler},
+	{"/twitchAuth", login.TwitchAuthHandler},
+	{"/twitchLogout", login.TwitchLogoutHandler},
 
 	{"/admin", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ServeAdminPage)},
 	{"/admin/roles", chelpers.FilterHTTPRequest(helpers.ActionViewPage, admin.ChangeRole)},
