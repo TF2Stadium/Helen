@@ -1,11 +1,14 @@
 sudo: required
 services:
   - docker
+  - postgresql
 language: go
 go:
   - 1.6
 env:
   - GO15VENDOREXPERIMENT=1
+  - HELEN_DATABASE_USERNAME=postgres
+  - HELEN_DATABASE_PASSWORD=dickbutt
 before_install:
   - go get github.com/jteeuwen/go-bindata/...
   - go get github.com/Masterminds/glide
@@ -13,8 +16,11 @@ install:
   - make assets -B
   - glide install
   - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
 script:
+  - go test -race -v ./...
+after_success:
   - make static -B
   - case $TRAVIS_BRANCH in master) docker build -t tf2stadium/helen:latest . ;; dev) docker build -t tf2stadium/helen:dev . ;; esac 
-after_success:
   - case $TRAVIS_BRANCH in master) docker push tf2stadium/helen:latest ;; dev) docker push tf2stadium/helen ;; esac
