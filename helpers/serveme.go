@@ -31,7 +31,7 @@ func GetServemeContextIP(ipaddr string) *servemetf.Context {
 		return servemeAU
 
 	default: // africa and antarctica
-		return servemeNA
+		return servemeEU
 	}
 }
 
