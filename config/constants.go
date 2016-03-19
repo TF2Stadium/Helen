@@ -39,7 +39,7 @@ type constants struct {
 	ServeStatic      bool   `envconfig:"SERVE_STATIC" default:"true" doc:"Serve /static/"`
 	RabbitMQURL      string `envconfig:"RABBITMQ_URL" default:"amqp://guest:guest@localhost:5672/" doc:"URL for AMQP server"`
 	PaulingQueue     string `envconfig:"PAULING_QUEUE" default:"pauling" doc:"Name of queue over which RPC calls to Pauling are sent"`
-	TwitchBotQueue   string `envconfig:"TWITCHBOT_QUEUE" default:"twitchbot"`
+	TwitchBotQueue   string `envconfig:"TWITCHBOT_QUEUE" default:"twitchbot" doc:"Name of queue over which RPC calls to Pauling are sent"`
 	FumbleQueue      string `envconfig:"FUMBLE_QUEUE" default:"fumble" doc:"Name of queue over which RPC calls to Fumble are sent"`
 	RabbitMQQueue    string `envconfig:"RABBITMQ_QUEUE" default:"events" doc:"Name of queue over which events are sent"`
 
@@ -57,7 +57,7 @@ type constants struct {
 	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
 	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
 	ServemeAPIKey      string `envconfig:"SERVEME_API_KEY" doc:"serveme.tf API Key"`
-	HealthChecks       bool   `envconfig:"HEALTH_CHECKS" default:"false"`
+	HealthChecks       bool   `envconfig:"HEALTH_CHECKS" default:"false" doc:"Enable health checks"`
 }
 
 var Constants = constants{}
