@@ -18,19 +18,20 @@ func GetServemeContextIP(ipaddr string) *servemetf.Context {
 	continent, _ := GetRegion(ipaddr)
 
 	switch continent {
-	case "NA":
+	case "NA": // north america
 		return servemeNA
-	case "SA":
+	case "SA": // south america
 		return servemeNA
 
-	case "AS":
-		return servemeNA
-	case "EU":
+	case "AS": // asia
+		return servemeEU
+	case "EU": // europe
 		return servemeEU
 
-	case "OC":
+	case "OC": // oceania
 		return servemeAU
-	default:
+
+	default: // africa and antarctica
 		return servemeEU
 	}
 }
