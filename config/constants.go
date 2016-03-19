@@ -85,6 +85,10 @@ func SetupConstants() {
 	if err != nil {
 		logrus.Fatal("Couldn't parse HELEN_SERVER_REDIRECT_PATH - ", err)
 	}
+
+	if Constants.GeoIP {
+		logrus.Info("GeoIP support enabled")
+	}
 }
 
 func PrintConfigDoc() {
