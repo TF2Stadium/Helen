@@ -122,6 +122,11 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		if player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod {
 			return errors.New("You have already created a lobby.")
 		}
+
+		db.DB.Model(&models.Lobby{}).Where("created_by_steam_id = ? AND state <> ? AND serveme_id <> 0", player.SteamID, models.LobbyStateEnded).Count(&count)
+		if count != 0 {
+			return errors.New("You can only create one serveme lobby at a time.")
+		}
 	}
 
 	var steamGroup string
@@ -177,7 +182,6 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 		*args.Server = resp.Reservation.Server.IPAndPort
 		servemeID = resp.Reservation.ID
-		time.Sleep(1*time.Minute + 15*time.Second)
 	} else if *args.ServerType == "storedServer" {
 		if *args.Server == "" {
 			return errors.New("No server ID given")
@@ -245,6 +249,10 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 	lob.Save()
 	lob.CreateLock()
+
+	if *args.ServerType == "serveme" {
+		time.Sleep(1*time.Minute + 30*time.Second)
+	}
 
 	err := lob.SetupServer()
 	if err != nil { //lobby setup failed, delete lobby and corresponding server record
