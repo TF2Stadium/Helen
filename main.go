@@ -115,6 +115,7 @@ func main() {
 		},
 
 		ShutdownInitiated: func() {
+			models.SendNotification(`Backend will be going down for a while for an update, click on "Reconnect" to reconnect to TF2Stadium`, 0)
 			logrus.Info("Received SIGINT/SIGTERM")
 			logrus.Info("waiting for GlobalWait")
 			helpers.GlobalWait.Wait()
