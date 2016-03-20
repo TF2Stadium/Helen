@@ -86,40 +86,35 @@ type BanData struct {
 }
 
 func GetBanLogs(w http.ResponseWriter, r *http.Request) {
-	allBans := models.GetAllActiveBans()
-	var bans []BanData
-	var player *models.Player
-	var err error
-
 	values := r.URL.Query()
-
 	if !xsrftoken.Valid(values.Get("xsrf-token"), config.Constants.CookieStoreSecret, "admin", "POST") {
 		http.Error(w, "invalid xsrf token", http.StatusBadRequest)
 		return
 	}
 
+	var banData []BanData
+
 	steamid := values.Get("steamid")
-	if steamid != "" {
-		player, err = models.GetPlayerBySteamID(steamid)
+	if steamid == "" {
+		bans := models.GetAllActiveBans()
+		for _, ban := range bans {
+			player, _ := models.GetPlayerByID(ban.PlayerID)
+			banData = append(banData, BanData{player, ban})
+		}
+	} else {
+		player, err := models.GetPlayerBySteamID(steamid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-	}
 
-	for _, ban := range allBans {
-		if steamid != "" && ban.PlayerID != player.ID {
-			continue
+		bans, _ := player.GetActiveBans()
+		for _, ban := range bans {
+			banData = append(banData, BanData{player, ban})
 		}
-
-		banData := BanData{
-			Player: player,
-			Ban:    ban}
-
-		bans = append(bans, banData)
 	}
 
-	err = banlogsTempl.Execute(w, bans)
+	err := banlogsTempl.Execute(w, banData)
 	if err != nil {
 		logrus.Error(err)
 	}
