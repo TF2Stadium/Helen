@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -210,16 +211,32 @@ func (player *Player) GenAuthKey() string {
 	return authKey
 }
 
+var reSteamProfileID = regexp.MustCompile(`steamcommunity.com\/id\/(\w+)`)
+
+func isClean(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+
+	for _, c := range s {
+		if c >= 'A' && c <= 'z' || c == ' ' {
+			continue
+		}
+		return false
+	}
+
+	return true
+}
+
 func (player *Player) SetMumbleUsername(lobbyType LobbyType, slot int) {
 	_, class, _ := LobbyGetSlotInfoString(lobbyType, slot)
 	username := strings.ToUpper(class) + "_"
 
 	alias := player.GetSetting("siteAlias")
-	if alias == "" && player.Profileurl != "" {
-		index := strings.Index(player.Profileurl, "id/")
-		if index == -1 {
-			profileid := player.Profileurl[index+3 : len(player.Profileurl)-1]
-			username += profileid
+	if (alias == "" || !isClean(alias)) && player.Profileurl != "" {
+		if reSteamProfileID.MatchString(player.Profileurl) {
+			m := reSteamProfileID.FindStringSubmatch(player.Profileurl)
+			username += m[1]
 		} else {
 			username += player.SteamID
 		}
