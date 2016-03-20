@@ -14,7 +14,7 @@ var lobbiesTempl *template.Template
 
 func ViewOpenLobbies(w http.ResponseWriter, r *http.Request) {
 	var lobbies []*models.Lobby
-	db.DB.Model(&models.Lobby{}).Where("state = ?", models.LobbyStateInProgress).Find(&lobbies)
+	db.DB.Model(&models.Lobby{}).Preload("ServerInfo").Where("state = ?", models.LobbyStateInProgress).Find(&lobbies)
 	err := lobbiesTempl.Execute(w, map[string]interface{}{
 		"Lobbies":     lobbies,
 		"FrontendURL": config.Constants.LoginRedirectPath,
