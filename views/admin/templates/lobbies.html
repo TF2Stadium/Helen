@@ -15,9 +15,10 @@
       <tbody>
 	<!-- "Note that if there is only one variable, it is assigned
 	     the element; this is opposite to the convention in Go range clauses." -->
+	{{$url := .FrontendURL }}
 	{{range $lobby := .Lobbies}}
 	<tr>
-	  <td><a href="{{.FrontendURL}}/lobby/{{$lobby.ID}}">Lobby #{{$lobby.ID}}</td>
+	  <td><a href="{{print $url}}/lobby/{{$lobby.ID}}">Lobby #{{$lobby.ID}}</td>
 	</tr>
 	{{end}}
       </tbody>
