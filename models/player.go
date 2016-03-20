@@ -464,6 +464,12 @@ func (player *Player) Unban(t PlayerBanType) error {
 		Update("active", "FALSE").Error
 }
 
+func (player *Player) GetActiveBan(banType PlayerBanType) (*PlayerBan, error) {
+	ban := &PlayerBan{}
+	err := db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, banType).First(ban).Error
+	return ban, err
+}
+
 func (player *Player) GetActiveBans() ([]*PlayerBan, error) {
 	var bans []*PlayerBan
 	err := db.DB.Where("player_id = ? AND active = TRUE AND until > now()", player.ID).Find(&bans).Error
