@@ -110,9 +110,11 @@ type LobbyEvent struct {
 
 func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetails {
 	playerId, err := lobby.GetPlayerIDBySlot(slot)
-	j := SlotDetails{Slot: slot, Filled: err == nil}
+	needsSub := lobby.SlotNeedsSubstitute(slot)
 
-	if err == nil && includeDetails {
+	j := SlotDetails{Slot: slot, Filled: err == nil && !needsSub}
+
+	if err == nil && includeDetails && !needsSub {
 		var player Player
 		db.DB.First(&player, playerId)
 		player.SetPlayerSummary()
