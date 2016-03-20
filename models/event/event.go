@@ -102,7 +102,7 @@ func playerDisc(steamID string, lobbyID uint) {
 
 	models.SendNotification(fmt.Sprintf("%s has disconected from the server.", player.Alias()), int(lobby.ID))
 
-	lobby.AfterPlayerNotInGameFunc(player, 2*time.Minute, func() {
+	lobby.AfterPlayerNotInGameFunc(player, 5*time.Minute, func() {
 		lobby.Substitute(player)
 		player.BanUntil(time.Now().Add(30*time.Minute), models.PlayerBanJoin, "For ragequiting a lobby in the last 30 minutes")
 		db.DB.Model(player).Association("RageQuits").Append(lobby)
