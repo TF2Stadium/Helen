@@ -126,7 +126,6 @@ func main() {
 func shutdown() {
 	logrus.Info("Received SIGINT/SIGTERM")
 	models.SendNotification(`Backend will be going down for a while for an update, click on "Reconnect" to reconnect to TF2Stadium`, 0)
-	logrus.Info("WAT")
 	logrus.Info("waiting for GlobalWait")
 	helpers.GlobalWait.Wait()
 	logrus.Info("waiting for socket requests to complete.")
