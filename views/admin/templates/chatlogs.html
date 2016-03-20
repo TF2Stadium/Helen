@@ -16,14 +16,12 @@
       </thead>
       
       <tbody>
-	{{range .}}
-	<tr>
+	{{range .}}<tr>
 	  <td><a href="{{.Player.Profileurl}}">{{.Player.Alias}}</a></td>
 	  <td>{{.Message}}</td>
 	  <td>{{.CreatedAt.Format "Mon Jan _2 15:04:05 2006"}}</td>
 	  <td>{{.Room}}</td>
-	</tr>
-	{{end}}
+	</tr>{{end}}
       </tbody>
       
     </table>
