@@ -163,6 +163,9 @@ func TestPlayerBanning(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, bans, 2)
 
+	_, err = player2.GetActiveBan(PlayerBanJoin)
+	assert.NoError(t, err)
+
 	player2.Unban(PlayerBanJoin)
 	player2.Unban(PlayerBanFull)
 
