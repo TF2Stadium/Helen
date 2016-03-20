@@ -773,15 +773,15 @@ func (lobby *Lobby) Start() {
 	db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", LobbyStateInProgress)
 	lobby.Unlock()
 
-	var playerids []uint
-	db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &playerids)
+	// var playerids []uint
+	// db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &playerids)
 
-	for _, id := range playerids {
-		player, _ := GetPlayerByID(id)
-		lobby.AfterPlayerNotInGameFunc(player, 5*time.Minute, func() {
-			lobby.Substitute(player)
-		})
-	}
+	// for _, id := range playerids {
+	// 	player, _ := GetPlayerByID(id)
+	// 	lobby.AfterPlayerNotInGameFunc(player, 5*time.Minute, func() {
+	// 		lobby.Substitute(player)
+	// 	})
+	// }
 }
 
 // manually called. Should be called after the change to lobby actually takes effect.
