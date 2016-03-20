@@ -16,13 +16,11 @@
 	<!-- "Note that if there is only one variable, it is assigned
 	     the element; this is opposite to the convention in Go range clauses." -->
 	{{$url := .FrontendURL }}
-	{{range $lobby := .Lobbies}}
-	<tr>
+	{{range $lobby := .Lobbies}}<tr>
 	  <td><a href="{{print $url}}/lobby/{{$lobby.ID}}">Lobby #{{$lobby.ID}}</td>
 	  <td>$lobby.ServerInfo.Host</td>
 	  <td>$lobby.ServerInfo.RconPassword</td>
-	</tr>
-	{{end}}
+	</tr>{{end}}
       </tbody>
       
     </table>
