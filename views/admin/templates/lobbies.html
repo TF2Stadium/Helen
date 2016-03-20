@@ -18,8 +18,8 @@
 	{{$url := .FrontendURL }}
 	{{range $lobby := .Lobbies}}<tr>
 	  <td><a href="{{print $url}}/lobby/{{$lobby.ID}}">Lobby #{{$lobby.ID}}</td>
-	  <td>$lobby.ServerInfo.Host</td>
-	  <td>$lobby.ServerInfo.RconPassword</td>
+	  <td>{{$lobby.ServerInfo.Host}}</td>
+	  <td>{{$lobby.ServerInfo.RconPassword}}</td>
 	</tr>{{end}}
       </tbody>
       
