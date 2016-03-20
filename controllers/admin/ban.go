@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/models"
 	"golang.org/x/net/xsrftoken"
@@ -118,5 +119,8 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 		bans = append(bans, banData)
 	}
 
-	banlogsTempl.Execute(w, bans)
+	err = banlogsTempl.Execute(w, bans)
+	if err != nil {
+		logrus.Error(err)
+	}
 }

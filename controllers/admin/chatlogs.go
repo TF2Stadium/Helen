@@ -102,7 +102,6 @@ func GetChatLogs(w http.ResponseWriter, r *http.Request) {
 
 	err = chatLogsTempl.Execute(w, messages)
 	if err != nil {
-		logrus.Error(err.Error())
-		return
+		logrus.Error(err)
 	}
 }

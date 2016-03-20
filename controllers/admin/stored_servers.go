@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/models"
 	"golang.org/x/net/xsrftoken"
@@ -71,8 +72,11 @@ func RemoveServer(w http.ResponseWriter, r *http.Request) {
 }
 
 func ViewServerPage(w http.ResponseWriter, r *http.Request) {
-	serverPage.Execute(w, map[string]interface{}{
+	err := serverPage.Execute(w, map[string]interface{}{
 		"XSRFToken": xsrftoken.Generate(config.Constants.CookieStoreSecret, "admin", "POST"),
 		"Servers":   models.GetAllServers(),
 	})
+	if err != nil {
+		logrus.Error(err)
+	}
 }

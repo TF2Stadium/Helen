@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"golang.org/x/net/xsrftoken"
 )
@@ -27,9 +28,12 @@ var roleForm = map[string]string{
 var adminPageTempl *template.Template
 
 func ServeAdminPage(w http.ResponseWriter, r *http.Request) {
-	adminPageTempl.Execute(w, map[string]interface{}{
+	err := adminPageTempl.Execute(w, map[string]interface{}{
 		"BanForms":  banForm,
 		"RoleForms": roleForm,
 		"XSRFToken": xsrftoken.Generate(config.Constants.CookieStoreSecret, "admin", "POST"),
 	})
+	if err != nil {
+		logrus.Error(err)
+	}
 }
