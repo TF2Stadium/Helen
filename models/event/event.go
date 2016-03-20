@@ -106,7 +106,7 @@ func playerDisc(steamID string, lobbyID uint) {
 		lobby.Substitute(player)
 		player.BanUntil(time.Now().Add(30*time.Minute), models.PlayerBanJoin, "For ragequiting a lobby in the last 30 minutes")
 		db.DB.Model(player).Association("RageQuits").Append(lobby)
-		models.SendNotification(fmt.Sprintf("%s has been reported for not joining the game in 2 minutes", player.Alias()), int(lobby.ID))
+		models.SendNotification(fmt.Sprintf("%s has been reported for not joining the game in 5 minutes", player.Alias()), int(lobby.ID))
 	})
 }
 
