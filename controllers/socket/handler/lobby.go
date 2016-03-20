@@ -113,7 +113,8 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 	player := chelpers.GetPlayer(so.Token)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanCreate); banned {
-		return fmt.Errorf("You've been banned from creating lobbies till %s", until.Format(time.RFC822))
+		ban, _ := player.GetActiveBan(models.PlayerBanCreate)
+		return fmt.Errorf("You've been banned from creating lobbies till %s (%s)", until.Format(time.RFC822), ban.Reason)
 	}
 
 	var count int
@@ -385,7 +386,8 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 
 	player := chelpers.GetPlayer(so.Token)
 	if banned, until := player.IsBannedWithTime(models.PlayerBanJoin); banned {
-		return fmt.Errorf("You have been banned from joining lobbies till %s", until.Format(time.RFC822))
+		ban, _ := player.GetActiveBan(models.PlayerBanJoin)
+		return fmt.Errorf("You have been banned from joining lobbies till %s (%s)", until.Format(time.RFC822), ban.Reason)
 	}
 
 	//logrus.Debug("id %d class %s team %s", *args.Id, *args.Class, *args.Team)
