@@ -217,8 +217,12 @@ func (player *Player) SetMumbleUsername(lobbyType LobbyType, slot int) {
 	alias := player.GetSetting("siteAlias")
 	if alias == "" && player.Profileurl != "" {
 		index := strings.Index(player.Profileurl, "id/")
-		profileid := player.Profileurl[index+3 : len(player.Profileurl)-1]
-		username += profileid
+		if index == -1 {
+			profileid := player.Profileurl[index+3 : len(player.Profileurl)-1]
+			username += profileid
+		} else {
+			username += player.SteamID
+		}
 	} else {
 		username += strings.Replace(alias, " ", "_", -1)
 	}
