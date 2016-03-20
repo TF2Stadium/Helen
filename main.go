@@ -12,6 +12,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"gopkg.in/tylerb/graceful.v1"
@@ -104,37 +106,33 @@ func main() {
 		defer pid.Remove()
 	}
 
-	// start the server
-	server := graceful.Server{
-		Timeout: 10 * time.Second,
-		Server: &http.Server{
-			Addr:         config.Constants.ListenAddress,
-			Handler:      corsHandler,
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 5 * time.Second,
-		},
-
-		ShutdownInitiated: func() {
-			models.SendNotification(`Backend will be going down for a while for an update, click on "Reconnect" to reconnect to TF2Stadium`, 0)
-			logrus.Info("Received SIGINT/SIGTERM")
-			logrus.Info("waiting for GlobalWait")
-			helpers.GlobalWait.Wait()
-			logrus.Info("waiting for socket requests to complete.")
-			socketServer.Wait()
-			logrus.Info("closing all active websocket connections")
-			socketServer.AuthServer.Close()
-			logrus.Info("stopping event listener")
-			event.StopListening()
-		},
-	}
-
 	//start health checks
 	if config.Constants.HealthChecks {
 		controllers.StartHealthCheck()
 	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)
+	go func() {
+		<-sig
+		shutdown()
+		os.Exit(0)
+	}()
+
 	logrus.Info("Serving on ", config.Constants.ListenAddress)
-	err = server.ListenAndServe()
-	if err != nil {
-		logrus.Fatal(err)
-	}
+	logrus.Fatal(http.ListenAndServe(config.Constants.ListenAddress, corsHandler))
+}
+
+func shutdown() {
+	logrus.Info("Received SIGINT/SIGTERM")
+	models.SendNotification(`Backend will be going down for a while for an update, click on "Reconnect" to reconnect to TF2Stadium`, 0)
+	logrus.Info("WAT")
+	logrus.Info("waiting for GlobalWait")
+	helpers.GlobalWait.Wait()
+	logrus.Info("waiting for socket requests to complete.")
+	socketServer.Wait()
+	logrus.Info("closing all active websocket connections")
+	socketServer.AuthServer.Close()
+	logrus.Info("stopping event listener")
+	event.StopListening()
 }
