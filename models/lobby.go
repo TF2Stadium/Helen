@@ -173,6 +173,12 @@ func getGamemode(mapName string, lobbyType LobbyType) string {
 	return "unknown"
 }
 
+func MapRegionExists(mapName, region string) bool {
+	var count int
+	db.DB.Model(&Lobby{}).Where("map_name = ? AND region_code = ? AND state = ? OR state = ?", mapName, region, LobbyStateWaiting, LobbyStateInitializing).Count(&count)
+	return count != 0
+}
+
 // Returns a new lobby object with the given parameters
 // Call CreateLock after saving this lobby.
 func NewLobby(mapName string, lobbyType LobbyType, league string, serverInfo ServerRecord, whitelist string, mumble bool, whitelistGroup, password string) *Lobby {
@@ -376,9 +382,9 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 			if curLobby.State == LobbyStateInProgress {
 				curLobby.Substitute(player)
 			} else {
-				lobby.Lock()
-				db.DB.Where("player_id = ?", player.ID).Delete(&LobbySlot{})
-				lobby.Unlock()
+				curLobby.Lock()
+				db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, curLobby.ID).Delete(&LobbySlot{})
+				curLobby.Unlock()
 
 				curLobby.AddSpectator(player)
 			}
