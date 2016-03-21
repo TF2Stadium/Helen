@@ -4,14 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync/atomic"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
+	stats "github.com/TF2Stadium/Helen/controllers/stats"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/internal/pprof"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
@@ -60,8 +61,10 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logrus.Error(err)
 		so.Close()
+		return
 	}
-	pprof.Clients.Add(1)
+
+	atomic.AddInt64(stats.Stats.Clients, 1)
 }
 
 var ErrRecordNotFound = errors.New("Player record for found.")
