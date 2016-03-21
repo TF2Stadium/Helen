@@ -432,14 +432,17 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 
 	// Check if player is a substitute (the slot needs a subtitute)
 	if isSubstitution {
-		//delete previous slot
+		//get previous slot, to kick them from game
+		prevPlayerID, _ := lobby.GetPlayerIDBySlot(slot)
+		prevPlayer, _ := GetPlayerByID(prevPlayerID)
+
 		lobby.Lock()
 		db.DB.Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Delete(&LobbySlot{})
 		lobby.Unlock()
 
 		go func() {
 			//kicks previous slot occupant if they're in-game, resets their !rep count, removes them from the lobby
-			DisallowPlayer(lobby.ID, player.SteamID)
+			DisallowPlayer(lobby.ID, prevPlayer.SteamID)
 			BroadcastSubList() //since the sub slot has been deleted, broadcast the updated substitute list
 			//notify players in game server of subtitute
 			class, team, _ := LobbyGetSlotInfoString(lobby.Type, slot)
