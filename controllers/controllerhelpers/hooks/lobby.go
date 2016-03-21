@@ -30,6 +30,8 @@ func AfterLobbyJoin(so *wsevent.Client, lobby *models.Lobby, player *models.Play
 		lobby.AfterPlayerNotInGameFunc(player, 5*time.Minute, func() {
 			// if player doesn't join game server in 5 minutes,
 			// substitute them
+			message := player.Alias() + " has been reported for not joining the game within 5 minutes"
+			models.SendNotification(message, int(lobby.ID))
 			lobby.Substitute(player)
 		})
 	}
