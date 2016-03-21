@@ -10,11 +10,23 @@ Helen is the backend server component for the tf2stadium.com project written in 
 
 [Coverage Status](https://tf2stadium.github.io/coverage/)
 
-### Setup
+### Requirements
 
-The project uses PostgreSQL (PSQL) as a database. Default development account data can be found at [database/setup.md](../master/database/setup.md).
+* Go >= 1.5
+* PostgreSQL (with the `hstore` extension installed) Default development account data can be found at [database/setup.md](../master/database/setup.md)
+* RabbitMQ
+* [go-bindata](https://github.com/jteeuwen/go-bindata)
+
+### Installation
 
 Running this project requires configuring it via environment variables, documentation for which can be found on [CONFIG.md](./master/CONFIG.md)
+
+1. `go get github.com/TF2Stadium/Helen`
+2. `cd $(GOPATH)/src/github.com/TF2Stadium/Helen`
+3. `make assets -B`
+4. `make static`
+
+To build docker images, use `docker build -t tf2stadium/helen .`
 
 ### Structure
 The code is divided into multiple packages that follow the usual web application structure:
