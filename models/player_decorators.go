@@ -38,16 +38,10 @@ func (p *Player) setJSONFields(stats, lobbies, streaming, bans bool) {
 
 	if lobbies {
 		p.PlaceholderLobbies = new([]LobbyData)
-		rows, err := db.DB.DB().Query("SELECT lobbies.ID FROM lobbies INNER JOIN lobby_slots ON lobbies.id = lobby_slots.lobby_id WHERE lobbies.match_ended = true AND lobby_slots.player_id = $1 ORDER BY lobbies.ID DESC LIMIT 5", p.ID)
-		if err != nil {
-			return
-		}
+		var lobbies []*Lobby
+		db.DB.Table("lobbies").Joins("INNER JOIN lobby_slots ON lobbies.id = lobby_slots.lobby_id").Where("lobbies.match_ended = TRUE AND lobby_slots.player_id = ?", p.ID).Order("lobbies.ID DESC").Limit(5).Find(&lobbies)
 
-		for rows.Next() {
-			var id uint
-			rows.Scan(&id)
-
-			lobby, _ := GetLobbyByID(id)
+		for _, lobby := range lobbies {
 			*p.PlaceholderLobbies = append(*p.PlaceholderLobbies, DecorateLobbyData(lobby, true))
 		}
 	}
