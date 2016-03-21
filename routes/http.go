@@ -12,6 +12,7 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/admin"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/login"
+	"github.com/TF2Stadium/Helen/controllers/stats"
 	"github.com/TF2Stadium/Helen/helpers"
 )
 
@@ -41,7 +42,7 @@ var routes = []route{
 	{"/admin/server/remove", chelpers.FilterHTTPRequest(helpers.ModifyServers, admin.RemoveServer)},
 	{"/admin/lobbies", chelpers.FilterHTTPRequest(helpers.ActionViewLogs, admin.ViewOpenLobbies)},
 
-	{"/health", controllers.Health},
+	{"/stats", stats.StatsHandler},
 	{"/badge/", controllers.TwitchBadge},
 	{"/resetMumblePassword", controllers.ResetMumblePassword},
 }
