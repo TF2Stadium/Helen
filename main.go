@@ -106,11 +106,6 @@ func main() {
 		defer pid.Remove()
 	}
 
-	//start health checks
-	if config.Constants.HealthChecks {
-		controllers.StartHealthCheck()
-	}
-
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)
 	go func() {
