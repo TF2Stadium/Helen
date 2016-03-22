@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk add --update ca-certificates
+RUN apk add --update  --repository http://mirror.nl.leaseweb.net/alpine/main ca-certificates
 
 ENV HELEN_GEOIP=true
 ENV HELEN_SERVER_ADDR=0.0.0.0:80
