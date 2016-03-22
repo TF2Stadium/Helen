@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"sync/atomic"
+
+	"github.com/TF2Stadium/Helen/routes/socket"
 )
 
 var Stats struct {
@@ -23,9 +25,11 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 "eu": %d,
 "au": %d,
 "as": %d,
+"clients": %d,
 }`,
 		atomic.LoadInt64(Stats.NAPlayers),
 		atomic.LoadInt64(Stats.EUPlayers),
 		atomic.LoadInt64(Stats.AUPlayers),
-		atomic.LoadInt64(Stats.ASPlayers))
+		atomic.LoadInt64(Stats.ASPlayers),
+		socket.AuthServer.Clients()+socket.UnauthServer.Clients())
 }
