@@ -25,9 +25,8 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 }
 
 func AfterConnectLoggedIn(so *wsevent.Client, player *models.Player) {
-	if time.Since(player.ProfileUpdatedAt) >= time.Hour*1 {
+	if time.Since(player.ProfileUpdatedAt) >= 30*time.Minute {
 		player.UpdatePlayerInfo()
-		player.Save()
 	}
 
 	lobbyID, err := player.GetLobbyID(false)
