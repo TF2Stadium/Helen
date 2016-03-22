@@ -244,9 +244,9 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP {
 		return errors.New("Couldn't find region server.")
 	}
-	if models.MapRegionFormatExists(lob.MapName, lob.RegionCode, lob.Type) {
-		return errors.New("Your region already has a lobby with this map and format.")
-	}
+	// if models.MapRegionFormatExists(lob.MapName, lob.RegionCode, lob.Type) {
+	// 	return errors.New("Your region already has a lobby with this map and format.")
+	//}
 
 	if *args.ServerType == "serveme" {
 		lob.ServemeID = servemeID
