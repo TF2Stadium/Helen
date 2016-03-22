@@ -15,7 +15,7 @@ var (
 	steamIDSockets   = make(map[string][]*wsevent.Client) //steamid -> client array, since players can have multiple tabs open
 	socketSpectating = make(map[string]uint)              //socketid -> id of lobby the socket is spectating
 	connectedMu      = new(sync.RWMutex)
-	steamIDConnected = make(map[string](chan struct{}))
+	connectedTimer   = make(map[string](*time.Timer))
 )
 
 //AddSocket adds so to the list of sockets connected from steamid
@@ -25,9 +25,9 @@ func AddSocket(steamid string, so *wsevent.Client) {
 
 	steamIDSockets[steamid] = append(steamIDSockets[steamid], so)
 	if len(steamIDSockets[steamid]) == 1 {
-		stop, ok := steamIDConnected[steamid]
+		timer, ok := connectedTimer[steamid]
 		if ok {
-			stop <- struct{}{}
+			timer.Stop()
 		}
 	}
 }
@@ -72,30 +72,22 @@ func IsConnected(steamid string) bool {
 
 //ConnectedSockets returns the number of socket connections from steamid
 func ConnectedSockets(steamid string) int {
-	return len(steamIDSockets[steamid])
+	socketsMu.RLock()
+	l := len(steamIDSockets[steamid])
+	socketsMu.RUnlock()
+
+	return l
 }
 
 //AfterDisconnectedFunc waits the duration to elapse, and if the player with the given
 //steamid is still disconnected, calls f in it's own goroutine.
 func AfterDisconnectedFunc(steamid string, d time.Duration, f func()) {
 	connectedMu.Lock()
-	stop := make(chan struct{}, 1)
-	steamIDConnected[steamid] = stop
+	connectedTimer[steamid] = time.AfterFunc(d, func() {
+		if !IsConnected(steamid) {
+			f()
+		}
+	})
 	connectedMu.Unlock()
 
-	c := time.After(d)
-
-	go func() {
-		select {
-		case <-c:
-			if !IsConnected(steamid) {
-				f()
-			}
-		case <-stop:
-		}
-
-		connectedMu.Lock()
-		delete(steamIDConnected, steamid)
-		connectedMu.Unlock()
-	}()
 }
