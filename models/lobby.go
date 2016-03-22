@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -561,11 +562,18 @@ func (lobby *Lobby) RemoveUnreadyPlayers(spec bool) error {
 	return err
 }
 
+var (
+	inGameMu    = new(sync.Mutex)
+	inGameTimer = make(map[uint]*time.Timer)
+)
+
 //AfterPlayerNotInGameFunc waits the duration to elapse, and if the given player
 //is still not in the game server, calls f in it's own goroutine.
 func (lobby *Lobby) AfterPlayerNotInGameFunc(player *Player, d time.Duration, f func()) {
 	helpers.GlobalWait.Add(1)
-	time.AfterFunc(d, func() {
+
+	inGameMu.Lock()
+	inGameTimer[player.ID] = time.AfterFunc(d, func() {
 		var count int
 		db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ? AND needs_sub = FALSE AND in_game = FALSE", lobby.ID, player.ID).Count(&count)
 
@@ -574,6 +582,7 @@ func (lobby *Lobby) AfterPlayerNotInGameFunc(player *Player, d time.Duration, f 
 		}
 		helpers.GlobalWait.Done()
 	})
+	inGameMu.Unlock()
 }
 
 //IsPlayerInGame returns true if the player is in-game
@@ -763,6 +772,16 @@ func (lobby *Lobby) setInGameStatus(player *Player, inGame bool) error {
 
 //SetInGame sets the in-game status of the given player to true
 func (lobby *Lobby) SetInGame(player *Player) error {
+	inGameMu.Lock()
+	timer, ok := inGameTimer[player.ID]
+	if ok {
+		if timer.Stop() {
+			helpers.GlobalWait.Done()
+		}
+		delete(inGameTimer, player.ID)
+	}
+	inGameMu.Unlock()
+
 	return lobby.setInGameStatus(player, true)
 }
 
