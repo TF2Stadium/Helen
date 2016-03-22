@@ -174,9 +174,9 @@ func getGamemode(mapName string, lobbyType LobbyType) string {
 	return "unknown"
 }
 
-func MapRegionExists(mapName, region string) bool {
+func MapRegionFormatExists(mapName, region string, lobbytype LobbyType) bool {
 	var count int
-	db.DB.Model(&Lobby{}).Where("map_name = ? AND region_code = ? AND state = ? OR state = ?", mapName, region, LobbyStateWaiting, LobbyStateInitializing).Count(&count)
+	db.DB.Model(&Lobby{}).Where("map_name = ? AND region_code = ? AND type = ? AND state = ? OR state = ?", mapName, region, lobbytype, LobbyStateWaiting, LobbyStateInitializing).Count(&count)
 	return count != 0
 }
 
