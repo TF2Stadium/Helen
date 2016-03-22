@@ -14,7 +14,7 @@ var (
 	socketsMu        = new(sync.RWMutex)
 	steamIDSockets   = make(map[string][]*wsevent.Client) //steamid -> client array, since players can have multiple tabs open
 	socketSpectating = make(map[string]uint)              //socketid -> id of lobby the socket is spectating
-	connectedMu      = new(sync.RWMutex)
+	connectedMu      = new(sync.Mutex)
 	connectedTimer   = make(map[string](*time.Timer))
 )
 
@@ -25,10 +25,13 @@ func AddSocket(steamid string, so *wsevent.Client) {
 
 	steamIDSockets[steamid] = append(steamIDSockets[steamid], so)
 	if len(steamIDSockets[steamid]) == 1 {
+		connectedMu.Lock()
 		timer, ok := connectedTimer[steamid]
 		if ok {
 			timer.Stop()
+			delete(connectedTimer, steamid)
 		}
+		connectedMu.Unlock()
 	}
 }
 
