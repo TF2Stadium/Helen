@@ -5,12 +5,10 @@
 package hooks
 
 import (
-	"sync/atomic"
 	"time"
 
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
-	stats "github.com/TF2Stadium/Helen/controllers/stats"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/dgrijalva/jwt-go"
@@ -18,7 +16,6 @@ import (
 
 //OnDisconnect is connected when a player with a given socketID disconnects
 func OnDisconnect(socketID string, token *jwt.Token) {
-	atomic.AddInt64(stats.Stats.Clients, -1)
 	if token != nil { //player was logged in
 		player := chelpers.GetPlayer(token)
 		if player == nil {
