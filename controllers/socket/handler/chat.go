@@ -8,8 +8,6 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
@@ -24,30 +22,12 @@ func (Chat) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-var (
-	mapMu        = new(sync.RWMutex)
-	lastChatTime = make(map[uint]int64)
-)
-
 func (Chat) ChatSend(so *wsevent.Client, args struct {
 	Message *string `json:"message"`
 	Room    *int    `json:"room"`
 }) interface{} {
 
 	playerID, _ := strconv.ParseUint(so.Token.Claims["player_id"].(string), 10, 32)
-	now := time.Now().Unix()
-
-	mapMu.RLock()
-	diff := now - lastChatTime[uint(playerID)]
-	mapMu.RUnlock()
-
-	if diff == 0 {
-		return errors.New("You're sending messages too quickly")
-	}
-
-	mapMu.Lock()
-	lastChatTime[uint(playerID)] = now
-	mapMu.Unlock()
 
 	player, _ := models.GetPlayerByID(uint(playerID))
 
