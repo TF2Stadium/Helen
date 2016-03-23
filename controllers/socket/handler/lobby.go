@@ -239,6 +239,13 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	}
 
 	if models.MapRegionFormatExists(lob.MapName, lob.RegionCode, lob.Type) {
+		if reservation.ID != 0 {
+			err := context.Delete(reservation.ID, player.SteamID)
+			for err != nil {
+				err = context.Delete(reservation.ID, player.SteamID)
+			}
+		}
+
 		return errors.New("Your region already has a lobby with this map and format.")
 	}
 
@@ -312,8 +319,8 @@ func (Lobby) LobbyServerReset(so *wsevent.Client, args struct {
 	player := chelpers.GetPlayer(so.Token)
 	lobby, tperr := models.GetLobbyByID(*args.ID)
 
-	if player.SteamID != lobby.CreatedBySteamID || player.Role != helpers.RoleAdmin {
-		return errors.New("Player not authorized to reset server.")
+	if player.SteamID != lobby.CreatedBySteamID || (player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod) {
+		return errors.New("You are not authorized to reset server.")
 	}
 
 	if tperr != nil {

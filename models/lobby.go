@@ -215,8 +215,8 @@ func (lobby *Lobby) Delete() {
 	if lobby.ServemeID != 0 {
 		context := helpers.GetServemeContext(lobby.ServerInfo.Host)
 		err := context.Delete(lobby.ServemeID, lobby.CreatedBySteamID)
-		if err != nil {
-			logrus.Error(err)
+		for err != nil {
+			err = context.Delete(lobby.ServemeID, lobby.CreatedBySteamID)
 		}
 	}
 
