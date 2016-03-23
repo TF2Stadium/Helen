@@ -5,6 +5,7 @@ import (
 	"net"
 	"strings"
 
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/servemetf"
@@ -18,8 +19,7 @@ func (Serveme) Name(s string) string {
 }
 
 func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
-	arr := strings.Split(so.Request.RemoteAddr, ":")
-	context := helpers.GetServemeContextIP(arr[0])
+	context := helpers.GetServemeContextIP(chelpers.GetIPAddr(so.Request))
 
 	starts, ends, err := context.GetReservationTime(so.Token.Claims["steam_id"].(string))
 	if _, ok := err.(*net.OpError); ok {
