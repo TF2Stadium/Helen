@@ -684,7 +684,7 @@ func (lobby *Lobby) GetAllSlots() []LobbySlot {
 //SetupServer setups the TF2 server for the lobby, creates the mumble channels for it
 func (lobby *Lobby) SetupServer() error {
 	if lobby.State == LobbyStateEnded {
-		return nil
+		return errors.New("Lobby is closed")
 	}
 
 	err := setupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.Whitelist, lobby.MapName)
