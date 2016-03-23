@@ -274,10 +274,13 @@ func DecorateSubstitute(slot *LobbySlot) SubstituteData {
 	lobby := &Lobby{}
 	db.DB.First(lobby, slot.LobbyID)
 	substitute := SubstituteData{
-		LobbyID: lobby.ID,
-		Format:  formatMap[lobby.Type],
-		MapName: lobby.MapName,
-		Mumble:  lobby.Mumble,
+		LobbyID:       lobby.ID,
+		Format:        formatMap[lobby.Type],
+		MapName:       lobby.MapName,
+		Mumble:        lobby.Mumble,
+		Password:      lobby.SlotPassword != "",
+		TwitchChannel: lobby.TwitchChannel,
+		SteamGroup:    lobby.PlayerWhitelist,
 	}
 
 	substitute.Region.Name = lobby.RegionName
@@ -285,8 +288,6 @@ func DecorateSubstitute(slot *LobbySlot) SubstituteData {
 
 	substitute.Team, substitute.Class, _ = LobbyGetSlotInfoString(lobby.Type, slot.Slot)
 	substitute.Password = lobby.SlotPassword != ""
-	substitute.TwitchChannel = lobby.TwitchChannel
-	substitute.SteamGroup = lobby.PlayerWhitelist
 
 	return substitute
 }

@@ -176,7 +176,8 @@ func getGamemode(mapName string, lobbyType LobbyType) string {
 
 func MapRegionFormatExists(mapName, region string, lobbytype LobbyType) bool {
 	var count int
-	db.DB.Model(&Lobby{}).Where("map_name = ? AND region_code = ? AND type = ? AND state = ? OR state = ?", mapName, region, lobbytype, LobbyStateWaiting, LobbyStateInitializing).Count(&count)
+
+	db.DB.Model(&Lobby{}).Where("map_name = ? AND region_code = ? AND type = ? AND state = ?", mapName, region, lobbytype, LobbyStateWaiting).Count(&count)
 	return count != 0
 }
 
@@ -683,7 +684,7 @@ func (lobby *Lobby) GetAllSlots() []LobbySlot {
 //SetupServer setups the TF2 server for the lobby, creates the mumble channels for it
 func (lobby *Lobby) SetupServer() error {
 	if lobby.State == LobbyStateEnded {
-		return nil
+		return errors.New("Lobby is closed")
 	}
 
 	err := setupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.Whitelist, lobby.MapName)

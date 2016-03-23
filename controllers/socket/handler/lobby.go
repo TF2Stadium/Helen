@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -103,7 +102,6 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	// string doesn't have the field
 	TwitchWhitelistSubscribers bool `json:"twitchWhitelistSubs"`
 	TwitchWhitelistFollowers   bool `json:"twitchWhitelistFollows"`
-	//TwitchRestrictionType *string `json:"twitchRestrictionType" empty:"-" valid:"subscriber,follower"`
 
 	Requirements *struct {
 		Classes map[string]Requirement `json:"classes,omitempty"`
@@ -117,21 +115,15 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		return fmt.Errorf("You've been banned from creating lobbies till %s (%s)", until.Format(time.RFC822), ban.Reason)
 	}
 
-	var count int
-	db.DB.Model(&models.Lobby{}).Where("created_by_steam_id = ? AND state <> ?", player.SteamID, models.LobbyStateEnded).Count(&count)
-	if count != 0 {
+	if player.HasCreatedLobby() {
 		if player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod {
 			return errors.New("You have already created a lobby.")
-		}
-
-		db.DB.Model(&models.Lobby{}).Where("created_by_steam_id = ? AND state <> ? AND serveme_id <> 0", player.SteamID, models.LobbyStateEnded).Count(&count)
-		if count != 0 {
-			return errors.New("You can only create one serveme lobby at a time.")
 		}
 	}
 
 	var steamGroup string
-	var servemeID int
+	var context *servemetf.Context
+	var reservation servemetf.Reservation
 
 	if *args.SteamGroupWhitelist != "" {
 		if reSteamGroup.MatchString(*args.SteamGroupWhitelist) {
@@ -159,7 +151,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		rand.Read(randBytes)
 		*args.RconPwd = base64.URLEncoding.EncodeToString(randBytes)
 
-		reservation := servemetf.Reservation{
+		reservation = servemetf.Reservation{
 			StartsAt:    start.Format(servemetf.TimeFormat),
 			EndsAt:      end.Format(servemetf.TimeFormat),
 			ServerID:    (*args.Serveme).Server.ID,
@@ -168,8 +160,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			Password:    "foobar",
 		}
 
-		arr := strings.Split(so.Request.RemoteAddr, ":")
-		context := helpers.GetServemeContextIP(arr[0])
+		context = helpers.GetServemeContextIP(chelpers.GetIPAddr(so.Request))
 		resp, err := context.Create(reservation, so.Token.Claims["steam_id"].(string))
 		if err != nil || resp.Reservation.Errors != nil {
 			if err != nil {
@@ -182,7 +173,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		}
 
 		*args.Server = resp.Reservation.Server.IPAndPort
-		servemeID = resp.Reservation.ID
+		reservation = resp.Reservation
 	} else if *args.ServerType == "storedServer" {
 		if *args.Server == "" {
 			return errors.New("No server ID given")
@@ -206,6 +197,8 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			return errors.New("Server Address cannot be empty")
 		}
 	}
+
+	var count int
 
 	lobbyType := playermap[*args.Type]
 	db.DB.Table("server_records").Where("host = ?", *args.Server).Count(&count)
@@ -242,21 +235,38 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	lob.CreatedBySteamID = player.SteamID
 	lob.RegionCode, lob.RegionName = helpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP {
-		return errors.New("Couldn't find region server.")
+		return errors.New("Couldn't find the region for this server.")
 	}
-	// if models.MapRegionFormatExists(lob.MapName, lob.RegionCode, lob.Type) {
-	// 	return errors.New("Your region already has a lobby with this map and format.")
-	//}
+
+	if models.MapRegionFormatExists(lob.MapName, lob.RegionCode, lob.Type) {
+		return errors.New("Your region already has a lobby with this map and format.")
+	}
 
 	if *args.ServerType == "serveme" {
-		lob.ServemeID = servemeID
+		lob.ServemeID = reservation.ID
 	}
 
 	lob.Save()
 	lob.CreateLock()
 
 	if *args.ServerType == "serveme" {
-		time.Sleep(1*time.Minute + 30*time.Second)
+		now := time.Now()
+
+		for {
+			status, err := context.Status(reservation.ID, player.SteamID)
+			if err != nil {
+				logrus.Error(err)
+			}
+			if status == "ready" {
+				break
+			}
+
+			time.Sleep(10 * time.Second)
+			if time.Since(now) >= 3*time.Minute {
+				lob.Delete()
+				return errors.New("Couldn't get Serveme reservation, try another server.")
+			}
+		}
 	}
 
 	err := lob.SetupServer()
@@ -265,8 +275,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		return err
 	}
 
-	lob.State = models.LobbyStateWaiting
-	lob.Save()
+	lob.SetState(models.LobbyStateWaiting)
 
 	if args.Requirements != nil {
 		for class, requirement := range (*args.Requirements).Classes {
