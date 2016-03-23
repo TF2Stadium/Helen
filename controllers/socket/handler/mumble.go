@@ -19,3 +19,12 @@ func (Mumble) ResetMumblePassword(so *wsevent.Client, args struct{}) interface{}
 
 	return emptySuccess
 }
+
+type MumblePasswordResponse struct {
+	MumblePassword string `json:"mumblePassword"`
+}
+
+func (Mumble) GetMumblePassword(so *wsevent.Client, args struct{}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+	return newResponse(MumblePasswordResponse{MumblePassword: player.MumbleAuthkey})
+}
