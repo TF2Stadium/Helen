@@ -316,16 +316,11 @@ func (player *Player) GetLobbyID(inProgress bool) (uint, error) {
 	}
 
 	err := db.DB.Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").
-		Where("lobby_slots.player_id = ? AND lobbies.state NOT IN (?)", player.ID, states).
+		Where("lobby_slots.player_id = ? AND lobbies.state NOT IN (?) AND lobby_slots.needs_sub = FALSE", player.ID, states).
 		First(playerSlot).Error
 
-	// if the player is not in any lobby or the player has been reported/needs sub, return error
 	if err != nil {
 		return 0, err
-	}
-
-	if playerSlot.NeedsSub {
-		return 0, ErrPlayerInReportedSlot
 	}
 
 	return playerSlot.LobbyID, nil
@@ -527,6 +522,16 @@ func (p *Player) IsFollowing(channel string) bool {
 	}
 
 	return resp.StatusCode != 404
+}
+
+var states = []LobbyState{LobbyStateInitializing, LobbyStateEnded}
+
+func (p *Player) HasCreatedLobby() bool {
+	var count int
+
+	db.DB.Model(&Lobby{}).Where("created_by_steam_id = ? AND state NOT IN (?)", p.SteamID, states).Count(&count)
+
+	return count != 0
 }
 
 //if the player has connected their twitch account, and
