@@ -46,6 +46,8 @@ const (
 	DisconnectedFromServer string = "discFromServer"
 	MatchEnded             string = "matchEnded"
 	Test                   string = "test"
+
+	ReservationOver string = "reservationOver"
 )
 
 var stop = make(chan struct{})
@@ -82,6 +84,8 @@ func StartListening() {
 					disconnectedFromServer(event.LobbyID)
 				case MatchEnded:
 					matchEnded(event.LobbyID, event.LogsID, event.ClassTimes)
+				case ReservationOver:
+					reservationEnded(event.LobbyID)
 				}
 			case <-stop:
 				return
@@ -92,6 +96,12 @@ func StartListening() {
 
 func StopListening() {
 	stop <- struct{}{}
+}
+
+func reservationEnded(lobbyID uint) {
+	lobby, _ := models.GetLobbyByID(lobbyID)
+	lobby.Close(false, false)
+	models.SendNotification("Lobby Closed (serveme.tf reservation ended)", int(lobby.ID))
 }
 
 func playerDisc(steamID string, lobbyID uint) {
