@@ -6,8 +6,9 @@ package handler
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
 	"strings"
+	"time"
 
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
@@ -26,12 +27,11 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 	Message *string `json:"message"`
 	Room    *int    `json:"room"`
 }) interface{} {
-
-	playerID, _ := strconv.ParseUint(so.Token.Claims["player_id"].(string), 10, 32)
-
-	player, _ := models.GetPlayerByID(uint(playerID))
-
-	//logrus.Debug("received chat message: %s %s", *args.Message, player.Name)
+	player := chelpers.GetPlayer(so.Token)
+	if banned, until := player.IsBannedWithTime(models.PlayerBanChat); banned {
+		ban, _ := player.GetActiveBan(models.PlayerBanChat)
+		return fmt.Errorf("You've been banned from creating lobbies till %s (%s)", until.Format(time.RFC822), ban.Reason)
+	}
 
 	if *args.Room > 0 {
 		var count int
