@@ -12,10 +12,18 @@ func (Mumble) Name(s string) string {
 	return string((s[0])+32) + s[1:]
 }
 
-func (Mumble) ResetMumblePassword(so *wsevent.Client, args struct{}) interface{} {
+func (Mumble) ResetMumblePassword(so *wsevent.Client, _ struct{}) interface{} {
 	player := chelpers.GetPlayer(so.Token)
 	player.MumbleAuthkey = player.GenAuthKey()
 	player.Save()
 
 	return emptySuccess
+}
+
+func (Mumble) GetMumblePassword(so *wsevent.Client, _ struct{}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+
+	return struct {
+		Password string
+	}{player.MumbleAuthkey}
 }
