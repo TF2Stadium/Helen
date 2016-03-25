@@ -256,9 +256,11 @@ func (l *Lobby) ServemeCheck(context *servemetf.Context) {
 			if err != nil {
 				logrus.Error(err)
 			}
-			if ended && l.CurrentState() != LobbyStateEnded {
-				SendNotification("Lobby Closed (Serveme reservation ended.)", int(l.ID))
-				l.Close(true, false)
+			if ended {
+				if l.CurrentState() != LobbyStateEnded {
+					SendNotification("Lobby Closed (Serveme reservation ended.)", int(l.ID))
+					l.Close(true, false)
+				}
 				return
 			}
 			time.Sleep(10 * time.Second)
