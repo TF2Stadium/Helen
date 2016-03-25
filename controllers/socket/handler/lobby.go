@@ -331,7 +331,7 @@ func (Lobby) LobbyServerReset(so *wsevent.Client, args struct {
 		return errors.New("Lobby has ended")
 	}
 
-	if err := models.ReExecConfig(lobby.ID); err != nil {
+	if err := models.ReExecConfig(lobby.ID, false); err != nil {
 		return err
 	}
 
