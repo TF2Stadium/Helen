@@ -802,6 +802,7 @@ func (lobby *Lobby) Start() {
 	db.DB.Table("lobbies").Where("id = ?", lobby.ID).Update("state", LobbyStateInProgress)
 	lobby.Unlock()
 
+	ReExecConfig(lobby.ID, false)
 	// var playerids []uint
 	// db.DB.Table("lobby_slots").Where("lobby_id = ?", lobby.ID).Pluck("player_id", &playerids)
 
