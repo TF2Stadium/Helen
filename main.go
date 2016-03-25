@@ -73,6 +73,7 @@ func main() {
 
 	helpers.ConnectAMQP()
 	event.StartListening()
+	helpers.InitGeoIPDB()
 
 	database.Init()
 	migrations.Do()
@@ -87,7 +88,6 @@ func main() {
 	models.DeleteUnusedServerRecords()
 	//go models.TFTVStreamStatusUpdater()
 
-	helpers.InitGeoIPDB()
 	if config.Constants.SteamIDWhitelist != "" {
 		go chelpers.WhitelistListener()
 	}
