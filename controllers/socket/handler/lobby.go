@@ -785,3 +785,49 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 
 	return emptySuccess
 }
+
+func (Lobby) LobbyRemoveTwitchRestriction(so *wsevent.Client, args struct {
+	ID uint `json:"id"`
+}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+
+	lobby, err := models.GetLobbyByID(args.ID)
+	if err != nil {
+		return err
+	}
+
+	if player.SteamID != lobby.CreatedBySteamID && (player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod) {
+		return errors.New("You aren't authorized to do this.")
+	}
+
+	lobby.TwitchChannel = ""
+	lobby.Save()
+
+	models.BroadcastLobby(lobby)
+	models.BroadcastLobbyList()
+
+	return emptySuccess
+}
+
+func (Lobby) LobbyRemoveSteamRestriction(so *wsevent.Client, args struct {
+	ID uint `json:"id"`
+}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+
+	lobby, err := models.GetLobbyByID(args.ID)
+	if err != nil {
+		return err
+	}
+
+	if player.SteamID != lobby.CreatedBySteamID && (player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod) {
+		return errors.New("You aren't authorized to do this.")
+	}
+
+	lobby.PlayerWhitelist = ""
+	lobby.Save()
+
+	models.BroadcastLobby(lobby)
+	models.BroadcastLobbyList()
+
+	return emptySuccess
+}
