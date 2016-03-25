@@ -83,6 +83,7 @@ func main() {
 
 	models.CreateLocks()
 	models.ConnectRPC()
+	models.RestoreServemeChecks()
 	models.DeleteUnusedServerRecords()
 	//go models.TFTVStreamStatusUpdater()
 

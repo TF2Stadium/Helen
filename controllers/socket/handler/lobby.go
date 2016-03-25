@@ -274,6 +274,8 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 				return errors.New("Couldn't get Serveme reservation, try another server.")
 			}
 		}
+
+		lob.ServemeCheck(context)
 	}
 
 	err := lob.SetupServer()

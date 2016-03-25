@@ -16,6 +16,7 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/servemetf"
 	"github.com/jinzhu/gorm"
 )
 
@@ -244,6 +245,36 @@ func (l *Lobby) CurrentState() LobbyState {
 func (l *Lobby) SetState(s LobbyState) {
 	db.DB.Table("lobbies").Where("id = ?", l.ID).UpdateColumn("state", s)
 	l.State = s
+}
+
+//ServemeCheck checks the status of the serveme reservation for the lobby
+//(if any) every 10 seconds in a goroutine, and closes the lobby if it has ended
+func (l *Lobby) ServemeCheck(context *servemetf.Context) {
+	go func() {
+		for {
+			ended, err := context.Ended(l.ServemeID, l.CreatedBySteamID)
+			if err != nil {
+				logrus.Error(err)
+			}
+			if ended && l.CurrentState() != LobbyStateEnded {
+				SendNotification("Lobby Closed (Serveme reservation ended.)", int(l.ID))
+				l.Close(true, false)
+				return
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}()
+}
+
+func RestoreServemeChecks() {
+	var ids []uint
+	db.DB.Model(&Lobby{}).Where("state <> ? AND serveme_id <> 0", LobbyStateEnded).Pluck("id", &ids)
+
+	for _, id := range ids {
+		lobby, _ := GetLobbyByIDServer(id)
+		context := helpers.GetServemeContext(lobby.ServerInfo.Host)
+		lobby.ServemeCheck(context)
+	}
 }
 
 //GetPlayerSlotObj returns the LobbySlot object if the given player occupies a slot in the lobby.
