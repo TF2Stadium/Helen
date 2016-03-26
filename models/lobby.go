@@ -421,7 +421,6 @@ func (lobby *Lobby) AddPlayer(player *Player, slot int, password string) error {
 				db.DB.Where("player_id = ? AND lobby_id = ?", player.ID, curLobby.ID).Delete(&LobbySlot{})
 				curLobby.Unlock()
 
-				curLobby.AddSpectator(player)
 			}
 
 		} else { //player is in the same lobby, they're changing their slots
