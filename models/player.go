@@ -424,8 +424,7 @@ func (t PlayerBanType) String() string {
 
 func (player *Player) IsBannedWithTime(t PlayerBanType) (bool, time.Time) {
 	ban := &PlayerBan{}
-	err := db.DB.Where("type = ? AND until > now() AND player_id = ? AND active = TRUE", t, player.ID).
-		Order("until desc").First(ban).Error
+	err := db.DB.Where("type IN (?) AND until > now() AND player_id = ? AND active = TRUE", []PlayerBanType{t, PlayerBanFull}, player.ID).Order("until desc").First(ban).Error
 	if err != nil {
 		return false, time.Time{}
 	}
@@ -460,9 +459,15 @@ func (player *Player) Unban(t PlayerBanType) error {
 }
 
 func (player *Player) GetActiveBan(banType PlayerBanType) (*PlayerBan, error) {
+	//try getting the full ban first
 	ban := &PlayerBan{}
-	err := db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, banType).First(ban).Error
-	return ban, err
+	err := db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? and active = TRUE", player.ID, PlayerBanFull).First(ban).Error
+	if err != nil {
+		err = db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, banType).First(ban).Error
+		return ban, err
+	}
+
+	return ban, nil
 }
 
 func (player *Player) GetActiveBans() ([]*PlayerBan, error) {
