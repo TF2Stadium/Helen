@@ -143,8 +143,8 @@ func TestPlayerBanning(t *testing.T) {
 	player.BanUntil(future, PlayerBanFull, "they suck")
 
 	player2, _ := GetPlayerBySteamID(player.SteamID)
-	assert.False(t, player2.IsBanned(PlayerBanCreate))
-	assert.False(t, player2.IsBanned(PlayerBanChat))
+	assert.True(t, player2.IsBanned(PlayerBanCreate))
+	assert.True(t, player2.IsBanned(PlayerBanChat))
 	isBannedFull, untilFull := player2.IsBannedWithTime(PlayerBanFull)
 	assert.True(t, isBannedFull)
 	assert.True(t, future.Sub(untilFull) < time.Second)
