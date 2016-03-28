@@ -150,7 +150,6 @@ func LoadLobbySettings(data []byte) error {
 
 	err := json.Unmarshal(data, &args)
 	if err != nil {
-		panic(err)
 		return err
 	}
 

@@ -36,10 +36,11 @@ func BanPlayer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ban, ok := map[string]models.PlayerBanType{
-		"joinLobby":   models.PlayerBanJoin,
-		"createLobby": models.PlayerBanCreate,
-		"chat":        models.PlayerBanChat,
-		"full":        models.PlayerBanFull,
+		"joinLobby":       models.PlayerBanJoin,
+		"joinMumbleLobby": models.PlayerBanJoinMumble,
+		"createLobby":     models.PlayerBanCreate,
+		"chat":            models.PlayerBanChat,
+		"full":            models.PlayerBanFull,
 	}[banType]
 	if !ok {
 		http.Error(w, "Invalid ban type", http.StatusBadRequest)
@@ -93,10 +94,18 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var banData []BanData
+	var bans []*models.PlayerBan
+
+	all := values.Get("all")
 
 	steamid := values.Get("steamid")
 	if steamid == "" {
-		bans := models.GetAllActiveBans()
+		if all == "" {
+			bans = models.GetAllActiveBans()
+		} else {
+			bans = models.GetAllBans()
+		}
+
 		for _, ban := range bans {
 			player, _ := models.GetPlayerByID(ban.PlayerID)
 			banData = append(banData, BanData{player, ban})
@@ -108,7 +117,12 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		bans, _ := player.GetActiveBans()
+		if all == "" {
+			bans, _ = player.GetActiveBans()
+		} else {
+			bans, _ = player.GetAllBans()
+		}
+
 		for _, ban := range bans {
 			banData = append(banData, BanData{player, ban})
 		}

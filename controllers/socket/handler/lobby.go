@@ -419,6 +419,13 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 		return tperr
 	}
 
+	if lob.Mumble {
+		if banned, until := player.IsBannedWithTime(models.PlayerBanJoinMumble); banned {
+			ban, _ := player.GetActiveBan(models.PlayerBanJoinMumble)
+			return fmt.Errorf("You have been banned from joining Mumble lobbies till %s (%s)", until.Format(time.RFC822), ban.Reason)
+		}
+	}
+
 	if lob.State == models.LobbyStateEnded {
 		return errors.New("Cannot join a closed lobby.")
 
