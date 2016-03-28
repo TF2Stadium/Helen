@@ -24,6 +24,6 @@ func (Mumble) GetMumblePassword(so *wsevent.Client, _ struct{}) interface{} {
 	player := chelpers.GetPlayer(so.Token)
 
 	return struct {
-		Password string
+		Password string `json:"password"`
 	}{player.MumbleAuthkey}
 }
