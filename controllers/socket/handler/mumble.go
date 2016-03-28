@@ -23,7 +23,7 @@ func (Mumble) ResetMumblePassword(so *wsevent.Client, _ struct{}) interface{} {
 func (Mumble) GetMumblePassword(so *wsevent.Client, _ struct{}) interface{} {
 	player := chelpers.GetPlayer(so.Token)
 
-	return struct {
+	return newResponse(struct {
 		Password string `json:"password"`
-	}{player.MumbleAuthkey}
+	}{player.MumbleAuthkey})
 }
