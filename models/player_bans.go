@@ -29,10 +29,11 @@ type PlayerBan struct {
 
 func (t PlayerBanType) String() string {
 	return map[PlayerBanType]string{
-		PlayerBanJoin:   "lobby join ban",
-		PlayerBanCreate: "lobby create ban",
-		PlayerBanChat:   "chat ban",
-		PlayerBanFull:   "full ban",
+		PlayerBanJoin:       "lobby join ban",
+		PlayerBanJoinMumble: "mumble lobby join ban",
+		PlayerBanCreate:     "lobby create ban",
+		PlayerBanChat:       "chat ban",
+		PlayerBanFull:       "full ban",
 	}[t]
 }
 
