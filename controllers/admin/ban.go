@@ -93,10 +93,18 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var banData []BanData
+	var bans []*models.PlayerBan
+
+	all := values.Get("all")
 
 	steamid := values.Get("steamid")
 	if steamid == "" {
-		bans := models.GetAllActiveBans()
+		if all == "" {
+			bans = models.GetAllActiveBans()
+		} else {
+			bans = models.GetAllBans()
+		}
+
 		for _, ban := range bans {
 			player, _ := models.GetPlayerByID(ban.PlayerID)
 			banData = append(banData, BanData{player, ban})
@@ -108,7 +116,12 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		bans, _ := player.GetActiveBans()
+		if all == "" {
+			bans, _ = player.GetActiveBans()
+		} else {
+			bans, _ = player.GetAllBans()
+		}
+
 		for _, ban := range bans {
 			banData = append(banData, BanData{player, ban})
 		}

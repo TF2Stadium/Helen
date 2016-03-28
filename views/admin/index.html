@@ -41,6 +41,7 @@
   <form method="get" action="admin/banlogs" class="pure-form">
     <legend> Ban Logs </legend>
     <input placeholder="Steam ID (optional)" type="text" name="steamid">
+    <input type="checkbox" name="all" value="true">Fetch all bans<br>
     <input type="hidden" name="xsrf-token" value="{{.XSRFToken}}">
     <button type="submit" class="pure-button pure-button-primary">View</button>
   </form>

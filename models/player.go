@@ -24,36 +24,11 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
 	"github.com/TF2Stadium/PlayerStatsScraper"
-	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
-)
-
-// Stores types of bans
-type PlayerBanType int
-
-const (
-	// Ban player from joining lobbies
-	PlayerBanJoin PlayerBanType = iota
-	// Ban player from creating lobbies
-	PlayerBanCreate
-	// Ban player from sending chat messages
-	PlayerBanChat
-	// Complete player ban
-	PlayerBanFull
 )
 
 var ErrPlayerNotFound = errors.New("Player not found")
 var ErrPlayerInReportedSlot = errors.New("Player in reported slot")
-
-//PlayerBan represents a player ban
-type PlayerBan struct {
-	gorm.Model
-	PlayerID uint          // ID of the player banned
-	Type     PlayerBanType // Ban type
-	Until    time.Time     // Time until which the ban is valid
-	Reason   string        // Reason for the ban
-	Active   bool          `sql:"default:true"` // Whether the ban is active
-}
 
 //Player represents a player object
 type Player struct {
@@ -413,78 +388,6 @@ func (player *Player) GetSetting(key string) string {
 	return *value
 }
 
-func (t PlayerBanType) String() string {
-	return map[PlayerBanType]string{
-		PlayerBanJoin:   "lobby join ban",
-		PlayerBanCreate: "lobby create ban",
-		PlayerBanChat:   "chat ban",
-		PlayerBanFull:   "full ban",
-	}[t]
-}
-
-func (player *Player) IsBannedWithTime(t PlayerBanType) (bool, time.Time) {
-	ban := &PlayerBan{}
-	err := db.DB.Where("type IN (?) AND until > now() AND player_id = ? AND active = TRUE", []PlayerBanType{t, PlayerBanFull}, player.ID).Order("until desc").First(ban).Error
-	if err != nil {
-		return false, time.Time{}
-	}
-
-	return true, ban.Until
-}
-
-func (player *Player) IsBanned(t PlayerBanType) bool {
-	res, _ := player.IsBannedWithTime(t)
-	return res
-}
-
-func (player *Player) BanUntil(tim time.Time, t PlayerBanType, reason string) error {
-	// first check if player is already banned
-	if banned := player.IsBanned(t); banned {
-		db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE AND until > now()", player.ID, t).Update("until", tim)
-		return nil
-	}
-	ban := PlayerBan{
-		PlayerID: player.ID,
-		Type:     t,
-		Until:    tim,
-		Reason:   reason,
-	}
-
-	return db.DB.Create(&ban).Error
-}
-
-func (player *Player) Unban(t PlayerBanType) error {
-	return db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, t).
-		Update("active", "FALSE").Error
-}
-
-func (player *Player) GetActiveBan(banType PlayerBanType) (*PlayerBan, error) {
-	//try getting the full ban first
-	ban := &PlayerBan{}
-	err := db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? and active = TRUE", player.ID, PlayerBanFull).First(ban).Error
-	if err != nil {
-		err = db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, banType).First(ban).Error
-		return ban, err
-	}
-
-	return ban, nil
-}
-
-func (player *Player) GetActiveBans() ([]*PlayerBan, error) {
-	var bans []*PlayerBan
-	err := db.DB.Where("player_id = ? AND active = TRUE AND until > now()", player.ID).Find(&bans).Error
-	if err != nil {
-		return nil, err
-	}
-	return bans, nil
-}
-
-func GetAllActiveBans() []*PlayerBan {
-	var bans []*PlayerBan
-	db.DB.Where("active = TRUE AND until > now()").Find(&bans)
-	return bans
-}
-
 //IsSubscribed returns whether if the player has subscribed to the given twitch channel.
 //The player object should have a valid access token and twitch name
 func (p *Player) IsSubscribed(channel string) bool {
@@ -509,6 +412,24 @@ func (p *Player) IsSubscribed(channel string) bool {
 
 	//if status code is 404, the user isn't subscribed
 	return err == nil && resp.StatusCode != 404
+}
+
+//IsSubscribed returns whether if the player has a Twitch subscription program.
+//The player object should have a valid access token and twitch name
+func (p *Player) HasSubscriptionProgram() bool {
+	url := fmt.Sprintf("https://api.twitch.tv/kraken/users/%s/subscriptions/%s", p.TwitchName, p.TwitchName)
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
+	req.Header.Add("Authorization", "OAuth "+p.TwitchAccessToken)
+
+	resp, err := helpers.HTTPClient.Do(req)
+	if err != nil {
+		logrus.Error(err)
+		return false
+	}
+
+	return resp.StatusCode != 422
 }
 
 //IsFollowing returns whether the player has subscribed to the given Twitch channel.
