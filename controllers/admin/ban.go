@@ -36,10 +36,11 @@ func BanPlayer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ban, ok := map[string]models.PlayerBanType{
-		"joinLobby":   models.PlayerBanJoin,
-		"createLobby": models.PlayerBanCreate,
-		"chat":        models.PlayerBanChat,
-		"full":        models.PlayerBanFull,
+		"joinLobby":       models.PlayerBanJoin,
+		"joinMumbleLobby": models.PlayerBanJoinMumble,
+		"createLobby":     models.PlayerBanCreate,
+		"chat":            models.PlayerBanChat,
+		"full":            models.PlayerBanFull,
 	}[banType]
 	if !ok {
 		http.Error(w, "Invalid ban type", http.StatusBadRequest)

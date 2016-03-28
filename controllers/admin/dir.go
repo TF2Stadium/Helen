@@ -14,10 +14,11 @@ import (
 )
 
 var banForm = map[string]string{
-	"joinLobby":   "Joining Lobbies",
-	"createLobby": "Creating Lobbies",
-	"chat":        "Chatting",
-	"full":        "Full ban",
+	"joinLobby":       "Joining Lobbies",
+	"joinMumbleLobby": "Joining Mumble Lobbies",
+	"createLobby":     "Creating Lobbies",
+	"chat":            "Chatting",
+	"full":            "Full ban",
 }
 
 var roleForm = map[string]string{
