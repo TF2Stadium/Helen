@@ -206,17 +206,18 @@ func isClean(s string) bool {
 func (player *Player) SetMumbleUsername(lobbyType LobbyType, slot int) {
 	_, class, _ := LobbyGetSlotInfoString(lobbyType, slot)
 	username := strings.ToUpper(class) + "_"
-
 	alias := player.GetSetting("siteAlias")
-	if (alias == "" || !isClean(alias)) && player.Profileurl != "" {
-		if reSteamProfileID.MatchString(player.Profileurl) {
-			m := reSteamProfileID.FindStringSubmatch(player.Profileurl)
-			username += m[1]
-		} else {
-			username += player.SteamID
-		}
-	} else {
+
+	switch {
+	case isClean(alias):
 		username += strings.Replace(alias, " ", "_", -1)
+	case isClean(player.Name):
+		username += strings.Replace(player.Name, " ", "_", -1)
+	case reSteamProfileID.MatchString(player.Profileurl):
+		m := reSteamProfileID.FindStringSubmatch(player.Profileurl)
+		username += m[1]
+	default:
+		username += player.SteamID
 	}
 
 	var count int
