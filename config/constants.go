@@ -23,24 +23,24 @@ var (
 )
 
 type constants struct {
-	ListenAddress     string `envconfig:"SERVER_ADDR" default:"localhost:8080" doc:"Address to serve on."`
-	PublicAddress     string `envconfig:"PUBLIC_ADDR" doc:"Publicly accessible address for the server, requires schema"`
-	OpenIDRealm       string `envconfig:"SERVER_OPENID_REALM" default:"http://localhost:8080" doc:"The OpenID Realm (See: [Section 9.2 of the OpenID Spec](https://openid.net/specs/openid-authentication-2_0-12.html#realms))"`
-	CORSWhitelist     string `envconfig:"CORS_WHITELIST" default:"*"`
-	CookieDomain      string `envconfig:"SERVER_COOKIE_DOMAIN" default:"" doc:"Cookie URL domain"`
-	LoginRedirectPath string `envconfig:"SERVER_REDIRECT_PATH" default:"http://localhost:8080/" doc:"URL to redirect user to after a successful login"`
-	CookieStoreSecret string `envconfig:"COOKIE_STORE_SECRET" default:"secret" doc:"base64 encoded key to use for encrypting cookies"`
-	MumbleAddr        string `envconfig:"MUMBLE_ADDR" doc:"Mumble Address"`
-	MumblePassword    string `envconfig:"MUMBLE_PASSWORD" doc:"Mumble Password"`
-	SteamIDWhitelist  string `envconfig:"STEAMID_WHITELIST" doc:"SteamID Group XML page to use to filter logins"`
-	MockupAuth        bool   `envconfig:"MOCKUP_AUTH" default:"false" doc:"Enable Mockup Authentication"`
-	GeoIP             bool   `envconfig:"GEOIP" default:"false" doc:"Enable geoip support for getting the location of game servers"`
-	ServeStatic       bool   `envconfig:"SERVE_STATIC" default:"true" doc:"Serve /static/"`
-	RabbitMQURL       string `envconfig:"RABBITMQ_URL" default:"amqp://guest:guest@localhost:5672/" doc:"URL for AMQP server"`
-	PaulingQueue      string `envconfig:"PAULING_QUEUE" default:"pauling" doc:"Name of queue over which RPC calls to Pauling are sent"`
-	TwitchBotQueue    string `envconfig:"TWITCHBOT_QUEUE" default:"twitchbot" doc:"Name of queue over which RPC calls to Pauling are sent"`
-	FumbleQueue       string `envconfig:"FUMBLE_QUEUE" default:"fumble" doc:"Name of queue over which RPC calls to Fumble are sent"`
-	RabbitMQQueue     string `envconfig:"RABBITMQ_QUEUE" default:"events" doc:"Name of queue over which events are sent"`
+	ListenAddress     string   `envconfig:"SERVER_ADDR" default:"localhost:8080" doc:"Address to serve on."`
+	PublicAddress     string   `envconfig:"PUBLIC_ADDR" doc:"Publicly accessible address for the server, requires schema"`
+	OpenIDRealm       string   `envconfig:"SERVER_OPENID_REALM" default:"http://localhost:8080" doc:"The OpenID Realm (See: [Section 9.2 of the OpenID Spec](https://openid.net/specs/openid-authentication-2_0-12.html#realms))"`
+	AllowedOrigins    []string `envconfig:"ALLOWED_ORIGINS" default:"*"`
+	CookieDomain      string   `envconfig:"SERVER_COOKIE_DOMAIN" default:"" doc:"Cookie URL domain"`
+	LoginRedirectPath string   `envconfig:"SERVER_REDIRECT_PATH" default:"http://localhost:8080/" doc:"URL to redirect user to after a successful login"`
+	CookieStoreSecret string   `envconfig:"COOKIE_STORE_SECRET" default:"secret" doc:"base64 encoded key to use for encrypting cookies"`
+	MumbleAddr        string   `envconfig:"MUMBLE_ADDR" doc:"Mumble Address"`
+	MumblePassword    string   `envconfig:"MUMBLE_PASSWORD" doc:"Mumble Password"`
+	SteamIDWhitelist  string   `envconfig:"STEAMID_WHITELIST" doc:"SteamID Group XML page to use to filter logins"`
+	MockupAuth        bool     `envconfig:"MOCKUP_AUTH" default:"false" doc:"Enable Mockup Authentication"`
+	GeoIP             bool     `envconfig:"GEOIP" default:"false" doc:"Enable geoip support for getting the location of game servers"`
+	ServeStatic       bool     `envconfig:"SERVE_STATIC" default:"true" doc:"Serve /static/"`
+	RabbitMQURL       string   `envconfig:"RABBITMQ_URL" default:"amqp://guest:guest@localhost:5672/" doc:"URL for AMQP server"`
+	PaulingQueue      string   `envconfig:"PAULING_QUEUE" default:"pauling" doc:"Name of queue over which RPC calls to Pauling are sent"`
+	TwitchBotQueue    string   `envconfig:"TWITCHBOT_QUEUE" default:"twitchbot" doc:"Name of queue over which RPC calls to Pauling are sent"`
+	FumbleQueue       string   `envconfig:"FUMBLE_QUEUE" default:"fumble" doc:"Name of queue over which RPC calls to Fumble are sent"`
+	RabbitMQQueue     string   `envconfig:"RABBITMQ_QUEUE" default:"events" doc:"Name of queue over which events are sent"`
 
 	// database
 	DbAddr     string `envconfig:"DATABASE_ADDR" default:"127.0.0.1:5432" doc:"Database Address"`
