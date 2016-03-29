@@ -98,7 +98,7 @@ func main() {
 
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{config.Constants.CORSWhitelist},
-		AllowedMethods:   []string{"GET", "POST", "DELETE"},
+		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowCredentials: true,
 	}).Handler(mux)
 
