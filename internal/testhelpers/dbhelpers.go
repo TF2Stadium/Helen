@@ -49,12 +49,14 @@ func CleanupDB() {
 		"chat_messages",
 		"lobbies",
 		"lobby_slots",
-		"bans",
-		"stats",
+		"player_bans",
+		"player_stats",
 		"players",
+		"reports",
+		"requirements",
 		"servers",
 		"spectators_players_lobbies",
-		"requirements",
+		"stored_servers",
 	}
 	for _, table := range tables {
 		database.DB.Exec("TRUNCATE TABLE " + table + " RESTART IDENTITY")
