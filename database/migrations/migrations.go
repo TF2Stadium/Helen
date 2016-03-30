@@ -27,9 +27,9 @@ func Do() {
 	database.DB.AutoMigrate(&lobby.Lobby{})
 	database.DB.AutoMigrate(&lobby.LobbySlot{})
 	database.DB.AutoMigrate(&gameserver.Server{})
-	database.DB.AutoMigrate(&player.Stats{})
+	database.DB.AutoMigrate(&player.PlayerStats{})
 	database.DB.AutoMigrate(&models.AdminLogEntry{})
-	database.DB.AutoMigrate(&player.Ban{})
+	database.DB.AutoMigrate(&player.PlayerBan{})
 
 	database.DB.Model(&lobby.LobbySlot{}).AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
 	database.DB.Model(&lobby.LobbySlot{}).AddUniqueIndex("idx_lobby_id_player_id", "lobby_id", "player_id")
@@ -37,6 +37,7 @@ func Do() {
 	database.DB.AutoMigrate(&lobby.Requirement{})
 	database.DB.AutoMigrate(&Constant{})
 	database.DB.AutoMigrate(&gameserver.StoredServer{})
+	database.DB.AutoMigrate(&player.Report{})
 
 	once.Do(func() {
 		checkSchema()
