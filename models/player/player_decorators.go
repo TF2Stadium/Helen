@@ -62,7 +62,7 @@ func (p *Player) setJSONFields(stats, lobbies, streaming, bans bool) {
 	}
 }
 
-func (ban *Ban) MarshalJSON() ([]byte, error) {
+func (ban *PlayerBan) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Type   string    `json:"type"`
 		Until  time.Time `json:"until"`

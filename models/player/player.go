@@ -38,10 +38,10 @@ type Player struct {
 	ProfileUpdatedAt      time.Time `json:"-"`
 	StreamStatusUpdatedAt time.Time `json:"-"`
 
-	Debug   bool   // true if player is a dummy one.
-	SteamID string `sql:"unique" json:"steamid"` // Players steam ID
-	Stats   Stats  `json:"-"`
-	StatsID uint   `json:"-"`
+	Debug   bool        // true if player is a dummy one.
+	SteamID string      `sql:"unique" json:"steamid"` // Players steam ID
+	Stats   PlayerStats `json:"-"`
+	StatsID uint        `json:"-"`
 
 	// info from steam api
 	Avatar     string             `json:"avatar"`
@@ -73,8 +73,8 @@ type JSONFields struct {
 	PlaceholderTags          *[]string `sql:"-" json:"tags"`
 	PlaceholderRoleStr       *string   `sql:"-" json:"role"`
 	//PlaceholderLobbies       *[]LobbyData `sql:"-" json:"lobbies"`
-	PlaceholderStats *Stats `sql:"-" json:"stats"`
-	PlaceholderBans  []*Ban `sql:"-" json:"bans"`
+	PlaceholderStats *PlayerStats `sql:"-" json:"stats"`
+	PlaceholderBans  []*PlayerBan `sql:"-" json:"bans"`
 }
 
 // Create a new player with the given steam id.

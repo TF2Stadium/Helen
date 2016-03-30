@@ -11,7 +11,7 @@ import (
 	"github.com/TF2Stadium/Helen/models/lobby/format"
 )
 
-type Stats struct {
+type PlayerStats struct {
 	ID uint `json:"-"`
 
 	Total                 int `sql:"-" json:"lobbiesPlayed"`
@@ -45,17 +45,17 @@ type Stats struct {
 	Airshots    int `json:"airshots"`
 }
 
-func NewStats() Stats {
-	stats := Stats{}
+func NewStats() PlayerStats {
+	stats := PlayerStats{}
 
 	return stats
 }
 
-func (ps *Stats) TotalLobbies() int {
+func (ps *PlayerStats) TotalLobbies() int {
 	return ps.PlayedSixesCount + ps.PlayedHighlanderCount + ps.PlayedFoursCount + ps.PlayedUltiduoCount + ps.PlayedBballCount
 }
 
-func (ps *Stats) PlayedCountIncrease(lt format.Format) {
+func (ps *PlayerStats) PlayedCountIncrease(lt format.Format) {
 	switch lt {
 	case format.Sixes:
 		ps.PlayedSixesCount++
@@ -71,12 +71,12 @@ func (ps *Stats) PlayedCountIncrease(lt format.Format) {
 	database.DB.Save(ps)
 }
 
-func (ps *Stats) IncreaseSubCount() {
+func (ps *PlayerStats) IncreaseSubCount() {
 	ps.Substitutes++
 	database.DB.Save(ps)
 }
 
-func (ps *Stats) IncreaseClassCount(f format.Format, slot int) {
+func (ps *PlayerStats) IncreaseClassCount(f format.Format, slot int) {
 	_, class, _ := format.GetSlotTeamClass(f, slot)
 	switch class {
 	case "scout", "scout1", "scout2":

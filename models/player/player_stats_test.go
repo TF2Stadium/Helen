@@ -16,14 +16,14 @@ import (
 
 func TestLobbiesPlayed(t *testing.T) {
 	t.Parallel()
-	stats1 := &Stats{}
+	stats1 := &PlayerStats{}
 
 	stats1.PlayedCountIncrease(format.Sixes) // sixes: 0 -> 1
 
 	database.DB.Save(stats1)
 
 	// can load the record
-	var stats2 Stats
+	var stats2 PlayerStats
 	err := database.DB.First(&stats2, stats1.ID).Error
 	assert.Nil(t, err)
 

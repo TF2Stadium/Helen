@@ -83,7 +83,7 @@ func BanPlayer(w http.ResponseWriter, r *http.Request) {
 
 type BanData struct {
 	Player *player.Player
-	Ban    *player.Ban
+	Ban    *player.PlayerBan
 }
 
 func GetBanLogs(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +94,7 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var banData []BanData
-	var bans []*player.Ban
+	var bans []*player.PlayerBan
 
 	all := values.Get("all")
 

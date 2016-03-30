@@ -31,8 +31,6 @@ func TestGetPlayer(t *testing.T) {
 }
 
 func TestIsSpectating(t *testing.T) {
-	t.Parallel()
-
 	lobby := testhelpers.CreateLobby()
 	database.DB.Save(lobby)
 
@@ -59,8 +57,6 @@ func TestIsSpectating(t *testing.T) {
 }
 
 func TestGetSpectatingIds(t *testing.T) {
-	t.Parallel()
-
 	player := testhelpers.CreatePlayer()
 
 	specIds, specErr := player.GetSpectatingIds()

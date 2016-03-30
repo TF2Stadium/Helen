@@ -18,7 +18,7 @@ const (
 )
 
 //PlayerBan represents a player ban
-type Ban struct {
+type PlayerBan struct {
 	gorm.Model
 	PlayerID uint      // ID of the player banned
 	Type     BanType   // Ban type
@@ -38,7 +38,7 @@ func (t BanType) String() string {
 }
 
 func (player *Player) IsBannedWithTime(t BanType) (bool, time.Time) {
-	ban := &Ban{}
+	ban := &PlayerBan{}
 	err := db.DB.Where("type IN (?) AND until > now() AND player_id = ? AND active = TRUE", []BanType{t, BanFull}, player.ID).Order("until desc").First(ban).Error
 	if err != nil {
 		return false, time.Time{}
@@ -55,10 +55,10 @@ func (player *Player) IsBanned(t BanType) bool {
 func (player *Player) BanUntil(tim time.Time, t BanType, reason string) error {
 	// first check if player is already banned
 	if banned := player.IsBanned(t); banned {
-		db.DB.Model(&Ban{}).Where("player_id = ? AND type = ? AND active = TRUE AND until > now()", player.ID, t).Update("until", tim)
+		db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE AND until > now()", player.ID, t).Update("until", tim)
 		return nil
 	}
-	ban := Ban{
+	ban := PlayerBan{
 		PlayerID: player.ID,
 		Type:     t,
 		Until:    tim,
@@ -69,44 +69,44 @@ func (player *Player) BanUntil(tim time.Time, t BanType, reason string) error {
 }
 
 func (player *Player) Unban(t BanType) error {
-	return db.DB.Model(&Ban{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, t).
+	return db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, t).
 		Update("active", "FALSE").Error
 }
 
-func (player *Player) GetActiveBan(banType BanType) (*Ban, error) {
+func (player *Player) GetActiveBan(banType BanType) (*PlayerBan, error) {
 	//try getting the full ban first
-	ban := &Ban{}
-	err := db.DB.Model(&Ban{}).Where("player_id = ? AND type = ? and active = TRUE", player.ID, BanFull).First(ban).Error
+	ban := &PlayerBan{}
+	err := db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? and active = TRUE", player.ID, BanFull).First(ban).Error
 
 	if err != nil {
-		err = db.DB.Model(&Ban{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, banType).First(ban).Error
+		err = db.DB.Model(&PlayerBan{}).Where("player_id = ? AND type = ? AND active = TRUE", player.ID, banType).First(ban).Error
 		return ban, err
 	}
 
 	return ban, nil
 }
 
-func (player *Player) GetActiveBans() ([]*Ban, error) {
-	var bans []*Ban
+func (player *Player) GetActiveBans() ([]*PlayerBan, error) {
+	var bans []*PlayerBan
 	err := db.DB.Where("player_id = ? AND active = TRUE AND until > now()", player.ID).Find(&bans).Error
 	return bans, err
 }
 
-func (player *Player) GetAllBans() ([]*Ban, error) {
-	var bans []*Ban
+func (player *Player) GetAllBans() ([]*PlayerBan, error) {
+	var bans []*PlayerBan
 	err := db.DB.Where("player_id = ?", player.ID).Find(&bans).Error
 	return bans, err
 
 }
 
-func GetAllActiveBans() []*Ban {
-	var bans []*Ban
+func GetAllActiveBans() []*PlayerBan {
+	var bans []*PlayerBan
 	db.DB.Where("active = TRUE AND until > now()").Find(&bans)
 	return bans
 }
 
-func GetAllBans() []*Ban {
-	var bans []*Ban
-	db.DB.Model(&Ban{}).Find(&bans)
+func GetAllBans() []*PlayerBan {
+	var bans []*PlayerBan
+	db.DB.Model(&PlayerBan{}).Find(&bans)
 	return bans
 }
