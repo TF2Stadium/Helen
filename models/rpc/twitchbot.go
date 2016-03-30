@@ -1,4 +1,4 @@
-package models
+package rpc
 
 func TwitchBotJoin(channel string) {
 	if *twitchbotDisabled {
@@ -12,4 +12,15 @@ func TwitchBotLeave(channel string) {
 		return
 	}
 	twitchbot.Call("TwitchBot.Leave", channel, &struct{}{})
+}
+
+func TwitchBotAnnouce(channel string, lobbyid uint) {
+	if !*twitchbotDisabled {
+		return
+	}
+
+	twitchbot.Go("TwitchBot.Announce", struct {
+		Channel string
+		LobbyID uint
+	}{channel, lobbyid}, &struct{}{}, nil)
 }

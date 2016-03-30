@@ -1,11 +1,13 @@
 package controllers
 
 import (
-	"github.com/TF2Stadium/Helen/controllers/admin"
-	"github.com/TF2Stadium/Helen/models"
 	"html/template"
 	"net/http"
 	"regexp"
+
+	"github.com/TF2Stadium/Helen/controllers/admin"
+	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/player"
 )
 
 var (
@@ -29,7 +31,7 @@ func TwitchBadge(w http.ResponseWriter, r *http.Request) {
 	matches := reValidPath.FindStringSubmatch(r.URL.Path)
 	steamid := matches[1]
 
-	player, err := models.GetPlayerBySteamID(steamid)
+	player, err := player.GetPlayerBySteamID(steamid)
 	if err != nil { //player not found
 		http.Error(w, "Player with given SteamID not found", http.StatusNotFound)
 		return
@@ -42,7 +44,7 @@ func TwitchBadge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lobby, _ := models.GetLobbyByID(id)
+	lobby, _ := lobby.GetLobbyByID(id)
 	err = twitchBadge.Execute(w, lobby)
 }
 

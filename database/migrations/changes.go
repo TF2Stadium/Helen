@@ -23,7 +23,7 @@ type Constant struct {
 
 func getCurrConstants() *Constant {
 	constant := &Constant{}
-	db.DB.Table("constants").Last(constant)
+	db.DB.Model(&Constant{}).Last(constant)
 
 	return constant
 }
@@ -37,7 +37,7 @@ func checkSchema() {
 	var count int
 	defer writeConstants()
 
-	db.DB.Table("constants").Where("schema_version = ?", schemaVersion.String()).Count(&count)
+	db.DB.Model(&Constant{}).Where("schema_version = ?", schemaVersion.String()).Count(&count)
 
 	if count == 1 {
 		return

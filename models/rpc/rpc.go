@@ -2,12 +2,11 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package models
+package rpc
 
 import (
 	"flag"
 	"net/rpc"
-	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
@@ -28,17 +27,8 @@ var (
 func ConnectRPC() {
 	if !*paulingDisabled {
 		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
-		i := 0
-		for {
-			codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
-			if err == nil {
-				break
-			}
-			if i == 5 {
-				logrus.Fatal(err)
-			}
-			time.Sleep(1 * time.Second)
-			i++
+		if err != nil {
+			logrus.Fatal(err)
 		}
 
 		pauling = rpc.NewClientWithCodec(codec)
@@ -46,34 +36,16 @@ func ConnectRPC() {
 	}
 	if !*fumbleDisabled {
 		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
-		i := 0
-		for {
-			codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
-			if err == nil {
-				break
-			}
-			if i == 5 {
-				logrus.Fatal(err)
-			}
-			time.Sleep(1 * time.Second)
-			i++
+		if err != nil {
+			logrus.Fatal(err)
 		}
 
 		fumble = rpc.NewClientWithCodec(codec)
 	}
 	if !*twitchbotDisabled {
 		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.TwitchBotQueue, amqprpc.JSONCodec{})
-		i := 0
-		for {
-			codec, err = amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.TwitchBotQueue, amqprpc.JSONCodec{})
-			if err == nil {
-				break
-			}
-			if i == 5 {
-				logrus.Fatal(err)
-			}
-			time.Sleep(1 * time.Second)
-			i++
+		if err != nil {
+			logrus.Fatal(err)
 		}
 		twitchbot = rpc.NewClientWithCodec(codec)
 	}

@@ -9,7 +9,9 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/chat"
+	lobbypackage "github.com/TF2Stadium/Helen/models/lobby"
+	playerpackage "github.com/TF2Stadium/Helen/models/player"
 )
 
 //Mirrored across github.com/Pauling/server
@@ -99,38 +101,37 @@ func StopListening() {
 }
 
 func reservationEnded(lobbyID uint) {
-	lobby, _ := models.GetLobbyByID(lobbyID)
+	lobby, _ := lobbypackage.GetLobbyByID(lobbyID)
 	lobby.Close(false, false)
-	models.SendNotification("Lobby Closed (serveme.tf reservation ended)", int(lobby.ID))
+	chat.SendNotification("Lobby Closed (serveme.tf reservation ended)", int(lobby.ID))
 }
 
 func playerDisc(steamID string, lobbyID uint) {
-	player, _ := models.GetPlayerBySteamID(steamID)
-	lobby, _ := models.GetLobbyByID(lobbyID)
+	player, _ := playerpackage.GetPlayerBySteamID(steamID)
+	lobby, _ := lobbypackage.GetLobbyByID(lobbyID)
 
 	lobby.SetNotInGame(player)
 
-	models.SendNotification(fmt.Sprintf("%s has disconected from the server.", player.Alias()), int(lobby.ID))
+	chat.SendNotification(fmt.Sprintf("%s has disconected from the server.", player.Alias()), int(lobby.ID))
 
 	lobby.AfterPlayerNotInGameFunc(player, 5*time.Minute, func() {
 		lobby.Substitute(player)
-		player.BanUntil(time.Now().Add(30*time.Minute), models.PlayerBanJoin, "For ragequiting a lobby in the last 30 minutes")
-		db.DB.Model(player).Association("RageQuits").Append(lobby)
-		models.SendNotification(fmt.Sprintf("%s has been reported for not joining the game in 5 minutes", player.Alias()), int(lobby.ID))
+		player.NewReport(playerpackage.Substitute, lobby.ID)
+		chat.SendNotification(fmt.Sprintf("%s has been reported for not joining the game in 5 minutes", player.Alias()), int(lobby.ID))
 	})
 }
 
 func playerConn(steamID string, lobbyID uint) {
-	player, _ := models.GetPlayerBySteamID(steamID)
-	lobby, _ := models.GetLobbyByID(lobbyID)
+	player, _ := playerpackage.GetPlayerBySteamID(steamID)
+	lobby, _ := lobbypackage.GetLobbyByID(lobbyID)
 
 	lobby.SetInGame(player)
-	models.SendNotification(fmt.Sprintf("%s has connected to the server.", player.Alias()), int(lobby.ID))
+	chat.SendNotification(fmt.Sprintf("%s has connected to the server.", player.Alias()), int(lobby.ID))
 }
 
 func playerSub(steamID string, lobbyID uint, self bool) {
-	player, _ := models.GetPlayerBySteamID(steamID)
-	lobby, err := models.GetLobbyByID(lobbyID)
+	player, _ := playerpackage.GetPlayerBySteamID(steamID)
+	lobby, err := lobbypackage.GetLobbyByID(lobbyID)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -142,47 +143,39 @@ func playerSub(steamID string, lobbyID uint, self bool) {
 
 		db.DB.DB().QueryRow("SELECT lobby_id FROM substitutes_player_lobbies WHERE player_id = $1 ORDER BY lobby_id DESC LIMIT 1", player.ID).Scan(&lobbyid)
 		db.DB.Model(player).Association("Substitutes").Append(lobby)
-
-		if lobbyid == 0 { // this is the first sub
-			return
-		}
-
-		lastLobby, _ := models.GetLobbyByID(lobbyid)
-		if time.Since(lastLobby.CreatedAt) < 30*time.Minute {
-			player.BanUntil(time.Now().Add(30*time.Minute), models.PlayerBanJoin, "For subbing twice in the last 30 minutes")
-		}
+		player.NewReport(playerpackage.Substitute, lobby.ID)
 
 	} else {
 		db.DB.Model(player).Association("Reports").Append(lobby)
 		// ban player from joining lobbies for 30 minutes
-		player.BanUntil(time.Now().Add(30*time.Minute), models.PlayerBanJoin, "For getting reported in the last 30 minutes")
+		player.NewReport(playerpackage.Vote, lobby.ID)
 	}
 
-	models.SendNotification(fmt.Sprintf("%s has been reported.", player.Alias()), int(lobby.ID))
+	chat.SendNotification(fmt.Sprintf("%s has been reported.", player.Alias()), int(lobby.ID))
 }
 
 func playerChat(lobbyID uint, steamID string, message string) {
-	lobby, _ := models.GetLobbyByIDServer(lobbyID)
-	player, _ := models.GetPlayerBySteamID(steamID)
+	lobby, _ := lobbypackage.GetLobbyByIDServer(lobbyID)
+	player, _ := playerpackage.GetPlayerBySteamID(steamID)
 
-	chatMessage := models.NewInGameChatMessage(lobby, player, message)
+	chatMessage := chat.NewInGameChatMessage(lobby.ID, player, message)
 	chatMessage.Save()
 	chatMessage.Send()
 }
 
 func disconnectedFromServer(lobbyID uint) {
-	lobby, err := models.GetLobbyByIDServer(lobbyID)
+	lobby, err := lobbypackage.GetLobbyByIDServer(lobbyID)
 	if err != nil {
 		logrus.Error("Couldn't find lobby ", lobbyID, " in database")
 		return
 	}
 
 	lobby.Close(false, false)
-	models.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
+	chat.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
 }
 
 func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
-	lobby, err := models.GetLobbyByIDServer(lobbyID)
+	lobby, err := lobbypackage.GetLobbyByIDServer(lobbyID)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -190,10 +183,10 @@ func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
 	lobby.Close(false, true)
 
 	msg := fmt.Sprintf("Lobby Ended. Logs: http://logs.tf/%d", logsID)
-	models.SendNotification(msg, int(lobby.ID))
+	chat.SendNotification(msg, int(lobby.ID))
 
 	for steamid, times := range classTimes {
-		player, err := models.GetPlayerBySteamID(steamid)
+		player, err := playerpackage.GetPlayerBySteamID(steamid)
 		if err != nil {
 			logrus.Error("Couldn't find player ", steamid)
 			continue

@@ -13,7 +13,9 @@ import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/chat"
+	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/TF2Stadium/wsevent"
 )
 
@@ -27,17 +29,17 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 	Message *string `json:"message"`
 	Room    *int    `json:"room"`
 }) interface{} {
-	player := chelpers.GetPlayer(so.Token)
-	if banned, until := player.IsBannedWithTime(models.PlayerBanChat); banned {
-		ban, _ := player.GetActiveBan(models.PlayerBanChat)
+	p := chelpers.GetPlayer(so.Token)
+	if banned, until := p.IsBannedWithTime(player.BanChat); banned {
+		ban, _ := p.GetActiveBan(player.BanChat)
 		return fmt.Errorf("You've been banned from creating lobbies till %s (%s)", until.Format(time.RFC822), ban.Reason)
 	}
 
 	if *args.Room > 0 {
-		var count int
-		spec := player.IsSpectatingID(uint(*args.Room))
 		//Check if player has either joined, or is spectating lobby
-		db.DB.Table("lobby_slots").Where("lobby_id = ? AND player_id = ?", *args.Room, player.ID).Count(&count)
+		var count int
+		spec := p.IsSpectatingID(uint(*args.Room))
+		db.DB.Model(&lobby.LobbySlot{}).Where("lobby_id = ? AND player_id = ?", *args.Room, p.ID).Count(&count)
 
 		if !spec && count == 0 {
 			return errors.New("Player is not in the lobby.")
@@ -57,10 +59,10 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 		return errors.New("Message too long")
 	}
 
-	message := models.NewChatMessage(*args.Message, *args.Room, player)
+	message := chat.NewChatMessage(*args.Message, *args.Room, p)
 
 	if strings.HasPrefix(*args.Message, "!admin") {
-		chelpers.SendToSlack(*args.Message, player.Name, player.SteamID)
+		chelpers.SendToSlack(*args.Message, p.Name, p.SteamID)
 		return emptySuccess
 	}
 
@@ -79,7 +81,7 @@ func (Chat) ChatDelete(so *wsevent.Client, args struct {
 		return err
 	}
 
-	message := &models.ChatMessage{}
+	message := &chat.ChatMessage{}
 	err := db.DB.First(message, *args.ID).Error
 	if message.Bot {
 		return errors.New("Cannot delete notification messages")

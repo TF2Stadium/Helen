@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package models_test
+package lobby_test
 
 import (
 	"testing"
@@ -10,20 +10,26 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
-	. "github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/gameserver"
+	. "github.com/TF2Stadium/Helen/models/lobby"
+	. "github.com/TF2Stadium/Helen/models/player"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	testhelpers.CleanupDB()
+}
 
 func TestDeleteUnusedServerRecords(t *testing.T) {
 	var count int
 
 	lobby := testhelpers.CreateLobby()
 	lobby.Close(false, true)
-	db.DB.Save(&ServerRecord{})
+	db.DB.Save(&gameserver.Server{})
 
-	DeleteUnusedServerRecords()
+	DeleteUnusedServers()
 
-	err := db.DB.Table("server_records").Count(&count).Error
+	err := db.DB.Model(&gameserver.Server{}).Count(&count).Error
 	assert.NoError(t, err)
 	assert.Zero(t, count)
 }
@@ -58,13 +64,13 @@ func TestLobbyClose(t *testing.T) {
 	req.Save()
 	lobby.Close(true, true)
 	var count int
-	db.DB.Table("requirements").Where("lobby_id = ?", lobby.ID).Count(&count)
+	db.DB.Model(&Requirement{}).Where("lobby_id = ?", lobby.ID).Count(&count)
 	assert.Zero(t, count)
 
-	db.DB.Table("server_records").Where("id = ?", lobby.ServerInfoID).Count(&count)
+	db.DB.Model(&gameserver.Server{}).Where("id = ?", lobby.ServerInfoID).Count(&count)
 	assert.Zero(t, count)
 	lobby, _ = GetLobbyByID(lobby.ID)
-	assert.Equal(t, lobby.State, LobbyStateEnded)
+	assert.Equal(t, lobby.State, Ended)
 }
 
 func TestLobbyAdd(t *testing.T) {
@@ -118,13 +124,13 @@ func TestLobbyAdd(t *testing.T) {
 
 	// try to add a player while they're in another lobby
 	//player should be substituted
-	lobby.State = LobbyStateInProgress
+	lobby.State = InProgress
 	lobby.Save()
 	err = lobby2.AddPlayer(players[0], 1, "")
 	assert.Nil(t, err)
 
 	var count int
-	db.DB.Table("lobby_slots").Where("lobby_id = ? AND needs_sub = ?", lobby.ID, true).Count(&count)
+	db.DB.Model(&LobbySlot{}).Where("lobby_id = ? AND needs_sub = ?", lobby.ID, true).Count(&count)
 	assert.Equal(t, count, 1)
 }
 
@@ -403,7 +409,7 @@ func TestSlotRequirements(t *testing.T) {
 	}
 	req.Save()
 
-	assert.True(t, lobby.HasRequirements(0))
+	assert.True(t, lobby.HasSlotRequirement(0))
 	err := lobby.AddPlayer(player, 0, "")
 	assert.Equal(t, err, ErrReqHours)
 
@@ -480,7 +486,7 @@ func TestStart(t *testing.T) {
 	defer lobby.Close(false, true)
 
 	lobby.Start()
-	assert.Equal(t, lobby.CurrentState(), LobbyStateInProgress)
+	assert.Equal(t, lobby.CurrentState(), InProgress)
 }
 
 func TestIsSubNeeded(t *testing.T) {

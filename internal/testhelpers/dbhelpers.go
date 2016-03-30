@@ -49,10 +49,10 @@ func CleanupDB() {
 		"chat_messages",
 		"lobbies",
 		"lobby_slots",
-		"player_bans",
-		"player_stats",
+		"bans",
+		"stats",
 		"players",
-		"server_records",
+		"servers",
 		"spectators_players_lobbies",
 		"requirements",
 	}

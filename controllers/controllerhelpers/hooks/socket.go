@@ -9,8 +9,7 @@ import (
 
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
-	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/lobby"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -25,8 +24,8 @@ func OnDisconnect(socketID string, token *jwt.Token) {
 		sessions.RemoveSocket(socketID, player.SteamID)
 		id, _ := sessions.GetSpectating(socketID)
 		if id != 0 {
-			lobby, _ := models.GetLobbyByID(id)
-			lobby.RemoveSpectator(player, true)
+			lob, _ := lobby.GetLobbyByID(id)
+			lob.RemoveSpectator(player, true)
 		}
 
 		id, _ = player.GetLobbyID(true)
@@ -34,9 +33,10 @@ func OnDisconnect(socketID string, token *jwt.Token) {
 		//remove him from it. Here, connected = player isn't connected from any tab/window
 		if id != 0 && sessions.ConnectedSockets(player.SteamID) == 0 {
 			sessions.AfterDisconnectedFunc(player.SteamID, time.Second*30, func() {
-				lobby := &models.Lobby{}
-				db.DB.First(lobby, id)
-				lobby.RemovePlayer(player)
+				lob, _ := lobby.GetLobbyByID(id)
+				if lob.State == lobby.Waiting {
+					lob.RemovePlayer(player)
+				}
 			})
 		}
 	}

@@ -10,7 +10,9 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/lobby/format"
+	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/jinzhu/gorm/dialects/postgres"
 )
 
@@ -31,7 +33,7 @@ var migrationRoutines = map[uint64]func(){
 func whitelist_id_string() {
 	var count int
 
-	db.DB.Table("lobbies").Count(&count)
+	db.DB.Model(&lobby.Lobby{}).Count(&count)
 	if count == 0 {
 		db.DB.Exec("ALTER TABLE lobbies DROP COLUMN whitelist")
 		db.DB.Exec("ALTER TABLE lobbies ADD whitelist varchar(255)")
@@ -40,38 +42,38 @@ func whitelist_id_string() {
 	var whitelistIDs []int
 	var lobbyIDs []uint
 
-	db.DB.Table("lobbies").Order("whitelist").Pluck("whitelist", &whitelistIDs)
+	db.DB.Model(&lobby.Lobby{}).Order("whitelist").Pluck("whitelist", &whitelistIDs)
 	if len(whitelistIDs) == 0 {
 		return
 	}
 
-	db.DB.Table("lobbies").Order("id").Pluck("id", &lobbyIDs)
+	db.DB.Model(&lobby.Lobby{}).Order("id").Pluck("id", &lobbyIDs)
 
 	db.DB.Exec("ALTER TABLE lobbies DROP whitelist")
 	db.DB.Exec("ALTER TABLE lobbies ADD whitelist varchar(255)")
 
 	for i, lobbyID := range lobbyIDs {
-		db.DB.Model(&models.Lobby{}).Where("id = ?", lobbyID).Update("whitelist", strconv.Itoa(whitelistIDs[i]))
+		db.DB.Model(&lobby.Lobby{}).Where("id = ?", lobbyID).Update("whitelist", strconv.Itoa(whitelistIDs[i]))
 	}
 }
 
 func lobbyTypeChange() {
-	newLobbyType := map[int]models.LobbyType{
-		6: models.LobbyTypeSixes,
-		9: models.LobbyTypeHighlander,
-		4: models.LobbyTypeFours,
-		3: models.LobbyTypeUltiduo,
-		2: models.LobbyTypeBball,
-		1: models.LobbyTypeDebug,
+	newLobbyType := map[int]format.Format{
+		6: format.Sixes,
+		9: format.Highlander,
+		4: format.Fours,
+		3: format.Ultiduo,
+		2: format.Bball,
+		1: format.Debug,
 	}
 
 	var lobbyIDs []uint
-	db.DB.Table("lobbies").Order("id").Pluck("id", &lobbyIDs)
+	db.DB.Model(&lobby.Lobby{}).Order("id").Pluck("id", &lobbyIDs)
 
 	for _, lobbyID := range lobbyIDs {
 		var old int
 		db.DB.DB().QueryRow("SELECT type FROM lobbies WHERE id = $1", lobbyID).Scan(&old)
-		db.DB.Table("lobbies").Where("id = ?", lobbyID).Update("type", newLobbyType[old])
+		db.DB.Model(&lobby.Lobby{}).Where("id = ?", lobbyID).Update("type", newLobbyType[old])
 	}
 }
 
@@ -84,8 +86,8 @@ func increaseChatMessageLength() {
 }
 
 func updateAllPlayerInfo() {
-	var players []*models.Player
-	db.DB.Table("players").Find(&players)
+	var players []*player.Player
+	db.DB.Model(&player.Player{}).Find(&players)
 
 	for _, player := range players {
 		player.UpdatePlayerInfo()
@@ -98,9 +100,9 @@ func truncateHTTPSessions() {
 }
 
 func setMumbleInfo() {
-	var players []*models.Player
+	var players []*player.Player
 
-	db.DB.Table("players").Find(&players)
+	db.DB.Model(&player.Player{}).Find(&players)
 	for _, player := range players {
 		player.MumbleUsername = strconv.Itoa(rand.Int())
 		player.MumbleAuthkey = player.GenAuthKey()
@@ -109,8 +111,8 @@ func setMumbleInfo() {
 }
 
 func setPlayerExternalLinks() {
-	var players []*models.Player
-	db.DB.Table("players").Find(&players)
+	var players []*player.Player
+	db.DB.Model(&player.Player{}).Find(&players)
 
 	for _, player := range players {
 		player.ExternalLinks = make(postgres.Hstore)
@@ -130,8 +132,8 @@ func setPlayerSettings() {
 		var key, value string
 
 		rows.Scan(&playerID, &key, &value)
-		player, _ := models.GetPlayerByID(playerID)
-		player.SetSetting(key, value)
+		p, _ := player.GetPlayerByID(playerID)
+		p.SetSetting(key, value)
 	}
 
 	db.DB.Exec("DROP TABLE player_settings")

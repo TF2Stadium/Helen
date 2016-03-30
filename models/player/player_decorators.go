@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package models
+package player
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 )
 
-func decoratePlayerTags(p *Player) []string {
+func (p *Player) DecoratePlayerTags() []string {
 	tags := []string{helpers.RoleNames[p.Role]}
 	if p.IsStreaming {
 		tags = append(tags, "twitch")
@@ -34,17 +34,17 @@ func (p *Player) setJSONFields(stats, lobbies, streaming, bans bool) {
 	p.PlaceholderRoleStr = new(string)
 
 	*p.PlaceholderRoleStr = helpers.RoleNames[p.Role]
-	*p.PlaceholderTags = decoratePlayerTags(p)
+	*p.PlaceholderTags = p.DecoratePlayerTags()
 
-	if lobbies {
-		p.PlaceholderLobbies = new([]LobbyData)
-		var lobbies []*Lobby
-		db.DB.Table("lobbies").Joins("INNER JOIN lobby_slots ON lobbies.id = lobby_slots.lobby_id").Where("lobbies.match_ended = TRUE AND lobby_slots.player_id = ?", p.ID).Order("lobbies.ID DESC").Limit(5).Find(&lobbies)
+	// if lobbies {
+	// 	p.PlaceholderLobbies = new([]LobbyData)
+	// 	var lobbies []*Lobby
+	// 	db.DB.Table("lobbies").Joins("INNER JOIN lobby_slots ON lobbies.id = lobby_slots.lobby_id").Where("lobbies.match_ended = TRUE AND lobby_slots.player_id = ?", p.ID).Order("lobbies.ID DESC").Limit(5).Find(&lobbies)
 
-		for _, lobby := range lobbies {
-			*p.PlaceholderLobbies = append(*p.PlaceholderLobbies, DecorateLobbyData(lobby, true))
-		}
-	}
+	// 	for _, lobby := range lobbies {
+	// 		*p.PlaceholderLobbies = append(*p.PlaceholderLobbies, DecorateLobbyData(lobby, true))
+	// 	}
+	// }
 
 	p.Name = p.Alias()
 	if p.TwitchName != "" {
@@ -62,7 +62,7 @@ func (p *Player) setJSONFields(stats, lobbies, streaming, bans bool) {
 	}
 }
 
-func (ban *PlayerBan) MarshalJSON() ([]byte, error) {
+func (ban *Ban) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Type   string    `json:"type"`
 		Until  time.Time `json:"until"`

@@ -12,7 +12,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/player"
 	"golang.org/x/net/xsrftoken"
 )
 
@@ -35,19 +35,19 @@ func BanPlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ban, ok := map[string]models.PlayerBanType{
-		"joinLobby":       models.PlayerBanJoin,
-		"joinMumbleLobby": models.PlayerBanJoinMumble,
-		"createLobby":     models.PlayerBanCreate,
-		"chat":            models.PlayerBanChat,
-		"full":            models.PlayerBanFull,
+	ban, ok := map[string]player.BanType{
+		"joinLobby":       player.BanJoin,
+		"joinMumbleLobby": player.BanJoinMumble,
+		"createLobby":     player.BanCreate,
+		"chat":            player.BanChat,
+		"full":            player.BanFull,
 	}[banType]
 	if !ok {
 		http.Error(w, "Invalid ban type", http.StatusBadRequest)
 		return
 	}
 
-	player, err := models.GetPlayerBySteamID(steamid)
+	player, err := player.GetPlayerBySteamID(steamid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -82,8 +82,8 @@ func BanPlayer(w http.ResponseWriter, r *http.Request) {
 }
 
 type BanData struct {
-	Player *models.Player
-	Ban    *models.PlayerBan
+	Player *player.Player
+	Ban    *player.Ban
 }
 
 func GetBanLogs(w http.ResponseWriter, r *http.Request) {
@@ -94,24 +94,24 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var banData []BanData
-	var bans []*models.PlayerBan
+	var bans []*player.Ban
 
 	all := values.Get("all")
 
 	steamid := values.Get("steamid")
 	if steamid == "" {
 		if all == "" {
-			bans = models.GetAllActiveBans()
+			bans = player.GetAllActiveBans()
 		} else {
-			bans = models.GetAllBans()
+			bans = player.GetAllBans()
 		}
 
 		for _, ban := range bans {
-			player, _ := models.GetPlayerByID(ban.PlayerID)
-			banData = append(banData, BanData{player, ban})
+			p, _ := player.GetPlayerByID(ban.PlayerID)
+			banData = append(banData, BanData{p, ban})
 		}
 	} else {
-		player, err := models.GetPlayerBySteamID(steamid)
+		player, err := player.GetPlayerBySteamID(steamid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return

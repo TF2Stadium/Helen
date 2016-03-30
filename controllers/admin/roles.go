@@ -11,7 +11,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/player"
 	"golang.org/x/net/xsrftoken"
 )
 
@@ -40,7 +40,7 @@ func ChangeRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	player, err := models.GetPlayerBySteamID(steamid)
+	player, err := player.GetPlayerBySteamID(steamid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -67,7 +67,7 @@ func Remove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	steamid := r.Form.Get("steamid")
-	player, err := models.GetPlayerBySteamID(steamid)
+	player, err := player.GetPlayerBySteamID(steamid)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return

@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package models_test
+package player_test
 
 import (
 	"testing"
@@ -12,9 +12,15 @@ import (
 	"github.com/TF2Stadium/Helen/database"
 	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
-	. "github.com/TF2Stadium/Helen/models"
+	lobbypackage "github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/lobby/format"
+	. "github.com/TF2Stadium/Helen/models/player"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	testhelpers.CleanupDB()
+}
 
 func TestGetPlayer(t *testing.T) {
 	t.Parallel()
@@ -96,9 +102,9 @@ func TestPlayerInfoFetching(t *testing.T) {
 
 	assert.True(t, player.GameHours >= 3000)
 
-	player.Stats.PlayedCountIncrease(LobbyTypeSixes)
-	player.Stats.PlayedCountIncrease(LobbyTypeHighlander)
-	player.Stats.PlayedCountIncrease(LobbyTypeSixes) // sixes: 1 -> 2
+	player.Stats.PlayedCountIncrease(format.Sixes)
+	player.Stats.PlayedCountIncrease(format.Highlander)
+	player.Stats.PlayedCountIncrease(format.Sixes) // sixes: 1 -> 2
 
 	database.DB.Save(player)
 
@@ -130,46 +136,45 @@ func TestPlayerBanning(t *testing.T) {
 	t.Parallel()
 	player := testhelpers.CreatePlayer()
 
-	for ban := PlayerBanJoin; ban != PlayerBanFull; ban++ {
+	for ban := BanJoin; ban != BanFull; ban++ {
 		assert.False(t, player.IsBanned(ban))
 	}
 
 	past := time.Now().Add(time.Second * -10)
-	player.BanUntil(past, PlayerBanJoin, "they suck")
-	assert.False(t, player.IsBanned(PlayerBanJoin))
+	player.BanUntil(past, BanJoin, "they suck")
+	assert.False(t, player.IsBanned(BanJoin))
 
 	future := time.Now().Add(time.Second * 10)
-	player.BanUntil(future, PlayerBanJoin, "they suck")
-	player.BanUntil(future, PlayerBanFull, "they suck")
+	player.BanUntil(future, BanJoin, "they suck")
+	player.BanUntil(future, BanFull, "they suck")
 
 	player2, _ := GetPlayerBySteamID(player.SteamID)
-	assert.True(t, player2.IsBanned(PlayerBanCreate))
-	assert.True(t, player2.IsBanned(PlayerBanChat))
-	isBannedFull, untilFull := player2.IsBannedWithTime(PlayerBanFull)
+	assert.True(t, player2.IsBanned(BanCreate))
+	assert.True(t, player2.IsBanned(BanChat))
+	isBannedFull, untilFull := player2.IsBannedWithTime(BanFull)
 	assert.True(t, isBannedFull)
 	assert.True(t, future.Sub(untilFull) < time.Second)
 	assert.True(t, untilFull.Sub(future) < time.Second)
-	t.Log(future.Sub(untilFull))
 
-	isBannedJoin, untilJoin := player2.IsBannedWithTime(PlayerBanJoin)
+	isBannedJoin, untilJoin := player2.IsBannedWithTime(BanJoin)
 	assert.True(t, isBannedJoin)
 	assert.True(t, future.Sub(untilJoin) < time.Second)
 	assert.True(t, untilJoin.Sub(future) < time.Second)
 
 	future2 := time.Now().Add(time.Second * 20)
-	player2.BanUntil(future2, PlayerBanJoin, "they suck")
+	player2.BanUntil(future2, BanJoin, "they suck")
 
 	bans, err := player2.GetActiveBans()
 	assert.NoError(t, err)
 	assert.Len(t, bans, 2)
 
-	_, err = player2.GetActiveBan(PlayerBanJoin)
+	_, err = player2.GetActiveBan(BanJoin)
 	assert.NoError(t, err)
 
-	player2.Unban(PlayerBanJoin)
-	player2.Unban(PlayerBanFull)
+	player2.Unban(BanJoin)
+	player2.Unban(BanFull)
 
-	for ban := PlayerBanJoin; ban != PlayerBanFull; ban++ {
+	for ban := BanJoin; ban != BanFull; ban++ {
 		assert.False(t, player2.IsBanned(ban))
 	}
 }
@@ -189,13 +194,13 @@ func TestGetLobbyID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, id, lobby.ID)
 
-	lobby.State = LobbyStateEnded
+	lobby.State = lobbypackage.Ended
 	lobby.Save()
 	id, err = player.GetLobbyID(false)
 	assert.Error(t, err)
 	assert.Equal(t, id, uint(0))
 
-	lobby.State = LobbyStateInProgress
+	lobby.State = lobbypackage.InProgress
 	lobby.Save()
 
 	//Exclude lobbies in progress

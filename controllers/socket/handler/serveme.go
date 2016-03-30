@@ -7,7 +7,7 @@ import (
 
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/gameserver"
 	"github.com/TF2Stadium/servemetf"
 	"github.com/TF2Stadium/wsevent"
 )
@@ -51,6 +51,6 @@ func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
 }
 
 func (Serveme) GetStoredServers(so *wsevent.Client, _ struct{}) interface{} {
-	servers := models.GetAvailableServers()
+	servers := gameserver.GetAvailableServers()
 	return newResponse(servers)
 }

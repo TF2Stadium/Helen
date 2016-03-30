@@ -1,4 +1,4 @@
-package models_test
+package chat_test
 
 import (
 	"strconv"
@@ -8,7 +8,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
-	. "github.com/TF2Stadium/Helen/models"
+	. "github.com/TF2Stadium/Helen/models/chat"
 	"github.com/stretchr/testify/assert"
 )
 

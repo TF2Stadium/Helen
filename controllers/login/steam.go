@@ -14,7 +14,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/player"
 	openid "github.com/yohcop/openid-go"
 )
 
@@ -55,23 +55,20 @@ func SteamMockLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var player *models.Player
-	var err error
-
-	player, tperr := models.GetPlayerBySteamID(steamid)
-	if tperr != nil {
-		player, err = models.NewPlayer(steamid)
+	p, err := player.GetPlayerBySteamID(steamid)
+	if err != nil {
+		p, err = player.NewPlayer(steamid)
 		if err != nil {
 			logrus.Error(err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 
-		database.DB.Create(player)
+		database.DB.Create(p)
 	}
 
-	player.UpdatePlayerInfo()
-	key := controllerhelpers.NewToken(player)
+	p.UpdatePlayerInfo()
+	key := controllerhelpers.NewToken(p)
 	cookie := &http.Cookie{
 		Name:    "auth-jwt",
 		Value:   key,
@@ -130,26 +127,25 @@ func SteamLoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var player *models.Player
-	player, tperr := models.GetPlayerBySteamID(steamid)
-	if tperr != nil {
-		player, err = models.NewPlayer(steamid)
+	p, err := player.GetPlayerBySteamID(steamid)
+	if err != nil {
+		p, err = player.NewPlayer(steamid)
 		if err != nil {
 			logrus.Error(err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 
-		database.DB.Create(player)
+		database.DB.Create(p)
 	}
 
 	go func() {
-		if time.Since(player.ProfileUpdatedAt) >= 1*time.Hour {
-			player.UpdatePlayerInfo()
+		if time.Since(p.ProfileUpdatedAt) >= 1*time.Hour {
+			p.UpdatePlayerInfo()
 		}
 	}()
 
-	key := controllerhelpers.NewToken(player)
+	key := controllerhelpers.NewToken(p)
 	cookie := &http.Cookie{
 		Name:    "auth-jwt",
 		Value:   key,

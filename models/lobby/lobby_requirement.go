@@ -1,9 +1,10 @@
-package models
+package lobby
 
 import (
 	"time"
 
 	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/models/player"
 )
 
 // Requirement stores a requirement for a particular slot in a lobby
@@ -34,7 +35,7 @@ func (r *Requirement) Save() { db.DB.Save(r) }
 //GetSlotRequirement returns the slot requirement for the lobby lobby
 func (lobby *Lobby) GetSlotRequirement(slot int) (*Requirement, error) {
 	req := &Requirement{}
-	err := db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, slot).First(req).Error
+	err := db.DB.Model(&Requirement{}).Where("lobby_id = ? AND slot = ?", lobby.ID, slot).First(req).Error
 
 	return req, err
 }
@@ -42,17 +43,18 @@ func (lobby *Lobby) GetSlotRequirement(slot int) (*Requirement, error) {
 //HasSlotRequirement returns true if the given slot in the lobby has a requirement
 func (lobby *Lobby) HasSlotRequirement(slot int) bool {
 	var count int
-	db.DB.Table("requirements").Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Count(&count)
+	db.DB.Model(&Requirement{}).Where("lobby_id = ? AND slot = ?", lobby.ID, slot).Count(&count)
 	return count != 0
 }
 
-//HasRequirements returns true if the given slot has a requirement (either general or slot-only)
-func (lobby *Lobby) HasRequirements(slot int) bool {
-	return lobby.HasSlotRequirement(slot)
+func (lobby *Lobby) HasRequirements() bool {
+	var count int
+	db.DB.Model(&Requirement{}).Where("lobby_id = ?", lobby.ID).Count(&count)
+	return count != 0
 }
 
 //FitsRequirements checks if the player fits the requirement to be added to the given slot in the lobby
-func (l *Lobby) FitsRequirements(player *Player, slot int) (bool, error) {
+func (l *Lobby) FitsRequirements(player *player.Player, slot int) (bool, error) {
 	//BUG(vibhavp): FitsRequirements doesn't check reliability
 	var req *Requirement
 

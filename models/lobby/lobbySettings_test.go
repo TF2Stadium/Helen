@@ -1,10 +1,9 @@
-package models_test
+package lobby_test
 
 import (
-	"fmt"
 	"testing"
 
-	. "github.com/TF2Stadium/Helen/models"
+	. "github.com/TF2Stadium/Helen/models/lobby"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -113,9 +112,7 @@ func TestSettingsLoad(t *testing.T) {
 
 		// TODO write more tests, pls
 
-		output, err := LobbySettingsToJSON().Encode()
-		if assert.Nil(err) {
-			fmt.Println(string(output))
-		}
+		_, err := LobbySettingsToJSON().Encode()
+		assert.NoError(err)
 	}
 }

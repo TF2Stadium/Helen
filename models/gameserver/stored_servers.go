@@ -1,4 +1,4 @@
-package models
+package gameserver
 
 import (
 	"errors"
@@ -64,13 +64,13 @@ func GetStoredServer(id uint) (*StoredServer, error) {
 	return server, err
 }
 
-func putStoredServer(address string) {
+func PutStoredServer(address string) {
 	storeLock.Lock()
 	db.DB.Model(&StoredServer{}).Where("address = ?", address).UpdateColumn("used", false)
 	storeLock.Unlock()
 }
 
-func GetAllServers() []*StoredServer {
+func GetAllStoredServers() []*StoredServer {
 	var servers []*StoredServer
 	db.DB.Model(&StoredServer{}).Find(&servers)
 	return servers

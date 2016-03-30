@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package models
+package player
 
 import (
 	"bytes"
@@ -23,6 +23,7 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/helpers/authority"
+	"github.com/TF2Stadium/Helen/models/lobby/format"
 	"github.com/TF2Stadium/PlayerStatsScraper"
 	"github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -37,10 +38,10 @@ type Player struct {
 	ProfileUpdatedAt      time.Time `json:"-"`
 	StreamStatusUpdatedAt time.Time `json:"-"`
 
-	Debug   bool        // true if player is a dummy one.
-	SteamID string      `sql:"unique" json:"steamid"` // Players steam ID
-	Stats   PlayerStats `json:"-"`
-	StatsID uint        `json:"-"`
+	Debug   bool   // true if player is a dummy one.
+	SteamID string `sql:"unique" json:"steamid"` // Players steam ID
+	Stats   Stats  `json:"-"`
+	StatsID uint   `json:"-"`
 
 	// info from steam api
 	Avatar     string             `json:"avatar"`
@@ -60,10 +61,6 @@ type Player struct {
 
 	ExternalLinks postgres.Hstore `json:"external_links,omitempty"`
 
-	Substitutes []Lobby `gorm:"many2many:substitutes_player_lobbies"`
-	Reports     []Lobby `gorm:"many2many:reports_player_lobbies"`
-	RageQuits   []Lobby `gorm:"many2many:ragequits_player_lobbies"`
-
 	JSONFields
 }
 
@@ -72,12 +69,12 @@ type Player struct {
 // pointers allow un-needed structs to be set to null, so null is sent instead
 // of the zeroed struct
 type JSONFields struct {
-	PlaceholderLobbiesPlayed *int         `sql:"-" json:"lobbiesPlayed"`
-	PlaceholderTags          *[]string    `sql:"-" json:"tags"`
-	PlaceholderRoleStr       *string      `sql:"-" json:"role"`
-	PlaceholderLobbies       *[]LobbyData `sql:"-" json:"lobbies"`
-	PlaceholderStats         *PlayerStats `sql:"-" json:"stats"`
-	PlaceholderBans          []*PlayerBan `sql:"-" json:"bans"`
+	PlaceholderLobbiesPlayed *int      `sql:"-" json:"lobbiesPlayed"`
+	PlaceholderTags          *[]string `sql:"-" json:"tags"`
+	PlaceholderRoleStr       *string   `sql:"-" json:"role"`
+	//PlaceholderLobbies       *[]LobbyData `sql:"-" json:"lobbies"`
+	PlaceholderStats *Stats `sql:"-" json:"stats"`
+	PlaceholderBans  []*Ban `sql:"-" json:"bans"`
 }
 
 // Create a new player with the given steam id.
@@ -85,19 +82,17 @@ type JSONFields struct {
 func NewPlayer(steamId string) (*Player, error) {
 	player := &Player{SteamID: steamId}
 
-	if config.Constants.SteamDevAPIKey == "" {
-		player.Stats = NewPlayerStats()
+	player.Stats = NewStats()
 
+	if config.Constants.SteamDevAPIKey == "" {
 		err := player.UpdatePlayerInfo()
 		if err != nil {
 			return &Player{}, err
 		}
-	} else {
-		player.Stats = PlayerStats{}
 	}
 
 	last := &Player{}
-	db.DB.Table("players").Last(last)
+	db.DB.Model(&Player{}).Last(last)
 
 	player.MumbleUsername = fmt.Sprintf("TF2Stadium%d", last.ID+1)
 	player.MumbleAuthkey = player.GenAuthKey()
@@ -177,7 +172,7 @@ func (player *Player) GenAuthKey() string {
 		sum := sha256.Sum256(buff.Bytes())
 		authKey = hex.EncodeToString(sum[:])
 
-		db.DB.Table("players").Where("mumble_authkey = ?", authKey).Count(&count)
+		db.DB.Model(&Player{}).Where("mumble_authkey = ?", authKey).Count(&count)
 		if count == 0 {
 			break
 		}
@@ -203,8 +198,8 @@ func isClean(s string) bool {
 	return true
 }
 
-func (player *Player) SetMumbleUsername(lobbyType LobbyType, slot int) {
-	_, class, _ := LobbyGetSlotInfoString(lobbyType, slot)
+func (player *Player) SetMumbleUsername(lobbyType format.Format, slot int) {
+	_, class, _ := format.GetSlotTeamClass(lobbyType, slot)
 	username := strings.ToUpper(class) + "_"
 	alias := player.GetSetting("siteAlias")
 
@@ -285,39 +280,37 @@ func GetPlayerWithStats(steamid string) (*Player, error) {
 // Get the ID of the lobby the player occupies a slot in. Only works for lobbies which aren't closed (LobbyStateEnded).
 //If inProrgess, exclude lobbies which are in progress
 func (player *Player) GetLobbyID(inProgress bool) (uint, error) {
-	playerSlot := &LobbySlot{}
-	states := []LobbyState{LobbyStateEnded}
+	states := []int{5} //Ended
 	if inProgress {
-		states = append(states, LobbyStateInProgress)
+		states = append(states, 3) //3 == in progress
 	}
+	var lobbyID uint
 
-	err := db.DB.Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").
+	err := db.DB.Select("lobbies.id").Table("lobbies").
+		Joins("INNER JOIN lobby_slots ON lobbies.id = lobby_slots.lobby_id").
 		Where("lobby_slots.player_id = ? AND lobbies.state NOT IN (?) AND lobby_slots.needs_sub = FALSE", player.ID, states).
-		First(playerSlot).Error
+		Row().Scan(&lobbyID)
 
 	if err != nil {
 		return 0, err
 	}
 
-	return playerSlot.LobbyID, nil
+	return lobbyID, nil
 }
 
 // Return true if player is spectating a lobby with the given lobby ID
 func (player *Player) IsSpectatingID(lobbyid uint) bool {
 	count := 0
-	err := db.DB.Table("spectators_players_lobbies").Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Count(&count).Error
-	if err != nil {
-		return false
-	}
+	db.DB.Table("spectators_players_lobbies").Where("player_id = ? AND lobby_id = ?", player.ID, lobbyid).Count(&count)
 	return count != 0
 }
 
 //Get ID(s) of lobbies (which aren't clsoed) the player is spectating
 func (player *Player) GetSpectatingIds() ([]uint, error) {
 	var ids []uint
-	err := db.DB.Model(&Lobby{}).
+	err := db.DB.Table("lobbies").
 		Joins("INNER JOIN spectators_players_lobbies l ON l.lobby_id = lobbies.id").
-		Where("l.player_id = ? AND lobbies.state <> ?", player.ID, LobbyStateEnded).
+		Where("l.player_id = ? AND lobbies.state <> ?", player.ID, 5). //5 == lobby ended
 		Pluck("id", &ids).Error
 
 	if err != nil {
@@ -451,12 +444,12 @@ func (p *Player) IsFollowing(channel string) bool {
 	return resp.StatusCode != 404
 }
 
-var states = []LobbyState{LobbyStateInitializing, LobbyStateEnded}
+var states = []int{0, 5}
 
 func (p *Player) HasCreatedLobby() bool {
 	var count int
 
-	db.DB.Model(&Lobby{}).Where("created_by_steam_id = ? AND state NOT IN (?)", p.SteamID, states).Count(&count)
+	db.DB.Table("lobbies").Where("created_by_steam_id = ? AND state NOT IN (?)", p.SteamID, states).Count(&count)
 
 	return count != 0
 }

@@ -2,7 +2,7 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package models
+package lobby
 
 import (
 	"fmt"
@@ -11,15 +11,17 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/models/lobby/format"
+	"github.com/TF2Stadium/Helen/models/player"
 )
 
 type SlotDetails struct {
-	Slot         int          `json:"slot"`
-	Filled       bool         `json:"filled"`
-	Player       *Player      `json:"player,omitempty"`
-	Ready        *bool        `json:"ready,omitempty"`
-	InGame       *bool        `json:"ingame,omitempty"`
-	Requirements *Requirement `json:"requirements,omitempty"`
+	Slot         int            `json:"slot"`
+	Filled       bool           `json:"filled"`
+	Player       *player.Player `json:"player,omitempty"`
+	Ready        *bool          `json:"ready,omitempty"`
+	InGame       *bool          `json:"ingame,omitempty"`
+	Requirements *Requirement   `json:"requirements,omitempty"`
 }
 
 type ClassDetails struct {
@@ -55,10 +57,10 @@ type LobbyData struct {
 
 	Classes []ClassDetails `json:"classes"`
 
-	Leader      Player `json:"leader"`
-	CreatedAt   int64  `json:"createdAt"`
-	State       int    `json:"state"`
-	WhitelistID string `json:"whitelistId"`
+	Leader      player.Player `json:"leader"`
+	CreatedAt   int64         `json:"createdAt"`
+	State       int           `json:"state"`
+	WhitelistID string        `json:"whitelistId"`
 
 	Spectators []SpecDetails `json:"spectators,omitempty"`
 }
@@ -112,44 +114,42 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 	playerId, err := lobby.GetPlayerIDBySlot(slot)
 	needsSub := lobby.SlotNeedsSubstitute(slot)
 
-	j := SlotDetails{Slot: slot, Filled: err == nil && !needsSub}
+	slotDetails := SlotDetails{Slot: slot, Filled: err == nil && !needsSub}
 
 	if err == nil && includeDetails && !needsSub {
-		var player Player
-		db.DB.First(&player, playerId)
-		player.SetPlayerSummary()
+		p, _ := player.GetPlayerByID(playerId)
+		p.SetPlayerSummary()
 
-		summary := player
-		j.Player = &summary
+		slotDetails.Player = p
 
-		ready, _ := lobby.IsPlayerReady(&player)
-		j.Ready = &ready
+		ready, _ := lobby.IsPlayerReady(p)
+		slotDetails.Ready = &ready
 
-		ingame := lobby.IsPlayerInGame(&player)
-		j.InGame = &ingame
+		ingame := lobby.IsPlayerInGame(p)
+		slotDetails.InGame = &ingame
 	}
 
 	if lobby.HasSlotRequirement(slot) {
-		j.Requirements, _ = lobby.GetSlotRequirement(slot)
+		slotDetails.Requirements, _ = lobby.GetSlotRequirement(slot)
 	}
 
-	return j
+	return slotDetails
 }
 
 var (
-	stateString = map[LobbyState]string{
-		LobbyStateWaiting:    "Waiting For Players",
-		LobbyStateInProgress: "Lobby in Progress",
-		LobbyStateEnded:      "Lobby Ended",
+	stateString = map[State]string{
+		Waiting:    "Waiting For Players",
+		InProgress: "Lobby in Progress",
+		Ended:      "Lobby Ended",
 	}
 
-	formatMap = map[LobbyType]string{
-		LobbyTypeSixes:      "6s",
-		LobbyTypeHighlander: "Highlander",
-		LobbyTypeFours:      "4v4",
-		LobbyTypeUltiduo:    "Ultiduo",
-		LobbyTypeBball:      "Bball",
-		LobbyTypeDebug:      "Debug",
+	formatMap = map[format.Format]string{
+		format.Sixes:      "6s",
+		format.Highlander: "Highlander",
+		format.Fours:      "4v4",
+		format.Ultiduo:    "Ultiduo",
+		format.Bball:      "Bball",
+		format.Debug:      "Debug",
 	}
 )
 
@@ -172,15 +172,15 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyData.Region.Name = lobby.RegionName
 	lobbyData.Region.Code = lobby.RegionCode
 
-	var classList = typeClassList[lobby.Type]
+	classList := format.GetClasses(lobby.Type)
 
 	classes := make([]ClassDetails, len(classList))
-	lobbyData.MaxPlayers = NumberOfClassesMap[lobby.Type] * 2
+	lobbyData.MaxPlayers = format.NumberOfClassesMap[lobby.Type] * 2
 
 	for slot, className := range classList {
 		class := ClassDetails{
 			Red:   decorateSlotDetails(lobby, slot, includeDetails),
-			Blu:   decorateSlotDetails(lobby, slot+NumberOfClassesMap[lobby.Type], includeDetails),
+			Blu:   decorateSlotDetails(lobby, slot+format.NumberOfClassesMap[lobby.Type], includeDetails),
 			Class: className,
 		}
 
@@ -195,7 +195,7 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	}
 
 	if lobby.CreatedBySteamID != "" { // == "" during tests
-		leader, _ := GetPlayerBySteamID(lobby.CreatedBySteamID)
+		leader, _ := player.GetPlayerBySteamID(lobby.CreatedBySteamID)
 		leader.SetPlayerSummary()
 		lobbyData.Leader = *leader
 	}
@@ -209,8 +209,7 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	spectators := make([]SpecDetails, len(specIDs))
 
 	for i, spectatorID := range specIDs {
-		specPlayer := &Player{}
-		db.DB.First(specPlayer, spectatorID)
+		specPlayer, _ := player.GetPlayerByID(spectatorID)
 
 		specJs := SpecDetails{
 			Name:    specPlayer.Alias(),
@@ -244,17 +243,17 @@ func DecorateLobbyListData(lobbies []*Lobby) []LobbyData {
 	return lobbyList
 }
 
-func DecorateLobbyConnect(lobby *Lobby, player *Player, slot int) LobbyConnectData {
+func DecorateLobbyConnect(lob *Lobby, player *player.Player, slot int) LobbyConnectData {
 	l := LobbyConnectData{}
-	l.ID = lobby.ID
-	l.Time = lobby.CreatedAt.Unix()
-	l.Pass = lobby.ServerInfo.ServerPassword
-	l.Game.Host = lobby.ServerInfo.Host
+	l.ID = lob.ID
+	l.Time = lob.CreatedAt.Unix()
+	l.Pass = lob.ServerInfo.ServerPassword
+	l.Game.Host = lob.ServerInfo.Host
 
 	l.Mumble.Address = config.Constants.MumbleAddr
 	l.Mumble.Password = player.MumbleAuthkey
-	team, _, _ := LobbyGetSlotInfoString(lobby.Type, slot)
-	l.Mumble.Channel = fmt.Sprintf("Lobby #%d/%s", lobby.ID, strings.ToUpper(team))
+	team, _, _ := format.GetSlotTeamClass(lob.Type, slot)
+	l.Mumble.Channel = fmt.Sprintf("Lobby #%d/%s", lob.ID, strings.ToUpper(team))
 	return l
 }
 
@@ -286,7 +285,7 @@ func DecorateSubstitute(slot *LobbySlot) SubstituteData {
 	substitute.Region.Name = lobby.RegionName
 	substitute.Region.Code = lobby.RegionCode
 
-	substitute.Team, substitute.Class, _ = LobbyGetSlotInfoString(lobby.Type, slot.Slot)
+	substitute.Team, substitute.Class, _ = format.GetSlotTeamClass(lobby.Type, slot.Slot)
 	substitute.Password = lobby.SlotPassword != ""
 
 	return substitute
@@ -296,7 +295,7 @@ func DecorateSubstituteList() []SubstituteData {
 	slots := []*LobbySlot{}
 	subList := []SubstituteData{}
 
-	db.DB.Table("lobby_slots").Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").Where("lobby_slots.needs_sub = ? AND lobbies.state = ?", true, LobbyStateInProgress).Find(&slots)
+	db.DB.Model(&LobbySlot{}).Joins("INNER JOIN lobbies ON lobbies.id = lobby_slots.lobby_id").Where("lobby_slots.needs_sub = ? AND lobbies.state = ?", true, InProgress).Find(&slots)
 
 	for _, slot := range slots {
 		subList = append(subList, DecorateSubstitute(slot))

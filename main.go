@@ -29,8 +29,10 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	_ "github.com/TF2Stadium/Helen/helpers/authority" // to register authority types
 	_ "github.com/TF2Stadium/Helen/internal/pprof"    // to setup expvars
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/chat"
 	"github.com/TF2Stadium/Helen/models/event"
+	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/rpc"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/rs/cors"
@@ -77,15 +79,15 @@ func main() {
 
 	database.Init()
 	migrations.Do()
-	err := models.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
+	err := lobby.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	models.CreateLocks()
-	models.ConnectRPC()
-	models.RestoreServemeChecks()
-	models.DeleteUnusedServerRecords()
+	lobby.CreateLocks()
+	rpc.ConnectRPC()
+	lobby.RestoreServemeChecks()
+	lobby.DeleteUnusedServers()
 	//go models.TFTVStreamStatusUpdater()
 
 	if config.Constants.SteamIDWhitelist != "" {
@@ -121,7 +123,7 @@ func main() {
 
 func shutdown() {
 	logrus.Info("Received SIGINT/SIGTERM")
-	models.SendNotification(`Backend will be going down for a while for an update, click on "Reconnect" to reconnect to TF2Stadium`, 0)
+	chat.SendNotification(`Backend will be going down for a while for an update, click on "Reconnect" to reconnect to TF2Stadium`, 0)
 	logrus.Info("waiting for GlobalWait")
 	helpers.GlobalWait.Wait()
 	logrus.Info("waiting for socket requests to complete.")
