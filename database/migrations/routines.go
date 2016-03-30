@@ -28,6 +28,7 @@ var migrationRoutines = map[uint64]func(){
 	9:  setPlayerSettings,
 	10: dropTableSessions,
 	11: dropColumnUpdatedAt,
+	12: moveReportsServers,
 }
 
 func whitelist_id_string() {
@@ -145,4 +146,43 @@ func dropTableSessions() {
 
 func dropColumnUpdatedAt() {
 	db.DB.Exec("ALTER TABLE players DROP COLUMN updated_at")
+}
+
+func moveReportsServers() {
+	type oldReport struct {
+		PlayerID uint
+		LobbyID  uint
+	}
+
+	reportTypes := []struct {
+		table string
+		rtype player.ReportType
+	}{
+		{"ragequits_player_lobbies", player.RageQuit},
+		{"reports_player_lobbies", player.Vote},
+		{"substitutes_player_lobbies", player.Substitute},
+	}
+
+	for _, rtype := range reportTypes {
+		rows, _ := db.DB.DB().Query("SELECT * FROM " + rtype.table)
+
+		logrus.Info("Creating entries for ", rtype.table)
+		for rows.Next() {
+			var report oldReport
+
+			rows.Scan(&report.PlayerID, &report.LobbyID)
+			p, _ := player.GetPlayerByID(report.PlayerID)
+			newReport := &player.Report{
+				PlayerID: p.ID,
+				LobbyID:  report.LobbyID,
+				Type:     rtype.rtype,
+			}
+			db.DB.Create(newReport)
+		}
+	}
+
+	db.DB.Exec("DROP TABLE ragequits_player_lobbies")
+	db.DB.Exec("DROP TABLE reports_player_lobbies")
+	db.DB.Exec("DROP TABLE substitutes_player_lobbies")
+	db.DB.Exec("DROP TABLE server_records")
 }
