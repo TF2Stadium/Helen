@@ -23,8 +23,6 @@ func CleanupDB() {
 	defer cleaningMutex.Unlock()
 
 	o.Do(func() {
-		config.SetupConstants()
-
 		ci := os.Getenv("CI")
 		config.Constants.DbAddr = "127.0.0.1:5432"
 		config.Constants.SteamDevAPIKey = ""
