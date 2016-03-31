@@ -18,8 +18,6 @@ import (
 var steamid = "76561198074578368"
 
 func TestDatabasePing(t *testing.T) {
-	config.SetupConstants()
-
 	ci := os.Getenv("CI")
 	if ci == "true" {
 		config.Constants.DbUsername = "postgres"
