@@ -15,7 +15,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/helpers/authority"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/TF2Stadium/wsevent"
 )
 
@@ -72,7 +72,7 @@ func IsSteamIDWhitelisted(steamid string) bool {
 // shitlord
 func CheckPrivilege(so *wsevent.Client, action authority.AuthAction) error {
 	//Checks if the client has the neccesary authority to perform action
-	player, _ := models.GetPlayerBySteamID(so.Token.Claims["steam_id"].(string))
+	player, _ := player.GetPlayerBySteamID(so.Token.Claims["steam_id"].(string))
 	if !player.Role.Can(action) {
 		return errors.New("You are not authorized to perform this action")
 	}

@@ -1,8 +1,8 @@
-package models
+package rpc
 
 import "github.com/Sirupsen/logrus"
 
-func fumbleLobbyCreated(lobbyID uint) error {
+func FumbleLobbyCreated(lobbyID uint) error {
 	if *fumbleDisabled {
 		return nil
 	}
@@ -17,7 +17,7 @@ func fumbleLobbyCreated(lobbyID uint) error {
 	return nil
 }
 
-func fumbleLobbyEnded(lobbyID uint) {
+func FumbleLobbyEnded(lobbyID uint) {
 	if *fumbleDisabled {
 		return
 	}

@@ -14,7 +14,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/chat"
+	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/jinzhu/gorm"
 )
 
@@ -24,12 +25,12 @@ var (
 )
 
 func getPlayerID(steamID string) (playerID uint) {
-	db.DB.Table("players").Select("id").Where("steam_id = ?", steamID).Row().Scan(&playerID)
+	db.DB.Model(&player.Player{}).Select("id").Where("steam_id = ?", steamID).Row().Scan(&playerID)
 	return
 }
 
 func GetChatLogs(w http.ResponseWriter, r *http.Request) {
-	var messages []*models.ChatMessage
+	var messages []*chat.ChatMessage
 	values := r.URL.Query()
 
 	room, err := strconv.Atoi(values.Get("room"))

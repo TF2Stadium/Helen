@@ -9,7 +9,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -31,7 +31,7 @@ func SetupJWTSigning() {
 	}
 }
 
-func NewToken(player *models.Player) string {
+func NewToken(player *player.Player) string {
 	token := jwt.New(jwt.SigningMethodHS512)
 	token.Claims["player_id"] = strconv.FormatUint(uint64(player.ID), 10)
 	token.Claims["steam_id"] = player.SteamID
@@ -66,8 +66,8 @@ func GetToken(r *http.Request) (*jwt.Token, error) {
 	return token, err
 }
 
-func GetPlayer(token *jwt.Token) *models.Player {
+func GetPlayer(token *jwt.Token) *player.Player {
 	playerid, _ := strconv.ParseUint(token.Claims["player_id"].(string), 10, 32)
-	player, _ := models.GetPlayerByID(uint(playerid))
+	player, _ := player.GetPlayerByID(uint(playerid))
 	return player
 }

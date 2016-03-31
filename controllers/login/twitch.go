@@ -10,7 +10,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/player"
 	"golang.org/x/net/xsrftoken"
 )
 
@@ -36,7 +36,7 @@ func TwitchLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	steamID := token.Claims["steam_id"].(string)
 
-	player, _ := models.GetPlayerBySteamID(steamID)
+	player, _ := player.GetPlayerBySteamID(steamID)
 
 	loginURL := url.URL{
 		Scheme: "https",
@@ -70,7 +70,7 @@ func TwitchAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	steamID := token.Claims["steam_id"].(string)
-	player, _ := models.GetPlayerBySteamID(steamID)
+	player, _ := player.GetPlayerBySteamID(steamID)
 
 	values := r.URL.Query()
 	code := values.Get("code")
@@ -168,7 +168,7 @@ func TwitchLogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	steamID := token.Claims["steam_id"].(string)
 
-	player, _ := models.GetPlayerBySteamID(steamID)
+	player, _ := player.GetPlayerBySteamID(steamID)
 	player.TwitchName = ""
 	player.TwitchAccessToken = ""
 	player.Save()

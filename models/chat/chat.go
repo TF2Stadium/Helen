@@ -1,4 +1,4 @@
-package models
+package chat
 
 import (
 	"fmt"
@@ -7,24 +7,25 @@ import (
 	"encoding/json"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/models/player"
 )
 
 // ChatMessage Represents a chat mesasge sent by a particular player
 type ChatMessage struct {
 	// Message ID
-	ID        uint      `json:"id"`
-	CreatedAt time.Time `json:"timestamp"`
-	Player    Player    `json:"-"`
-	PlayerID  uint      `json:"-"`                               // ID of the player who sent the message
-	Room      int       `json:"room"`                            // room to which the message was sent
-	Message   string    `json:"message" sql:"type:varchar(150)"` // the actual Message
-	Deleted   bool      `json:"deleted"`                         // true if the message has been deleted by a moderator
-	Bot       bool      `json:"bot"`                             // true if the message was sent by the notification "bot"
-	InGame    bool      `json:"ingame"`                          // true if the message is in-game
+	ID        uint          `json:"id"`
+	CreatedAt time.Time     `json:"timestamp"`
+	Player    player.Player `json:"-"`
+	PlayerID  uint          `json:"-"`                               // ID of the player who sent the message
+	Room      int           `json:"room"`                            // room to which the message was sent
+	Message   string        `json:"message" sql:"type:varchar(150)"` // the actual Message
+	Deleted   bool          `json:"deleted"`                         // true if the message has been deleted by a moderator
+	Bot       bool          `json:"bot"`                             // true if the message was sent by the notification "bot"
+	InGame    bool          `json:"ingame"`                          // true if the message is in-game
 }
 
 // Return a new ChatMessage sent from specficied player
-func NewChatMessage(message string, room int, player *Player) *ChatMessage {
+func NewChatMessage(message string, room int, player *player.Player) *ChatMessage {
 	player.SetPlayerSummary()
 	record := &ChatMessage{
 		PlayerID: player.ID,
@@ -36,11 +37,11 @@ func NewChatMessage(message string, room int, player *Player) *ChatMessage {
 	return record
 }
 
-func NewInGameChatMessage(lobby *Lobby, player *Player, message string) *ChatMessage {
+func NewInGameChatMessage(lobbyID uint, player *player.Player, message string) *ChatMessage {
 	return &ChatMessage{
 		PlayerID: player.ID,
 
-		Room:    int(lobby.ID),
+		Room:    int(lobbyID),
 		Message: message,
 		InGame:  true,
 	}
@@ -68,10 +69,10 @@ type minPlayer struct {
 type sentMessage ChatMessage
 
 func (m *sentMessage) MarshalJSON() ([]byte, error) {
-	var player *Player
+	var p *player.Player
 
 	if !m.Bot {
-		player, _ = GetPlayerByID(m.PlayerID)
+		p, _ = player.GetPlayerByID(m.PlayerID)
 	}
 
 	message := struct {
@@ -84,9 +85,9 @@ func (m *sentMessage) MarshalJSON() ([]byte, error) {
 		message.Player.SteamID = "76561198275497635"
 		message.Player.Tags = []string{"tf2stadium"}
 	} else {
-		message.Player.Name = player.Alias()
-		message.Player.SteamID = player.SteamID
-		message.Player.Tags = decoratePlayerTags(player)
+		message.Player.Name = p.Alias()
+		message.Player.SteamID = p.SteamID
+		message.Player.Tags = p.DecoratePlayerTags()
 	}
 
 	if m.Deleted {
@@ -118,16 +119,16 @@ func SendNotification(message string, room int) {
 func GetRoomMessages(room int) ([]*ChatMessage, error) {
 	var messages []*ChatMessage
 
-	err := db.DB.Table("chat_messages").Where("room = ?", room).Order("created_at").Find(&messages).Error
+	err := db.DB.Model(&ChatMessage{}).Where("room = ?", room).Order("created_at").Find(&messages).Error
 
 	return messages, err
 }
 
 // Return all messages sent by player to room
-func GetPlayerMessages(player *Player) ([]*ChatMessage, error) {
+func GetPlayerMessages(p *player.Player) ([]*ChatMessage, error) {
 	var messages []*ChatMessage
 
-	err := db.DB.Table("chat_messages").Where("player_id = ?", player.ID).Order("room, created_at").Find(&messages).Error
+	err := db.DB.Model(&ChatMessage{}).Where("player_id = ?", p.ID).Order("room, created_at").Find(&messages).Error
 
 	return messages, err
 
@@ -137,7 +138,7 @@ func GetPlayerMessages(player *Player) ([]*ChatMessage, error) {
 func GetScrollback(room int) ([]*sentMessage, error) {
 	var messages []*sentMessage // apparently the ORM works fine with using this type (they're aliases after all)
 
-	err := db.DB.Table("chat_messages").Where("room = ? AND deleted = FALSE", room).Order("id desc").Limit(20).Find(&messages).Error
+	err := db.DB.Model(&ChatMessage{}).Where("room = ? AND deleted = FALSE", room).Order("id desc").Limit(20).Find(&messages).Error
 
 	return messages, err
 }

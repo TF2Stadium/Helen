@@ -10,7 +10,9 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/player"
+	"github.com/TF2Stadium/Helen/models/rpc"
 	"github.com/TF2Stadium/wsevent"
 )
 
@@ -27,26 +29,26 @@ func (Player) PlayerReady(so *wsevent.Client, _ struct{}) interface{} {
 		return tperr
 	}
 
-	lobby, tperr := models.GetLobbyByIDServer(lobbyid)
-	if tperr != nil {
-		return tperr
+	lob, err := lobby.GetLobbyByIDServer(lobbyid)
+	if err != nil {
+		return err
 	}
 
-	if lobby.State != models.LobbyStateReadyingUp {
+	if lob.State != lobby.ReadyingUp {
 		return errors.New("Lobby hasn't been filled up yet.")
 	}
 
-	tperr = lobby.ReadyPlayer(player)
+	err = lob.ReadyPlayer(player)
 
-	if tperr != nil {
-		return tperr
+	if err != nil {
+		return err
 	}
 
-	if lobby.IsEveryoneReady() {
-		lobby.Start()
+	if lob.IsEveryoneReady() {
+		lob.Start()
 
-		hooks.BroadcastLobbyStart(lobby)
-		models.BroadcastLobbyList()
+		hooks.BroadcastLobbyStart(lob)
+		lobby.BroadcastLobbyList()
 	}
 
 	return emptySuccess
@@ -59,30 +61,30 @@ func (Player) PlayerNotReady(so *wsevent.Client, _ struct{}) interface{} {
 		return tperr
 	}
 
-	lobby, tperr := models.GetLobbyByID(lobbyid)
-	if tperr != nil {
-		return tperr
+	lob, err := lobby.GetLobbyByID(lobbyid)
+	if err != nil {
+		return err
 	}
 
-	if lobby.State != models.LobbyStateReadyingUp {
+	if lob.State != lobby.ReadyingUp {
 		return errors.New("Lobby hasn't been filled up yet.")
 	}
 
-	tperr = lobby.UnreadyPlayer(player)
-	lobby.RemovePlayer(player)
-	hooks.AfterLobbyLeave(lobby, player)
-	if spec := sessions.IsSpectating(so.ID, lobby.ID); spec {
+	err = lob.UnreadyPlayer(player)
+	lob.RemovePlayer(player)
+	hooks.AfterLobbyLeave(lob, player)
+	if spec := sessions.IsSpectating(so.ID, lob.ID); spec {
 		// IsSpectating checks if the player has joined the lobby's public room
-		lobby.AddSpectator(player)
+		lob.AddSpectator(player)
 	}
 
 	if tperr != nil {
 		return tperr
 	}
 
-	lobby.SetState(models.LobbyStateWaiting)
-	lobby.UnreadyAllPlayers()
-	models.BroadcastLobby(lobby)
+	lob.SetState(lobby.Waiting)
+	lob.UnreadyAllPlayers()
+	lobby.BroadcastLobby(lob)
 	return emptySuccess
 }
 
@@ -120,11 +122,10 @@ func (Player) PlayerSettingsSet(so *wsevent.Client, args struct {
 		so.EmitJSON(helpers.NewRequest("playerProfile", player))
 
 		if lobbyID, _ := player.GetLobbyID(true); lobbyID != 0 {
-			lobby, _ := models.GetLobbyByID(lobbyID)
-			slot, _ := lobby.GetPlayerSlot(player)
-			player.SetMumbleUsername(lobby.Type, slot)
-			lobbyData := lobby.LobbyData(true)
-			lobbyData.Send()
+			lob, _ := lobby.GetLobbyByID(lobbyID)
+			slot, _ := lob.GetPlayerSlot(player)
+			player.SetMumbleUsername(lob.Type, slot)
+			lobby.BroadcastLobby(lob)
 		}
 	default:
 		player.SetSetting(*args.Key, *args.Value)
@@ -142,7 +143,7 @@ func (Player) PlayerProfile(so *wsevent.Client, args struct {
 		steamid = so.Token.Claims["steam_id"].(string)
 	}
 
-	player, err := models.GetPlayerBySteamID(steamid)
+	player, err := player.GetPlayerBySteamID(steamid)
 	if err != nil {
 		return err
 	}
@@ -171,7 +172,7 @@ func (Player) PlayerEnableTwitchBot(so *wsevent.Client, _ struct{}) interface{} 
 		return errors.New("Please wait for a minute before changing the bot's status")
 	}
 
-	models.TwitchBotJoin(player.TwitchName)
+	rpc.TwitchBotJoin(player.TwitchName)
 
 	changeMu.Lock()
 	lastTwitchBotChange[player.ID] = time.Now()
@@ -199,7 +200,7 @@ func (Player) PlayerDisableTwitchBot(so *wsevent.Client, _ struct{}) interface{}
 		return errors.New("Please wait for a minute before changing the bot's status")
 	}
 
-	models.TwitchBotLeave(player.TwitchName)
+	rpc.TwitchBotLeave(player.TwitchName)
 
 	changeMu.Lock()
 	lastTwitchBotChange[player.ID] = time.Now()

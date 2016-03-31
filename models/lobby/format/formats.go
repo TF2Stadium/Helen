@@ -1,10 +1,17 @@
-// Copyright (C) 2015  TF2Stadium
-// Use of this source code is governed by the GPLv3
-// that can be found in the COPYING file.
-
-package models
+package format
 
 import "errors"
+
+type Format int
+
+const (
+	Sixes      Format = iota
+	Highlander        // lol
+	Fours
+	Ultiduo
+	Bball
+	Debug
+)
 
 var (
 	teamMap  = map[string]int{"red": 0, "blu": 1}
@@ -67,35 +74,37 @@ var (
 	}
 	foursClassList = []string{"scout", "soldier", "demoman", "medic"}
 
-	typeClassMap = map[LobbyType]map[string]int{
-		LobbyTypeHighlander: hlClassMap,
-		LobbyTypeSixes:      sixesClassMap,
-		LobbyTypeFours:      foursClassMap,
-		LobbyTypeUltiduo:    ultiduoClassMap,
-		LobbyTypeBball:      bballClassMap,
-		LobbyTypeDebug:      debugClassMap,
+	typeClassMap = map[Format]map[string]int{
+		Highlander: hlClassMap,
+		Sixes:      sixesClassMap,
+		Fours:      foursClassMap,
+		Ultiduo:    ultiduoClassMap,
+		Bball:      bballClassMap,
+		Debug:      debugClassMap,
 	}
 
-	typeClassList = map[LobbyType][]string{
-		LobbyTypeHighlander: hlClassList,
-		LobbyTypeSixes:      sixesClassList,
-		LobbyTypeFours:      foursClassList,
-		LobbyTypeUltiduo:    ultiduoClassList,
-		LobbyTypeBball:      bballClassList,
-		LobbyTypeDebug:      debugClassList,
+	typeClassList = map[Format][]string{
+		Highlander: hlClassList,
+		Sixes:      sixesClassList,
+		Fours:      foursClassList,
+		Ultiduo:    ultiduoClassList,
+		Bball:      bballClassList,
+		Debug:      debugClassList,
 	}
 
-	NumberOfClassesMap = map[LobbyType]int{
-		LobbyTypeHighlander: 9,
-		LobbyTypeSixes:      6,
-		LobbyTypeFours:      4,
-		LobbyTypeUltiduo:    2,
-		LobbyTypeBball:      2,
-		LobbyTypeDebug:      1,
+	NumberOfClassesMap = map[Format]int{
+		Highlander: 9,
+		Sixes:      6,
+		Fours:      4,
+		Ultiduo:    2,
+		Bball:      2,
+		Debug:      1,
 	}
 )
 
-func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (int, error) {
+//GetSlot returns the slot number for given team, class strings and the
+//lobby format
+func GetSlot(lobbytype Format, teamStr string, classStr string) (int, error) {
 	team, ok := teamMap[teamStr]
 	if !ok {
 		return -1, errors.New("Invalid team")
@@ -109,18 +118,20 @@ func LobbyGetPlayerSlot(lobbytype LobbyType, teamStr string, classStr string) (i
 	return team*NumberOfClassesMap[lobbytype] + class, nil
 }
 
-// team, class
-func LobbyGetSlotInfoString(lobbytype LobbyType, slot int) (team, class string, err error) {
+//GetSlotTeamClass returns the team and class strings for a given slot number
+func GetSlotTeamClass(lobbytype Format, slot int) (team, class string, err error) {
 	classList := typeClassList[lobbytype]
 
-	teamI, classI, err := LobbyGetSlotInfo(lobbytype, slot)
+	teamI, classI, err := getSlotNums(lobbytype, slot)
 	if err == nil {
 		team, class, err = teamList[teamI], classList[classI], nil
 	}
 	return
 }
 
-func LobbyGetSlotInfo(lobbytype LobbyType, slot int) (int, int, error) {
+//given a slot number, returns the numbers for the
+//slot's class and team for the given format
+func getSlotNums(lobbytype Format, slot int) (int, int, error) {
 	classList := typeClassList[lobbytype]
 
 	if slot < len(classList) {
@@ -130,4 +141,8 @@ func LobbyGetSlotInfo(lobbytype LobbyType, slot int) (int, int, error) {
 	} else {
 		return 0, 0, errors.New("Invalid slot")
 	}
+}
+
+func GetClasses(format Format) []string {
+	return typeClassList[format]
 }

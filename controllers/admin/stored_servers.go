@@ -7,7 +7,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/gameserver"
 	"golang.org/x/net/xsrftoken"
 )
 
@@ -41,7 +41,7 @@ func AddServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	server, err := models.NewStoredServer(name, addr, passwd)
+	server, err := gameserver.NewStoredServer(name, addr, passwd)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -67,14 +67,14 @@ func RemoveServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	models.RemoveStoredServer(addr)
+	gameserver.RemoveStoredServer(addr)
 	fmt.Fprintf(w, "Server successfully deleted.")
 }
 
 func ViewServerPage(w http.ResponseWriter, r *http.Request) {
 	err := serverPage.Execute(w, map[string]interface{}{
 		"XSRFToken": xsrftoken.Generate(config.Constants.CookieStoreSecret, "admin", "POST"),
-		"Servers":   models.GetAllServers(),
+		"Servers":   gameserver.GetAllStoredServers(),
 	})
 	if err != nil {
 		logrus.Error(err)

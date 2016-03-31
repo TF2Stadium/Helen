@@ -2,19 +2,24 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package models
+package rpc
+
+import (
+	"github.com/TF2Stadium/Helen/models/gameserver"
+	"github.com/TF2Stadium/Helen/models/lobby/format"
+)
 
 type ServerBootstrap struct {
 	LobbyId       uint
-	Info          ServerRecord
+	Info          gameserver.Server
 	Players       []string
 	BannedPlayers []string
 }
 
 type Args struct {
 	Id        uint
-	Info      ServerRecord
-	Type      LobbyType
+	Info      gameserver.Server
+	Type      format.Format
 	League    string
 	Whitelist string
 	Map       string
@@ -32,7 +37,7 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 	return pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &struct{}{})
 }
 
-func setupServer(lobbyId uint, info ServerRecord, lobbyType LobbyType, league string,
+func SetupServer(lobbyId uint, info gameserver.Server, lobbyType format.Format, league string,
 	whitelist string, mapName string) error {
 	if *paulingDisabled {
 		return nil
@@ -55,7 +60,7 @@ func ReExecConfig(lobbyId uint, changeMap bool) error {
 	return pauling.Call("Pauling.ReExecConfig", &Args{Id: lobbyId, ChangeMap: changeMap}, &struct{}{})
 }
 
-func VerifyInfo(info ServerRecord) error {
+func VerifyInfo(info gameserver.Server) error {
 	if *paulingDisabled {
 		return nil
 	}

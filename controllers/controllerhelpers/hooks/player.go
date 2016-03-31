@@ -11,7 +11,8 @@ import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
 )
@@ -19,33 +20,33 @@ import (
 func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 	server.Join(so, "0_public") //room for global chat
 
-	so.EmitJSON(helpers.NewRequest("lobbyListData", models.DecorateLobbyListData(models.GetWaitingLobbies())))
+	so.EmitJSON(helpers.NewRequest("lobbyListData", lobby.DecorateLobbyListData(lobby.GetWaitingLobbies())))
 	chelpers.BroadcastScrollback(so, 0)
-	so.EmitJSON(helpers.NewRequest("subListData", models.DecorateSubstituteList()))
+	so.EmitJSON(helpers.NewRequest("subListData", lobby.DecorateSubstituteList()))
 }
 
-func AfterConnectLoggedIn(so *wsevent.Client, player *models.Player) {
+func AfterConnectLoggedIn(so *wsevent.Client, player *player.Player) {
 	if time.Since(player.ProfileUpdatedAt) >= 30*time.Minute {
 		player.UpdatePlayerInfo()
 	}
 
 	lobbyID, err := player.GetLobbyID(false)
 	if err == nil {
-		lobby, _ := models.GetLobbyByIDServer(lobbyID)
-		AfterLobbyJoin(so, lobby, player)
-		AfterLobbySpec(socket.AuthServer, so, player, lobby)
-		models.BroadcastLobbyToUser(lobby, so.Token.Claims["steam_id"].(string))
+		lob, _ := lobby.GetLobbyByIDServer(lobbyID)
+		AfterLobbyJoin(so, lob, player)
+		AfterLobbySpec(socket.AuthServer, so, player, lob)
+		lobby.BroadcastLobbyToUser(lob, so.Token.Claims["steam_id"].(string))
 
-		slot := &models.LobbySlot{}
-		err := db.DB.Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).First(slot).Error
+		slot := &lobby.LobbySlot{}
+		err := db.DB.Where("lobby_id = ? AND player_id = ?", lob.ID, player.ID).First(slot).Error
 
 		if err == nil {
-			if lobby.State == models.LobbyStateInProgress {
-				broadcaster.SendMessage(player.SteamID, "lobbyStart", models.DecorateLobbyConnect(lobby, player, slot.Slot))
-			} else if lobby.State == models.LobbyStateReadyingUp && !slot.Ready {
+			if lob.State == lobby.InProgress {
+				broadcaster.SendMessage(player.SteamID, "lobbyStart", lobby.DecorateLobbyConnect(lob, player, slot.Slot))
+			} else if lob.State == lobby.ReadyingUp && !slot.Ready {
 				data := struct {
 					Timeout int64 `json:"timeout"`
-				}{lobby.ReadyUpTimeLeft()}
+				}{lob.ReadyUpTimeLeft()}
 
 				broadcaster.SendMessage(player.SteamID, "lobbyReadyUp", data)
 			}

@@ -11,7 +11,7 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/gorilla/websocket"
@@ -78,7 +78,7 @@ func SocketInit(so *wsevent.Client) error {
 	if loggedIn {
 		hooks.AfterConnect(socket.AuthServer, so)
 
-		player, err := models.GetPlayerBySteamID(steamid)
+		player, err := player.GetPlayerBySteamID(steamid)
 		if err != nil {
 			return fmt.Errorf("Couldn't find player record for %s", steamid)
 		}

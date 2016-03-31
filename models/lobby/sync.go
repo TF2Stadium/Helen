@@ -1,8 +1,9 @@
-package models
+package lobby
 
 import (
-	db "github.com/TF2Stadium/Helen/database"
 	"sync"
+
+	db "github.com/TF2Stadium/Helen/database"
 )
 
 var (
@@ -12,9 +13,7 @@ var (
 
 //Lock aquires the lock for the given lobby.
 //Be careful while using Lock outside of models,
-//since it could potentially result in a deadlock
-//if the function call after the lock would try
-//acquiring it too
+//improper usage could result in deadlocks
 func (lobby *Lobby) Lock() {
 	mu.RLock()
 	lock, ok := lobbyLocks[lobby.ID]
@@ -59,7 +58,7 @@ func CreateLocks() {
 
 	var ids []uint
 
-	db.DB.Model(&Lobby{}).Where("state <> ?", LobbyStateEnded).Pluck("id", &ids)
+	db.DB.Model(&Lobby{}).Where("state <> ?", Ended).Pluck("id", &ids)
 	for _, id := range ids {
 		lobbyLocks[id] = new(sync.Mutex)
 	}

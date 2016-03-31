@@ -9,6 +9,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/models/chat"
 )
 
 func TFTVStreamStatusUpdater() {
@@ -46,7 +47,7 @@ func TFTVStreamStatusUpdater() {
 		json.NewDecoder(resp.Body).Decode(&reply)
 		if reply.Total != 0 && !streaming {
 			str := fmt.Sprintf(`twitch.tv/teamfortresstv is live with "%s"`, reply.Streams[0].Channel.Status)
-			message := NewBotMessage(str, 0)
+			message := chat.NewBotMessage(str, 0)
 			message.Send()
 			streaming = true
 		} else {

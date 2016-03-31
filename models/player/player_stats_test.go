@@ -2,14 +2,15 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package models_test
+package player_test
 
 import (
 	"testing"
 
 	"github.com/TF2Stadium/Helen/database"
 	_ "github.com/TF2Stadium/Helen/helpers"
-	. "github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/lobby/format"
+	. "github.com/TF2Stadium/Helen/models/player"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +18,7 @@ func TestLobbiesPlayed(t *testing.T) {
 	t.Parallel()
 	stats1 := &PlayerStats{}
 
-	stats1.PlayedCountIncrease(LobbyTypeSixes) // sixes: 0 -> 1
+	stats1.PlayedCountIncrease(format.Sixes) // sixes: 0 -> 1
 
 	database.DB.Save(stats1)
 

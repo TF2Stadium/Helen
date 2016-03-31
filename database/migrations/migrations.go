@@ -12,6 +12,10 @@ import (
 	"github.com/TF2Stadium/Helen/assets"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/chat"
+	"github.com/TF2Stadium/Helen/models/gameserver"
+	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/gchaincl/dotsql"
 )
 
@@ -19,20 +23,21 @@ var once = new(sync.Once)
 
 func Do() {
 	database.DB.Exec("CREATE EXTENSION IF NOT EXISTS hstore")
-	database.DB.AutoMigrate(&models.Player{})
-	database.DB.AutoMigrate(&models.Lobby{})
-	database.DB.AutoMigrate(&models.LobbySlot{})
-	database.DB.AutoMigrate(&models.ServerRecord{})
-	database.DB.AutoMigrate(&models.PlayerStats{})
+	database.DB.AutoMigrate(&player.Player{})
+	database.DB.AutoMigrate(&lobby.Lobby{})
+	database.DB.AutoMigrate(&lobby.LobbySlot{})
+	database.DB.AutoMigrate(&gameserver.Server{})
+	database.DB.AutoMigrate(&player.PlayerStats{})
 	database.DB.AutoMigrate(&models.AdminLogEntry{})
-	database.DB.AutoMigrate(&models.PlayerBan{})
+	database.DB.AutoMigrate(&player.PlayerBan{})
 
-	database.DB.Model(&models.LobbySlot{}).AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
-	database.DB.Model(&models.LobbySlot{}).AddUniqueIndex("idx_lobby_id_player_id", "lobby_id", "player_id")
-	database.DB.AutoMigrate(&models.ChatMessage{})
-	database.DB.AutoMigrate(&models.Requirement{})
+	database.DB.Model(&lobby.LobbySlot{}).AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
+	database.DB.Model(&lobby.LobbySlot{}).AddUniqueIndex("idx_lobby_id_player_id", "lobby_id", "player_id")
+	database.DB.AutoMigrate(&chat.ChatMessage{})
+	database.DB.AutoMigrate(&lobby.Requirement{})
 	database.DB.AutoMigrate(&Constant{})
-	database.DB.AutoMigrate(&models.StoredServer{})
+	database.DB.AutoMigrate(&gameserver.StoredServer{})
+	database.DB.AutoMigrate(&player.Report{})
 
 	once.Do(func() {
 		checkSchema()

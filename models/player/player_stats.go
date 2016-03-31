@@ -2,12 +2,13 @@
 // Use of this source code is governed by the GPLv3
 // that can be found in the COPYING file.
 
-package models
+package player
 
 import (
 	"time"
 
 	"github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/models/lobby/format"
 )
 
 type PlayerStats struct {
@@ -44,7 +45,7 @@ type PlayerStats struct {
 	Airshots    int `json:"airshots"`
 }
 
-func NewPlayerStats() PlayerStats {
+func NewStats() PlayerStats {
 	stats := PlayerStats{}
 
 	return stats
@@ -54,17 +55,17 @@ func (ps *PlayerStats) TotalLobbies() int {
 	return ps.PlayedSixesCount + ps.PlayedHighlanderCount + ps.PlayedFoursCount + ps.PlayedUltiduoCount + ps.PlayedBballCount
 }
 
-func (ps *PlayerStats) PlayedCountIncrease(lt LobbyType) {
+func (ps *PlayerStats) PlayedCountIncrease(lt format.Format) {
 	switch lt {
-	case LobbyTypeSixes:
+	case format.Sixes:
 		ps.PlayedSixesCount++
-	case LobbyTypeHighlander:
+	case format.Highlander:
 		ps.PlayedHighlanderCount++
-	case LobbyTypeFours:
+	case format.Fours:
 		ps.PlayedFoursCount++
-	case LobbyTypeBball:
+	case format.Bball:
 		ps.PlayedBballCount++
-	case LobbyTypeUltiduo:
+	case format.Ultiduo:
 		ps.PlayedUltiduoCount++
 	}
 	database.DB.Save(ps)
@@ -75,8 +76,8 @@ func (ps *PlayerStats) IncreaseSubCount() {
 	database.DB.Save(ps)
 }
 
-func (ps *PlayerStats) IncreaseClassCount(lobby *Lobby, slot int) {
-	_, class, _ := LobbyGetSlotInfoString(lobby.Type, slot)
+func (ps *PlayerStats) IncreaseClassCount(f format.Format, slot int) {
+	_, class, _ := format.GetSlotTeamClass(f, slot)
 	switch class {
 	case "scout", "scout1", "scout2":
 		ps.Scout++
@@ -98,4 +99,51 @@ func (ps *PlayerStats) IncreaseClassCount(lobby *Lobby, slot int) {
 		ps.Spy++
 	}
 	database.DB.Save(ps)
+}
+
+type Report struct {
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+
+	PlayerID uint
+	LobbyID  uint
+	Type     ReportType
+}
+
+type ReportType int
+
+const (
+	Substitute ReportType = iota //!sub
+	Vote                         //!repped by other players
+	RageQuit                     //rage quit
+)
+
+func (player *Player) NewReport(rtype ReportType, lobbyid uint) {
+	var count int
+
+	last := time.Now().Add(-30 * time.Minute)
+	database.DB.Model(&Report{}).Where("player_id = ? AND created_at > ? AND type = ?", player.ID, last, rtype).Count(&count)
+
+	switch rtype {
+	case Substitute:
+		if count == 2 {
+			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For !subbing twice in the last 30 minutes")
+		}
+	case Vote:
+		if count != 0 {
+			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For getting !repped from a lobby in the last 30 minutes")
+		}
+	case RageQuit:
+		if count != 0 {
+			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For ragequitting a lobby in the last 30 minutes")
+		}
+
+	}
+
+	r := &Report{
+		LobbyID:  lobbyid,
+		PlayerID: player.ID,
+		Type:     rtype,
+	}
+	database.DB.Save(r)
 }

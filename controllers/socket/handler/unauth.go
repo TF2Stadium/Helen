@@ -6,7 +6,8 @@ import (
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	"github.com/TF2Stadium/Helen/helpers"
-	"github.com/TF2Stadium/Helen/models"
+	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/TF2Stadium/Helen/routes/socket"
 	"github.com/TF2Stadium/wsevent"
 )
@@ -21,16 +22,15 @@ func (Unauth) LobbySpectatorJoin(so *wsevent.Client, args struct {
 	ID *uint `json:"id"`
 }) interface{} {
 
-	var lob *models.Lobby
-	lob, tperr := models.GetLobbyByID(*args.ID)
+	lob, err := lobby.GetLobbyByID(*args.ID)
 
-	if tperr != nil {
-		return tperr
+	if err != nil {
+		return err
 	}
 
 	hooks.AfterLobbySpec(socket.UnauthServer, so, nil, lob)
 
-	so.EmitJSON(helpers.NewRequest("lobbyData", models.DecorateLobbyData(lob, true)))
+	so.EmitJSON(helpers.NewRequest("lobbyData", lobby.DecorateLobbyData(lob, true)))
 
 	return emptySuccess
 }
@@ -52,7 +52,7 @@ func (Unauth) PlayerProfile(so *wsevent.Client, args struct {
 	Steamid *string `json:"steamid"`
 }) interface{} {
 
-	player, err := models.GetPlayerBySteamID(*args.Steamid)
+	player, err := player.GetPlayerBySteamID(*args.Steamid)
 	if err != nil {
 		return err
 	}
