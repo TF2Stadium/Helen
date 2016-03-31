@@ -18,7 +18,6 @@ import (
 
 	"gopkg.in/tylerb/graceful.v1"
 
-	"github.com/DSchalla/go-pid"
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers"
@@ -103,11 +102,6 @@ func main() {
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowCredentials: true,
 	}).Handler(mux)
-
-	pid := &pid.Instance{}
-	if pid.Create() == nil {
-		defer pid.Remove()
-	}
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)
