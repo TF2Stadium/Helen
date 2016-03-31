@@ -57,12 +57,12 @@ type constants struct {
 	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
 	ServemeAPIKey      string `envconfig:"SERVEME_API_KEY" doc:"serveme.tf API Key"`
 	HealthChecks       bool   `envconfig:"HEALTH_CHECKS" default:"false" doc:"Enable health checks"`
-	SecureCookies      bool   `envconfig:"SECURE_COOKIE" default:"Enable 'secure' flag on cookies" default:"false"`
+	SecureCookies      bool   `envconfig:"SECURE_COOKIE" doc:"Enable 'secure' flag on cookies" default:"false"`
 }
 
 var Constants = constants{}
 
-func SetupConstants() {
+func init() {
 	err := envconfig.Process("HELEN", &Constants)
 	if err != nil {
 		logrus.Fatal(err)

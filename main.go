@@ -14,9 +14,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
-
-	"gopkg.in/tylerb/graceful.v1"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
@@ -62,13 +59,11 @@ func main() {
 	}
 
 	controllers.InitTemplates()
-	config.SetupConstants()
-	helpers.SetServemeContext()
 	//models.ReadServers()
 	chelpers.SetupJWTSigning()
 
 	if config.Constants.ProfilerAddr != "" {
-		go graceful.Run(config.Constants.ProfilerAddr, 1*time.Second, nil)
+		go http.ListenAndServe(config.Constants.ProfilerAddr, nil)
 		logrus.Info("Running Profiler at ", config.Constants.ProfilerAddr)
 	}
 
