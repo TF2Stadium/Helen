@@ -8,6 +8,10 @@ Helen
 _obj
 _test
 
+# Version Management
+vendor/
+glide.lock
+
 # Architecture specific extensions/prefixes
 *.[568vq]
 [568vq].out

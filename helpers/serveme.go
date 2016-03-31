@@ -45,7 +45,7 @@ func GetServemeContext(addrStr string) *servemetf.Context {
 	return GetServemeContextIP(addr.String())
 }
 
-func SetServemeContext() {
+func init() {
 	servemeNA.APIKey = config.Constants.ServemeAPIKey
 	servemeEU.APIKey = config.Constants.ServemeAPIKey
 	servemeAU.APIKey = config.Constants.ServemeAPIKey

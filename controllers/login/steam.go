@@ -147,12 +147,13 @@ func SteamLoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	key := controllerhelpers.NewToken(p)
 	cookie := &http.Cookie{
-		Name:    "auth-jwt",
-		Value:   key,
-		Path:    "/",
-		Domain:  config.Constants.CookieDomain,
-		Expires: time.Now().Add(30 * 24 * time.Hour),
-		//Secure: true,
+		Name:     "auth-jwt",
+		Value:    key,
+		Path:     "/",
+		Domain:   config.Constants.CookieDomain,
+		Expires:  time.Now().Add(30 * 24 * time.Hour),
+		HttpOnly: true,
+		Secure:   config.Constants.SecureCookies,
 	}
 
 	http.SetCookie(w, cookie)

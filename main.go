@@ -14,11 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"gopkg.in/tylerb/graceful.v1"
-
-	"github.com/DSchalla/go-pid"
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers"
@@ -63,13 +59,11 @@ func main() {
 	}
 
 	controllers.InitTemplates()
-	config.SetupConstants()
-	helpers.SetServemeContext()
 	//models.ReadServers()
 	chelpers.SetupJWTSigning()
 
 	if config.Constants.ProfilerAddr != "" {
-		go graceful.Run(config.Constants.ProfilerAddr, 1*time.Second, nil)
+		go http.ListenAndServe(config.Constants.ProfilerAddr, nil)
 		logrus.Info("Running Profiler at ", config.Constants.ProfilerAddr)
 	}
 
@@ -103,11 +97,6 @@ func main() {
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowCredentials: true,
 	}).Handler(mux)
-
-	pid := &pid.Instance{}
-	if pid.Create() == nil {
-		defer pid.Remove()
-	}
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)

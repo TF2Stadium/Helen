@@ -138,7 +138,7 @@ func GetPlayerMessages(p *player.Player) ([]*ChatMessage, error) {
 func GetScrollback(room int) ([]*sentMessage, error) {
 	var messages []*sentMessage // apparently the ORM works fine with using this type (they're aliases after all)
 
-	err := db.DB.Model(&ChatMessage{}).Where("room = ? AND deleted = FALSE", room).Order("id desc").Limit(20).Find(&messages).Error
+	err := db.DB.Table("chat_messages").Where("room = ? AND deleted = FALSE", room).Order("id desc").Limit(20).Find(&messages).Error
 
 	return messages, err
 }
