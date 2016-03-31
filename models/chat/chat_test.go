@@ -3,7 +3,6 @@ package chat_test
 import (
 	"strconv"
 	"testing"
-	"time"
 
 	db "github.com/TF2Stadium/Helen/database"
 	_ "github.com/TF2Stadium/Helen/helpers"
