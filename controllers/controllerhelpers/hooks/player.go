@@ -20,7 +20,7 @@ import (
 func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 	server.Join(so, "0_public") //room for global chat
 
-	so.EmitJSON(helpers.NewRequest("lobbyListData", lobby.DecorateLobbyListData(lobby.GetWaitingLobbies())))
+	so.EmitJSON(helpers.NewRequest("lobbyListData", lobby.DecorateLobbyListData(lobby.GetWaitingLobbies(), false)))
 	chelpers.BroadcastScrollback(so, 0)
 	so.EmitJSON(helpers.NewRequest("subListData", lobby.DecorateSubstituteList()))
 }

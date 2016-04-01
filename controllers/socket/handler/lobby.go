@@ -708,7 +708,7 @@ func (Lobby) LobbySpectatorLeave(so *wsevent.Client, args struct {
 }
 
 func (Lobby) RequestLobbyListData(so *wsevent.Client, _ struct{}) interface{} {
-	so.EmitJSON(helpers.NewRequest("lobbyListData", lobby.DecorateLobbyListData(lobby.GetWaitingLobbies())))
+	so.EmitJSON(helpers.NewRequest("lobbyListData", lobby.DecorateLobbyListData(lobby.GetWaitingLobbies(), false)))
 
 	return emptySuccess
 }

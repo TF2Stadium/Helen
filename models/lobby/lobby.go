@@ -854,7 +854,7 @@ func BroadcastLobbyToUser(lobby *Lobby, steamid string) {
 func BroadcastLobbyList() {
 	broadcaster.SendMessageToRoom(
 		"0_public",
-		"lobbyListData", DecorateLobbyListData(GetWaitingLobbies()))
+		"lobbyListData", DecorateLobbyListData(GetWaitingLobbies(), false))
 }
 
 //Substitute sets the needs_sub column of the given slot to true, and broadcasts the new

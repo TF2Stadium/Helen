@@ -45,7 +45,7 @@ type Player struct {
 
 	// info from steam api
 	Avatar     string             `json:"avatar"`
-	Profileurl string             `json:"profileUrl"`
+	Profileurl string             `json:"profileUrl" sql:"unique"`
 	GameHours  int                `json:"gameHours"`
 	Name       string             `json:"name"`              // Player name
 	Role       authority.AuthRole `sql:"default:0" json:"-"` // Role is player by default

@@ -110,13 +110,13 @@ type LobbyEvent struct {
 	ID uint `json:"id"`
 }
 
-func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetails {
+func decorateSlotDetails(lobby *Lobby, slot int, playerInfo bool) SlotDetails {
 	playerId, err := lobby.GetPlayerIDBySlot(slot)
 	needsSub := lobby.SlotNeedsSubstitute(slot)
 
 	slotDetails := SlotDetails{Slot: slot, Filled: err == nil && !needsSub}
 
-	if err == nil && includeDetails && !needsSub {
+	if err == nil && playerInfo && !needsSub {
 		p, _ := player.GetPlayerByID(playerId)
 		p.SetPlayerSummary()
 
@@ -153,7 +153,7 @@ var (
 	}
 )
 
-func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
+func DecorateLobbyData(lobby *Lobby, playerInfo bool) LobbyData {
 	lobbyData := LobbyData{
 		ID:                lobby.ID,
 		Mode:              lobby.Mode,
@@ -179,8 +179,8 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 
 	for slot, className := range classList {
 		class := ClassDetails{
-			Red:   decorateSlotDetails(lobby, slot, includeDetails),
-			Blu:   decorateSlotDetails(lobby, slot+format.NumberOfClassesMap[lobby.Type], includeDetails),
+			Red:   decorateSlotDetails(lobby, slot, playerInfo),
+			Blu:   decorateSlotDetails(lobby, slot+format.NumberOfClassesMap[lobby.Type], playerInfo),
 			Class: className,
 		}
 
@@ -190,7 +190,7 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyData.Classes = classes
 	lobbyData.WhitelistID = lobby.Whitelist
 
-	if !includeDetails {
+	if !playerInfo {
 		return lobbyData
 	}
 
@@ -232,11 +232,11 @@ func (l LobbyData) SendToPlayer(steamid string) {
 	broadcaster.SendMessage(steamid, "lobbyData", l)
 }
 
-func DecorateLobbyListData(lobbies []*Lobby) []LobbyData {
+func DecorateLobbyListData(lobbies []*Lobby, playerInfo bool) []LobbyData {
 	var lobbyList = make([]LobbyData, len(lobbies))
 
 	for i, lobby := range lobbies {
-		lobbyData := DecorateLobbyData(lobby, false)
+		lobbyData := DecorateLobbyData(lobby, playerInfo)
 		lobbyList[i] = lobbyData
 	}
 
