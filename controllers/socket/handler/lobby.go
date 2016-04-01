@@ -107,6 +107,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	// string doesn't have the field
 	TwitchWhitelistSubscribers bool `json:"twitchWhitelistSubs"`
 	TwitchWhitelistFollowers   bool `json:"twitchWhitelistFollows"`
+	RegionLock                 bool `json:"regionLock"`
 
 	Requirements *struct {
 		Classes map[string]Requirement `json:"classes,omitempty"`
@@ -237,6 +238,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		}
 	}
 
+	lob.RegionLock = args.RegionLock
 	lob.CreatedBySteamID = p.SteamID
 	lob.RegionCode, lob.RegionName = helpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP {
@@ -450,6 +452,13 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 	}
 	if lob.State == lobby.Initializing {
 		return errors.New("Lobby is being setup right now.")
+	}
+
+	if lob.RegionLock {
+		region, _ := helpers.GetRegion(chelpers.GetIPAddr(so.Request))
+		if region != lob.RegionCode {
+			return errors.New("This lobby is region locked.")
+		}
 	}
 
 	//Check if player is in the same lobby

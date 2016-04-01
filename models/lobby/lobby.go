@@ -110,6 +110,7 @@ type Lobby struct {
 
 	Slots []LobbySlot `gorm:"ForeignKey:LobbyID"` // List of occupied slots
 
+	RegionLock        bool
 	PlayerWhitelist   string            // URL of steam group
 	TwitchChannel     string            // twitch channel, slots will be restricted
 	TwitchRestriction TwitchRestriction // restricted to either followers or subs
