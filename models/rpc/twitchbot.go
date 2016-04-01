@@ -15,7 +15,7 @@ func TwitchBotLeave(channel string) {
 }
 
 func TwitchBotAnnouce(channel string, lobbyid uint) {
-	if !*twitchbotDisabled {
+	if *twitchbotDisabled {
 		return
 	}
 

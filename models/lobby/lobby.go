@@ -110,7 +110,6 @@ type Lobby struct {
 
 	Slots []LobbySlot // List of occupied slots
 
-	SlotPassword      string            // Slot password, if any
 	PlayerWhitelist   string            // URL of steam group
 	TwitchChannel     string            // twitch channel, slots will be restricted
 	TwitchRestriction TwitchRestriction // restricted to either followers or subs
@@ -173,7 +172,7 @@ func MapRegionFormatExists(mapName, region string, lobbytype format.Format) bool
 
 // Returns a new lobby object with the given parameters
 // Call CreateLock after saving this lobby.
-func NewLobby(mapName string, lobbyType format.Format, league string, serverInfo gameserver.ServerRecord, whitelist string, mumble bool, whitelistGroup, password string) *Lobby {
+func NewLobby(mapName string, lobbyType format.Format, league string, serverInfo gameserver.ServerRecord, whitelist string, mumble bool, whitelistGroup string) *Lobby {
 	lobby := &Lobby{
 		Mode:            getGamemode(mapName, lobbyType),
 		Type:            lobbyType,
@@ -184,7 +183,6 @@ func NewLobby(mapName string, lobbyType format.Format, league string, serverInfo
 		Mumble:          mumble,
 		ServerInfo:      serverInfo,
 		PlayerWhitelist: whitelistGroup,
-		SlotPassword:    password,
 	}
 
 	// Must specify CreatedBy manually if the lobby is created by a player
@@ -374,10 +372,6 @@ func (lobby *Lobby) AddPlayer(p *player.Player, slot int, password string) error
 	 * Player has already joined a lobby
 	 * anything else?
 	 */
-	//check if slot password is valid
-	if lobby.SlotPassword != "" && lobby.SlotPassword != password {
-		return ErrInvalidPassword
-	}
 
 	//Check if player is banned
 	if lobby.IsPlayerBanned(p) {
@@ -399,6 +393,11 @@ func (lobby *Lobby) AddPlayer(p *player.Player, slot int, password string) error
 		//check if player fits the requirements for the slot
 		if ok, err := lobby.FitsRequirements(p, slot); !ok {
 			return err
+		}
+
+		req, _ := lobby.GetSlotRequirement(slot)
+		if password != req.Password {
+			return ErrInvalidPassword
 		}
 	}
 

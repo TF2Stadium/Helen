@@ -41,7 +41,7 @@ func CreatePlayerAdmin() *player.Player {
 }
 
 func CreateLobby() *lobby.Lobby {
-	lobby := lobby.NewLobby("cp_badlands", format.Sixes, "etf2l", gameserver.ServerRecord{}, "0", false, "", "")
+	lobby := lobby.NewLobby("cp_badlands", format.Sixes, "etf2l", gameserver.ServerRecord{}, "0", false, "")
 	lobby.Save()
 	lobby.CreateLock()
 	return lobby

@@ -222,7 +222,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		ServerPassword: serverPwd,
 	}
 
-	lob := lobby.NewLobby(*args.Map, lobbyType, *args.League, info, *args.WhitelistID, *args.Mumble, steamGroup, *args.Password)
+	lob := lobby.NewLobby(*args.Map, lobbyType, *args.League, info, *args.WhitelistID, *args.Mumble, steamGroup)
 
 	if args.TwitchWhitelistSubscribers || args.TwitchWhitelistFollowers {
 		if p.TwitchName == "" {
@@ -313,6 +313,19 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 		}
 	}
+
+	if *args.Password != "" {
+		for i := 0; i < 2*format.NumberOfClassesMap[lob.Type]; i++ {
+			req := &lobby.Requirement{
+				LobbyID:  lob.ID,
+				Slot:     i,
+				Password: *args.Password,
+			}
+			req.Save()
+		}
+	}
+
+	lobby.BroadcastLobbyList()
 	return newResponse(
 		struct {
 			ID uint `json:"id"`
@@ -746,9 +759,10 @@ func (Lobby) LobbyChangeOwner(so *wsevent.Client, args struct {
 func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 	ID *uint `json:"id"` // lobby ID
 
-	Slot  *int         `json:"slot"` // -1 if to set for all slots
-	Type  *string      `json:"type"`
-	Value *json.Number `json:"value"`
+	Slot     *int         `json:"slot"` // -1 if to set for all slots
+	Type     *string      `json:"type"`
+	Value    *json.Number `json:"value"`
+	Password *string      `json:"password" empty:"-"`
 }) interface{} {
 
 	lob, err := lobby.GetLobbyByID(*args.ID)
@@ -776,14 +790,16 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 
 	switch *args.Type {
 	case "hours":
-		n, err = (*args.Value).Int64()
+		n, err = args.Value.Int64()
 		req.Hours = int(n)
 	case "lobbies":
-		n, err = (*args.Value).Int64()
+		n, err = args.Value.Int64()
 		req.Lobbies = int(n)
 	case "reliability":
-		f, err = (*args.Value).Float64()
+		f, err = args.Value.Float64()
 		req.Reliability = f
+	case "password":
+		req.Password = *args.Password
 	default:
 		return errors.New("Invalid requirement type.")
 	}

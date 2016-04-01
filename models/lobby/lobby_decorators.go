@@ -22,6 +22,7 @@ type SlotDetails struct {
 	Ready        *bool          `json:"ready,omitempty"`
 	InGame       *bool          `json:"ingame,omitempty"`
 	Requirements *Requirement   `json:"requirements,omitempty"`
+	Password     bool           `json:"password"`
 }
 
 type ClassDetails struct {
@@ -48,7 +49,6 @@ type LobbyData struct {
 	TwitchRestriction string `json:"twitchRestriction"`
 
 	SteamGroup string `json:"steamGroup"`
-	Password   bool   `json:"password"`
 
 	Region struct {
 		Name string `json:"name"`
@@ -130,7 +130,11 @@ func decorateSlotDetails(lobby *Lobby, slot int, playerInfo bool) SlotDetails {
 	}
 
 	if lobby.HasSlotRequirement(slot) {
-		slotDetails.Requirements, _ = lobby.GetSlotRequirement(slot)
+		req, _ := lobby.GetSlotRequirement(slot)
+		if req != nil {
+			slotDetails.Requirements = req
+			slotDetails.Password = req.Password != ""
+		}
 	}
 
 	return slotDetails
@@ -166,7 +170,6 @@ func DecorateLobbyData(lobby *Lobby, playerInfo bool) LobbyData {
 		TwitchRestriction: lobby.TwitchRestriction.String(),
 
 		SteamGroup: lobby.PlayerWhitelist,
-		Password:   lobby.SlotPassword != "",
 	}
 
 	lobbyData.Region.Name = lobby.RegionName
@@ -270,23 +273,25 @@ func DecorateLobbyClosed(lobby *Lobby) LobbyEvent {
 }
 
 func DecorateSubstitute(slot *LobbySlot) SubstituteData {
-	lobby := &Lobby{}
-	db.DB.First(lobby, slot.LobbyID)
+	lobby, _ := GetLobbyByID(slot.LobbyID)
+
 	substitute := SubstituteData{
 		LobbyID:       lobby.ID,
 		Format:        formatMap[lobby.Type],
 		MapName:       lobby.MapName,
 		Mumble:        lobby.Mumble,
-		Password:      lobby.SlotPassword != "",
 		TwitchChannel: lobby.TwitchChannel,
 		SteamGroup:    lobby.PlayerWhitelist,
 	}
 
+	req, _ := lobby.GetSlotRequirement(slot.Slot)
+	if req != nil {
+		substitute.Password = req.Password != ""
+	}
+
 	substitute.Region.Name = lobby.RegionName
 	substitute.Region.Code = lobby.RegionCode
-
 	substitute.Team, substitute.Class, _ = format.GetSlotTeamClass(lobby.Type, slot.Slot)
-	substitute.Password = lobby.SlotPassword != ""
 
 	return substitute
 }
