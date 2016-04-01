@@ -32,15 +32,15 @@ func (player *Player) NewReport(rtype ReportType, lobbyid uint) {
 	switch rtype {
 	case Substitute:
 		if count == 1 {
-			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For !subbing twice in the last 30 minutes")
+			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For !subbing twice in the last 30 minutes", 0)
 		}
 	case Vote:
 		if count != 0 {
-			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For getting !repped from a lobby multiple times in the last 30 minutes")
+			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For getting !repped from a lobby multiple times in the last 30 minutes", 0)
 		}
 	case RageQuit:
 		if count != 0 {
-			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For ragequitting a lobby multiple times in the last 30 minutes")
+			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For ragequitting a lobby multiple times in the last 30 minutes", 0)
 		}
 
 	}
