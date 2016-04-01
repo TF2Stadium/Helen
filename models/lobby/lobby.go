@@ -67,13 +67,13 @@ type LobbySlot struct {
 //the corresponsing lobby is closed
 func DeleteUnusedServers() {
 	serverInfoIDs := []uint{}
-	db.DB.Model(&gameserver.Server{}).Pluck("id", &serverInfoIDs)
+	db.DB.Model(&gameserver.ServerRecord{}).Pluck("id", &serverInfoIDs)
 	for _, id := range serverInfoIDs {
 		lobby := &Lobby{}
 		err := db.DB.Where("server_info_id = ?", id).First(lobby).Error
 
 		if err != nil || lobby.State == Ended {
-			db.DB.Model(&gameserver.Server{}).Where("id = ?", id).Delete(&gameserver.Server{})
+			db.DB.Model(&gameserver.ServerRecord{}).Where("id = ?", id).Delete(&gameserver.ServerRecord{})
 		}
 	}
 }
@@ -117,7 +117,7 @@ type Lobby struct {
 	ServemeID         int               // if serveme was used to get this server, stores the server ID
 
 	// TF2 Server Info
-	ServerInfo   gameserver.Server
+	ServerInfo   gameserver.ServerRecord
 	ServerInfoID uint
 
 	Whitelist string //whitelist.tf ID
@@ -173,7 +173,7 @@ func MapRegionFormatExists(mapName, region string, lobbytype format.Format) bool
 
 // Returns a new lobby object with the given parameters
 // Call CreateLock after saving this lobby.
-func NewLobby(mapName string, lobbyType format.Format, league string, serverInfo gameserver.Server, whitelist string, mumble bool, whitelistGroup, password string) *Lobby {
+func NewLobby(mapName string, lobbyType format.Format, league string, serverInfo gameserver.ServerRecord, whitelist string, mumble bool, whitelistGroup, password string) *Lobby {
 	lobby := &Lobby{
 		Mode:            getGamemode(mapName, lobbyType),
 		Type:            lobbyType,
@@ -197,7 +197,7 @@ func NewLobby(mapName string, lobbyType format.Format, league string, serverInfo
 func (lobby *Lobby) Delete() {
 	var count int
 
-	db.DB.Model(&gameserver.Server{}).Where("host = ?", lobby.ServerInfo.Host).Count(&count)
+	db.DB.Model(&gameserver.ServerRecord{}).Where("host = ?", lobby.ServerInfo.Host).Count(&count)
 	if count != 0 {
 		gameserver.PutStoredServer(lobby.ServerInfo.Host)
 	}
@@ -724,7 +724,7 @@ func (lobby *Lobby) Close(doRPC, matchEnded bool) {
 	var count int
 
 	db.DB.Preload("ServerInfo").First(lobby, lobby.ID)
-	db.DB.Model(&gameserver.Server{}).Where("host = ?", lobby.ServerInfo.Host).Count(&count)
+	db.DB.Model(&gameserver.ServerRecord{}).Where("host = ?", lobby.ServerInfo.Host).Count(&count)
 	if count != 0 {
 		gameserver.PutStoredServer(lobby.ServerInfo.Host)
 	}
@@ -753,7 +753,7 @@ func (lobby *Lobby) Close(doRPC, matchEnded bool) {
 	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
 	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", DecorateLobbyClosed(lobby))
 
-	db.DB.Model(&gameserver.Server{}).Where("id = ?", lobby.ServerInfoID).Delete(&gameserver.Server{})
+	db.DB.Model(&gameserver.ServerRecord{}).Where("id = ?", lobby.ServerInfoID).Delete(&gameserver.ServerRecord{})
 	BroadcastSubList()
 	BroadcastLobby(lobby)
 	BroadcastLobbyList() // has to be done manually for now

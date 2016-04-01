@@ -26,7 +26,7 @@ func Do() {
 	database.DB.AutoMigrate(&player.Player{})
 	database.DB.AutoMigrate(&lobby.Lobby{})
 	database.DB.AutoMigrate(&lobby.LobbySlot{})
-	database.DB.AutoMigrate(&gameserver.Server{})
+	database.DB.AutoMigrate(&gameserver.ServerRecord{})
 	database.DB.AutoMigrate(&player.PlayerStats{})
 	database.DB.AutoMigrate(&models.AdminLogEntry{})
 	database.DB.AutoMigrate(&player.PlayerBan{})

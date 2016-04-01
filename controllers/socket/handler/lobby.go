@@ -206,7 +206,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	var count int
 
 	lobbyType := playermap[*args.Type]
-	db.DB.Model(&gameserver.Server{}).Where("host = ?", *args.Server).Count(&count)
+	db.DB.Model(&gameserver.ServerRecord{}).Where("host = ?", *args.Server).Count(&count)
 	if count != 0 {
 		return errors.New("A lobby is already using this server.")
 	}
@@ -216,7 +216,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	serverPwd := base64.URLEncoding.EncodeToString(randBytes)
 
 	//TODO what if playermap[lobbytype] is nil?
-	info := gameserver.Server{
+	info := gameserver.ServerRecord{
 		Host:           *args.Server,
 		RconPassword:   *args.RconPwd,
 		ServerPassword: serverPwd,
@@ -357,12 +357,12 @@ func (Lobby) ServerVerify(so *wsevent.Client, args struct {
 	}
 
 	var count int
-	db.DB.Model(&gameserver.Server{}).Where("host = ?", *args.Server).Count(&count)
+	db.DB.Model(&gameserver.ServerRecord{}).Where("host = ?", *args.Server).Count(&count)
 	if count != 0 {
 		return errors.New("A lobby is already using this server.")
 	}
 
-	info := &gameserver.Server{
+	info := &gameserver.ServerRecord{
 		Host:         *args.Server,
 		RconPassword: *args.Rconpwd,
 	}

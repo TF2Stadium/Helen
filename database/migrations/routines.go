@@ -184,5 +184,4 @@ func moveReportsServers() {
 	db.DB.Exec("DROP TABLE ragequits_player_lobbies")
 	db.DB.Exec("DROP TABLE reports_player_lobbies")
 	db.DB.Exec("DROP TABLE substitutes_player_lobbies")
-	db.DB.Exec("DROP TABLE server_records")
 }
