@@ -31,7 +31,7 @@ func (player *Player) NewReport(rtype ReportType, lobbyid uint) {
 
 	switch rtype {
 	case Substitute:
-		if count == 2 {
+		if count == 1 {
 			player.BanUntil(time.Now().Add(30*time.Minute), BanJoin, "For !subbing twice in the last 30 minutes")
 		}
 	case Vote:
