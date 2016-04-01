@@ -38,7 +38,6 @@ type Player struct {
 	ProfileUpdatedAt      time.Time `json:"-"`
 	StreamStatusUpdatedAt time.Time `json:"-"`
 
-	Debug   bool        // true if player is a dummy one.
 	SteamID string      `sql:"unique" json:"steamid"` // Players steam ID
 	Stats   PlayerStats `json:"-"`
 	StatsID uint        `json:"-"`
