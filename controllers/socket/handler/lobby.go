@@ -869,3 +869,27 @@ func (Lobby) LobbyRemoveSteamRestriction(so *wsevent.Client, args struct {
 
 	return emptySuccess
 }
+
+func (Lobby) LobbyRemoveRegionLock(so *wsevent.Client, args struct {
+	ID uint `json:"id"`
+}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+
+	lob, err := lobby.GetLobbyByID(args.ID)
+	if err != nil {
+		return err
+	}
+
+	if player.SteamID != lob.CreatedBySteamID && (player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod) {
+		return errors.New("You aren't authorized to do this.")
+	}
+
+	lob.RegionLock = false
+	lob.Save()
+
+	lobby.BroadcastLobby(lob)
+	lobby.BroadcastLobbyList()
+
+	return emptySuccess
+
+}
