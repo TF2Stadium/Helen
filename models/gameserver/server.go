@@ -1,6 +1,6 @@
 package gameserver
 
-type Server struct {
+type ServerRecord struct {
 	ID             uint
 	Host           string
 	LogSecret      string

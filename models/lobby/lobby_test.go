@@ -25,11 +25,11 @@ func TestDeleteUnusedServerRecords(t *testing.T) {
 
 	lobby := testhelpers.CreateLobby()
 	lobby.Close(false, true)
-	db.DB.Save(&gameserver.Server{})
+	db.DB.Save(&gameserver.ServerRecord{})
 
 	DeleteUnusedServers()
 
-	err := db.DB.Model(&gameserver.Server{}).Count(&count).Error
+	err := db.DB.Model(&gameserver.ServerRecord{}).Count(&count).Error
 	assert.NoError(t, err)
 	assert.Zero(t, count)
 }
@@ -67,7 +67,7 @@ func TestLobbyClose(t *testing.T) {
 	db.DB.Model(&Requirement{}).Where("lobby_id = ?", lobby.ID).Count(&count)
 	assert.Zero(t, count)
 
-	db.DB.Model(&gameserver.Server{}).Where("id = ?", lobby.ServerInfoID).Count(&count)
+	db.DB.Model(&gameserver.ServerRecord{}).Where("id = ?", lobby.ServerInfoID).Count(&count)
 	assert.Zero(t, count)
 	lobby, _ = GetLobbyByID(lobby.ID)
 	assert.Equal(t, lobby.State, Ended)

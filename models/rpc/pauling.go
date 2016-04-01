@@ -11,14 +11,14 @@ import (
 
 type ServerBootstrap struct {
 	LobbyId       uint
-	Info          gameserver.Server
+	Info          gameserver.ServerRecord
 	Players       []string
 	BannedPlayers []string
 }
 
 type Args struct {
 	Id        uint
-	Info      gameserver.Server
+	Info      gameserver.ServerRecord
 	Type      format.Format
 	League    string
 	Whitelist string
@@ -37,7 +37,7 @@ func DisallowPlayer(lobbyId uint, steamId string) error {
 	return pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &struct{}{})
 }
 
-func SetupServer(lobbyId uint, info gameserver.Server, lobbyType format.Format, league string,
+func SetupServer(lobbyId uint, info gameserver.ServerRecord, lobbyType format.Format, league string,
 	whitelist string, mapName string) error {
 	if *paulingDisabled {
 		return nil
@@ -60,7 +60,7 @@ func ReExecConfig(lobbyId uint, changeMap bool) error {
 	return pauling.Call("Pauling.ReExecConfig", &Args{Id: lobbyId, ChangeMap: changeMap}, &struct{}{})
 }
 
-func VerifyInfo(info gameserver.Server) error {
+func VerifyInfo(info gameserver.ServerRecord) error {
 	if *paulingDisabled {
 		return nil
 	}

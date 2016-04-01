@@ -12,6 +12,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/models/player"
 	"golang.org/x/net/xsrftoken"
 )
@@ -72,18 +73,16 @@ func BanPlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = player.BanUntil(until, ban, reason)
+	jwt, _ := chelpers.GetToken(r)
+	bannedByPlayer := chelpers.GetPlayer(jwt)
+
+	err = player.BanUntil(until, ban, reason, bannedByPlayer.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	fmt.Fprintf(w, "Player %s (%s) has been banned (%s) till %v", player.Name, player.SteamID, ban.String(), until)
-}
-
-type BanData struct {
-	Player *player.Player
-	Ban    *player.PlayerBan
 }
 
 func GetBanLogs(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +92,6 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var banData []BanData
 	var bans []*player.PlayerBan
 
 	all := values.Get("all")
@@ -106,10 +104,6 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 			bans = player.GetAllBans()
 		}
 
-		for _, ban := range bans {
-			p, _ := player.GetPlayerByID(ban.PlayerID)
-			banData = append(banData, BanData{p, ban})
-		}
 	} else {
 		player, err := player.GetPlayerBySteamID(steamid)
 		if err != nil {
@@ -123,12 +117,9 @@ func GetBanLogs(w http.ResponseWriter, r *http.Request) {
 			bans, _ = player.GetAllBans()
 		}
 
-		for _, ban := range bans {
-			banData = append(banData, BanData{player, ban})
-		}
 	}
 
-	err := banlogsTempl.Execute(w, banData)
+	err := banlogsTempl.Execute(w, bans)
 	if err != nil {
 		logrus.Error(err)
 	}

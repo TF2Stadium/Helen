@@ -29,6 +29,7 @@ var migrationRoutines = map[uint64]func(){
 	10: dropTableSessions,
 	11: dropColumnUpdatedAt,
 	12: moveReportsServers,
+	13: dropUnusedColumns,
 }
 
 func whitelist_id_string() {
@@ -184,5 +185,9 @@ func moveReportsServers() {
 	db.DB.Exec("DROP TABLE ragequits_player_lobbies")
 	db.DB.Exec("DROP TABLE reports_player_lobbies")
 	db.DB.Exec("DROP TABLE substitutes_player_lobbies")
-	db.DB.Exec("DROP TABLE server_records")
+}
+
+func dropUnusedColumns() {
+	db.DB.Model(&lobby.Lobby{}).DropColumn("slot_password")
+	db.DB.Model(&player.Player{}).DropColumn("debug")
 }

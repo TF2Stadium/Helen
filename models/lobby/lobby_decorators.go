@@ -22,6 +22,7 @@ type SlotDetails struct {
 	Ready        *bool          `json:"ready,omitempty"`
 	InGame       *bool          `json:"ingame,omitempty"`
 	Requirements *Requirement   `json:"requirements,omitempty"`
+	Password     bool           `json:"password"`
 }
 
 type ClassDetails struct {
@@ -48,7 +49,6 @@ type LobbyData struct {
 	TwitchRestriction string `json:"twitchRestriction"`
 
 	SteamGroup string `json:"steamGroup"`
-	Password   bool   `json:"password"`
 
 	Region struct {
 		Name string `json:"name"`
@@ -110,13 +110,13 @@ type LobbyEvent struct {
 	ID uint `json:"id"`
 }
 
-func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetails {
+func decorateSlotDetails(lobby *Lobby, slot int, playerInfo bool) SlotDetails {
 	playerId, err := lobby.GetPlayerIDBySlot(slot)
 	needsSub := lobby.SlotNeedsSubstitute(slot)
 
 	slotDetails := SlotDetails{Slot: slot, Filled: err == nil && !needsSub}
 
-	if err == nil && includeDetails && !needsSub {
+	if err == nil && playerInfo && !needsSub {
 		p, _ := player.GetPlayerByID(playerId)
 		p.SetPlayerSummary()
 
@@ -130,7 +130,11 @@ func decorateSlotDetails(lobby *Lobby, slot int, includeDetails bool) SlotDetail
 	}
 
 	if lobby.HasSlotRequirement(slot) {
-		slotDetails.Requirements, _ = lobby.GetSlotRequirement(slot)
+		req, _ := lobby.GetSlotRequirement(slot)
+		if req != nil {
+			slotDetails.Requirements = req
+			slotDetails.Password = req.Password != ""
+		}
 	}
 
 	return slotDetails
@@ -153,7 +157,7 @@ var (
 	}
 )
 
-func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
+func DecorateLobbyData(lobby *Lobby, playerInfo bool) LobbyData {
 	lobbyData := LobbyData{
 		ID:                lobby.ID,
 		Mode:              lobby.Mode,
@@ -166,7 +170,6 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 		TwitchRestriction: lobby.TwitchRestriction.String(),
 
 		SteamGroup: lobby.PlayerWhitelist,
-		Password:   lobby.SlotPassword != "",
 	}
 
 	lobbyData.Region.Name = lobby.RegionName
@@ -179,8 +182,8 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 
 	for slot, className := range classList {
 		class := ClassDetails{
-			Red:   decorateSlotDetails(lobby, slot, includeDetails),
-			Blu:   decorateSlotDetails(lobby, slot+format.NumberOfClassesMap[lobby.Type], includeDetails),
+			Red:   decorateSlotDetails(lobby, slot, playerInfo),
+			Blu:   decorateSlotDetails(lobby, slot+format.NumberOfClassesMap[lobby.Type], playerInfo),
 			Class: className,
 		}
 
@@ -190,7 +193,7 @@ func DecorateLobbyData(lobby *Lobby, includeDetails bool) LobbyData {
 	lobbyData.Classes = classes
 	lobbyData.WhitelistID = lobby.Whitelist
 
-	if !includeDetails {
+	if !playerInfo {
 		return lobbyData
 	}
 
@@ -232,11 +235,11 @@ func (l LobbyData) SendToPlayer(steamid string) {
 	broadcaster.SendMessage(steamid, "lobbyData", l)
 }
 
-func DecorateLobbyListData(lobbies []*Lobby) []LobbyData {
+func DecorateLobbyListData(lobbies []*Lobby, playerInfo bool) []LobbyData {
 	var lobbyList = make([]LobbyData, len(lobbies))
 
 	for i, lobby := range lobbies {
-		lobbyData := DecorateLobbyData(lobby, false)
+		lobbyData := DecorateLobbyData(lobby, playerInfo)
 		lobbyList[i] = lobbyData
 	}
 
@@ -270,23 +273,25 @@ func DecorateLobbyClosed(lobby *Lobby) LobbyEvent {
 }
 
 func DecorateSubstitute(slot *LobbySlot) SubstituteData {
-	lobby := &Lobby{}
-	db.DB.First(lobby, slot.LobbyID)
+	lobby, _ := GetLobbyByID(slot.LobbyID)
+
 	substitute := SubstituteData{
 		LobbyID:       lobby.ID,
 		Format:        formatMap[lobby.Type],
 		MapName:       lobby.MapName,
 		Mumble:        lobby.Mumble,
-		Password:      lobby.SlotPassword != "",
 		TwitchChannel: lobby.TwitchChannel,
 		SteamGroup:    lobby.PlayerWhitelist,
 	}
 
+	req, _ := lobby.GetSlotRequirement(slot.Slot)
+	if req != nil {
+		substitute.Password = req.Password != ""
+	}
+
 	substitute.Region.Name = lobby.RegionName
 	substitute.Region.Code = lobby.RegionCode
-
 	substitute.Team, substitute.Class, _ = format.GetSlotTeamClass(lobby.Type, slot.Slot)
-	substitute.Password = lobby.SlotPassword != ""
 
 	return substitute
 }

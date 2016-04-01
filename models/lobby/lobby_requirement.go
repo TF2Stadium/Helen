@@ -17,6 +17,7 @@ type Requirement struct {
 	Hours       int     `json:"hours"`       // minimum hours needed
 	Lobbies     int     `json:"lobbies"`     // minimum lobbies played
 	Reliability float64 `json:"reliability"` // minimum reliability needed
+	Password    string  `json:"-"`           // Slot password, if any
 }
 
 func NewRequirement(lobbyID uint, slot int, hours int, lobbies int) *Requirement {

@@ -26,7 +26,7 @@ var createBox = function(so, messageName, messageFields) {
       params = {};
       messageFields.forEach(function(field) {
         var val = $("#"+messageName+"_"+field).val();
-        if ((field.toLowerCase() !== "steamid" && field.endsWith("id")) || field == "room" || field == "role") {
+        if ((field.toLowerCase() !== "steamid" && field.endsWith("id")) || field == "room" || field == "role" || field == "value" || field == "slot") {
           val = parseInt(val);
         } else if (field == "mumbleRequired" || field == "ban") {
           val = (val == "true")
@@ -116,7 +116,7 @@ so.On("socketInitialized", function(s){
 })
 $(function() {
   createBox(so, "lobbyCreate", ["map", "type", "league", "whitelistID", "serverType", "server", "rconpwd", "mumbleRequired", "password", "steamGroupWhitelist", "twitchWhitelist"]);
-  createBox(so, "lobbySetRequirement", ["id", "slot", "type", "value"]);
+  createBox(so, "lobbySetRequirement", ["id", "slot", "type", "value", "password"]);
   createBox(so, "serverVerify", ["server", "rconpwd", "password"]);
   createBox(so, "lobbyClose", ["id"]);
   createBox(so, "lobbyJoin", ["id", "team", "class", "password"]);
