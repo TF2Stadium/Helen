@@ -2,9 +2,11 @@ package chat
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"encoding/json"
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models/player"
@@ -93,6 +95,10 @@ func (m *sentMessage) MarshalJSON() ([]byte, error) {
 	if m.Deleted {
 		message.Message = "<deleted>"
 		message.Player.Tags = append(message.Player.Tags, "deleted")
+	}
+
+	for _, word := range config.Constants.FilteredWords {
+		message.Message = strings.Replace(message.Message, word, "<redacted>", -1)
 	}
 
 	return json.Marshal(message)
