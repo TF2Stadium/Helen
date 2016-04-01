@@ -395,6 +395,13 @@ func (lobby *Lobby) AddPlayer(p *player.Player, slot int, password string) error
 		return ErrFilled
 	}
 
+	if lobby.HasSlotRequirement(slot) {
+		//check if player fits the requirements for the slot
+		if ok, err := lobby.FitsRequirements(p, slot); !ok {
+			return err
+		}
+	}
+
 	var slotChange bool
 	//Check if the player is currently in another lobby
 	if currLobbyID, err := p.GetLobbyID(false); err == nil {
@@ -434,13 +441,6 @@ func (lobby *Lobby) AddPlayer(p *player.Player, slot int, password string) error
 
 		if lobby.PlayerWhitelist != "" && !helpers.IsWhitelisted(p.SteamID, url) {
 			return ErrNotWhitelisted
-		}
-
-		if lobby.HasSlotRequirement(slot) {
-			//check if player fits the requirements for the slot
-			if ok, err := lobby.FitsRequirements(p, slot); !ok {
-				return err
-			}
 		}
 
 		//check if player has been subbed to the twitch channel (if any)
