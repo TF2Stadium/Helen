@@ -215,7 +215,7 @@ func (Player) PlayerDisableTwitchBot(so *wsevent.Client, _ struct{}) interface{}
 	return emptySuccess
 }
 
-func (Player) PlayerGetRecentLobbies(so *wsevent.Client, args struct {
+func (Player) PlayerRecentLobbies(so *wsevent.Client, args struct {
 	SteamID *string `json:"steamid"`
 }) interface{} {
 	var p *player.Player
