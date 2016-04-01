@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TF2Stadium/Helen/config"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -67,6 +68,10 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 	}
 
 	message.Save()
+	for _, word := range config.Constants.FilteredWords {
+		message.Message = strings.Replace(message.Message, word, "<redacted>", -1)
+	}
+
 	message.Send()
 
 	return emptySuccess
