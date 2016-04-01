@@ -500,3 +500,16 @@ func TestIsSubNeeded(t *testing.T) {
 	assert.True(t, lobby.SlotNeedsSubstitute(1))
 
 }
+
+func TestLobbySlots(t *testing.T) {
+	t.Parallel()
+	lobby := testhelpers.CreateLobby()
+	defer lobby.Close(false, true)
+
+	for i := 0; i < 12; i++ {
+		p := testhelpers.CreatePlayer()
+		lobby.AddPlayer(p, i, "")
+	}
+
+	assert.Len(t, lobby.GetAllSlots(), 12)
+}
