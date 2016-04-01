@@ -137,12 +137,12 @@ func TestPlayerBanning(t *testing.T) {
 	}
 
 	past := time.Now().Add(time.Second * -10)
-	player.BanUntil(past, BanJoin, "they suck")
+	player.BanUntil(past, BanJoin, "they suck", 0)
 	assert.False(t, player.IsBanned(BanJoin))
 
 	future := time.Now().Add(time.Second * 10)
-	player.BanUntil(future, BanJoin, "they suck")
-	player.BanUntil(future, BanFull, "they suck")
+	player.BanUntil(future, BanJoin, "they suck", 0)
+	player.BanUntil(future, BanFull, "they suck", 0)
 
 	player2, _ := GetPlayerBySteamID(player.SteamID)
 	assert.True(t, player2.IsBanned(BanCreate))
@@ -158,7 +158,7 @@ func TestPlayerBanning(t *testing.T) {
 	assert.True(t, untilJoin.Sub(future) < time.Second)
 
 	future2 := time.Now().Add(time.Second * 20)
-	player2.BanUntil(future2, BanJoin, "they suck")
+	player2.BanUntil(future2, BanJoin, "they suck", 0)
 
 	bans, err := player2.GetActiveBans()
 	assert.NoError(t, err)
