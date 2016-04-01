@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TF2Stadium/Helen/config"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
