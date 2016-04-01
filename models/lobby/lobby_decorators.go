@@ -48,6 +48,7 @@ type LobbyData struct {
 	TwitchChannel     string `json:"twitchChannel"`
 	TwitchRestriction string `json:"twitchRestriction"`
 
+	RegionLock bool   `json:"regionLock"`
 	SteamGroup string `json:"steamGroup"`
 
 	Region struct {
@@ -96,9 +97,10 @@ type SubstituteData struct {
 		Code string `json:"code"`
 	} `json:"region"`
 
-	Mumble bool   `json:"mumbleRequired"`
-	Team   string `sql:"-" json:"team"`
-	Class  string `sql:"-" json:"class"`
+	RegionLock bool   `json:"regionLock"`
+	Mumble     bool   `json:"mumbleRequired"`
+	Team       string `sql:"-" json:"team"`
+	Class      string `sql:"-" json:"class"`
 
 	TwitchChannel     string `json:"twitchChannel"`
 	TwitchRestriction string `json:"twitchRestriction"`
@@ -168,6 +170,7 @@ func DecorateLobbyData(lobby *Lobby, playerInfo bool) LobbyData {
 		Mumble:            lobby.Mumble,
 		TwitchChannel:     lobby.TwitchChannel,
 		TwitchRestriction: lobby.TwitchRestriction.String(),
+		RegionLock:        lobby.RegionLock,
 
 		SteamGroup: lobby.PlayerWhitelist,
 	}
@@ -282,6 +285,7 @@ func DecorateSubstitute(slot *LobbySlot) SubstituteData {
 		Mumble:        lobby.Mumble,
 		TwitchChannel: lobby.TwitchChannel,
 		SteamGroup:    lobby.PlayerWhitelist,
+		RegionLock:    lobby.RegionLock,
 	}
 
 	req, _ := lobby.GetSlotRequirement(slot.Slot)

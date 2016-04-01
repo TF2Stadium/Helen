@@ -107,6 +107,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	// string doesn't have the field
 	TwitchWhitelistSubscribers bool `json:"twitchWhitelistSubs"`
 	TwitchWhitelistFollowers   bool `json:"twitchWhitelistFollows"`
+	RegionLock                 bool `json:"regionLock"`
 
 	Requirements *struct {
 		Classes map[string]Requirement `json:"classes,omitempty"`
@@ -237,6 +238,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		}
 	}
 
+	lob.RegionLock = args.RegionLock
 	lob.CreatedBySteamID = p.SteamID
 	lob.RegionCode, lob.RegionName = helpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP {
@@ -450,6 +452,13 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 	}
 	if lob.State == lobby.Initializing {
 		return errors.New("Lobby is being setup right now.")
+	}
+
+	if lob.RegionLock {
+		region, _ := helpers.GetRegion(chelpers.GetIPAddr(so.Request))
+		if region != lob.RegionCode {
+			return errors.New("This lobby is region locked.")
+		}
 	}
 
 	//Check if player is in the same lobby
@@ -859,4 +868,28 @@ func (Lobby) LobbyRemoveSteamRestriction(so *wsevent.Client, args struct {
 	lobby.BroadcastLobbyList()
 
 	return emptySuccess
+}
+
+func (Lobby) LobbyRemoveRegionLock(so *wsevent.Client, args struct {
+	ID uint `json:"id"`
+}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+
+	lob, err := lobby.GetLobbyByID(args.ID)
+	if err != nil {
+		return err
+	}
+
+	if player.SteamID != lob.CreatedBySteamID && (player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod) {
+		return errors.New("You aren't authorized to do this.")
+	}
+
+	lob.RegionLock = false
+	lob.Save()
+
+	lobby.BroadcastLobby(lob)
+	lobby.BroadcastLobbyList()
+
+	return emptySuccess
+
 }
