@@ -217,6 +217,8 @@ func (Player) PlayerDisableTwitchBot(so *wsevent.Client, _ struct{}) interface{}
 
 func (Player) PlayerRecentLobbies(so *wsevent.Client, args struct {
 	SteamID *string `json:"steamid"`
+	Lobbies *int    `json:"lobbies"`
+	LobbyID int     `json:"lobbyId"` // start from this lobbyID, 0 when not specified in json
 }) interface{} {
 	var p *player.Player
 
@@ -234,8 +236,10 @@ func (Player) PlayerRecentLobbies(so *wsevent.Client, args struct {
 	var lobbies []*lobby.Lobby
 
 	db.DB.Model(&lobby.Lobby{}).Joins("INNER JOIN lobby_slots ON lobbies.ID = lobby_slots.lobby_id").
-		Where("lobbies.match_ended = TRUE and lobby_slots.player_id = ? AND lobby_slots.needs_sub = FALSE", p.ID).
+		Where("lobbies.match_ended = TRUE and lobby_slots.player_id = ? AND lobby_slots.needs_sub = FALSE AND lobbies.ID >= ?", p.ID, args.LobbyID).
+		Order("lobbies.id desc").
+		Limit(*args.Lobbies).
 		Find(&lobbies)
 
-	return lobby.DecorateLobbyListData(lobbies, true)
+	return newResponse(lobby.DecorateLobbyListData(lobbies, true))
 }
