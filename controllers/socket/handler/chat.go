@@ -68,10 +68,6 @@ func (Chat) ChatSend(so *wsevent.Client, args struct {
 	}
 
 	message.Save()
-	for _, word := range config.Constants.FilteredWords {
-		message.Message = strings.Replace(message.Message, word, "<redacted>", -1)
-	}
-
 	message.Send()
 
 	return emptySuccess
