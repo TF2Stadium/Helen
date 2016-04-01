@@ -139,14 +139,9 @@ func playerSub(steamID string, lobbyID uint, self bool) {
 
 	lobby.Substitute(player)
 	if self {
-		var lobbyid uint
-
-		db.DB.DB().QueryRow("SELECT lobby_id FROM substitutes_player_lobbies WHERE player_id = $1 ORDER BY lobby_id DESC LIMIT 1", player.ID).Scan(&lobbyid)
-		db.DB.Model(player).Association("Substitutes").Append(lobby)
 		player.NewReport(playerpackage.Substitute, lobby.ID)
 
 	} else {
-		db.DB.Model(player).Association("Reports").Append(lobby)
 		// ban player from joining lobbies for 30 minutes
 		player.NewReport(playerpackage.Vote, lobby.ID)
 	}
