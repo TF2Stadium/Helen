@@ -9,6 +9,7 @@ import (
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers/hooks"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
+	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models/lobby"
 	"github.com/TF2Stadium/Helen/models/player"
@@ -212,4 +213,29 @@ func (Player) PlayerDisableTwitchBot(so *wsevent.Client, _ struct{}) interface{}
 		changeMu.Unlock()
 	})
 	return emptySuccess
+}
+
+func (Player) PlayerGetRecentLobbies(so *wsevent.Client, args struct {
+	SteamID *string `json:"steamid"`
+}) interface{} {
+	var p *player.Player
+
+	if *args.SteamID != "" {
+		var err error
+		p, err = player.GetPlayerBySteamID(*args.SteamID)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		p = chelpers.GetPlayer(so.Token)
+	}
+
+	var lobbies []*lobby.Lobby
+
+	db.DB.Model(&lobby.Lobby{}).Joins("INNER JOIN lobby_slots ON lobbies.ID = lobby_slots.lobby_id").
+		Where("lobbies.match_ended = TRUE and lobby_slots.player_id = ? AND lobby_slots.needs_sub = FALSE", p.ID).
+		Find(&lobbies)
+
+	return lobby.DecorateLobbyListData(lobbies, true)
 }
