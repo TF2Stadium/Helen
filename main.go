@@ -81,7 +81,6 @@ func main() {
 	lobby.CreateLocks()
 	rpc.ConnectRPC()
 	lobby.RestoreServemeChecks()
-	lobby.DeleteUnusedServers()
 	//go models.TFTVStreamStatusUpdater()
 
 	if config.Constants.SteamIDWhitelist != "" {
