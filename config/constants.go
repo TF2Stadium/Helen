@@ -52,12 +52,13 @@ type constants struct {
 
 	ProfilerAddr string `envconfig:"PROFILER_ADDR" doc:"Address to serve the web-based profiler over"`
 
-	SlackbotURL        string `envconfig:"SLACK_URL" doc:"Slack webhook URL"`
-	TwitchClientID     string `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
-	TwitchClientSecret string `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
-	ServemeAPIKey      string `envconfig:"SERVEME_API_KEY" doc:"serveme.tf API Key"`
-	HealthChecks       bool   `envconfig:"HEALTH_CHECKS" default:"false" doc:"Enable health checks"`
-	SecureCookies      bool   `envconfig:"SECURE_COOKIE" doc:"Enable 'secure' flag on cookies" default:"false"`
+	SlackbotURL        string   `envconfig:"SLACK_URL" doc:"Slack webhook URL"`
+	TwitchClientID     string   `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
+	TwitchClientSecret string   `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
+	ServemeAPIKey      string   `envconfig:"SERVEME_API_KEY" doc:"serveme.tf API Key"`
+	HealthChecks       bool     `envconfig:"HEALTH_CHECKS" default:"false" doc:"Enable health checks"`
+	SecureCookies      bool     `envconfig:"SECURE_COOKIE" doc:"Enable 'secure' flag on cookies" default:"false"`
+	FilteredWords      []string `envconfig:"FILTERED_WORDS"`
 }
 
 var Constants = constants{}

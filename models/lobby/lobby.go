@@ -108,7 +108,7 @@ type Lobby struct {
 
 	Mumble bool // Whether mumble is required
 
-	Slots []LobbySlot // List of occupied slots
+	Slots []LobbySlot `gorm:"ForeignKey:LobbyID"` // List of occupied slots
 
 	PlayerWhitelist   string            // URL of steam group
 	TwitchChannel     string            // twitch channel, slots will be restricted
@@ -116,7 +116,7 @@ type Lobby struct {
 	ServemeID         int               // if serveme was used to get this server, stores the server ID
 
 	// TF2 Server Info
-	ServerInfo   gameserver.ServerRecord
+	ServerInfo   gameserver.ServerRecord `gorm:"ForeignKey:ServerInfoID"`
 	ServerInfoID uint
 
 	Whitelist string //whitelist.tf ID
