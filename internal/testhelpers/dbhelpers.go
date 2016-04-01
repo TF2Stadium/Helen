@@ -52,7 +52,7 @@ func CleanupDB() {
 		"players",
 		"reports",
 		"requirements",
-		"servers",
+		"server_records",
 		"spectators_players_lobbies",
 		"stored_servers",
 	}
