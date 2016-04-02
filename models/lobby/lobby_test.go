@@ -61,11 +61,24 @@ func TestLobbyClose(t *testing.T) {
 	req := &Requirement{
 		LobbyID: lobby.ID,
 	}
+
+	var players []*Player
+
+	for i := 0; i < 12; i++ {
+		p := testhelpers.CreatePlayer()
+		players = append(players, p)
+		err := lobby.AddPlayer(p, i, "")
+		assert.NoError(t, err)
+	}
+
 	req.Save()
-	lobby.Close(true, true)
+	lobby.Close(false, true)
+	for _, p := range players {
+		db.DB.Preload("Stats").First(p, p.ID)
+		assert.Equal(t, p.Stats.TotalLobbies(), 1)
+	}
+
 	var count int
-	db.DB.Model(&Requirement{}).Where("lobby_id = ?", lobby.ID).Count(&count)
-	assert.Zero(t, count)
 
 	db.DB.Model(&gameserver.ServerRecord{}).Where("id = ?", lobby.ServerInfoID).Count(&count)
 	assert.Zero(t, count)
@@ -378,7 +391,7 @@ func TestRemoveUnreadyPlayers(t *testing.T) {
 func TestUpdateStats(t *testing.T) {
 	t.Parallel()
 	lobby := testhelpers.CreateLobby()
-	defer lobby.Close(false, true)
+	defer lobby.Close(false, false)
 	var players []*Player
 
 	for i := 0; i < 6; i++ {
