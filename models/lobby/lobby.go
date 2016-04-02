@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -402,6 +403,17 @@ func (lobby *Lobby) AddPlayer(p *player.Player, slot int, password string) error
 		}
 	}
 
+	if config.Constants.SteamDevAPIKey != "" {
+		if time.Since(p.ProfileUpdatedAt) < time.Hour*time.Duration(150-p.GameHours) {
+			//update player info only if the number of hours needed > the number of hours
+			//passed since player info was last updated
+			p.UpdatePlayerInfo()
+		}
+		if p.GameHours < 150 {
+			return errors.New("You need at least 150 hours to join lobbies.")
+		}
+	}
+
 	var slotChange bool
 	//Check if the player is currently in another lobby
 	if currLobbyID, err := p.GetLobbyID(false); err == nil {
@@ -730,8 +742,7 @@ func (lobby *Lobby) Close(doRPC, matchEnded bool) {
 	}
 
 	lobby.SetState(Ended)
-	db.DB.First(&lobby).UpdateColumn("match_ended", matchEnded)
-	db.DB.Model(&Requirement{}).Where("lobby_id = ?", lobby.ID).Delete(&Requirement{})
+	db.DB.First(lobby).UpdateColumn("match_ended", matchEnded)
 	//db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
 	if doRPC {
 		rpc.End(lobby.ID)
@@ -757,7 +768,7 @@ func (lobby *Lobby) Close(doRPC, matchEnded bool) {
 	BroadcastSubList()
 	BroadcastLobby(lobby)
 	BroadcastLobbyList() // has to be done manually for now
-	go rpc.FumbleLobbyEnded(lobby.ID)
+	rpc.FumbleLobbyEnded(lobby.ID)
 	lobby.deleteLock()
 }
 
