@@ -61,6 +61,7 @@ type LobbySlot struct {
 	Slot     int  //Denotes if the player is ready
 	Ready    bool //Denotes if the player is in game
 	InGame   bool //true if the player is in the game server
+	InMumble bool //true if the player is in the mumble channel for the lobby
 	NeedsSub bool //true if the slot needs a subtitute player
 }
 
@@ -617,13 +618,15 @@ func (lobby *Lobby) AfterPlayerNotInGameFunc(player *player.Player, d time.Durat
 
 //IsPlayerInGame returns true if the player is in-game
 func (lobby *Lobby) IsPlayerInGame(player *player.Player) bool {
-	var ingame bool
-	err := db.DB.DB().QueryRow("SELECT in_game FROM lobby_slots WHERE lobby_id = $1 AND player_id = $2", lobby.ID, player.ID).Scan(&ingame)
-	if err != nil {
-		return false
-	}
+	var count int
+	db.DB.Model(&LobbySlot{}).Where("lobby_id = ? AND player_id = ? AND in_game = TRUE", lobby.ID, player.ID).Count(&count)
+	return count != 0
+}
 
-	return ingame
+func (lobby *Lobby) IsPlayerInMumble(player *player.Player) bool {
+	var count int
+	db.DB.Model(&LobbySlot{}).Where("lobby_id = ? AND player_id = ? AND in_mumble = TRUE", lobby.ID, player.ID).Count(&count)
+	return count != 0
 }
 
 //IsPlayerReady returns true if the given player is ready
@@ -721,7 +724,7 @@ func (lobby *Lobby) SetupServer() error {
 		return err
 	}
 
-	go rpc.FumbleLobbyCreated(lobby.ID)
+	rpc.FumbleLobbyCreated(lobby.ID)
 	return nil
 }
 
@@ -813,6 +816,23 @@ func (lobby *Lobby) SetInGame(player *player.Player) error {
 //SetNotInGame sets the in-game status of the given player to false
 func (lobby *Lobby) SetNotInGame(player *player.Player) error {
 	return lobby.setInGameStatus(player, false)
+}
+
+func (lobby *Lobby) setInMumbleStatus(player *player.Player, inMumble bool) error {
+	err := db.DB.Model(&LobbySlot{}).Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).UpdateColumn("in_mumble", inMumble).Error
+
+	lobby.OnChange(false)
+	return err
+}
+
+//SetInMumble sets the in-mumble status of the given player to true
+func (lobby *Lobby) SetInMumble(player *player.Player) error {
+	return lobby.setInMumbleStatus(player, true)
+}
+
+//SetNotInMumble sets the in-mumble status of the given player to false
+func (lobby *Lobby) SetNotInMumble(player *player.Player) error {
+	return lobby.setInMumbleStatus(player, false)
 }
 
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes

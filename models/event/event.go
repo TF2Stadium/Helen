@@ -16,8 +16,9 @@ import (
 
 //Mirrored across github.com/Pauling/server
 type Event struct {
-	Name    string
-	SteamID string
+	Name     string
+	SteamID  string
+	PlayerID uint32 // used by fumble
 
 	LobbyID    uint
 	LogsID     int //logs.tf ID
@@ -44,6 +45,8 @@ const (
 	PlayerSubstituted  string = "playerSub"
 	PlayerConnected    string = "playerConn"
 	PlayerChat         string = "playerChat"
+	PlayerMumbleJoined string = "playerMumbleJoined"
+	PlayerMumbleLeft   string = "playerMumbleLeft"
 
 	DisconnectedFromServer string = "discFromServer"
 	MatchEnded             string = "matchEnded"
@@ -88,6 +91,10 @@ func StartListening() {
 					matchEnded(event.LobbyID, event.LogsID, event.ClassTimes)
 				case ReservationOver:
 					reservationEnded(event.LobbyID)
+				case PlayerMumbleJoined:
+					mumbleJoined(uint(event.PlayerID))
+				case PlayerMumbleLeft:
+					mumbleLeft(uint(event.PlayerID))
 				}
 			case <-stop:
 				return
@@ -200,4 +207,26 @@ func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
 
 		db.DB.Save(&player.Stats)
 	}
+}
+
+func mumbleJoined(playerID uint) {
+	player, _ := playerpackage.GetPlayerByID(playerID)
+	id, _ := player.GetLobbyID(false)
+	if id == 0 { // player joined mumble lobby for closed channel
+		return
+	}
+
+	lobby, _ := lobbypackage.GetLobbyByID(id)
+	lobby.SetInMumble(player)
+}
+
+func mumbleLeft(playerID uint) {
+	player, _ := playerpackage.GetPlayerByID(playerID)
+	id, _ := player.GetLobbyID(false)
+	if id == 0 { // player joined mumble lobby for closed channel
+		return
+	}
+
+	lobby, _ := lobbypackage.GetLobbyByID(id)
+	lobby.SetNotInMumble(player)
 }
