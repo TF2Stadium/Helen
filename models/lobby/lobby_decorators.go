@@ -21,6 +21,7 @@ type SlotDetails struct {
 	Player       *player.Player `json:"player,omitempty"`
 	Ready        *bool          `json:"ready,omitempty"`
 	InGame       *bool          `json:"ingame,omitempty"`
+	InMumble     *bool          `json:"inmumble,omitempty"`
 	Requirements *Requirement   `json:"requirements,omitempty"`
 	Password     bool           `json:"password"`
 }
@@ -129,6 +130,9 @@ func decorateSlotDetails(lobby *Lobby, slot int, playerInfo bool) SlotDetails {
 
 		ingame := lobby.IsPlayerInGame(p)
 		slotDetails.InGame = &ingame
+
+		inmumble := lobby.IsPlayerInMumble(p)
+		slotDetails.InMumble = &inmumble
 	}
 
 	if lobby.HasSlotRequirement(slot) {

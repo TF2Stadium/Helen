@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
@@ -60,6 +61,7 @@ type LobbySlot struct {
 	Slot     int  //Denotes if the player is ready
 	Ready    bool //Denotes if the player is in game
 	InGame   bool //true if the player is in the game server
+	InMumble bool //true if the player is in the mumble channel for the lobby
 	NeedsSub bool //true if the slot needs a subtitute player
 }
 
@@ -402,6 +404,17 @@ func (lobby *Lobby) AddPlayer(p *player.Player, slot int, password string) error
 		}
 	}
 
+	if config.Constants.SteamDevAPIKey != "" {
+		if time.Since(p.ProfileUpdatedAt) < time.Hour*time.Duration(150-p.GameHours) {
+			//update player info only if the number of hours needed > the number of hours
+			//passed since player info was last updated
+			p.UpdatePlayerInfo()
+		}
+		if p.GameHours < 150 {
+			return errors.New("You need at least 150 hours to join lobbies.")
+		}
+	}
+
 	var slotChange bool
 	//Check if the player is currently in another lobby
 	if currLobbyID, err := p.GetLobbyID(false); err == nil {
@@ -605,13 +618,15 @@ func (lobby *Lobby) AfterPlayerNotInGameFunc(player *player.Player, d time.Durat
 
 //IsPlayerInGame returns true if the player is in-game
 func (lobby *Lobby) IsPlayerInGame(player *player.Player) bool {
-	var ingame bool
-	err := db.DB.DB().QueryRow("SELECT in_game FROM lobby_slots WHERE lobby_id = $1 AND player_id = $2", lobby.ID, player.ID).Scan(&ingame)
-	if err != nil {
-		return false
-	}
+	var count int
+	db.DB.Model(&LobbySlot{}).Where("lobby_id = ? AND player_id = ? AND in_game = TRUE", lobby.ID, player.ID).Count(&count)
+	return count != 0
+}
 
-	return ingame
+func (lobby *Lobby) IsPlayerInMumble(player *player.Player) bool {
+	var count int
+	db.DB.Model(&LobbySlot{}).Where("lobby_id = ? AND player_id = ? AND in_mumble = TRUE", lobby.ID, player.ID).Count(&count)
+	return count != 0
 }
 
 //IsPlayerReady returns true if the given player is ready
@@ -709,7 +724,7 @@ func (lobby *Lobby) SetupServer() error {
 		return err
 	}
 
-	go rpc.FumbleLobbyCreated(lobby.ID)
+	rpc.FumbleLobbyCreated(lobby.ID)
 	return nil
 }
 
@@ -730,8 +745,7 @@ func (lobby *Lobby) Close(doRPC, matchEnded bool) {
 	}
 
 	lobby.SetState(Ended)
-	db.DB.First(&lobby).UpdateColumn("match_ended", matchEnded)
-	db.DB.Model(&Requirement{}).Where("lobby_id = ?", lobby.ID).Delete(&Requirement{})
+	db.DB.First(lobby).UpdateColumn("match_ended", matchEnded)
 	//db.DB.Exec("DELETE FROM spectators_players_lobbies WHERE lobby_id = ?", lobby.ID)
 	if doRPC {
 		rpc.End(lobby.ID)
@@ -757,7 +771,7 @@ func (lobby *Lobby) Close(doRPC, matchEnded bool) {
 	BroadcastSubList()
 	BroadcastLobby(lobby)
 	BroadcastLobbyList() // has to be done manually for now
-	go rpc.FumbleLobbyEnded(lobby.ID)
+	rpc.FumbleLobbyEnded(lobby.ID)
 	lobby.deleteLock()
 }
 
@@ -802,6 +816,23 @@ func (lobby *Lobby) SetInGame(player *player.Player) error {
 //SetNotInGame sets the in-game status of the given player to false
 func (lobby *Lobby) SetNotInGame(player *player.Player) error {
 	return lobby.setInGameStatus(player, false)
+}
+
+func (lobby *Lobby) setInMumbleStatus(player *player.Player, inMumble bool) error {
+	err := db.DB.Model(&LobbySlot{}).Where("player_id = ? AND lobby_id = ?", player.ID, lobby.ID).UpdateColumn("in_mumble", inMumble).Error
+
+	lobby.OnChange(false)
+	return err
+}
+
+//SetInMumble sets the in-mumble status of the given player to true
+func (lobby *Lobby) SetInMumble(player *player.Player) error {
+	return lobby.setInMumbleStatus(player, true)
+}
+
+//SetNotInMumble sets the in-mumble status of the given player to false
+func (lobby *Lobby) SetNotInMumble(player *player.Player) error {
+	return lobby.setInMumbleStatus(player, false)
 }
 
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes

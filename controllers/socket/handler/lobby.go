@@ -40,7 +40,6 @@ func (Lobby) Name(s string) string {
 
 var (
 	reSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
-	reTwitchChan = regexp.MustCompile(`twitch.tv\/(.+)`)
 	reServer     = regexp.MustCompile(`\w+\:\d+`)
 	playermap    = map[string]format.Format{
 		"debug":      format.Debug,
@@ -242,6 +241,15 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	lob.CreatedBySteamID = p.SteamID
 	lob.RegionCode, lob.RegionName = helpers.GetRegion(*args.Server)
 	if (lob.RegionCode == "" || lob.RegionName == "") && config.Constants.GeoIP {
+		if reservation.ID != 0 {
+			err := context.Delete(reservation.ID, p.SteamID)
+			for err != nil {
+				err = context.Delete(reservation.ID, p.SteamID)
+			}
+		} else if *args.ServerType == "storedServer" {
+			gameserver.PutStoredServer(*args.Server)
+		}
+
 		return errors.New("Couldn't find the region for this server.")
 	}
 
@@ -251,6 +259,8 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			for err != nil {
 				err = context.Delete(reservation.ID, p.SteamID)
 			}
+		} else if *args.ServerType == "storedServer" {
+			gameserver.PutStoredServer(*args.Server)
 		}
 
 		return errors.New("Your region already has a lobby with this map and format.")
@@ -599,7 +609,8 @@ func removePlayerFromLobby(lobbyId uint, steamId string) (*lobby.Lobby, *player.
 
 	switch lob.State {
 	case lobby.InProgress:
-		return lob, player, errors.New("Lobby is in progress.")
+		lob.Substitute(player)
+		return lob, player, lob.AddSpectator(player)
 	case lobby.Ended:
 		return lob, player, errors.New("Lobby has closed.")
 	}

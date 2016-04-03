@@ -277,10 +277,10 @@ func GetPlayerWithStats(steamid string) (*Player, error) {
 }
 
 // Get the ID of the lobby the player occupies a slot in. Only works for lobbies which aren't closed (LobbyStateEnded).
-//If inProrgess, exclude lobbies which are in progress
-func (player *Player) GetLobbyID(inProgress bool) (uint, error) {
+//If excludeInProgress, exclude lobbies which are in progress
+func (player *Player) GetLobbyID(excludeInProgress bool) (uint, error) {
 	states := []int{5} //Ended
-	if inProgress {
+	if excludeInProgress {
 		states = append(states, 3) //3 == in progress
 	}
 	var lobbyID uint

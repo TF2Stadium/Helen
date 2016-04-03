@@ -14,5 +14,7 @@ assets:
 static: assets/geoip.mmdb assets/bindata.go
 	CGO_ENABLED=0 go build -tags "netgo bindata" -v -o Helen
 
+tests:
+	go test -v -race -tags bindata ./...
 cover:
 #	sh -ex cover.sh
