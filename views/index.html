@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+    {{if .LoggedIn}}
+
+    <a href="/logout">Logout here</a> <br>
+    Logged in as {{.Player.Name}} ({{.SteamID}}) <br>
+    {{if  .Player.TwitchName}} Twitch connected with account {{.Player.TwitchName}} <br> {{end}}
+
+    {{else}}
+
+    <a href='/startLogin'>Login</a> <br>
+    {{if .Mocklogin}}
+    <form action="/startMockLogin" method="get">
+      <fieldset>
+	<legend>Mock Login:</legend>
+	SteamID:<br>
+	<input type="text" name="steamid"><br>
+	<input type="submit" value="Submit">
+      </fieldset>
+    </form>
+    {{end}}
+    {{end}}
+
+    <br>
+    Build Date: {{.BuildDate}} <br>
+    Built From <b>{{.GitCommit}}</b> on branch <b>{{.GitBranch}}</b><br>
+    {{.BuildInfo}}
+  </body>
+</html>

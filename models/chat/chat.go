@@ -71,11 +71,6 @@ type minPlayer struct {
 type sentMessage ChatMessage
 
 func (m *sentMessage) MarshalJSON() ([]byte, error) {
-	var p *player.Player
-
-	if !m.Bot {
-		p, _ = player.GetPlayerByID(m.PlayerID)
-	}
 
 	message := struct {
 		*ChatMessage
@@ -87,6 +82,8 @@ func (m *sentMessage) MarshalJSON() ([]byte, error) {
 		message.Player.SteamID = "76561198275497635"
 		message.Player.Tags = []string{"tf2stadium"}
 	} else {
+		p := &player.Player{}
+		db.DB.First(p, m.PlayerID)
 		message.Player.Name = p.Alias()
 		message.Player.SteamID = p.SteamID
 		message.Player.Tags = p.DecoratePlayerTags()

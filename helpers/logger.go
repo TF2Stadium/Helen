@@ -47,4 +47,5 @@ func (formatter) Format(e *logrus.Entry) ([]byte, error) {
 
 func init() {
 	logrus.SetFormatter(&formatter{})
+	logrus.SetLevel(logrus.DebugLevel)
 }

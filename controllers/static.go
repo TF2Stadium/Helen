@@ -5,42 +5,20 @@
 package controllers
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
+	"runtime"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/internal/version"
+	"github.com/TF2Stadium/Helen/models/player"
 )
 
 var (
-	playerTempl = template.Must(template.New("player").Parse(
-		`
-<html>
-  <body>
-    <a href="/logout">Logout here</a> <br>
-    Logged in as {{.Name}} ({{.SteamID}}) on Steam <br>
-    {{if .TwitchName}} Twitch connect connected - <a href="http://twitch.tv/{{.TwitchName}}">{{.TwitchName}}</a> {{end}} <br>
-  </body>
-</html>
-`))
-	login = template.Must(template.New("login").Parse(
-		`
-<html>
-<body>
-<a href='/startLogin'>Login</a> <br>
-{{if .mocklogin}}
-<form action="/startMockLogin" method="get">
-  <fieldset>
-    <legend>Mock Login:</legend>
-    SteamID:<br>
-    <input type="text" name="steamid"><br>
-    <input type="submit" value="Submit">
-  </fieldset>
-</form>
-{{end}}
-</body>
-</html>
-`))
+	mainTempl *template.Template
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,14 +27,23 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var p *player.Player
 	token, err := controllerhelpers.GetToken(r)
 
 	if err == nil {
-		player := controllerhelpers.GetPlayer(token)
-		playerTempl.Execute(w, player)
-	} else {
-		login.Execute(w, map[string]bool{
-			"mocklogin": config.Constants.MockupAuth,
-		})
+		p = controllerhelpers.GetPlayer(token)
+	}
+
+	errtempl := mainTempl.Execute(w, map[string]interface{}{
+		"LoggedIn":  err == nil,
+		"Player":    p,
+		"MockLogin": config.Constants.MockupAuth,
+		"BuildDate": version.BuildDate,
+		"GitCommit": version.GitCommit,
+		"GitBranch": version.GitBranch,
+		"BuildInfo": fmt.Sprintf("Built using %s on %s (%s %s)", runtime.Version(), version.Hostname, runtime.GOOS, runtime.GOARCH),
+	})
+	if errtempl != nil {
+		logrus.Error(err)
 	}
 }
