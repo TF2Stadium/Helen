@@ -12,7 +12,13 @@ assets:
 	-o assets/bindata.go assets/
 
 static: assets/geoip.mmdb assets/bindata.go
-	CGO_ENABLED=0 go build -tags "netgo bindata" -v -o Helen
+	CGO_ENABLED=0 go build -tags "netgo bindata" -v 						\
+	-ldflags 											\
+	"-X \"github.com/TF2Stadium/Helen/internal/version.GitCommit=`git rev-parse HEAD`\" 		\
+	-X \"github.com/TF2Stadium/Helen/internal/version.GitBranch=`git rev-parse --abbrev-ref HEAD`\" \
+	-X \"github.com/TF2Stadium/Helen/internal/version.BuildDate=`date`\" 				\
+	-X \"github.com/TF2Stadium/Helen/internal/version.Hostname=`hostname`\""			\
+	-o Helen
 
 tests:
 	go test -v -race -tags bindata ./...
