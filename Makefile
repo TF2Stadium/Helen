@@ -21,6 +21,6 @@ static: assets/geoip.mmdb assets/bindata.go
 	-o Helen
 
 tests:
-	go test -tags bindata -race -v $(go list ./... | grep -v /vendor/)
+	go test -tags bindata -race -v `go list ./... | grep -v /vendor/`
 cover:
 #	sh -ex cover.sh
