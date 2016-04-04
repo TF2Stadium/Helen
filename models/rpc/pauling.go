@@ -30,11 +30,16 @@ type Args struct {
 	ChangeMap bool
 }
 
-func DisallowPlayer(lobbyId uint, steamId string) error {
-	if *paulingDisabled {
-		return nil
+func DisallowPlayer(lobbyId uint, steamId string, playerID uint) error {
+	if !*paulingDisabled {
+		pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &struct{}{})
 	}
-	return pauling.Call("Pauling.DisallowPlayer", &Args{Id: lobbyId, SteamId: steamId}, &struct{}{})
+
+	if !*fumbleDisabled {
+		fumble.Call("Fumble.RemovePlayer", playerID, &struct{}{})
+	}
+
+	return nil
 }
 
 func SetupServer(lobbyId uint, info gameserver.ServerRecord, lobbyType format.Format, league string,
