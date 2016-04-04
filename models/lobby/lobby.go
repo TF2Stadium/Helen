@@ -484,7 +484,7 @@ func (lobby *Lobby) AddPlayer(p *player.Player, slot int, password string) error
 
 		go func() {
 			//kicks previous slot occupant if they're in-game, resets their !rep count, removes them from the lobby
-			rpc.DisallowPlayer(lobby.ID, prevPlayer.SteamID)
+			rpc.DisallowPlayer(lobby.ID, prevPlayer.SteamID, prevPlayer.ID)
 			BroadcastSubList() //since the sub slot has been deleted, broadcast the updated substitute list
 			//notify players in game server of subtitute
 			class, team, _ := format.GetSlotTeamClass(lobby.Type, slot)
@@ -527,14 +527,14 @@ func (lobby *Lobby) RemovePlayer(player *player.Player) error {
 		return err
 	}
 
-	rpc.DisallowPlayer(lobby.ID, player.SteamID)
+	rpc.DisallowPlayer(lobby.ID, player.SteamID, player.ID)
 	lobby.OnChange(true)
 	return nil
 }
 
 //BanPlayer bans a given player from the lobby
 func (lobby *Lobby) BanPlayer(player *player.Player) {
-	rpc.DisallowPlayer(lobby.ID, player.SteamID)
+	rpc.DisallowPlayer(lobby.ID, player.SteamID, player.ID)
 	db.DB.Model(lobby).Association("BannedPlayers").Append(player)
 }
 
@@ -888,13 +888,28 @@ func BroadcastLobbyList() {
 		"lobbyListData", DecorateLobbyListData(GetWaitingLobbies(), false))
 }
 
+var maxSubs = map[format.Format]int{
+	format.Highlander: 5,
+	format.Sixes:      4,
+	format.Bball:      2,
+	format.Ultiduo:    2,
+	format.Debug:      2,
+	format.Fours:      2,
+}
+
 //Substitute sets the needs_sub column of the given slot to true, and broadcasts the new
 //substitute list
 func (lobby *Lobby) Substitute(player *player.Player) {
 	lobby.Lock()
-	defer lobby.Unlock()
-
 	db.DB.Model(&LobbySlot{}).Where("lobby_id = ? AND player_id = ?", lobby.ID, player.ID).UpdateColumn("needs_sub", true)
+	lobby.Unlock()
+
+	var count int
+	db.DB.Model(&LobbySlot{}).Where("lobby_id = ? AND needs_sub = TRUE", lobby.ID).Count(&count)
+	if count == maxSubs[lobby.Type] {
+		chat.SendNotification("Lobby closed (Too many subs).", int(lobby.ID))
+		lobby.Close(true, false)
+	}
 
 	db.DB.Preload("Stats").First(player, player.ID)
 	player.Stats.IncreaseSubCount()

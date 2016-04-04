@@ -10,8 +10,10 @@ import (
 	db "github.com/TF2Stadium/Helen/database"
 	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
+	"github.com/TF2Stadium/Helen/models/chat"
 	"github.com/TF2Stadium/Helen/models/gameserver"
 	. "github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/lobby/format"
 	. "github.com/TF2Stadium/Helen/models/player"
 	"github.com/stretchr/testify/assert"
 )
@@ -525,4 +527,23 @@ func TestLobbySlots(t *testing.T) {
 	}
 
 	assert.Len(t, lobby.GetAllSlots(), 12)
+}
+
+func TestLobbyMaxSubsClose(t *testing.T) {
+	t.Parallel()
+
+	lobby := testhelpers.CreateLobby()
+	lobby.Type = format.Debug
+	lobby.Save()
+	p1 := testhelpers.CreatePlayer()
+	p2 := testhelpers.CreatePlayer()
+	lobby.AddPlayer(p1, 0, "")
+	lobby.AddPlayer(p2, 1, "")
+	lobby.Substitute(p1)
+	lobby.Substitute(p2)
+
+	assert.Equal(t, lobby.CurrentState(), Ended, "Lobby should be closed")
+	m := &chat.ChatMessage{}
+	db.DB.Model(&chat.ChatMessage{}).Where("room = ?", lobby.ID).Last(m)
+	assert.Equal(t, m.Message, "Lobby closed (Too many subs).")
 }
