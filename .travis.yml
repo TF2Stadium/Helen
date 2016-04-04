@@ -17,7 +17,7 @@ install:
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 script:
-  - go test -tags bindata -race -v $(go list ./... | grep -v /vendor/)
+  - make tests
 after_success:
   - make static -B
   - case $TRAVIS_BRANCH in master) docker build -t tf2stadium/helen:latest . ;; dev) docker build -t tf2stadium/helen:dev . ;; esac 
