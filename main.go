@@ -71,12 +71,13 @@ func main() {
 		logrus.Info("Running Profiler at ", config.Constants.ProfilerAddr)
 	}
 
+	database.Init()
+	migrations.Do()
+
 	helpers.ConnectAMQP()
 	event.StartListening()
 	helpers.InitGeoIPDB()
 
-	database.Init()
-	migrations.Do()
 	err := lobby.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
 	if err != nil {
 		logrus.Fatal(err)
