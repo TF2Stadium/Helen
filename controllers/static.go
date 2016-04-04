@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	mainTempl = template.Must(template.ParseFiles("views/index.html"))
+	mainTempl *template.Template
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {

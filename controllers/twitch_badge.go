@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/TF2Stadium/Helen/controllers/admin"
 	"github.com/TF2Stadium/Helen/models/lobby"
 	"github.com/TF2Stadium/Helen/models/player"
 )
@@ -46,9 +45,4 @@ func TwitchBadge(w http.ResponseWriter, r *http.Request) {
 
 	lobby, _ := lobby.GetLobbyByID(id)
 	err = twitchBadge.Execute(w, lobby)
-}
-
-func InitTemplates() {
-	admin.InitAdminTemplates()
-	twitchBadge = template.Must(template.ParseFiles("views/twitchbadge.html"))
 }
