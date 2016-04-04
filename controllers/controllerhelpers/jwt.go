@@ -17,7 +17,7 @@ var (
 	signingKey []byte
 )
 
-func SetupJWTSigning() {
+func init() {
 	if config.Constants.CookieStoreSecret == "secret" {
 		logrus.Warning("Using an insecure encryption key")
 		signingKey = []byte("secret")

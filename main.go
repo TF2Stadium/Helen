@@ -25,6 +25,7 @@ import (
 	"github.com/TF2Stadium/Helen/helpers"
 	_ "github.com/TF2Stadium/Helen/helpers/authority" // to register authority types
 	_ "github.com/TF2Stadium/Helen/internal/pprof"    // to setup expvars
+	"github.com/TF2Stadium/Helen/internal/version"
 	"github.com/TF2Stadium/Helen/models/chat"
 	"github.com/TF2Stadium/Helen/models/event"
 	"github.com/TF2Stadium/Helen/models/lobby"
@@ -58,9 +59,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	logrus.Debug("Commit: ", version.GitCommit)
+	logrus.Debug("Branch: ", version.GitBranch)
+	logrus.Debug("Build date: ", version.BuildDate)
+
 	controllers.InitTemplates()
 	//models.ReadServers()
-	chelpers.SetupJWTSigning()
 
 	if config.Constants.ProfilerAddr != "" {
 		go http.ListenAndServe(config.Constants.ProfilerAddr, nil)
