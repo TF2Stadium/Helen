@@ -12,6 +12,8 @@ import (
 	"github.com/TF2Stadium/Helen/models/chat"
 	lobbypackage "github.com/TF2Stadium/Helen/models/lobby"
 	playerpackage "github.com/TF2Stadium/Helen/models/player"
+	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
+	"github.com/TF2Stadium/TF2RconWrapper"
 )
 
 //Mirrored across github.com/Pauling/server
@@ -23,6 +25,7 @@ type Event struct {
 	LobbyID    uint
 	LogsID     int //logs.tf ID
 	ClassTimes map[string]*classTime
+	Players    []TF2RconWrapper.Player
 
 	Self bool // true if
 }
@@ -47,6 +50,7 @@ const (
 	PlayerChat         string = "playerChat"
 	PlayerMumbleJoined string = "playerMumbleJoined"
 	PlayerMumbleLeft   string = "playerMumbleLeft"
+	PlayersList        string = "playersList"
 
 	DisconnectedFromServer string = "discFromServer"
 	MatchEnded             string = "matchEnded"
@@ -95,6 +99,8 @@ func StartListening() {
 					mumbleJoined(uint(event.PlayerID))
 				case PlayerMumbleLeft:
 					mumbleLeft(uint(event.PlayerID))
+				case PlayersList:
+					playersList(event.Players)
 				}
 			case <-stop:
 				return
@@ -229,4 +235,22 @@ func mumbleLeft(playerID uint) {
 
 	lobby, _ := lobbypackage.GetLobbyByID(id)
 	lobby.SetNotInMumble(player)
+}
+
+func playersList(players []TF2RconWrapper.Player) {
+	for _, player := range players {
+		commid, _ := steamid.SteamIdToCommId(player.SteamID)
+		player, err := playerpackage.GetPlayerBySteamID(commid)
+		if err != nil {
+			continue
+		}
+
+		id, _ := player.GetLobbyID(false)
+		if id == 0 {
+			continue
+		}
+
+		lobby, _ := lobbypackage.GetLobbyByID(id)
+		lobby.SetInGame(player)
+	}
 }
