@@ -68,15 +68,11 @@ var ErrRecordNotFound = errors.New("Player record for found.")
 //SocketInit initializes the websocket connection for the provided socket
 func SocketInit(so *wsevent.Client) error {
 	loggedIn := so.Token != nil
-	var steamid string
-
-	if loggedIn {
-		steamid = so.Token.Claims["steam_id"].(string)
-		sessions.AddSocket(steamid, so)
-	}
 
 	if loggedIn {
 		hooks.AfterConnect(socket.AuthServer, so)
+
+		steamid := so.Token.Claims["steam_id"].(string)
 
 		player, err := player.GetPlayerBySteamID(steamid)
 		if err != nil {
