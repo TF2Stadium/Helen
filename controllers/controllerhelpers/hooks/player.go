@@ -7,8 +7,8 @@ package hooks
 import (
 	"time"
 
-	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
+	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models/lobby"
@@ -24,6 +24,8 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 	chelpers.BroadcastScrollback(so, 0)
 	so.EmitJSON(helpers.NewRequest("subListData", lobby.DecorateSubstituteList()))
 }
+
+var emptyMap = make(map[string]string)
 
 func AfterConnectLoggedIn(so *wsevent.Client, player *player.Player) {
 	if time.Since(player.ProfileUpdatedAt) >= 30*time.Minute {
@@ -42,24 +44,24 @@ func AfterConnectLoggedIn(so *wsevent.Client, player *player.Player) {
 
 		if err == nil {
 			if lob.State == lobby.InProgress {
-				broadcaster.SendMessage(player.SteamID, "lobbyStart", lobby.DecorateLobbyConnect(lob, player, slot.Slot))
+				so.EmitJSON(helpers.NewRequest("lobbyStart", lobby.DecorateLobbyConnect(lob, player, slot.Slot)))
 			} else if lob.State == lobby.ReadyingUp && !slot.Ready {
 				data := struct {
 					Timeout int64 `json:"timeout"`
 				}{lob.ReadyUpTimeLeft()}
 
-				broadcaster.SendMessage(player.SteamID, "lobbyReadyUp", data)
+				so.EmitJSON(helpers.NewRequest("lobbyReadyUp", data))
 			}
 		}
 	}
 
-	settings := player.Settings
-	if settings != nil {
-		broadcaster.SendMessage(player.SteamID, "playerSettings", settings)
+	if player.Settings != nil {
+		so.EmitJSON(helpers.NewRequest("playerSettings", player.Settings))
 	} else {
-		broadcaster.SendMessage(player.SteamID, "playerSettings", map[string]string{})
+		so.EmitJSON(helpers.NewRequest("playerSettings", emptyMap))
 	}
 
 	player.SetPlayerProfile()
-	broadcaster.SendMessage(player.SteamID, "playerProfile", player)
+	so.EmitJSON(helpers.NewRequest("playerProfile", player))
+	sessions.AddSocket(player.SteamID, so)
 }
