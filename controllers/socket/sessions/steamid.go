@@ -90,7 +90,10 @@ func AfterDisconnectedFunc(steamid string, d time.Duration, f func()) {
 		if !IsConnected(steamid) {
 			f()
 		}
+
+		connectedMu.Lock()
+		delete(connectedTimer, steamid)
+		connectedMu.Unlock()
 	})
 	connectedMu.Unlock()
-
 }
