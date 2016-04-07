@@ -337,6 +337,8 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		}
 	}
 
+	chat.NewBotMessage(fmt.Sprintf("Lobby created by %s", p.Alias()), int(lob.ID)).Send()
+
 	lobby.BroadcastLobbyList()
 	return newResponse(
 		struct {
