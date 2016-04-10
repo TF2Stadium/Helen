@@ -73,7 +73,7 @@ func (Player) PlayerNotReady(so *wsevent.Client, _ struct{}) interface{} {
 
 	err = lob.UnreadyPlayer(player)
 	lob.RemovePlayer(player)
-	hooks.AfterLobbyLeave(lob, player)
+	hooks.AfterLobbyLeave(lob, player, false, false)
 	if spec := sessions.IsSpectating(so.ID, lob.ID); spec {
 		// IsSpectating checks if the player has joined the lobby's public room
 		lob.AddSpectator(player)

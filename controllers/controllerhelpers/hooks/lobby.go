@@ -41,8 +41,14 @@ func AfterLobbyJoin(so *wsevent.Client, lob *lobby.Lobby, player *player.Player)
 	broadcaster.SendMessage(player.SteamID, "lobbyJoined", lobby.DecorateLobbyData(lob, false))
 }
 
-func AfterLobbyLeave(lob *lobby.Lobby, player *player.Player) {
-	broadcaster.SendMessage(player.SteamID, "lobbyLeft", lobby.DecorateLobbyLeave(lob))
+func AfterLobbyLeave(lob *lobby.Lobby, player *player.Player, kicked bool, notReady bool) {
+	event := lobby.LobbyEvent{
+		ID:       lob.ID,
+		Kicked:   kicked,
+		NotReady: notReady,
+	}
+
+	broadcaster.SendMessage(player.SteamID, "lobbyLeft", event)
 
 	sockets, _ := sessions.GetSockets(player.SteamID)
 	//player might have connected from multiple tabs, remove all of them from the room
