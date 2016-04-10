@@ -337,6 +337,8 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		}
 	}
 
+	chat.NewBotMessage(fmt.Sprintf("Lobby created by %s", p.Alias()), int(lob.ID)).Send()
+
 	lobby.BroadcastLobbyList()
 	return newResponse(
 		struct {
@@ -484,7 +486,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 
 	if prevId, _ := p.GetLobbyID(false); prevId != 0 && !sameLobby {
 		lob, _ := lobby.GetLobbyByID(prevId)
-		hooks.AfterLobbyLeave(lob, p)
+		hooks.AfterLobbyLeave(lob, p, false, false)
 	}
 
 	tperr = lob.AddPlayer(p, slot, *args.Password)
@@ -550,7 +552,7 @@ func removeUnreadyPlayers(lobby *lobby.Lobby) {
 	lobby.RemoveUnreadyPlayers(true)
 
 	for _, player := range players {
-		hooks.AfterLobbyLeave(lobby, player)
+		hooks.AfterLobbyLeave(lobby, player, false, true)
 	}
 }
 
@@ -663,7 +665,7 @@ func (Lobby) LobbyKick(so *wsevent.Client, args struct {
 		return tperr
 	}
 
-	hooks.AfterLobbyLeave(lob, player)
+	hooks.AfterLobbyLeave(lob, player, true, false)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
@@ -693,7 +695,7 @@ func (Lobby) LobbyBan(so *wsevent.Client, args struct {
 
 	lob.BanPlayer(player)
 
-	hooks.AfterLobbyLeave(lob, player)
+	hooks.AfterLobbyLeave(lob, player, true, false)
 
 	// broadcaster.SendMessage(steamId, "sendNotification",
 	// 	fmt.Sprintf(`{"notification": "You have been removed from Lobby #%d"}`, *args.Id))
@@ -712,7 +714,7 @@ func (Lobby) LobbyLeave(so *wsevent.Client, args struct {
 		return tperr
 	}
 
-	hooks.AfterLobbyLeave(lob, player)
+	hooks.AfterLobbyLeave(lob, player, false, false)
 
 	return emptySuccess
 }

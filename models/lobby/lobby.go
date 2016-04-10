@@ -762,7 +762,7 @@ func (lobby *Lobby) Close(doRPC, matchEnded bool) {
 	}
 
 	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
-	broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", DecorateLobbyLeave(lobby))
+	broadcaster.SendMessageToRoom(privateRoom, "lobbyLeft", LobbyEvent{ID: lobby.ID})
 
 	publicRoom := fmt.Sprintf("%d_public", lobby.ID)
 	broadcaster.SendMessageToRoom(publicRoom, "lobbyClosed", DecorateLobbyClosed(lobby))

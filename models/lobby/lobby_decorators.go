@@ -110,7 +110,9 @@ type SubstituteData struct {
 }
 
 type LobbyEvent struct {
-	ID uint `json:"id"`
+	ID       uint `json:"id"`
+	Kicked   bool `json:"kick,omitempty"`     // true if player was kicked
+	NotReady bool `json:"notReady,omitempty"` // true if player removed for not being ready
 }
 
 func decorateSlotDetails(lobby *Lobby, slot int, playerInfo bool) SlotDetails {
@@ -268,15 +270,11 @@ func DecorateLobbyConnect(lob *Lobby, player *player.Player, slot int) LobbyConn
 }
 
 func DecorateLobbyJoin(lobby *Lobby) LobbyEvent {
-	return LobbyEvent{lobby.ID}
-}
-
-func DecorateLobbyLeave(lobby *Lobby) LobbyEvent {
-	return LobbyEvent{lobby.ID}
+	return LobbyEvent{ID: lobby.ID}
 }
 
 func DecorateLobbyClosed(lobby *Lobby) LobbyEvent {
-	return LobbyEvent{lobby.ID}
+	return LobbyEvent{ID: lobby.ID}
 }
 
 func DecorateSubstitute(slot *LobbySlot) SubstituteData {

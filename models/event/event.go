@@ -251,6 +251,8 @@ func playersList(players []TF2RconWrapper.Player) {
 		}
 
 		lobby, _ := lobbypackage.GetLobbyByID(id)
-		lobby.SetInGame(player)
+		if !lobby.IsPlayerInGame(player) {
+			lobby.SetInGame(player)
+		}
 	}
 }
