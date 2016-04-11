@@ -30,14 +30,18 @@ func Do() {
 	database.DB.AutoMigrate(&player.PlayerStats{})
 	database.DB.AutoMigrate(&models.AdminLogEntry{})
 	database.DB.AutoMigrate(&player.PlayerBan{})
-
-	database.DB.Model(&lobby.LobbySlot{}).AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
-	database.DB.Model(&lobby.LobbySlot{}).AddUniqueIndex("idx_lobby_id_player_id", "lobby_id", "player_id")
 	database.DB.AutoMigrate(&chat.ChatMessage{})
 	database.DB.AutoMigrate(&lobby.Requirement{})
 	database.DB.AutoMigrate(&Constant{})
 	database.DB.AutoMigrate(&gameserver.StoredServer{})
 	database.DB.AutoMigrate(&player.Report{})
+
+	database.DB.Model(&lobby.LobbySlot{}).
+		AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
+	database.DB.Model(&lobby.LobbySlot{}).
+		AddUniqueIndex("idx_lobby_id_player_id", "lobby_id", "player_id")
+	database.DB.Model(&lobby.LobbySlot{}).
+		AddUniqueIndex("idx_requirement_lobby_id_slot", "lobby_id", "slot")
 
 	once.Do(func() {
 		checkSchema()
