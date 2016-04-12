@@ -5,18 +5,14 @@
 package migrations
 
 import (
-	"bytes"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/TF2Stadium/Helen/assets"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/models/chat"
 	"github.com/TF2Stadium/Helen/models/gameserver"
 	"github.com/TF2Stadium/Helen/models/lobby"
 	"github.com/TF2Stadium/Helen/models/player"
-	"github.com/gchaincl/dotsql"
 )
 
 var once = new(sync.Once)
@@ -42,17 +38,8 @@ func Do() {
 		AddUniqueIndex("idx_lobby_id_player_id", "lobby_id", "player_id")
 	database.DB.Model(&lobby.LobbySlot{}).
 		AddUniqueIndex("idx_requirement_lobby_id_slot", "lobby_id", "slot")
+	database.DB.Model(&lobby.LobbySlot{}).
+		AddForeignKey("player_id", "players(id)", "RESTRICT", "RESTRICT")
 
-	once.Do(func() {
-		checkSchema()
-		dot, err := dotsql.Load(bytes.NewBuffer(assets.MustAsset("assets/views.sql")))
-		if err != nil {
-			logrus.Fatal(err)
-		}
-
-		_, err = dot.Exec(database.DB.DB(), "create-player-slots-view")
-		if err != nil {
-			logrus.Fatal(err)
-		}
-	})
+	checkSchema()
 }

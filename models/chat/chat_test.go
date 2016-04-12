@@ -11,10 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init() {
-	testhelpers.CleanupDB()
-}
-
 func TestNewChatMessage(t *testing.T) {
 	lobby := testhelpers.CreateLobby()
 	defer lobby.Close(false, true)

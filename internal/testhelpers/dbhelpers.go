@@ -38,26 +38,9 @@ func CleanupDB() {
 		}
 
 		database.Init()
-		migrations.Do()
 	})
 
-	tables := []string{
-		"admin_log_entries",
-		"banned_players_lobbies",
-		"chat_messages",
-		"lobbies",
-		"lobby_slots",
-		"player_bans",
-		"player_stats",
-		"players",
-		"reports",
-		"requirements",
-		"server_records",
-		"spectators_players_lobbies",
-		"stored_servers",
-	}
-	for _, table := range tables {
-		database.DB.Exec("TRUNCATE TABLE " + table + " RESTART IDENTITY")
-	}
-
+	database.DB.Exec("drop schema public cascade")
+	database.DB.Exec("create schema public")
+	migrations.Do()
 }

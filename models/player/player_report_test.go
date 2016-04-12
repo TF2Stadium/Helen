@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-func init() {
-	testhelpers.CleanupDB()
-}
-
 func TestReportSubs(t *testing.T) {
 	t.Parallel()
 

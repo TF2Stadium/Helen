@@ -52,9 +52,9 @@ func NewInGameChatMessage(lobbyID uint, player *player.Player, message string) *
 func (m *ChatMessage) Save() { db.DB.Save(m) }
 
 func (m *ChatMessage) Send() {
-	broadcaster.SendMessageToRoom(fmt.Sprintf("%d_public", m.Room), "chatReceive", (*sentMessage)(m))
+	broadcaster.SendMessageToRoom(fmt.Sprintf("%d_public", m.Room), "chatReceive", m)
 	if m.Room != 0 {
-		broadcaster.SendMessageToRoom(fmt.Sprintf("%d_private", m.Room), "chatReceive", (*sentMessage)(m))
+		broadcaster.SendMessageToRoom(fmt.Sprintf("%d_private", m.Room), "chatReceive", m)
 	}
 }
 
@@ -65,37 +65,38 @@ type minPlayer struct {
 	Tags    []string `json:"tags"`
 }
 
-// sentMessage aliases ChatMessage, since implementing MarshalJSON for
-// ChatMessage would result in a recursive data structure (see below),
-// which the json parser cannot marshal
-type sentMessage ChatMessage
+var bot = minPlayer{"TF2Stadium", "76561198275497635", []string{"tf2stadium"}}
 
-func (m *sentMessage) MarshalJSON() ([]byte, error) {
-
-	message := struct {
-		*ChatMessage
-		Player *minPlayer `json:"player"`
-	}{(*ChatMessage)(m), &minPlayer{}}
-
+func (m *ChatMessage) MarshalJSON() ([]byte, error) {
+	message := map[string]interface{}{
+		"id":        m.ID,
+		"timestamp": m.CreatedAt,
+		"room":      m.Room,
+		"message":   m.Message,
+		"deleted":   m.Deleted,
+		"ingame":    m.InGame,
+	}
 	if m.Bot {
-		message.Player.Name = "TF2Stadium"
-		message.Player.SteamID = "76561198275497635"
-		message.Player.Tags = []string{"tf2stadium"}
+		message["player"] = bot
 	} else {
 		p := &player.Player{}
 		db.DB.First(p, m.PlayerID)
-		message.Player.Name = p.Alias()
-		message.Player.SteamID = p.SteamID
-		message.Player.Tags = p.DecoratePlayerTags()
-	}
+		player := minPlayer{
+			Name:    p.Alias(),
+			SteamID: p.SteamID,
+			Tags:    p.DecoratePlayerTags(),
+		}
 
-	if m.Deleted {
-		message.Message = "<deleted>"
-		message.Player.Tags = append(message.Player.Tags, "deleted")
+		if m.Deleted {
+			player.Tags = append(player.Tags, "<deleted>")
+			message["message"] = "<deleted>"
+		}
+
+		message["player"] = player
 	}
 
 	for _, word := range config.Constants.FilteredWords {
-		message.Message = strings.Replace(message.Message, word, "<redacted>", -1)
+		message["message"] = strings.Replace(message["message"].(string), word, "<redacted>", -1)
 	}
 
 	return json.Marshal(message)
@@ -115,7 +116,7 @@ func NewBotMessage(message string, room int) *ChatMessage {
 
 func SendNotification(message string, room int) {
 	pub := fmt.Sprintf("%d_public", room)
-	broadcaster.SendMessageToRoom(pub, "chatReceive", (*sentMessage)(NewBotMessage(message, room)))
+	broadcaster.SendMessageToRoom(pub, "chatReceive", NewBotMessage(message, room))
 }
 
 // Return a list of ChatMessages spoken in room
@@ -138,8 +139,8 @@ func GetPlayerMessages(p *player.Player) ([]*ChatMessage, error) {
 }
 
 // Get a list of last 20 messages sent to room, used by frontend for displaying the chat history/scrollback
-func GetScrollback(room int) ([]*sentMessage, error) {
-	var messages []*sentMessage // apparently the ORM works fine with using this type (they're aliases after all)
+func GetScrollback(room int) ([]*ChatMessage, error) {
+	var messages []*ChatMessage
 
 	err := db.DB.Table("chat_messages").Where("room = ? AND deleted = FALSE", room).Order("id desc").Limit(20).Find(&messages).Error
 

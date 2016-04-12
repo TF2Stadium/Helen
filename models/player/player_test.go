@@ -18,10 +18,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init() {
-	testhelpers.CleanupDB()
-}
-
 func TestGetPlayer(t *testing.T) {
 	t.Parallel()
 	player := testhelpers.CreatePlayer()

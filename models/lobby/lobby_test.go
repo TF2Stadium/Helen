@@ -18,10 +18,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init() {
-	testhelpers.CleanupDB()
-}
-
 func TestDeleteUnusedServerRecords(t *testing.T) {
 	var count int
 
