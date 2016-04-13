@@ -7,6 +7,7 @@ package hooks
 import (
 	"time"
 
+	"github.com/TF2Stadium/Helen/config"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
 	db "github.com/TF2Stadium/Helen/database"
@@ -28,6 +29,8 @@ func AfterConnect(server *wsevent.Server, so *wsevent.Client) {
 var emptyMap = make(map[string]string)
 
 func AfterConnectLoggedIn(so *wsevent.Client, player *player.Player) {
+	sessions.AddSocket(player.SteamID, so)
+
 	if time.Since(player.ProfileUpdatedAt) >= 30*time.Minute {
 		player.UpdatePlayerInfo()
 	}
@@ -63,5 +66,8 @@ func AfterConnectLoggedIn(so *wsevent.Client, player *player.Player) {
 
 	player.SetPlayerProfile()
 	so.EmitJSON(helpers.NewRequest("playerProfile", player))
-	sessions.AddSocket(player.SteamID, so)
+	so.EmitJSON(helpers.NewRequest("mumbleInfo", struct {
+		Address  string `json:"address"`
+		Password string `json:"password"`
+	}{config.Constants.MumbleAddr, player.MumbleAuthkey}))
 }
