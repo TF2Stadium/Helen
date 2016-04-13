@@ -7,6 +7,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
+	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models/chat"
@@ -190,8 +191,12 @@ func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
 	}
 	lobby.Close(false, true)
 
-	msg := fmt.Sprintf("Lobby Ended. Logs: http://logs.tf/%d", logsID)
+	logs := fmt.Sprintf("http://logs.tf/%d", logsID)
+	msg := fmt.Sprintf("Lobby Ended. Logs: %s", logs)
 	chat.SendNotification(msg, int(lobby.ID))
+
+	room := fmt.Sprintf("%d_private", lobby.ID)
+	broadcaster.SendMessageToRoom(room, "lobbyLogs", logs)
 
 	for steamid, times := range classTimes {
 		player, err := playerpackage.GetPlayerBySteamID(steamid)
