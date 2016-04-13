@@ -7,6 +7,7 @@ package lobby_test
 import (
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
 	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
@@ -17,6 +18,12 @@ import (
 	. "github.com/TF2Stadium/Helen/models/player"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	logrus.Debug("Initializing database")
+	testhelpers.CleanupDB()
+	logrus.Debug("Done")
+}
 
 func TestDeleteUnusedServerRecords(t *testing.T) {
 	var count int

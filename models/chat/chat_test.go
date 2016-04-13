@@ -4,12 +4,19 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
 	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	. "github.com/TF2Stadium/Helen/models/chat"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	logrus.Debug("Initializing database")
+	testhelpers.CleanupDB()
+	logrus.Debug("Done")
+}
 
 func TestNewChatMessage(t *testing.T) {
 	lobby := testhelpers.CreateLobby()

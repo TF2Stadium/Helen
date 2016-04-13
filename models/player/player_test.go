@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/database"
 	_ "github.com/TF2Stadium/Helen/helpers"
@@ -17,6 +18,12 @@ import (
 	. "github.com/TF2Stadium/Helen/models/player"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	logrus.Debug("Initializing database")
+	testhelpers.CleanupDB()
+	logrus.Debug("Done")
+}
 
 func TestGetPlayer(t *testing.T) {
 	t.Parallel()

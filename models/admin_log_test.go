@@ -7,11 +7,19 @@ package models_test
 import (
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/TF2Stadium/Helen/internal/testhelpers"
 	. "github.com/TF2Stadium/Helen/models"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	logrus.Debug("Initializing database")
+	testhelpers.CleanupDB()
+	logrus.Debug("Done")
+}
 
 func TestLogCreation(t *testing.T) {
 	t.Parallel()
