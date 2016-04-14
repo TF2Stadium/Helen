@@ -29,5 +29,5 @@ function make_binary {
     fi
 }
 
-sh build_assets.bash $1
+bash build_assets.bash $1
 make_binary $1
