@@ -11,7 +11,7 @@ before_install:
   - go get github.com/jteeuwen/go-bindata/...
   - go get github.com/Masterminds/glide
 install:
-  - sh build_assets.bash production
+  - ./build_assets.bash production
   - glide install
   - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 before_script:
@@ -19,6 +19,6 @@ before_script:
 script:
   - go test -race -v `go list ./... | grep -v /vendor/`
 after_success:
-  - sh build.bash production
+  - ./build.bash production
   - case $TRAVIS_BRANCH in master) docker build -t tf2stadium/helen:latest . ;; dev) docker build -t tf2stadium/helen:dev . ;; esac 
   - case $TRAVIS_BRANCH in master) docker push tf2stadium/helen:latest ;; dev) docker push tf2stadium/helen ;; esac
