@@ -36,8 +36,9 @@ import (
 )
 
 var (
-	flagGen  = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
-	docPrint = flag.Bool("printdoc", false, "print the docs for environment variables, and exit.")
+	flagGen   = flag.Bool("genkey", false, "write a 32bit key for encrypting cookies the given file, and exit")
+	docPrint  = flag.Bool("printdoc", false, "print the docs for environment variables, and exit.")
+	dbMaxopen = flag.Int("db-maxopen", 80, "maximum number of open database connections allowed.")
 )
 
 func main() {
@@ -72,6 +73,7 @@ func main() {
 	}
 
 	database.Init()
+	database.DB.DB().SetMaxOpenConns(*dbMaxopen)
 	migrations.Do()
 
 	helpers.ConnectAMQP()
