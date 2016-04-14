@@ -38,7 +38,7 @@ type Player struct {
 	ProfileUpdatedAt      time.Time `json:"-"`
 	StreamStatusUpdatedAt time.Time `json:"-"`
 
-	SteamID string      `sql:"unique" json:"steamid"` // Players steam ID
+	SteamID string      `sql:"not null;unique" json:"steamid"` // Players steam ID
 	Stats   PlayerStats `json:"-"`
 	StatsID uint        `json:"-"`
 
@@ -51,7 +51,7 @@ type Player struct {
 
 	Settings postgres.Hstore `json:"-"`
 
-	MumbleUsername string `sql:"unique" json:"mumbleUsername"`
+	MumbleUsername string `sql:"unique"`
 	MumbleAuthkey  string `sql:"not null;unique" json:"-"`
 
 	TwitchAccessToken string `json:"-"`

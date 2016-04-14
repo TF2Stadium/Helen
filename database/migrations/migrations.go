@@ -5,18 +5,14 @@
 package migrations
 
 import (
-	"bytes"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/TF2Stadium/Helen/assets"
 	"github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models"
 	"github.com/TF2Stadium/Helen/models/chat"
 	"github.com/TF2Stadium/Helen/models/gameserver"
 	"github.com/TF2Stadium/Helen/models/lobby"
 	"github.com/TF2Stadium/Helen/models/player"
-	"github.com/gchaincl/dotsql"
 )
 
 var once = new(sync.Once)
@@ -30,25 +26,18 @@ func Do() {
 	database.DB.AutoMigrate(&player.PlayerStats{})
 	database.DB.AutoMigrate(&models.AdminLogEntry{})
 	database.DB.AutoMigrate(&player.PlayerBan{})
-
-	database.DB.Model(&lobby.LobbySlot{}).AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
-	database.DB.Model(&lobby.LobbySlot{}).AddUniqueIndex("idx_lobby_id_player_id", "lobby_id", "player_id")
 	database.DB.AutoMigrate(&chat.ChatMessage{})
 	database.DB.AutoMigrate(&lobby.Requirement{})
 	database.DB.AutoMigrate(&Constant{})
 	database.DB.AutoMigrate(&gameserver.StoredServer{})
 	database.DB.AutoMigrate(&player.Report{})
 
-	once.Do(func() {
-		checkSchema()
-		dot, err := dotsql.Load(bytes.NewBuffer(assets.MustAsset("assets/views.sql")))
-		if err != nil {
-			logrus.Fatal(err)
-		}
+	database.DB.Model(&lobby.LobbySlot{}).
+		AddUniqueIndex("idx_lobby_slot_lobby_id_slot", "lobby_id", "slot")
+	database.DB.Model(&lobby.LobbySlot{}).
+		AddUniqueIndex("idx_lobby_id_player_id", "lobby_id", "player_id")
+	database.DB.Model(&lobby.LobbySlot{}).
+		AddUniqueIndex("idx_requirement_lobby_id_slot", "lobby_id", "slot")
 
-		_, err = dot.Exec(database.DB.DB(), "create-player-slots-view")
-		if err != nil {
-			logrus.Fatal(err)
-		}
-	})
+	once.Do(checkSchema)
 }

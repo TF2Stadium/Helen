@@ -5,7 +5,6 @@
 package database
 
 import (
-	"flag"
 	"net/url"
 	"sync"
 
@@ -23,7 +22,6 @@ var (
 	dbMutex     sync.Mutex
 	initialized = false
 	DBUrl       url.URL
-	maxOpen     = flag.Int("maxopen", 100, "maximum number of open database connections")
 )
 
 // we'll connect to the database through this function
@@ -53,7 +51,6 @@ func Init() {
 		logrus.Fatal(err.Error())
 	}
 
-	DB.DB().SetMaxOpenConns(*maxOpen)
 	DB.SetLogger(logrus.StandardLogger())
 
 	logrus.Info("Connected!")

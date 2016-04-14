@@ -11,14 +11,14 @@ before_install:
   - go get github.com/jteeuwen/go-bindata/...
   - go get github.com/Masterminds/glide
 install:
-  - make assets -B
+  - bash build_assets.bash production
   - glide install
   - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 script:
-  - make tests
+  - go test -race -v `go list ./... | grep -v /vendor/`
 after_success:
-  - make static -B
+  - bash build.bash production
   - case $TRAVIS_BRANCH in master) docker build -t tf2stadium/helen:latest . ;; dev) docker build -t tf2stadium/helen:dev . ;; esac 
   - case $TRAVIS_BRANCH in master) docker push tf2stadium/helen:latest ;; dev) docker push tf2stadium/helen ;; esac

@@ -31,7 +31,6 @@ type constants struct {
 	LoginRedirectPath string   `envconfig:"SERVER_REDIRECT_PATH" default:"http://localhost:8080/" doc:"URL to redirect user to after a successful login"`
 	CookieStoreSecret string   `envconfig:"COOKIE_STORE_SECRET" default:"secret" doc:"base64 encoded key to use for encrypting cookies"`
 	MumbleAddr        string   `envconfig:"MUMBLE_ADDR" doc:"Mumble Address"`
-	MumblePassword    string   `envconfig:"MUMBLE_PASSWORD" doc:"Mumble Password"`
 	SteamIDWhitelist  string   `envconfig:"STEAMID_WHITELIST" doc:"SteamID Group XML page to use to filter logins"`
 	MockupAuth        bool     `envconfig:"MOCKUP_AUTH" default:"false" doc:"Enable Mockup Authentication"`
 	GeoIP             bool     `envconfig:"GEOIP" default:"false" doc:"Enable geoip support for getting the location of game servers"`
