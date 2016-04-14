@@ -8,10 +8,11 @@ go:
 env:
   - GO15VENDOREXPERIMENT=1
 before_install:
+  - ./build_assets.bash production
   - go get github.com/jteeuwen/go-bindata/...
   - go get github.com/Masterminds/glide
 install:
-  - make assets -B
+  - ./build_assets.sh production
   - glide install
   - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 before_script:

@@ -6,28 +6,6 @@ git_branch=$(git rev-parse --abbrev-ref HEAD)
 build_date=$(date)
 build_hostname=$(hostname)
 
-function download_assets {
-    echo "Downloading assets"
-    curl -o "assets/geoip.mmdb.gz" \
-	 "http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.mmdb.gz"
-    gzip -d -f assets/geoip.mmdb.gz
-}
-
-function make_assets {
-    if [ "$1" = "production" ]; then
-	echo "Compiling assets"
-	go-bindata -nomemcopy -ignore="bindata\.go"     \
-		   -pkg assets 			        \
-		   -o assets/bindata.go assets/
-    else
-	echo "Compiling assets (debug)"
-	go-bindata -debug -ignore="bindata\.go"         \
-		   -pkg assets    		        \
-		   -o assets/bindata.go assets/
-
-    fi
-}
-
 function make_binary {
     if [ "$1" = "production" ]; then
 	export CGO_ENABLED=0
@@ -51,9 +29,5 @@ function make_binary {
     fi
 }
 
-if [ ! -f assets/geoip.mmdb ]; then
-    download_assets
-fi
-
-make_assets $1
+./build_assets.bash $1
 make_binary $1
