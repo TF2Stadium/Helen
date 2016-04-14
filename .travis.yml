@@ -11,6 +11,7 @@ before_install:
   - go get github.com/jteeuwen/go-bindata/...
   - go get github.com/Masterminds/glide
 install:
+  - cd $TRAVIS_BUILD_DIR
   - sh build_assets.sh production
   - glide install
   - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
