@@ -15,7 +15,10 @@ import (
 	. "github.com/TF2Stadium/Helen/models/lobby"
 	"github.com/TF2Stadium/Helen/models/lobby/format"
 	. "github.com/TF2Stadium/Helen/models/player"
+	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
+	"github.com/TF2Stadium/logstf"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func init() {
@@ -546,4 +549,33 @@ func TestLobbyMaxSubsClose(t *testing.T) {
 	m := &chat.ChatMessage{}
 	db.DB.Model(&chat.ChatMessage{}).Where("room = ?", lobby.ID).Last(m)
 	assert.Equal(t, m.Message, "Lobby closed (Too many subs).")
+}
+
+func TestUpdateHours(t *testing.T) {
+	t.Parallel()
+	const logsID = 1000928
+
+	lobby := testhelpers.CreateLobby()
+	logs, err := logstf.GetLogs(logsID)
+	require.NoError(t, err)
+
+	var players []*Player
+	i := 0
+	for steamID, _ := range logs.Players {
+		commid, _ := steamid.SteamIdToCommId(steamID)
+		player, _ := NewPlayer(commid)
+		err := player.Save()
+		require.NoError(t, err)
+
+		err = lobby.AddPlayer(player, i, "")
+		require.NoError(t, err)
+		i++
+
+		players = append(players, player)
+	}
+
+	err = lobby.UpdateHours(logsID)
+	require.NoError(t, err)
+
+	//TODO: check player.Stats for updated hours
 }
