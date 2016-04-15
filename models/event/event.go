@@ -197,27 +197,7 @@ func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
 
 	room := fmt.Sprintf("%d_private", lobby.ID)
 	broadcaster.SendMessageToRoom(room, "lobbyLogs", logs)
-
-	for steamid, times := range classTimes {
-		player, err := playerpackage.GetPlayerBySteamID(steamid)
-		if err != nil {
-			logrus.Error("Couldn't find player ", steamid)
-			continue
-		}
-		db.DB.Preload("Stats").First(player, player.ID)
-
-		player.Stats.ScoutHours += times.Scout
-		player.Stats.SoldierHours += times.Soldier
-		player.Stats.PyroHours += times.Pyro
-		player.Stats.DemoHours += times.Demoman
-		player.Stats.HeavyHours += times.Heavy
-		player.Stats.EngineerHours += times.Engineer
-		player.Stats.SpyHours += times.Spy
-		player.Stats.MedicHours += times.Medic
-		player.Stats.SniperHours += times.Sniper
-
-		db.DB.Save(&player.Stats)
-	}
+	lobby.UpdateHours(logsID)
 }
 
 func mumbleJoined(playerID uint) {
