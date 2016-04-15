@@ -49,6 +49,10 @@ func NewStats() PlayerStats {
 	return stats
 }
 
+func (ps *PlayerStats) Save() {
+	database.DB.Save(ps)
+}
+
 func (ps *PlayerStats) TotalLobbies() int {
 	return ps.PlayedSixesCount + ps.PlayedHighlanderCount + ps.PlayedFoursCount + ps.PlayedUltiduoCount + ps.PlayedBballCount
 }
