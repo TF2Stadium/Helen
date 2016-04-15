@@ -41,8 +41,6 @@ type PlayerStats struct {
 	SpyHours      time.Duration `json:"spyHours"`
 
 	Substitutes int `json:"substitutes"`
-	Headshots   int `json:"headshots"`
-	Airshots    int `json:"airshots"`
 }
 
 func NewStats() PlayerStats {
