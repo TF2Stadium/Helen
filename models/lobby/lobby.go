@@ -22,6 +22,8 @@ import (
 	"github.com/TF2Stadium/Helen/models/lobby/format"
 	"github.com/TF2Stadium/Helen/models/player"
 	"github.com/TF2Stadium/Helen/models/rpc"
+	"github.com/TF2Stadium/PlayerStatsScraper/steamid"
+	"github.com/TF2Stadium/logstf"
 	"github.com/TF2Stadium/servemetf"
 	"github.com/jinzhu/gorm"
 )
@@ -789,6 +791,51 @@ func (lobby *Lobby) UpdateStats() {
 		p.Save()
 	}
 	lobby.OnChange(false)
+}
+
+func (lobby *Lobby) UpdateHours(logsID int) error {
+	logs, err := logstf.GetLogs(logsID)
+	if err != nil {
+		return err
+	}
+
+	for steamID, playerStats := range logs.Players {
+		commid, _ := steamid.SteamIdToCommId(steamID)
+		player, err := player.GetPlayerWithStats(commid)
+		if err != nil {
+			logrus.Error("Couldn't find player with SteamID ", commid)
+			continue
+		}
+
+		for _, class := range playerStats.ClassStats {
+			totalTime := time.Second * time.Duration(class.TotalTime)
+
+			switch class.Type {
+			case "scout":
+				player.Stats.ScoutHours += totalTime
+			case "soldier":
+				player.Stats.SoldierHours += totalTime
+			case "demoman":
+				player.Stats.DemoHours += totalTime
+			case "heavyweapons":
+				player.Stats.HeavyHours += totalTime
+			case "pyro":
+				player.Stats.PyroHours += totalTime
+			case "engineer":
+				player.Stats.EngineerHours += totalTime
+			case "spy":
+				player.Stats.SpyHours += totalTime
+			case "sniper":
+				player.Stats.SniperHours += totalTime
+			case "medic":
+				player.Stats.MedicHours += totalTime
+			}
+		}
+
+		player.Stats.Save()
+	}
+
+	return nil
 }
 
 func (lobby *Lobby) setInGameStatus(player *player.Player, inGame bool) error {

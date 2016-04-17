@@ -41,14 +41,16 @@ type PlayerStats struct {
 	SpyHours      time.Duration `json:"spyHours"`
 
 	Substitutes int `json:"substitutes"`
-	Headshots   int `json:"headshots"`
-	Airshots    int `json:"airshots"`
 }
 
 func NewStats() PlayerStats {
 	stats := PlayerStats{}
 
 	return stats
+}
+
+func (ps *PlayerStats) Save() {
+	database.DB.Save(ps)
 }
 
 func (ps *PlayerStats) TotalLobbies() int {

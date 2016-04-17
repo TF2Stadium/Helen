@@ -8,7 +8,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
-	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models/chat"
 	lobbypackage "github.com/TF2Stadium/Helen/models/lobby"
@@ -23,24 +22,11 @@ type Event struct {
 	SteamID  string
 	PlayerID uint32 // used by fumble
 
-	LobbyID    uint
-	LogsID     int //logs.tf ID
-	ClassTimes map[string]*classTime
-	Players    []TF2RconWrapper.Player
+	LobbyID uint
+	LogsID  int //logs.tf ID
+	Players []TF2RconWrapper.Player
 
 	Self bool // true if
-}
-
-type classTime struct {
-	Scout    time.Duration
-	Soldier  time.Duration
-	Pyro     time.Duration
-	Demoman  time.Duration
-	Heavy    time.Duration
-	Engineer time.Duration
-	Sniper   time.Duration
-	Medic    time.Duration
-	Spy      time.Duration
 }
 
 //Event names
@@ -93,7 +79,7 @@ func StartListening() {
 				case DisconnectedFromServer:
 					disconnectedFromServer(event.LobbyID)
 				case MatchEnded:
-					matchEnded(event.LobbyID, event.LogsID, event.ClassTimes)
+					matchEnded(event.LobbyID, event.LogsID)
 				case ReservationOver:
 					reservationEnded(event.LobbyID)
 				case PlayerMumbleJoined:
@@ -183,7 +169,7 @@ func disconnectedFromServer(lobbyID uint) {
 	chat.SendNotification("Lobby Closed (Connection to server lost)", int(lobby.ID))
 }
 
-func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
+func matchEnded(lobbyID uint, logsID int) {
 	lobby, err := lobbypackage.GetLobbyByIDServer(lobbyID)
 	if err != nil {
 		logrus.Error(err)
@@ -197,27 +183,7 @@ func matchEnded(lobbyID uint, logsID int, classTimes map[string]*classTime) {
 
 	room := fmt.Sprintf("%d_private", lobby.ID)
 	broadcaster.SendMessageToRoom(room, "lobbyLogs", logs)
-
-	for steamid, times := range classTimes {
-		player, err := playerpackage.GetPlayerBySteamID(steamid)
-		if err != nil {
-			logrus.Error("Couldn't find player ", steamid)
-			continue
-		}
-		db.DB.Preload("Stats").First(player, player.ID)
-
-		player.Stats.ScoutHours += times.Scout
-		player.Stats.SoldierHours += times.Soldier
-		player.Stats.PyroHours += times.Pyro
-		player.Stats.DemoHours += times.Demoman
-		player.Stats.HeavyHours += times.Heavy
-		player.Stats.EngineerHours += times.Engineer
-		player.Stats.SpyHours += times.Spy
-		player.Stats.MedicHours += times.Medic
-		player.Stats.SniperHours += times.Sniper
-
-		db.DB.Save(&player.Stats)
-	}
+	lobby.UpdateHours(logsID)
 }
 
 func mumbleJoined(playerID uint) {
