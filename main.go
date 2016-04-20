@@ -29,6 +29,7 @@ import (
 	"github.com/TF2Stadium/Helen/models/chat"
 	"github.com/TF2Stadium/Helen/models/event"
 	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/lobby_settings"
 	"github.com/TF2Stadium/Helen/models/rpc"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
@@ -80,13 +81,13 @@ func main() {
 	event.StartListening()
 	helpers.InitGeoIPDB()
 
-	err := lobby.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
+	err := lobbySettings.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
 	lobby.CreateLocks()
-	rpc.ConnectRPC()
+	rpc.ConnectRPC(helpers.AMQPConn)
 	lobby.RestoreServemeChecks()
 	//go models.TFTVStreamStatusUpdater()
 

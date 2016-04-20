@@ -7,7 +7,7 @@ package handler
 import (
 	"errors"
 
-	"github.com/TF2Stadium/Helen/models/lobby"
+	"github.com/TF2Stadium/Helen/models/lobby_settings"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
 )
@@ -25,7 +25,7 @@ func (Global) GetConstant(so *wsevent.Client, args struct {
 	output := simplejson.New()
 	switch args.Constant {
 	case "lobbySettingsList":
-		output = lobby.LobbySettingsToJSON()
+		output = lobbySettings.LobbySettingsToJSON()
 	default:
 		return errors.New("Unknown constant.")
 	}

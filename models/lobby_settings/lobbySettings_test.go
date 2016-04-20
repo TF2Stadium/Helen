@@ -1,9 +1,9 @@
-package lobby_test
+package lobbySettings_test
 
 import (
 	"testing"
 
-	. "github.com/TF2Stadium/Helen/models/lobby"
+	. "github.com/TF2Stadium/Helen/models/lobby_settings"
 	"github.com/stretchr/testify/assert"
 )
 
