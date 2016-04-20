@@ -87,7 +87,7 @@ func main() {
 	}
 
 	lobby.CreateLocks()
-	rpc.ConnectRPC()
+	rpc.ConnectRPC(helpers.AMQPConn)
 	lobby.RestoreServemeChecks()
 	//go models.TFTVStreamStatusUpdater()
 

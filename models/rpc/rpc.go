@@ -10,7 +10,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
-	"github.com/TF2Stadium/Helen/helpers"
+	"github.com/streadway/amqp"
 	"github.com/vibhavp/amqp-rpc"
 )
 
@@ -24,9 +24,9 @@ var (
 	twitchbotDisabled = flag.Bool("disable_twitchbot", true, "disable twitch bot")
 )
 
-func ConnectRPC() {
+func ConnectRPC(amqpConn *amqp.Connection) {
 	if !*paulingDisabled {
-		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
+		codec, err := amqprpc.NewClientCodec(amqpConn, config.Constants.PaulingQueue, amqprpc.JSONCodec{})
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -35,7 +35,7 @@ func ConnectRPC() {
 
 	}
 	if !*fumbleDisabled {
-		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
+		codec, err := amqprpc.NewClientCodec(amqpConn, config.Constants.FumbleQueue, amqprpc.JSONCodec{})
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -43,7 +43,7 @@ func ConnectRPC() {
 		fumble = rpc.NewClientWithCodec(codec)
 	}
 	if !*twitchbotDisabled {
-		codec, err := amqprpc.NewClientCodec(helpers.AMQPConn, config.Constants.TwitchBotQueue, amqprpc.JSONCodec{})
+		codec, err := amqprpc.NewClientCodec(amqpConn, config.Constants.TwitchBotQueue, amqprpc.JSONCodec{})
 		if err != nil {
 			logrus.Fatal(err)
 		}
