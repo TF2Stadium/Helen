@@ -9,13 +9,6 @@ import (
 	"github.com/TF2Stadium/Helen/models/lobby/format"
 )
 
-type ServerBootstrap struct {
-	LobbyId       uint
-	Info          gameserver.ServerRecord
-	Players       []string
-	BannedPlayers []string
-}
-
 type Args struct {
 	Id        uint
 	Info      gameserver.ServerRecord
