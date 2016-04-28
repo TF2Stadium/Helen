@@ -887,7 +887,7 @@ func (lobby *Lobby) Start() {
 	lobby.Lock()
 	defer lobby.Unlock()
 
-	if lobby.State == InProgress {
+	if lobby.CurrentState() == InProgress {
 		return
 	}
 
