@@ -885,15 +885,14 @@ func (lobby *Lobby) SetNotInMumble(player *player.Player) error {
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes
 func (lobby *Lobby) Start() {
 	lobby.Lock()
+	defer lobby.Unlock()
+
 	if lobby.State == InProgress {
-		lobby.Unlock()
 		return
 	}
 
 	db.DB.Model(&Lobby{}).Where("id = ?", lobby.ID).Update("state", InProgress)
-	lobby.Unlock()
-
-	rpc.ReExecConfig(lobby.ID, false)
+	go rpc.ReExecConfig(lobby.ID, false)
 	// var playerids []uint
 	// db.DB.Model(&LobbySlot{}).Where("lobby_id = ?", lobby.ID).Pluck("player_id", &playerids)
 
