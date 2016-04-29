@@ -884,7 +884,7 @@ func (lobby *Lobby) SetNotInMumble(player *player.Player) error {
 
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes
 func (lobby *Lobby) Start() {
-	rows := db.DB.Model(&Lobby{}).Where("id = ? AND state <>", lobby.ID, InProgress).Update("state", InProgress).RowsAffected
+	rows := db.DB.Model(&Lobby{}).Where("id = ? AND state <> ?", lobby.ID, InProgress).Update("state", InProgress).RowsAffected
 	if rows != 0 { // if == 0, then game is already in progress
 		go rpc.ReExecConfig(lobby.ID, false)
 
