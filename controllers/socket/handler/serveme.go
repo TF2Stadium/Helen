@@ -5,6 +5,7 @@ import (
 	"net"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models/gameserver"
@@ -22,12 +23,14 @@ func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
 	context := helpers.GetServemeContextIP(chelpers.GetIPAddr(so.Request))
 
 	starts, ends, err := context.GetReservationTime(so.Token.Claims["steam_id"].(string))
-	if _, ok := err.(*net.OpError); ok {
+	if err != nil {
+		logrus.Error(err)
 		return errors.New("Cannot access serveme.tf")
 	}
 
 	reservations, err := context.FindServers(starts, ends, so.Token.Claims["steam_id"].(string))
-	if _, ok := err.(*net.OpError); ok {
+	if err != nil {
+		logrus.Error(err)
 		return errors.New("Cannot access serveme.tf")
 	}
 
