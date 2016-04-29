@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"net"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
