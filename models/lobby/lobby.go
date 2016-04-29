@@ -884,24 +884,20 @@ func (lobby *Lobby) SetNotInMumble(player *player.Player) error {
 
 //Start sets lobby.State to LobbyStateInProgress, calls SubNotInGamePlayers after 5 minutes
 func (lobby *Lobby) Start() {
-	lobby.Lock()
-	defer lobby.Unlock()
+	rows := db.DB.Model(&Lobby{}).Where("id = ? AND state <>", lobby.ID, InProgress).Update("state", InProgress).RowsAffected
+	if rows != 0 { // if == 0, then game is already in progress
+		go rpc.ReExecConfig(lobby.ID, false)
 
-	if lobby.CurrentState() == InProgress {
-		return
+		// var playerids []uint
+		// db.DB.Model(&LobbySlot{}).Where("lobby_id = ?", lobby.ID).Pluck("player_id", &playerids)
+
+		// for _, id := range playerids {
+		// 	player, _ := GetPlayerByID(id)
+		// 	lobby.AfterPlayerNotInGameFunc(player, 5*time.Minute, func() {
+		// 		lobby.Substitute(player)
+		// 	})
+		// }
 	}
-
-	db.DB.Model(&Lobby{}).Where("id = ?", lobby.ID).Update("state", InProgress)
-	go rpc.ReExecConfig(lobby.ID, false)
-	// var playerids []uint
-	// db.DB.Model(&LobbySlot{}).Where("lobby_id = ?", lobby.ID).Pluck("player_id", &playerids)
-
-	// for _, id := range playerids {
-	// 	player, _ := GetPlayerByID(id)
-	// 	lobby.AfterPlayerNotInGameFunc(player, 5*time.Minute, func() {
-	// 		lobby.Substitute(player)
-	// 	})
-	// }
 }
 
 //OnChange broadcasts the given lobby to other players. If base is true, broadcasts the lobby list too.
