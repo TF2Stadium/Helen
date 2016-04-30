@@ -68,7 +68,7 @@ func main() {
 	controllers.InitTemplates()
 	//models.ReadServers()
 
-	err := os.Mkdir("./"+config.Constants.DemosFolder, 0644)
+	err := os.Mkdir(config.Constants.DemosFolder, 0644)
 	if err != nil && !os.IsExist(err) {
 		logrus.Fatal(err)
 	}
