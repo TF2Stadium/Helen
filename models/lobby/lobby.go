@@ -761,6 +761,11 @@ func (lobby *Lobby) Close(doRPC, matchEnded bool) {
 		if err != nil {
 			logrus.Error(err)
 		}
+		if matchEnded {
+			time.AfterFunc(10*time.Second, func() {
+				lobby.DownloadDemo(context)
+			})
+		}
 	}
 
 	privateRoom := fmt.Sprintf("%d_private", lobby.ID)
@@ -775,6 +780,18 @@ func (lobby *Lobby) Close(doRPC, matchEnded bool) {
 	BroadcastLobbyList() // has to be done manually for now
 	rpc.FumbleLobbyEnded(lobby.ID)
 	lobby.deleteLock()
+}
+
+func (lobby *Lobby) DownloadDemo(context *servemetf.Context) {
+	file := fmt.Sprintf("%s/%d.dem", config.Constants.DemosFolder,
+		lobby.ID)
+	err := context.DownloadDemo(lobby.ServemeID, lobby.CreatedBySteamID, file)
+	if err != nil {
+		logrus.Error(err)
+	} else {
+		url := fmt.Sprintf("%s/demos/%d.dem", config.Constants.PublicAddress, lobby.ID)
+		chat.SendNotification("STV Demo for this lobby is available at "+url, int(lobby.ID))
+	}
 }
 
 //UpdateStats updates the PlayerStats records for all players in the lobby
