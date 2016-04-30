@@ -51,6 +51,7 @@ func SetupHTTP(mux *http.ServeMux) {
 	for _, route := range routes {
 		mux.HandleFunc(route.pattern, route.handler)
 	}
+	mux.Handle("/demos/", http.StripPrefix("/demos/", http.FileServer(http.Dir(config.Constants.DemosFolder))))
 
 	if config.Constants.ServeStatic {
 		mux.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
