@@ -68,6 +68,11 @@ func main() {
 	controllers.InitTemplates()
 	//models.ReadServers()
 
+	err := os.Mkdir("./"+config.Constants.DemosFolder, 0644)
+	if err != nil && !os.IsExist(err) {
+		logrus.Fatal(err)
+	}
+
 	if config.Constants.ProfilerAddr != "" {
 		go http.ListenAndServe(config.Constants.ProfilerAddr, nil)
 		logrus.Info("Running Profiler at ", config.Constants.ProfilerAddr)
@@ -81,7 +86,7 @@ func main() {
 	event.StartListening()
 	helpers.InitGeoIPDB()
 
-	err := lobbySettings.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
+	err = lobbySettings.LoadLobbySettingsFromFile("assets/lobbySettingsData.json")
 	if err != nil {
 		logrus.Fatal(err)
 	}
