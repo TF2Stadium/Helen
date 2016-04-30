@@ -9,29 +9,29 @@ import (
 )
 
 var (
-	servemeNA = &servemetf.Context{Host: "na.serveme.tf"}
-	servemeEU = &servemetf.Context{Host: "serveme.tf"}
-	servemeAU = &servemetf.Context{Host: "au.serveme.tf"}
+	ServemeNA = &servemetf.Context{Host: "na.serveme.tf"}
+	ServemeEU = &servemetf.Context{Host: "serveme.tf"}
+	ServemeAU = &servemetf.Context{Host: "au.serveme.tf"}
 )
 
 func GetServemeContextIP(ipaddr string) *servemetf.Context {
 	continent, _ := GetRegion(ipaddr)
 	switch strings.ToLower(continent) {
 	case "na": // north america
-		return servemeNA
+		return ServemeNA
 	case "sa": // south america
-		return servemeNA
+		return ServemeNA
 
 	case "as": // asia
-		return servemeEU
+		return ServemeEU
 	case "eu": // europe
-		return servemeEU
+		return ServemeEU
 
 	case "oc": // oceania
-		return servemeAU
+		return ServemeAU
 
 	default: // africa and antarctica
-		return servemeEU
+		return ServemeEU
 	}
 }
 
@@ -39,14 +39,14 @@ func GetServemeContext(addrStr string) *servemetf.Context {
 	arr := strings.Split(addrStr, ":")
 	addr, err := net.ResolveIPAddr("ip4", arr[0])
 	if err != nil {
-		return servemeEU
+		return ServemeEU
 	}
 
 	return GetServemeContextIP(addr.String())
 }
 
 func init() {
-	servemeNA.APIKey = config.Constants.ServemeAPIKey
-	servemeEU.APIKey = config.Constants.ServemeAPIKey
-	servemeAU.APIKey = config.Constants.ServemeAPIKey
+	ServemeNA.APIKey = config.Constants.ServemeAPIKey
+	ServemeEU.APIKey = config.Constants.ServemeAPIKey
+	ServemeAU.APIKey = config.Constants.ServemeAPIKey
 }

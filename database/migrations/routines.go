@@ -7,9 +7,12 @@ package migrations
 import (
 	"math/rand"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/helpers"
 	"github.com/TF2Stadium/Helen/models/lobby"
 	"github.com/TF2Stadium/Helen/models/lobby/format"
 	"github.com/TF2Stadium/Helen/models/player"
@@ -30,6 +33,7 @@ var migrationRoutines = map[uint64]func(){
 	11: dropColumnUpdatedAt,
 	12: moveReportsServers,
 	13: dropUnusedColumns,
+	14: downloadSTVDemos,
 }
 
 func whitelist_id_string() {
@@ -190,4 +194,29 @@ func moveReportsServers() {
 func dropUnusedColumns() {
 	db.DB.Model(&lobby.Lobby{}).DropColumn("slot_password")
 	db.DB.Model(&player.Player{}).DropColumn("debug")
+}
+
+func downloadSTVDemos() {
+	var lobbies []*lobby.Lobby
+
+	since := time.Now().Add(time.Hour * 24 * 30 * -1)
+	db.DB.Model(&lobby.Lobby{}).
+		Where("match_ended = TRUE AND serveme_id <> 0 AND created_at > ?", since).
+		Find(&lobbies)
+	logrus.Debug("Downloading Demos for ", len(lobbies), " lobbies")
+
+	for _, lob := range lobbies {
+		go func(lobby *lobby.Lobby) {
+			switch strings.ToLower(lobby.RegionCode) {
+			case "na", "sa":
+				lobby.DownloadDemo(helpers.ServemeNA)
+			case "eu", "as":
+				lobby.DownloadDemo(helpers.ServemeEU)
+			case "oc":
+				lobby.DownloadDemo(helpers.ServemeAU)
+			default:
+				lobby.DownloadDemo(helpers.ServemeEU)
+			}
+		}(lob)
+	}
 }

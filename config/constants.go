@@ -58,6 +58,7 @@ type constants struct {
 	HealthChecks       bool     `envconfig:"HEALTH_CHECKS" default:"false" doc:"Enable health checks"`
 	SecureCookies      bool     `envconfig:"SECURE_COOKIE" doc:"Enable 'secure' flag on cookies" default:"false"`
 	FilteredWords      []string `envconfig:"FILTERED_WORDS"`
+	DemosFolder        string   `envconfig:"DEMOS_FOLDER" doc:"Folder to store STV demos in" default:"demos"`
 }
 
 var Constants = constants{}
