@@ -133,6 +133,7 @@ type Lobby struct {
 
 	ReadyUpTimestamp int64 // (Unix) Timestamp at which the ready up timeout started
 	MatchEnded       bool  // if true, the lobby ended with the match ending in the game server
+	LogstfID         int   // logs.tf id (only when match ends)
 }
 
 func getGamemode(mapName string, lobbyType format.Format) string {
@@ -811,6 +812,8 @@ func (lobby *Lobby) UpdateStats() {
 }
 
 func (lobby *Lobby) UpdateHours(logsID int) error {
+	db.DB.Model(&Lobby{}).Where("id = ?", lobby.ID).UpdateColumn("logstf_id", logsID)
+
 	logs, err := logstf.GetLogs(logsID)
 	if err != nil {
 		return err
