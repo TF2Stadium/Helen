@@ -183,8 +183,9 @@ func matchEnded(lobbyID uint, logsID int) {
 
 	room := fmt.Sprintf("%d_private", lobby.ID)
 	broadcaster.SendMessageToRoom(room, "lobbyLogs", struct {
-		Logs string `json:"logs"`
-	}{logs})
+		LobbyID uint   `json:"lobbyID"`
+		Logs    string `json:"logs"`
+	}{lobby.ID, logs})
 
 	lobby.UpdateHours(logsID)
 }
