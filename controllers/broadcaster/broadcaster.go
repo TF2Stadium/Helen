@@ -32,3 +32,16 @@ func SendMessageToRoom(r string, event string, content interface{}) {
 	socket.AuthServer.BroadcastJSON(r, v)
 	socket.UnauthServer.BroadcastJSON(r, v)
 }
+
+func SendMessageSkipIDs(skipID, steamid, event string, content interface{}) {
+	sockets, ok := sessions.GetSockets(steamid)
+	if !ok {
+		return
+	}
+
+	for _, socket := range sockets {
+		if socket.ID != skipID {
+			socket.EmitJSON(helpers.NewRequest(event, content))
+		}
+	}
+}
