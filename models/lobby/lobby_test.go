@@ -561,7 +561,7 @@ func TestUpdateHours(t *testing.T) {
 
 	var players []*Player
 	i := 0
-	for steamID, _ := range logs.Players {
+	for steamID := range logs.Players {
 		commid, _ := steamid.SteamIdToCommId(steamID)
 		player, _ := NewPlayer(commid)
 		err := player.Save()
@@ -576,6 +576,7 @@ func TestUpdateHours(t *testing.T) {
 
 	err = lobby.UpdateHours(logsID)
 	require.NoError(t, err)
-
+	lobby, _ = GetLobbyByID(lobby.ID)
+	assert.Equal(t, logsID, lobby.LogstfID)
 	//TODO: check player.Stats for updated hours
 }
