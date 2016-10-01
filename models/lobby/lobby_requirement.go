@@ -38,6 +38,10 @@ func (lobby *Lobby) GetSlotRequirement(slot int) (*Requirement, error) {
 	req := &Requirement{}
 	err := db.DB.Model(&Requirement{}).Where("lobby_id = ? AND slot = ?", lobby.ID, slot).First(req).Error
 
+	if req.Hours == 0 {
+		req.Hours = 150
+	}
+
 	return req, err
 }
 
