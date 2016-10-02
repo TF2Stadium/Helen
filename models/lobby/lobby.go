@@ -39,17 +39,17 @@ const (
 )
 
 var (
-	ErrLobbyNotFound   = errors.New("Couldn't find lobby with given ID")
+	ErrLobbyNotFound   = errors.New("Could not find lobby with given ID")
 	ErrLobbyBan        = errors.New("You have been banned from this lobby")
-	ErrBadSlot         = errors.New("This slot does not exist")
-	ErrFilled          = errors.New("This slot has been filled")
-	ErrNotWhitelisted  = errors.New("You aren't allowed in this lobby")
-	ErrInvalidPassword = errors.New("Invalid slot password")
+	ErrBadSlot         = errors.New("That slot does not exist")
+	ErrFilled          = errors.New("That slot has been filled")
+	ErrNotWhitelisted  = errors.New("You are not allowed in this lobby")
+	ErrInvalidPassword = errors.New("Incorrect slot password")
 	ErrNeedsSub        = errors.New("This slot needs a substitute")
 
-	ErrReqHours       = errors.New("You don't have sufficient hours to join this lobby")
-	ErrReqLobbies     = errors.New("You haven't played sufficient lobbies to join this lobby")
-	ErrReqReliability = errors.New("You have insufficient reliability to join this lobby")
+	ErrReqHours       = errors.New("You do not have sufficient hours to join that slot")
+	ErrReqLobbies     = errors.New("You have not played sufficient lobbies to join that slot")
+	ErrReqReliability = errors.New("You have insufficient reliability to join that slot")
 )
 
 // Represents an occupied player slot in a lobby
@@ -404,17 +404,6 @@ func (lobby *Lobby) AddPlayer(p *player.Player, slot int, password string) error
 		req, _ := lobby.GetSlotRequirement(slot)
 		if password != req.Password {
 			return ErrInvalidPassword
-		}
-	}
-
-	if config.Constants.SteamDevAPIKey != "" {
-		if time.Since(p.ProfileUpdatedAt) < time.Hour*time.Duration(150-p.GameHours) {
-			//update player info only if the number of hours needed > the number of hours
-			//passed since player info was last updated
-			p.UpdatePlayerInfo()
-		}
-		if p.GameHours < 150 {
-			return errors.New("You need at least 150 hours to join lobbies.")
 		}
 	}
 
