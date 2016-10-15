@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
+	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/models/lobby_settings"
 	"github.com/TF2Stadium/wsevent"
 	"github.com/bitly/go-simplejson"
@@ -47,7 +48,7 @@ func (Global) SendToOtherClients(so *wsevent.Client, args struct {
 	Event string `json:"event"`
 	Data  string `json:"data"`
 }) interface{} {
-	steamID := so.Token.Claims["steam_id"].(string)
+	steamID := so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID
 	broadcaster.SendMessageSkipIDs(so.ID, steamID, args.Event, args.Data)
 	return emptySuccess
 }

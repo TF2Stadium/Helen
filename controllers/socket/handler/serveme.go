@@ -21,13 +21,13 @@ func (Serveme) Name(s string) string {
 func (Serveme) GetServemeServers(so *wsevent.Client, _ struct{}) interface{} {
 	context := helpers.GetServemeContextIP(chelpers.GetIPAddr(so.Request))
 
-	starts, ends, err := context.GetReservationTime(so.Token.Claims["steam_id"].(string))
+	starts, ends, err := context.GetReservationTime(so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID)
 	if err != nil {
 		logrus.Error(err)
 		return errors.New("Cannot access serveme.tf")
 	}
 
-	reservations, err := context.FindServers(starts, ends, so.Token.Claims["steam_id"].(string))
+	reservations, err := context.FindServers(starts, ends, so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID)
 	if err != nil {
 		logrus.Error(err)
 		return errors.New("Cannot access serveme.tf")

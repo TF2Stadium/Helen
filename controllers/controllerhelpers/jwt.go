@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
+	"errors"
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/models/player"
@@ -33,12 +33,14 @@ func init() {
 
 func NewToken(player *player.Player) string {
 	token := jwt.New(jwt.SigningMethodHS512)
-	token.Claims["player_id"] = strconv.FormatUint(uint64(player.ID), 10)
-	token.Claims["steam_id"] = player.SteamID
-	token.Claims["mumble_password"] = player.MumbleAuthkey
-	token.Claims["role"] = strconv.Itoa(int(player.Role))
-	token.Claims["iat"] = time.Now().Unix()
-	token.Claims["iss"] = config.Constants.PublicAddress
+	token.Claims = TF2StadiumClaims{
+		PlayerID:       player.ID,
+		SteamID:        player.SteamID,
+		MumblePassword: player.MumbleAuthkey,
+		Role:           player.Role,
+		IssuedAt:       time.Now().Unix(),
+		Issuer:         config.Constants.PublicAddress,
+	}
 
 	str, err := token.SignedString([]byte(signingKey))
 	if err != nil {
@@ -51,6 +53,9 @@ func NewToken(player *player.Player) string {
 func verifyToken(token *jwt.Token) (interface{}, error) {
 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 		return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+	}
+	if _, ok := token.Claims.(TF2StadiumClaims); !ok {
+		return nil, errors.New("Unexpected claim")
 	}
 
 	return signingKey, nil
@@ -67,7 +72,6 @@ func GetToken(r *http.Request) (*jwt.Token, error) {
 }
 
 func GetPlayer(token *jwt.Token) *player.Player {
-	playerid, _ := strconv.ParseUint(token.Claims["player_id"].(string), 10, 32)
-	player, _ := player.GetPlayerByID(uint(playerid))
+	player, _ := player.GetPlayerByID(token.Claims.(TF2StadiumClaims).PlayerID)
 	return player
 }
