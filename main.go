@@ -16,6 +16,7 @@ import (
 	"syscall"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/evalphobia/logrus_sentry"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -59,6 +60,21 @@ func main() {
 	if *docPrint {
 		config.PrintConfigDoc()
 		os.Exit(0)
+	}
+
+	if helpers.Raven != nil {
+		hook, err := logrus_sentry.NewWithClientSentryHook(helpers.Raven, []logrus.Level{
+			logrus.PanicLevel,
+			logrus.FatalLevel,
+			logrus.ErrorLevel,
+			logrus.WarnLevel,
+		})
+
+		if err == nil {
+			logrus.AddHook(hook)
+		} else {
+			logrus.Fatal(err)
+		}
 	}
 
 	logrus.Debug("Commit: ", version.GitCommit)
