@@ -52,6 +52,8 @@ type constants struct {
 	ProfilerAddr string `envconfig:"PROFILER_ADDR" doc:"Address to serve the web-based profiler over"`
 
 	SlackbotURL        string   `envconfig:"SLACK_URL" doc:"Slack webhook URL"`
+	SentryDSN          string   `envconfig:"SENTRY_DSN" doc:"Sentry DSN"`
+	Environment        string   `envconfig:"DEPLOYED_ENV" default:"development" doc:"Deployment environment"`
 	TwitchClientID     string   `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
 	TwitchClientSecret string   `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
 	ServemeAPIKey      string   `envconfig:"SERVEME_API_KEY" doc:"serveme.tf API Key"`
