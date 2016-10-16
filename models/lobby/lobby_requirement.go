@@ -3,6 +3,7 @@ package lobby
 import (
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models/player"
 )
@@ -73,7 +74,10 @@ func (l *Lobby) FitsRequirements(player *player.Player, slot int) (bool, error) 
 	if time.Since(player.ProfileUpdatedAt) < time.Hour*time.Duration(req.Hours-player.GameHours) {
 		//update player info only if the number of hours needed > the number of hours
 		//passed since player info was last updated
-		player.UpdatePlayerInfo()
+		err = player.UpdatePlayerInfo()
+		if err != nil {
+			logrus.Error(err)
+		}
 	}
 
 	if player.GameHours < req.Hours {

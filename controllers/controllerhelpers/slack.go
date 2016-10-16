@@ -3,9 +3,10 @@ package controllerhelpers
 import (
 	"fmt"
 	"net/http"
-	"strings"
+	"bytes"
 	"sync"
 	"time"
+	"encoding/json"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
@@ -17,6 +18,10 @@ type message struct {
 	Message string
 }
 
+type SlackMessage struct {
+	Text string `json:"text"`
+}
+
 var messages = make(chan message, 10)
 var once = new(sync.Once)
 
@@ -24,8 +29,9 @@ func slackBroadcaster() {
 	for {
 		m := <-messages
 		final := fmt.Sprintf("<https://steamcommunity.com/profiles/%s|%s>: %s", m.SteamID, m.Name, m.Message)
-		_, err := http.Post(config.Constants.SlackbotURL, "text/plain",
-			strings.NewReader(final))
+		payload, _ := json.Marshal(SlackMessage{final})
+		_, err := http.Post(config.Constants.SlackbotURL, "application/json",
+			bytes.NewReader(payload))
 
 		if err != nil {
 			logrus.Error(err.Error())

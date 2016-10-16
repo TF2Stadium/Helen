@@ -67,7 +67,11 @@ func SteamMockLoginHandler(w http.ResponseWriter, r *http.Request) {
 		database.DB.Create(p)
 	}
 
-	p.UpdatePlayerInfo()
+	err = p.UpdatePlayerInfo()
+	if err != nil {
+		logrus.Error(err)
+	}
+
 	key := controllerhelpers.NewToken(p)
 	cookie := &http.Cookie{
 		Name:    "auth-jwt",
@@ -141,7 +145,10 @@ func SteamLoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		if time.Since(p.ProfileUpdatedAt) >= 1*time.Hour {
-			p.UpdatePlayerInfo()
+			err := p.UpdatePlayerInfo()
+			if err != nil {
+				logrus.Error(err)
+			}
 		}
 	}()
 

@@ -7,6 +7,7 @@ package hooks
 import (
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
 	"github.com/TF2Stadium/Helen/controllers/socket/sessions"
@@ -32,7 +33,10 @@ func AfterConnectLoggedIn(so *wsevent.Client, player *player.Player) {
 	sessions.AddSocket(player.SteamID, so)
 
 	if time.Since(player.ProfileUpdatedAt) >= 30*time.Minute {
-		player.UpdatePlayerInfo()
+		err := player.UpdatePlayerInfo()
+		if (err != nil) {
+			logrus.Error(err)
+		}
 	}
 
 	lobbyID, err := player.GetLobbyID(false)
