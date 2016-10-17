@@ -744,6 +744,10 @@ func (lobby *Lobby) SetupServer() error {
 		msg := fmt.Sprintf("%s%s%s lobby on %s%s: %s/lobby/%d", region, mumble, formatName, lobby.MapName, byLine, config.Constants.LoginRedirectPath, lobby.ID)
 		helpers.DiscordSendToChannel("lobby-notifications", msg)
 		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s", formatName, lobby.RegionCode), msg)
+
+		msg = fmt.Sprintf("@here %s", msg)
+		helpers.DiscordSendToChannel("lobby-notifications-ping", msg)
+		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s-ping", formatName, lobby.RegionCode), msg)
 	}
 
 	return nil
