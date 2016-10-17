@@ -717,6 +717,39 @@ func (lobby *Lobby) SetupServer() error {
 	}
 
 	rpc.FumbleLobbyCreated(lobby.ID)
+
+	if helpers.Discord != nil {
+		mumble := ""
+		if lobby.Mumble {
+			mumble = helpers.DiscordEmoji("mumble")
+		}
+
+		region := lobby.RegionName
+		if lobby.RegionCode == "eu" || lobby.RegionCode == "au" {
+			region = fmt.Sprintf(":flag_%s:", lobby.RegionCode)
+		} else if lobby.RegionCode == "na" {
+			region = ":flag_us:"
+		}
+
+		byLine := ""
+		player, playerErr := player.GetPlayerBySteamID(lobby.CreatedBySteamID)
+		if playerErr != nil {
+			logrus.Error(err)
+		} else {
+			byLine = fmt.Sprintf(" by %s", player.Alias())
+		}
+
+		formatName := format.FriendlyNamesMap[lobby.Type]
+
+		msg := fmt.Sprintf("%s%s%s lobby on %s%s: %s/lobby/%d", region, mumble, formatName, lobby.MapName, byLine, config.Constants.LoginRedirectPath, lobby.ID)
+		helpers.DiscordSendToChannel("lobby-notifications", msg)
+		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s", formatName, lobby.RegionCode), msg)
+
+		msg = fmt.Sprintf("@here %s", msg)
+		helpers.DiscordSendToChannel("lobby-notifications-ping", msg)
+		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s-ping", formatName, lobby.RegionCode), msg)
+	}
+
 	return nil
 }
 
