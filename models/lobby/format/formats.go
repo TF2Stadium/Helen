@@ -100,6 +100,15 @@ var (
 		Bball:      2,
 		Debug:      1,
 	}
+
+	FriendlyNamesMap = map[Format]string{
+		Highlander: "Highlander",
+		Sixes:      "6s",
+		Fours:      "4v4",
+		Ultiduo:    "Ultiduo",
+		Bball:      "Bball",
+		Debug:      "Debug",
+	}
 )
 
 //GetSlot returns the slot number for given team, class strings and the
