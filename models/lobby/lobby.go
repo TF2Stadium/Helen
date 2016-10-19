@@ -687,7 +687,15 @@ func (lobby *Lobby) GetPlayerNumber() int {
 
 //IsFull returns whether all lobby spots have been filled
 func (lobby *Lobby) IsFull() bool {
-	return lobby.GetPlayerNumber() == 2*format.NumberOfClassesMap[lobby.Type]
+	return lobby.IsEnoughPlayers(lobby.GetPlayerNumber())
+}
+
+func (lobby *Lobby) RequiredPlayers() int {
+	return 2*format.NumberOfClassesMap[lobby.Type]
+}
+
+func (lobby *Lobby) IsEnoughPlayers(n int) bool {
+	return n == lobby.RequiredPlayers()
 }
 
 //IsSlotFilled returns whether the given slot (by number) is occupied by a player

@@ -431,6 +431,19 @@ func (Lobby) LobbyClose(so *wsevent.Client, args struct {
 	return emptySuccess
 }
 
+// for rate limiting notifs (like lobby-almost-ready discord
+// notifs). Bad because it gets restart on Helen restart... but easy
+// for now
+var lobbyJoinLastNotif = make(map[uint]time.Time)
+var notifThreshold = map[format.Format]int{
+	format.Highlander: 13,
+	format.Sixes:      8,
+	format.Fours:      5,
+	format.Ultiduo:    2,
+	format.Bball:      2,
+	format.Debug:      1,
+}
+
 func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 	Id       *uint   `json:"id"`
 	Class    *string `json:"class"`
@@ -499,9 +512,16 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 		hooks.AfterLobbyJoin(so, lob, p)
 	}
 
+	playersCnt := lob.GetPlayerNumber()
+	lastNotif, timerExists := lobbyJoinLastNotif[lob.ID]
+	if playersCnt >= notifThreshold[lob.Type] && (!timerExists || time.Since(lastNotif).Minutes() > 5) {
+		lob.DiscordNotif(fmt.Sprintf("Almost ready [%d/%d]", playersCnt, lob.RequiredPlayers()))
+		lobbyJoinLastNotif[lob.ID] = time.Now()
+	}
+
 	//check if lobby isn't already in progress (which happens when the player is subbing)
 	lob.Lock()
-	if lob.IsFull() && lob.State != lobby.InProgress && lob.State != lobby.ReadyingUp {
+	if lob.IsEnoughPlayers(playersCnt) && lob.State != lobby.InProgress && lob.State != lobby.ReadyingUp {
 		lob.State = lobby.ReadyingUp
 		lob.ReadyUpTimestamp = time.Now().Unix() + 30
 		lob.Save()
