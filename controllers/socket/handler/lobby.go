@@ -414,7 +414,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, args struct {
 		return tperr
 	}
 
-	if player.SteamID != lob.CreatedBySteamID && player.Role != helpers.RoleAdmin {
+	if player.SteamID != lob.CreatedBySteamID && !(player.Role == helpers.RoleAdmin || player.Role == helpers.RoleMod) {
 		return errors.New("Player not authorized to close lobby.")
 
 	}
