@@ -705,19 +705,7 @@ func (lobby *Lobby) GetAllSlots() []LobbySlot {
 	return lobby.Slots
 }
 
-//SetupServer setups the TF2 server for the lobby, creates the mumble channels for it
-func (lobby *Lobby) SetupServer() error {
-	if lobby.State == Ended {
-		return errors.New("Lobby is closed")
-	}
-
-	err := rpc.SetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.Whitelist, lobby.MapName)
-	if err != nil {
-		return err
-	}
-
-	rpc.FumbleLobbyCreated(lobby.ID)
-
+func (lobby *Lobby) DiscordNotif(msg string) {
 	if helpers.Discord != nil {
 		mumble := ""
 		if lobby.Mumble {
@@ -734,14 +722,14 @@ func (lobby *Lobby) SetupServer() error {
 		byLine := ""
 		player, playerErr := player.GetPlayerBySteamID(lobby.CreatedBySteamID)
 		if playerErr != nil {
-			logrus.Error(err)
+			logrus.Error(playerErr)
 		} else {
 			byLine = fmt.Sprintf(" by %s", player.Alias())
 		}
 
 		formatName := format.FriendlyNamesMap[lobby.Type]
 
-		msg := fmt.Sprintf("%s%s%s lobby on %s%s: %s/lobby/%d", region, mumble, formatName, lobby.MapName, byLine, config.Constants.LoginRedirectPath, lobby.ID)
+		msg := fmt.Sprintf("%s%s%s lobby on %s%s: %s %s/lobby/%d", region, mumble, formatName, lobby.MapName, byLine, msg, config.Constants.LoginRedirectPath, lobby.ID)
 		helpers.DiscordSendToChannel("lobby-notifications", msg)
 		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s", formatName, lobby.RegionCode), msg)
 
@@ -749,7 +737,21 @@ func (lobby *Lobby) SetupServer() error {
 		helpers.DiscordSendToChannel("lobby-notifications-ping", msg)
 		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s-ping", formatName, lobby.RegionCode), msg)
 	}
+}
 
+//SetupServer setups the TF2 server for the lobby, creates the mumble channels for it
+func (lobby *Lobby) SetupServer() error {
+	if lobby.State == Ended {
+		return errors.New("Lobby is closed")
+	}
+
+	err := rpc.SetupServer(lobby.ID, lobby.ServerInfo, lobby.Type, lobby.League, lobby.Whitelist, lobby.MapName)
+	if err != nil {
+		return err
+	}
+
+	rpc.FumbleLobbyCreated(lobby.ID)
+	lobby.DiscordNotif("Join")
 	return nil
 }
 
