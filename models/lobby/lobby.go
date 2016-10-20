@@ -687,7 +687,15 @@ func (lobby *Lobby) GetPlayerNumber() int {
 
 //IsFull returns whether all lobby spots have been filled
 func (lobby *Lobby) IsFull() bool {
-	return lobby.GetPlayerNumber() == 2*format.NumberOfClassesMap[lobby.Type]
+	return lobby.IsEnoughPlayers(lobby.GetPlayerNumber())
+}
+
+func (lobby *Lobby) RequiredPlayers() int {
+	return 2*format.NumberOfClassesMap[lobby.Type]
+}
+
+func (lobby *Lobby) IsEnoughPlayers(n int) bool {
+	return n == lobby.RequiredPlayers()
 }
 
 //IsSlotFilled returns whether the given slot (by number) is occupied by a player
@@ -705,6 +713,40 @@ func (lobby *Lobby) GetAllSlots() []LobbySlot {
 	return lobby.Slots
 }
 
+func (lobby *Lobby) DiscordNotif(msg string) {
+	if helpers.Discord != nil {
+		mumble := ""
+		if lobby.Mumble {
+			mumble = helpers.DiscordEmoji("mumble")
+		}
+
+		region := lobby.RegionName
+		if lobby.RegionCode == "eu" || lobby.RegionCode == "au" {
+			region = fmt.Sprintf(":flag_%s:", lobby.RegionCode)
+		} else if lobby.RegionCode == "na" {
+			region = ":flag_us:"
+		}
+
+		byLine := ""
+		player, playerErr := player.GetPlayerBySteamID(lobby.CreatedBySteamID)
+		if playerErr != nil {
+			logrus.Error(playerErr)
+		} else {
+			byLine = fmt.Sprintf(" by %s", player.Alias())
+		}
+
+		formatName := format.FriendlyNamesMap[lobby.Type]
+
+		msg := fmt.Sprintf("%s%s%s lobby on %s%s: %s %s/lobby/%d", region, mumble, formatName, lobby.MapName, byLine, msg, config.Constants.LoginRedirectPath, lobby.ID)
+		helpers.DiscordSendToChannel("lobby-notifications", msg)
+		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s", formatName, lobby.RegionCode), msg)
+
+		msg = fmt.Sprintf("@here %s", msg)
+		helpers.DiscordSendToChannel("lobby-notifications-ping", msg)
+		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s-ping", formatName, lobby.RegionCode), msg)
+	}
+}
+
 //SetupServer setups the TF2 server for the lobby, creates the mumble channels for it
 func (lobby *Lobby) SetupServer() error {
 	if lobby.State == Ended {
@@ -717,6 +759,7 @@ func (lobby *Lobby) SetupServer() error {
 	}
 
 	rpc.FumbleLobbyCreated(lobby.ID)
+	lobby.DiscordNotif("Join")
 	return nil
 }
 

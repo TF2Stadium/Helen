@@ -33,6 +33,7 @@ import (
 	"github.com/TF2Stadium/Helen/models/rpc"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
+	"github.com/evalphobia/logrus_sentry"
 	"github.com/rs/cors"
 )
 
@@ -59,6 +60,21 @@ func main() {
 	if *docPrint {
 		config.PrintConfigDoc()
 		os.Exit(0)
+	}
+
+	if helpers.Raven != nil {
+		hook, err := logrus_sentry.NewWithClientSentryHook(helpers.Raven, []logrus.Level{
+			logrus.PanicLevel,
+			logrus.FatalLevel,
+			logrus.ErrorLevel,
+			logrus.WarnLevel,
+		})
+
+		if err == nil {
+			logrus.AddHook(hook)
+		} else {
+			logrus.Fatal(err)
+		}
 	}
 
 	logrus.Debug("Commit: ", version.GitCommit)
