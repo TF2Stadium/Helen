@@ -14,7 +14,7 @@ import:
   version: 3.1.0
 
 - package: github.com/dgrijalva/jwt-go
-  version: 2.4.0
+  version: 3.0.0
 
 - package: github.com/facebookgo/stack
   version: 751773369052141c013c6e827a71e8f35c07879c

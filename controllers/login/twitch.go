@@ -34,10 +34,8 @@ func TwitchLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	steamID := token.Claims["steam_id"].(string)
-
-	player, _ := player.GetPlayerBySteamID(steamID)
-
+	id := token.Claims.(controllerhelpers.TF2StadiumClaims).PlayerID
+	player, _ := player.GetPlayerByID(id)
 	loginURL := url.URL{
 		Scheme: "https",
 		Host:   "api.twitch.tv",
@@ -69,8 +67,8 @@ func TwitchAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	steamID := token.Claims["steam_id"].(string)
-	player, _ := player.GetPlayerBySteamID(steamID)
+	id := token.Claims.(controllerhelpers.TF2StadiumClaims).PlayerID
+	player, _ := player.GetPlayerByID(id)
 
 	values := r.URL.Query()
 	code := values.Get("code")
@@ -166,9 +164,9 @@ func TwitchLogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	steamID := token.Claims["steam_id"].(string)
+	id := token.Claims.(controllerhelpers.TF2StadiumClaims).PlayerID
 
-	player, _ := player.GetPlayerBySteamID(steamID)
+	player, _ := player.GetPlayerByID(id)
 	player.TwitchName = ""
 	player.TwitchAccessToken = ""
 	player.Save()

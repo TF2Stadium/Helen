@@ -141,7 +141,7 @@ func (Player) PlayerProfile(so *wsevent.Client, args struct {
 
 	steamid := *args.Steamid
 	if steamid == "" {
-		steamid = so.Token.Claims["steam_id"].(string)
+		steamid = so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID
 	}
 
 	player, err := player.GetPlayerBySteamID(steamid)
