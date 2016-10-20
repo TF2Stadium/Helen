@@ -148,28 +148,17 @@ func decorateSlotDetails(lobby *Lobby, slot int, playerInfo bool) SlotDetails {
 	return slotDetails
 }
 
-var (
-	stateString = map[State]string{
-		Waiting:    "Waiting For Players",
-		InProgress: "Lobby in Progress",
-		Ended:      "Lobby Ended",
-	}
-
-	formatMap = map[format.Format]string{
-		format.Sixes:      "6s",
-		format.Highlander: "Highlander",
-		format.Fours:      "4v4",
-		format.Ultiduo:    "Ultiduo",
-		format.Bball:      "Bball",
-		format.Debug:      "Debug",
-	}
-)
+var stateString = map[State]string{
+	Waiting:    "Waiting For Players",
+	InProgress: "Lobby in Progress",
+	Ended:      "Lobby Ended",
+}
 
 func DecorateLobbyData(lobby *Lobby, playerInfo bool) LobbyData {
 	lobbyData := LobbyData{
 		ID:                lobby.ID,
 		Mode:              lobby.Mode,
-		Type:              formatMap[lobby.Type],
+		Type:              format.FriendlyNamesMap[lobby.Type],
 		Players:           lobby.GetPlayerNumber(),
 		Map:               lobby.MapName,
 		League:            lobby.League,
@@ -282,7 +271,7 @@ func DecorateSubstitute(slot *LobbySlot) SubstituteData {
 
 	substitute := SubstituteData{
 		LobbyID:       lobby.ID,
-		Format:        formatMap[lobby.Type],
+		Format:        format.FriendlyNamesMap[lobby.Type],
 		MapName:       lobby.MapName,
 		Mumble:        lobby.Mumble,
 		TwitchChannel: lobby.TwitchChannel,

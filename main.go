@@ -16,7 +16,6 @@ import (
 	"syscall"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/evalphobia/logrus_sentry"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers"
 	chelpers "github.com/TF2Stadium/Helen/controllers/controllerhelpers"
@@ -34,6 +33,7 @@ import (
 	"github.com/TF2Stadium/Helen/models/rpc"
 	"github.com/TF2Stadium/Helen/routes"
 	socketServer "github.com/TF2Stadium/Helen/routes/socket"
+	"github.com/evalphobia/logrus_sentry"
 	"github.com/rs/cors"
 )
 
