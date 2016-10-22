@@ -54,9 +54,6 @@ func verifyToken(token *jwt.Token) (interface{}, error) {
 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 		return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 	}
-	if _, ok := token.Claims.(TF2StadiumClaims); !ok {
-		return nil, errors.New("Unexpected claim")
-	}
 
 	return signingKey, nil
 }
@@ -67,7 +64,8 @@ func GetToken(r *http.Request) (*jwt.Token, error) {
 		return nil, err
 	}
 
-	token, err := jwt.Parse(cookie.Value, verifyToken)
+	claims = TF2StadiumClaims{}
+	token, err := jwt.ParseWithClaims(cookie.Value, &claims, verifyToken)
 	return token, err
 }
 
