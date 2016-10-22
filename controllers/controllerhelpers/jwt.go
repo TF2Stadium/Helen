@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"errors"
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/models/player"
@@ -64,7 +63,7 @@ func GetToken(r *http.Request) (*jwt.Token, error) {
 		return nil, err
 	}
 
-	claims = TF2StadiumClaims{}
+	claims := TF2StadiumClaims{}
 	token, err := jwt.ParseWithClaims(cookie.Value, &claims, verifyToken)
 	return token, err
 }
