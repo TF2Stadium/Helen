@@ -17,7 +17,7 @@ type TF2StadiumClaims struct {
 
 func playerExists(id uint, steamID string) bool {
 	var count int
-	db.DB.Model(&player.Player{}).Where("id = ? AND steam_id = ?", id, steamID).Count(count)
+	db.DB.Model(&player.Player{}).Where("id = ? AND steam_id = ?", id, steamID).Count(&count)
 	return count != 0
 }
 

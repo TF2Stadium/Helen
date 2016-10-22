@@ -161,7 +161,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		}
 
 		context = helpers.GetServemeContextIP(chelpers.GetIPAddr(so.Request))
-		resp, err := context.Create(reservation, so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID)
+		resp, err := context.Create(reservation, so.Token.Claims.(*chelpers.TF2StadiumClaims).SteamID)
 		if err != nil || resp.Reservation.Errors != nil {
 			if err != nil {
 				logrus.Error(err)
@@ -666,7 +666,7 @@ func (Lobby) LobbyKick(so *wsevent.Client, args struct {
 }) interface{} {
 
 	steamId := *args.Steamid
-	selfSteamId := so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID
+	selfSteamId := so.Token.Claims.(*chelpers.TF2StadiumClaims).SteamID
 
 	if steamId == selfSteamId {
 		return errors.New("Player can't kick himself.")
@@ -694,7 +694,7 @@ func (Lobby) LobbyBan(so *wsevent.Client, args struct {
 }) interface{} {
 
 	steamId := *args.Steamid
-	selfSteamId := so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID
+	selfSteamId := so.Token.Claims.(*chelpers.TF2StadiumClaims).SteamID
 
 	if steamId == selfSteamId {
 		return errors.New("Player can't kick himself.")
@@ -722,7 +722,7 @@ func (Lobby) LobbyLeave(so *wsevent.Client, args struct {
 	Id *uint `json:"id"`
 }) interface{} {
 
-	steamId := so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID
+	steamId := so.Token.Claims.(*chelpers.TF2StadiumClaims).SteamID
 
 	lob, player, tperr := removePlayerFromLobby(*args.Id, steamId)
 	if tperr != nil {

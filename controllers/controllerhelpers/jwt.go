@@ -63,12 +63,11 @@ func GetToken(r *http.Request) (*jwt.Token, error) {
 		return nil, err
 	}
 
-	claims := TF2StadiumClaims{}
-	token, err := jwt.ParseWithClaims(cookie.Value, &claims, verifyToken)
+	token, err := jwt.ParseWithClaims(cookie.Value, &TF2StadiumClaims{}, verifyToken)
 	return token, err
 }
 
 func GetPlayer(token *jwt.Token) *player.Player {
-	player, _ := player.GetPlayerByID(token.Claims.(TF2StadiumClaims).PlayerID)
+	player, _ := player.GetPlayerByID(token.Claims.(*TF2StadiumClaims).PlayerID)
 	return player
 }

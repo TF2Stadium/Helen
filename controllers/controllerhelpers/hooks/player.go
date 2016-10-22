@@ -34,7 +34,7 @@ func AfterConnectLoggedIn(so *wsevent.Client, player *player.Player) {
 
 	if time.Since(player.ProfileUpdatedAt) >= 30*time.Minute {
 		err := player.UpdatePlayerInfo()
-		if (err != nil) {
+		if err != nil {
 			logrus.Error(err)
 		}
 	}
@@ -44,7 +44,7 @@ func AfterConnectLoggedIn(so *wsevent.Client, player *player.Player) {
 		lob, _ := lobby.GetLobbyByIDServer(lobbyID)
 		AfterLobbyJoin(so, lob, player)
 		AfterLobbySpec(socket.AuthServer, so, player, lob)
-		lobby.BroadcastLobbyToUser(lob, so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID)
+		lobby.BroadcastLobbyToUser(lob, so.Token.Claims.(*chelpers.TF2StadiumClaims).SteamID)
 
 		slot := &lobby.LobbySlot{}
 		err := db.DB.Where("lobby_id = ? AND player_id = ?", lob.ID, player.ID).First(slot).Error

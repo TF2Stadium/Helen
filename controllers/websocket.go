@@ -33,7 +33,7 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !chelpers.IsSteamIDWhitelisted(token.Claims.(chelpers.TF2StadiumClaims).SteamID) {
+		if !chelpers.IsSteamIDWhitelisted(token.Claims.(*chelpers.TF2StadiumClaims).SteamID) {
 			http.Error(w, "you're not in the beta", http.StatusForbidden)
 			return
 		}
@@ -71,7 +71,7 @@ func SocketInit(so *wsevent.Client) error {
 	if loggedIn {
 		hooks.AfterConnect(socket.AuthServer, so)
 
-		steamid := so.Token.Claims.(chelpers.TF2StadiumClaims).SteamID
+		steamid := so.Token.Claims.(*chelpers.TF2StadiumClaims).SteamID
 
 		player, err := player.GetPlayerBySteamID(steamid)
 		if err != nil {

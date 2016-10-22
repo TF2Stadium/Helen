@@ -71,7 +71,7 @@ func IsSteamIDWhitelisted(steamid string) bool {
 // shitlord
 func CheckPrivilege(so *wsevent.Client, action authority.AuthAction) error {
 	//Checks if the client has the neccesary authority to perform action
-	player, _ := player.GetPlayerByID(so.Token.Claims.(TF2StadiumClaims).PlayerID)
+	player, _ := player.GetPlayerByID(so.Token.Claims.(*TF2StadiumClaims).PlayerID)
 	if !player.Role.Can(action) {
 		return errors.New("You are not authorized to perform this action")
 	}
@@ -87,7 +87,7 @@ func FilterHTTPRequest(action authority.AuthAction, f func(http.ResponseWriter, 
 			return
 		}
 
-		if !(token.Claims.(TF2StadiumClaims).Role.Can(action)) {
+		if !(token.Claims.(*TF2StadiumClaims).Role.Can(action)) {
 			http.Error(w, "Not authorized", 403)
 			return
 		}

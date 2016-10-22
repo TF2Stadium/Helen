@@ -34,7 +34,7 @@ func TwitchLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := token.Claims.(controllerhelpers.TF2StadiumClaims).PlayerID
+	id := token.Claims.(*controllerhelpers.TF2StadiumClaims).PlayerID
 	player, _ := player.GetPlayerByID(id)
 	loginURL := url.URL{
 		Scheme: "https",
@@ -67,7 +67,7 @@ func TwitchAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := token.Claims.(controllerhelpers.TF2StadiumClaims).PlayerID
+	id := token.Claims.(*controllerhelpers.TF2StadiumClaims).PlayerID
 	player, _ := player.GetPlayerByID(id)
 
 	values := r.URL.Query()
@@ -165,7 +165,7 @@ func TwitchLogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := token.Claims.(controllerhelpers.TF2StadiumClaims).PlayerID
+	id := token.Claims.(*controllerhelpers.TF2StadiumClaims).PlayerID
 
 	player, _ := player.GetPlayerByID(id)
 	player.TwitchName = ""
