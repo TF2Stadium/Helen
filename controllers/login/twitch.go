@@ -142,6 +142,7 @@ func getUserInfo(token string) (*userInfo, error) {
 	req, _ := http.NewRequest("GET", "https://api.twitch.tv/kraken/user", nil)
 	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
 	req.Header.Add("Authorization", "OAuth "+token)
+	req.Header.Add("Client-ID", config.Constants.TwitchClientID)
 
 	resp, err := helpers.HTTPClient.Do(req)
 	if err != nil {

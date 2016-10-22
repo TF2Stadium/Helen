@@ -38,6 +38,8 @@ func TFTVStreamStatusUpdater() {
 	for {
 		req, _ := http.NewRequest("GET", u.String(), nil)
 		req.Header.Set("Accept", "application/vnd.twitchtv.v3+json")
+		req.Header.Add("Client-ID", config.Constants.TwitchClientID)
+
 		resp, err := helpers.HTTPClient.Do(req)
 		if err != nil {
 			logrus.Error(err)

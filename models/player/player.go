@@ -389,6 +389,7 @@ func (p *Player) IsSubscribed(channel string) bool {
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
 	req.Header.Add("Authorization", "OAuth "+p.TwitchAccessToken)
+	req.Header.Add("Client-ID", config.Constants.TwitchClientID)
 
 	resp, err := helpers.HTTPClient.Do(req)
 	if err != nil {
@@ -415,6 +416,7 @@ func (p *Player) HasSubscriptionProgram() bool {
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
 	req.Header.Add("Authorization", "OAuth "+p.TwitchAccessToken)
+	req.Header.Add("Client-ID", config.Constants.TwitchClientID)
 
 	resp, err := helpers.HTTPClient.Do(req)
 	if err != nil {
@@ -433,6 +435,7 @@ func (p *Player) IsFollowing(channel string) bool {
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/vnd.twitchtv.v3+json")
 	req.Header.Add("Authorization", "OAuth "+p.TwitchAccessToken)
+	req.Header.Add("Client-ID", config.Constants.TwitchClientID)
 
 	resp, err := helpers.HTTPClient.Do(req)
 	if err != nil {
@@ -478,6 +481,7 @@ func (p *Player) setStreamingStatus() {
 
 	req, _ := http.NewRequest("GET", u.String(), nil)
 	req.Header.Set("Accept", "application/vnd.twitchtv.v3+json")
+	req.Header.Add("Client-ID", config.Constants.TwitchClientID)
 
 	resp, err := helpers.HTTPClient.Do(req)
 	if err != nil {

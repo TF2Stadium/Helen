@@ -83,11 +83,6 @@ func newRequirement(team, class string, requirement Requirement, lob *lobby.Lobb
 	return nil
 }
 
-func isTwitchChannelValid(name string) bool {
-	resp, err := helpers.HTTPClient.Get("https://api.twitch.tv/kraken/channels/" + name)
-	return err == nil && resp.StatusCode != 404
-}
-
 func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	Map         *string        `json:"map"`
 	Type        *string        `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
