@@ -737,9 +737,10 @@ func (lobby *Lobby) DiscordNotif(msg string) {
 
 		formatName := format.FriendlyNamesMap[lobby.Type]
 
-		msg := fmt.Sprintf("%s%s%s lobby on %s%s: %s %s/lobby/%d", region, mumble, formatName, lobby.MapName, byLine, msg, config.Constants.LoginRedirectPath, lobby.ID)
+		msg := fmt.Sprintf("%s: %s%s %s on %s%s: %s/lobby/%d", msg, region, mumble, formatName, lobby.MapName, byLine, config.Constants.LoginRedirectPath, lobby.ID)
+		specificChannel := strings.ToLower(fmt.Sprintf("%s-%s", formatName, lobby.RegionCode))
 		helpers.DiscordSendToChannel("lobby-notifications", msg)
-		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s", formatName, lobby.RegionCode), msg)
+		helpers.DiscordSendToChannel(specificChannel, fmt.Sprintf("@here %s", msg))
 	}
 }
 
@@ -755,7 +756,7 @@ func (lobby *Lobby) SetupServer() error {
 	}
 
 	rpc.FumbleLobbyCreated(lobby.ID)
-	lobby.DiscordNotif("Join")
+	lobby.DiscordNotif("New Lobby")
 	return nil
 }
 

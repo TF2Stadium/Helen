@@ -509,7 +509,7 @@ func (Lobby) LobbyJoin(so *wsevent.Client, args struct {
 
 	playersCnt := lob.GetPlayerNumber()
 	lastNotif, timerExists := lobbyJoinLastNotif[lob.ID]
-	if playersCnt >= notifThreshold[lob.Type] && (!timerExists || time.Since(lastNotif).Minutes() > 5) {
+	if playersCnt >= notifThreshold[lob.Type] && !lob.IsEnoughPlayers(playersCnt) && (!timerExists || time.Since(lastNotif).Minutes() > 5) {
 		lob.DiscordNotif(fmt.Sprintf("Almost ready [%d/%d]", playersCnt, lob.RequiredPlayers()))
 		lobbyJoinLastNotif[lob.ID] = time.Now()
 	}
