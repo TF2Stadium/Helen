@@ -737,7 +737,7 @@ func (lobby *Lobby) DiscordNotif(msg string) {
 
 		formatName := format.FriendlyNamesMap[lobby.Type]
 
-		msg := fmt.Sprintf("%s%s%s lobby on %s%s: %s %s/lobby/%d", region, mumble, formatName, lobby.MapName, byLine, msg, config.Constants.LoginRedirectPath, lobby.ID)
+		msg := fmt.Sprintf("@here %s%s%s lobby on %s%s: %s %s/lobby/%d", region, mumble, formatName, lobby.MapName, byLine, msg, config.Constants.LoginRedirectPath, lobby.ID)
 		helpers.DiscordSendToChannel("lobby-notifications", msg)
 		helpers.DiscordSendToChannel(fmt.Sprintf("%s-%s", formatName, lobby.RegionCode), msg)
 	}
