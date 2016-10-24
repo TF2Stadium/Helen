@@ -8,6 +8,7 @@ go:
 env:
   - GO15VENDOREXPERIMENT=1
 before_install:
+  - env | grep -i travis
   - go get github.com/jteeuwen/go-bindata/...
   - go get github.com/Masterminds/glide
 install:
@@ -20,5 +21,5 @@ script:
   - go test -race -v `go list ./... | grep -v /vendor/`
 after_success:
   - bash build.bash production
-  - case $TRAVIS_BRANCH in master) docker build -t tf2stadium/helen:latest . ;; dev) docker build -t tf2stadium/helen:dev . ;; esac 
-  - case $TRAVIS_BRANCH in master) docker push tf2stadium/helen:latest ;; dev) docker push tf2stadium/helen:dev ;; esac
+  - if [ $TRAVIS_PULL_REQUEST -eq "false" ]; then case $TRAVIS_BRANCH in master) docker build -t tf2stadium/helen:latest . ;; dev) docker build -t tf2stadium/helen:dev . ;; esa ; fi
+  - if [ $TRAVIS_PULL_REQUEST -eq "false" ]; then case $TRAVIS_BRANCH in master) docker push tf2stadium/helen:latest ;; dev) docker push tf2stadium/helen:dev ;; esac; fi
