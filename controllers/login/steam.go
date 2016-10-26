@@ -112,12 +112,14 @@ func SteamLoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	r.URL.Host = publicURL.Host
 	idURL, err := openid.Verify(r.URL.String(), discoveryCache, nonceStore)
 	if err != nil {
+		logrus.Error(err)
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
 	parts := reSteamID.FindStringSubmatch(idURL)
 	if len(parts) != 2 {
+		logrus.Errorf("Steam Authentication failed. Response: %s", idURL)
 		http.Error(w, "Steam Authentication failed, please try again.", 500)
 		return
 	}
@@ -127,6 +129,7 @@ func SteamLoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if config.Constants.SteamIDWhitelist != "" &&
 		!controllerhelpers.IsSteamIDWhitelisted(steamid) {
 		//Use a more user-friendly message later
+		logrus.Errorf("User %s not in whitelist", steamid)
 		http.Error(w, "Sorry, you're not in the closed alpha.", 403)
 		return
 	}
