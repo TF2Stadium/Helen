@@ -37,6 +37,7 @@ func SteamLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if url, err := openid.RedirectURL("http://steamcommunity.com/openid",
 		redirecturl.String(),
 		config.Constants.OpenIDRealm); err == nil {
+		logrus.Info("Starting steam login to: ", url)
 		http.Redirect(w, r, url, 303)
 	} else {
 		logrus.Error(err)
@@ -112,12 +113,13 @@ func SteamLoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	r.URL.Host = publicURL.Host
 	idURL, err := openid.Verify(r.URL.String(), discoveryCache, nonceStore)
 	if err != nil {
-		logrus.Error(err)
+		logrus.Error("Error verifying openid", err)
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
 	parts := reSteamID.FindStringSubmatch(idURL)
+	logrus.Info("Steam auth callback: ", idURL)
 	if len(parts) != 2 {
 		logrus.Errorf("Steam Authentication failed. Response: %s", idURL)
 		http.Error(w, "Steam Authentication failed, please try again.", 500)
