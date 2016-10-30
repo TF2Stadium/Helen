@@ -405,6 +405,15 @@ func (lobby *Lobby) AddPlayer(p *player.Player, slot int, password string) error
 		if password != req.Password {
 			return ErrInvalidPassword
 		}
+	} else if config.Constants.SteamDevAPIKey != "" {
+		if time.Since(p.ProfileUpdatedAt) < time.Hour*time.Duration(150-p.GameHours) {
+			//update player info only if the number of hours needed > the number of hours
+			//passed since player info was last updated
+			p.UpdatePlayerInfo()
+		}
+		if p.GameHours < 150 {
+			return errors.New("You need at least 150 hours to join lobbies.")
+		}
 	}
 
 	var slotChange bool
