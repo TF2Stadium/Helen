@@ -52,6 +52,9 @@ type LobbyData struct {
 	RegionLock bool   `json:"regionLock"`
 	SteamGroup string `json:"steamGroup"`
 
+	RedTeamName string `json:"redTeamName"`
+	BluTeamName string `json:"bluTeamName"`
+
 	Region struct {
 		Name string `json:"name"`
 		Code string `json:"code"`
@@ -166,6 +169,8 @@ func DecorateLobbyData(lobby *Lobby, playerInfo bool) LobbyData {
 		TwitchChannel:     lobby.TwitchChannel,
 		TwitchRestriction: lobby.TwitchRestriction.String(),
 		RegionLock:        lobby.RegionLock,
+		RedTeamName:       lobby.RedTeamName,
+		BluTeamName:       lobby.BluTeamName,
 
 		SteamGroup: lobby.PlayerWhitelist,
 	}

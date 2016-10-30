@@ -852,6 +852,39 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 	return emptySuccess
 }
 
+func (Lobby) LobbySetTeamName(so *wsevent.Client, args struct {
+	Id      uint `json:"id"`
+	Team    string `json:"team"`
+	NewName string `json:"name"`
+}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+
+	lob, err := lobby.GetLobbyByID(args.Id)
+	if err != nil {
+		return err
+	}
+
+	if player.SteamID != lob.CreatedBySteamID && (player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod) {
+		return errors.New("You aren't authorized to do this.")
+	}
+
+	if len(args.NewName) == 0 || len(args.NewName) > 12 {
+		return errors.New("team name must be between 1-12 characters long.")
+	}
+
+	if args.Team == "red" {
+		lob.RedTeamName = args.NewName
+	} else if args.Team == "blu" {
+		lob.BluTeamName = args.NewName
+	} else {
+		return errors.New("team must be red or blu.")
+	}
+
+	lob.Save()
+	lobby.BroadcastLobby(lob)
+	return emptySuccess
+}
+
 func (Lobby) LobbyRemoveTwitchRestriction(so *wsevent.Client, args struct {
 	ID uint `json:"id"`
 }) interface{} {
