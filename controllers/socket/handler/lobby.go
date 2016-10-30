@@ -921,3 +921,22 @@ func (Lobby) LobbyRemoveRegionLock(so *wsevent.Client, args struct {
 	return emptySuccess
 
 }
+
+func (Lobby) LobbyShuffle(so *wsevent.Client, args struct {
+	Id uint `json:"id"`
+}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+
+	lob, err := lobby.GetLobbyByID(args.Id)
+	if err != nil {
+		return err
+	}
+
+	if player.SteamID != lob.CreatedBySteamID && (player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod) {
+		return errors.New("You aren't authorized to shuffle this lobby.")
+	}
+
+	lob.ShuffleAllSlots()
+	lob.Save()
+	return emptySuccess
+}
