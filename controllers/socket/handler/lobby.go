@@ -39,6 +39,7 @@ func (Lobby) Name(s string) string {
 }
 
 var (
+	reDiscordInvite = regexp.MustCompile(`https:\/\/discord.gg\/[a-zA-Z0-9]+`)
 	reSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
 	reServer     = regexp.MustCompile(`\w+\:\d+`)
 	playermap    = map[string]format.Format{
@@ -238,6 +239,10 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 
 	lob.Discord = args.Discord != nil
 	if lob.Discord {
+		if !reDiscordInvite.MatchString(*args.Discord.RedChannel) || !reDiscordInvite.MatchString(*args.Discord.BluChannel) {
+			return errors.New("Invalid Discord invite URL")
+		}
+
 		lob.DiscordRedChannel = *args.Discord.RedChannel
 		lob.DiscordBluChannel = *args.Discord.BluChannel
 	}
