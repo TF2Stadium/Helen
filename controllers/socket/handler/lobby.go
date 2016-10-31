@@ -938,5 +938,9 @@ func (Lobby) LobbyShuffle(so *wsevent.Client, args struct {
 
 	lob.ShuffleAllSlots()
 	lob.Save()
+
+	room := fmt.Sprintf("%s_private", hooks.GetLobbyRoom(args.Id))
+	broadcaster.SendMessageToRoom(room, "lobbyShuffled", args)
+	chat.NewBotMessage(fmt.Sprintf("Lobby shuffled by %s", player.Alias()), int(args.Id)).Send()
 	return emptySuccess
 }
