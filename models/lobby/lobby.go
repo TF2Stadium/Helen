@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"math/rand"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
@@ -711,6 +712,25 @@ func (lobby *Lobby) IsSlotFilled(slot int) bool {
 func (lobby *Lobby) GetAllSlots() []LobbySlot {
 	db.DB.Preload("Slots").First(lobby, lobby.ID)
 	return lobby.Slots
+}
+
+//GetAllSlots returns a list of all occupied slots in the lobby
+func (lobby *Lobby) ShuffleAllSlots() {
+	lobby.GetAllSlots()
+	classes := format.GetClasses(lobby.Type)
+	swapClass := make(map[string]bool)
+
+	for _, className := range classes {
+		swapClass[className] = rand.Intn(2) == 1
+	}
+
+	numClasses := len(classes)
+	for i := range lobby.Slots {
+		slot := &lobby.Slots[i]
+		if swapClass[classes[slot.Slot % numClasses]] {
+			slot.Slot = (slot.Slot + numClasses) % (2 * numClasses)
+		}
+	}
 }
 
 func (lobby *Lobby) DiscordNotif(msg string) {
