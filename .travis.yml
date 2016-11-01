@@ -21,5 +21,5 @@ script:
   - go test -race -v `go list ./... | grep -v /vendor/`
 after_success:
   - bash build.bash production
-  - if [ $TRAVIS_PULL_REQUEST -eq "false" ]; then case $TRAVIS_BRANCH in master) docker build -t tf2stadium/helen:latest . ;; dev) docker build -t tf2stadium/helen:dev . ;; esa ; fi
-  - if [ $TRAVIS_PULL_REQUEST -eq "false" ]; then case $TRAVIS_BRANCH in master) docker push tf2stadium/helen:latest ;; dev) docker push tf2stadium/helen:dev ;; esac; fi
+  - if [[ "$TRAVIS_PULL_REQUEST" -eq "false" ]]; then case $TRAVIS_BRANCH in master) docker build -t tf2stadium/helen:latest . ;; dev) docker build -t tf2stadium/helen:dev . ;; esac ; fi
+  - if [[ "$TRAVIS_PULL_REQUEST" -eq "false" ]]; then case $TRAVIS_BRANCH in master) docker push tf2stadium/helen:latest ;; dev) docker push tf2stadium/helen:dev ;; esac; fi
