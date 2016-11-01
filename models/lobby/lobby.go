@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"math/rand"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
@@ -111,6 +112,9 @@ type Lobby struct {
 	RegionName string // Region Name ("North America", "Europe", etc)
 
 	Mumble bool // Whether mumble is required
+	Discord bool // Whether discord is used
+	DiscordRedChannel string
+	DiscordBluChannel string
 
 	Slots []LobbySlot `gorm:"ForeignKey:LobbyID"` // List of occupied slots
 
@@ -119,6 +123,10 @@ type Lobby struct {
 	TwitchChannel     string            // twitch channel, slots will be restricted
 	TwitchRestriction TwitchRestriction // restricted to either followers or subs
 	ServemeID         int               // if serveme was used to get this server, stores the server ID
+
+	// Team name aliases
+	RedTeamName       string
+	BluTeamName       string
 
 	// TF2 Server Info
 	ServerInfo   gameserver.ServerRecord `gorm:"ForeignKey:ServerInfoID"`
@@ -189,6 +197,8 @@ func NewLobby(mapName string, lobbyType format.Format, league string, serverInfo
 		Mumble:          mumble,
 		ServerInfo:      serverInfo,
 		PlayerWhitelist: whitelistGroup,
+		RedTeamName:     "Red",
+		BluTeamName:     "Blu",
 	}
 
 	// Must specify CreatedBy manually if the lobby is created by a player
@@ -711,6 +721,25 @@ func (lobby *Lobby) IsSlotFilled(slot int) bool {
 func (lobby *Lobby) GetAllSlots() []LobbySlot {
 	db.DB.Preload("Slots").First(lobby, lobby.ID)
 	return lobby.Slots
+}
+
+//GetAllSlots returns a list of all occupied slots in the lobby
+func (lobby *Lobby) ShuffleAllSlots() {
+	lobby.GetAllSlots()
+	classes := format.GetClasses(lobby.Type)
+	swapClass := make(map[string]bool)
+
+	for _, className := range classes {
+		swapClass[className] = rand.Intn(2) == 1
+	}
+
+	numClasses := len(classes)
+	for i := range lobby.Slots {
+		slot := &lobby.Slots[i]
+		if swapClass[classes[slot.Slot % numClasses]] {
+			slot.Slot = (slot.Slot + numClasses) % (2 * numClasses)
+		}
+	}
 }
 
 func (lobby *Lobby) DiscordNotif(msg string) {

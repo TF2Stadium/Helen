@@ -39,6 +39,7 @@ func (Lobby) Name(s string) string {
 }
 
 var (
+	reDiscordInvite = regexp.MustCompile(`https:\/\/discord.gg\/[a-zA-Z0-9]+`)
 	reSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
 	reServer     = regexp.MustCompile(`\w+\:\d+`)
 	playermap    = map[string]format.Format{
@@ -107,8 +108,12 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		Classes map[string]Requirement `json:"classes,omitempty"`
 		General Requirement            `json:"general,omitempty"`
 	} `json:"requirements" empty:"-"`
-}) interface{} {
 
+	Discord *struct {
+		RedChannel *string `json:"redChannel,omitempty"`
+		BluChannel *string `json:"bluChannel,omitempty"`
+	} `json:"discord" empty:"-"`
+}) interface{} {
 	p := chelpers.GetPlayer(so.Token)
 	if banned, until := p.IsBannedWithTime(player.BanCreate); banned {
 		ban, _ := p.GetActiveBan(player.BanCreate)
@@ -230,6 +235,16 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		} else {
 			lob.TwitchRestriction = lobby.TwitchSubscribers
 		}
+	}
+
+	lob.Discord = args.Discord != nil
+	if lob.Discord {
+		if !reDiscordInvite.MatchString(*args.Discord.RedChannel) || !reDiscordInvite.MatchString(*args.Discord.BluChannel) {
+			return errors.New("Invalid Discord invite URL")
+		}
+
+		lob.DiscordRedChannel = *args.Discord.RedChannel
+		lob.DiscordBluChannel = *args.Discord.BluChannel
 	}
 
 	lob.RegionLock = args.RegionLock
@@ -852,6 +867,39 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 	return emptySuccess
 }
 
+func (Lobby) LobbySetTeamName(so *wsevent.Client, args struct {
+	Id      uint `json:"id"`
+	Team    string `json:"team"`
+	NewName string `json:"name"`
+}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+
+	lob, err := lobby.GetLobbyByID(args.Id)
+	if err != nil {
+		return err
+	}
+
+	if player.SteamID != lob.CreatedBySteamID && (player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod) {
+		return errors.New("You aren't authorized to do this.")
+	}
+
+	if len(args.NewName) == 0 || len(args.NewName) > 12 {
+		return errors.New("team name must be between 1-12 characters long.")
+	}
+
+	if args.Team == "red" {
+		lob.RedTeamName = args.NewName
+	} else if args.Team == "blu" {
+		lob.BluTeamName = args.NewName
+	} else {
+		return errors.New("team must be red or blu.")
+	}
+
+	lob.Save()
+	lobby.BroadcastLobby(lob)
+	return emptySuccess
+}
+
 func (Lobby) LobbyRemoveTwitchRestriction(so *wsevent.Client, args struct {
 	ID uint `json:"id"`
 }) interface{} {
@@ -920,4 +968,27 @@ func (Lobby) LobbyRemoveRegionLock(so *wsevent.Client, args struct {
 
 	return emptySuccess
 
+}
+
+func (Lobby) LobbyShuffle(so *wsevent.Client, args struct {
+	Id uint `json:"id"`
+}) interface{} {
+	player := chelpers.GetPlayer(so.Token)
+
+	lob, err := lobby.GetLobbyByID(args.Id)
+	if err != nil {
+		return err
+	}
+
+	if player.SteamID != lob.CreatedBySteamID && (player.Role != helpers.RoleAdmin && player.Role != helpers.RoleMod) {
+		return errors.New("You aren't authorized to shuffle this lobby.")
+	}
+
+	lob.ShuffleAllSlots()
+	lob.Save()
+
+	room := fmt.Sprintf("%s_private", hooks.GetLobbyRoom(args.Id))
+	broadcaster.SendMessageToRoom(room, "lobbyShuffled", args)
+	chat.NewBotMessage(fmt.Sprintf("Lobby shuffled by %s", player.Alias()), int(args.Id)).Send()
+	return emptySuccess
 }

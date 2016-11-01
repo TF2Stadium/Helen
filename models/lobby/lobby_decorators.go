@@ -45,12 +45,16 @@ type LobbyData struct {
 	Map               string `json:"map"`
 	League            string `json:"league"`
 	Mumble            bool   `json:"mumbleRequired"`
+	Discord           bool   `json:"discord"`
 	MaxPlayers        int    `json:"maxPlayers"`
 	TwitchChannel     string `json:"twitchChannel"`
 	TwitchRestriction string `json:"twitchRestriction"`
 
 	RegionLock bool   `json:"regionLock"`
 	SteamGroup string `json:"steamGroup"`
+
+	RedTeamName string `json:"redTeamName"`
+	BluTeamName string `json:"bluTeamName"`
 
 	Region struct {
 		Name string `json:"name"`
@@ -86,6 +90,8 @@ type LobbyConnectData struct {
 		Password string `json:"password"`
 		Channel  string `json:"channel"`
 	} `json:"mumble"`
+
+	DiscordChannel string `json:"discordChannel"`
 }
 
 type SubstituteData struct {
@@ -163,9 +169,12 @@ func DecorateLobbyData(lobby *Lobby, playerInfo bool) LobbyData {
 		Map:               lobby.MapName,
 		League:            lobby.League,
 		Mumble:            lobby.Mumble,
+		Discord:           lobby.Discord,
 		TwitchChannel:     lobby.TwitchChannel,
 		TwitchRestriction: lobby.TwitchRestriction.String(),
 		RegionLock:        lobby.RegionLock,
+		RedTeamName:       lobby.RedTeamName,
+		BluTeamName:       lobby.BluTeamName,
 
 		SteamGroup: lobby.PlayerWhitelist,
 	}
@@ -255,6 +264,15 @@ func DecorateLobbyConnect(lob *Lobby, player *player.Player, slot int) LobbyConn
 	l.Mumble.Password = player.MumbleAuthkey
 	team, _, _ := format.GetSlotTeamClass(lob.Type, slot)
 	l.Mumble.Channel = fmt.Sprintf("Lobby #%d/%s", lob.ID, strings.ToUpper(team))
+
+	if lob.Discord {
+		if team == "red" {
+			l.DiscordChannel = lob.DiscordRedChannel
+		} else {
+			l.DiscordChannel = lob.DiscordBluChannel
+		}
+	}
+
 	return l
 }
 
