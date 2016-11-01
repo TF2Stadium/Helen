@@ -112,6 +112,9 @@ type Lobby struct {
 	RegionName string // Region Name ("North America", "Europe", etc)
 
 	Mumble bool // Whether mumble is required
+	Discord bool // Whether discord is used
+	DiscordRedChannel string
+	DiscordBluChannel string
 
 	Slots []LobbySlot `gorm:"ForeignKey:LobbyID"` // List of occupied slots
 

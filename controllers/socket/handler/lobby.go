@@ -39,6 +39,7 @@ func (Lobby) Name(s string) string {
 }
 
 var (
+	reDiscordInvite = regexp.MustCompile(`https:\/\/discord.gg\/[a-zA-Z0-9]+`)
 	reSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
 	reServer     = regexp.MustCompile(`\w+\:\d+`)
 	playermap    = map[string]format.Format{
@@ -107,8 +108,12 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		Classes map[string]Requirement `json:"classes,omitempty"`
 		General Requirement            `json:"general,omitempty"`
 	} `json:"requirements" empty:"-"`
-}) interface{} {
 
+	Discord *struct {
+		RedChannel *string `json:"redChannel,omitempty"`
+		BluChannel *string `json:"bluChannel,omitempty"`
+	} `json:"discord" empty:"-"`
+}) interface{} {
 	p := chelpers.GetPlayer(so.Token)
 	if banned, until := p.IsBannedWithTime(player.BanCreate); banned {
 		ban, _ := p.GetActiveBan(player.BanCreate)
@@ -230,6 +235,16 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 		} else {
 			lob.TwitchRestriction = lobby.TwitchSubscribers
 		}
+	}
+
+	lob.Discord = args.Discord != nil
+	if lob.Discord {
+		if !reDiscordInvite.MatchString(*args.Discord.RedChannel) || !reDiscordInvite.MatchString(*args.Discord.BluChannel) {
+			return errors.New("Invalid Discord invite URL")
+		}
+
+		lob.DiscordRedChannel = *args.Discord.RedChannel
+		lob.DiscordBluChannel = *args.Discord.BluChannel
 	}
 
 	lob.RegionLock = args.RegionLock
