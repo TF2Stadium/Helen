@@ -124,6 +124,10 @@ type Lobby struct {
 	TwitchRestriction TwitchRestriction // restricted to either followers or subs
 	ServemeID         int               // if serveme was used to get this server, stores the server ID
 
+	// Team name aliases
+	RedTeamName       string
+	BluTeamName       string
+
 	// TF2 Server Info
 	ServerInfo   gameserver.ServerRecord `gorm:"ForeignKey:ServerInfoID"`
 	ServerInfoID uint
@@ -193,6 +197,8 @@ func NewLobby(mapName string, lobbyType format.Format, league string, serverInfo
 		Mumble:          mumble,
 		ServerInfo:      serverInfo,
 		PlayerWhitelist: whitelistGroup,
+		RedTeamName:     "Red",
+		BluTeamName:     "Blu",
 	}
 
 	// Must specify CreatedBy manually if the lobby is created by a player
