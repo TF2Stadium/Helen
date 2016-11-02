@@ -7,11 +7,11 @@ package lobby
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"math/rand"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
@@ -111,8 +111,8 @@ type Lobby struct {
 	RegionCode string // Region Code ("na", "eu", etc)
 	RegionName string // Region Name ("North America", "Europe", etc)
 
-	Mumble bool // Whether mumble is required
-	Discord bool // Whether discord is used
+	Mumble            bool // Whether mumble is required
+	Discord           bool // Whether discord is used
 	DiscordRedChannel string
 	DiscordBluChannel string
 
@@ -125,8 +125,8 @@ type Lobby struct {
 	ServemeID         int               // if serveme was used to get this server, stores the server ID
 
 	// Team name aliases
-	RedTeamName       string
-	BluTeamName       string
+	RedTeamName string
+	BluTeamName string
 
 	// TF2 Server Info
 	ServerInfo   gameserver.ServerRecord `gorm:"ForeignKey:ServerInfoID"`
@@ -701,7 +701,7 @@ func (lobby *Lobby) IsFull() bool {
 }
 
 func (lobby *Lobby) RequiredPlayers() int {
-	return 2*format.NumberOfClassesMap[lobby.Type]
+	return 2 * format.NumberOfClassesMap[lobby.Type]
 }
 
 func (lobby *Lobby) IsEnoughPlayers(n int) bool {
@@ -725,6 +725,11 @@ func (lobby *Lobby) GetAllSlots() []LobbySlot {
 
 //GetAllSlots returns a list of all occupied slots in the lobby
 func (lobby *Lobby) ShuffleAllSlots() error {
+	if lobby.GetPlayerNumber() == lobby.RequiredPlayers() {
+		return errors.New("Cannot shuffle a full lobby")
+	}
+
+	lobby.Lock()
 	lobby.GetAllSlots()
 	classes := format.GetClasses(lobby.Type)
 	swapClass := make(map[string]bool)
@@ -741,13 +746,14 @@ func (lobby *Lobby) ShuffleAllSlots() error {
 	numClasses := len(classes)
 	for i := range lobby.Slots {
 		slot := &lobby.Slots[i]
-		if swapClass[classes[slot.Slot % numClasses]] {
+		if swapClass[classes[slot.Slot%numClasses]] {
 			slot.Slot = (slot.Slot + numClasses) % (2 * numClasses)
 		}
 		if err = db.DB.Create(&slot).Error; err != nil {
 			return err
 		}
 	}
+	lobby.Unlock()
 
 	lobby.OnChange(true)
 	return nil
