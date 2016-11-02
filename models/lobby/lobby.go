@@ -724,7 +724,7 @@ func (lobby *Lobby) GetAllSlots() []LobbySlot {
 }
 
 //GetAllSlots returns a list of all occupied slots in the lobby
-func (lobby *Lobby) ShuffleAllSlots() {
+func (lobby *Lobby) ShuffleAllSlots() error {
 	lobby.GetAllSlots()
 	classes := format.GetClasses(lobby.Type)
 	swapClass := make(map[string]bool)
@@ -733,13 +733,24 @@ func (lobby *Lobby) ShuffleAllSlots() {
 		swapClass[className] = rand.Intn(2) == 1
 	}
 
+	err := db.DB.Delete(&LobbySlot{}, "lobby_id = ?", lobby.ID).Error
+	if err != nil {
+		return err
+	}
+
 	numClasses := len(classes)
 	for i := range lobby.Slots {
 		slot := &lobby.Slots[i]
 		if swapClass[classes[slot.Slot % numClasses]] {
 			slot.Slot = (slot.Slot + numClasses) % (2 * numClasses)
 		}
+		if err = db.DB.Create(&slot).Error; err != nil {
+			return err
+		}
 	}
+
+	lobby.OnChange(true)
+	return nil
 }
 
 func (lobby *Lobby) DiscordNotif(msg string) {

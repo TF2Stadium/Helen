@@ -984,8 +984,9 @@ func (Lobby) LobbyShuffle(so *wsevent.Client, args struct {
 		return errors.New("You aren't authorized to shuffle this lobby.")
 	}
 
-	lob.ShuffleAllSlots()
-	lob.Save()
+	if err = lob.ShuffleAllSlots(); err != nil {
+		return err
+	}
 
 	room := fmt.Sprintf("%s_private", hooks.GetLobbyRoom(args.Id))
 	broadcaster.SendMessageToRoom(room, "lobbyShuffled", args)
