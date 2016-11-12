@@ -21,6 +21,7 @@ var upgrader = websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool { retu
 func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := chelpers.GetToken(r)
 	if err != nil && err != http.ErrNoCookie { //invalid jwt token
+		logrus.Errorf("Error reading JWT: %v", err)
 		token = nil
 	}
 
