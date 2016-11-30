@@ -25,7 +25,7 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 "eu": %d,
 "au": %d,
 "as": %d,
-"clients": %d,
+"clients": %d
 }`,
 		atomic.LoadInt64(Stats.NAPlayers),
 		atomic.LoadInt64(Stats.EUPlayers),
