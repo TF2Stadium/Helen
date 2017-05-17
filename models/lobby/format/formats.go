@@ -1,7 +1,5 @@
 package format
 
-import "errors"
-
 type Format int
 
 const (
@@ -10,6 +8,7 @@ const (
 	Fours
 	Ultiduo
 	Bball
+	Prolander
 	Debug
 )
 
@@ -74,6 +73,10 @@ var (
 	}
 	foursClassList = []string{"scout", "soldier", "demoman", "medic"}
 
+	prolanderClassMap = map[string]int{}
+
+	prolanderClasses = []string{}
+
 	typeClassMap = map[Format]map[string]int{
 		Highlander: hlClassMap,
 		Sixes:      sixesClassMap,
@@ -81,6 +84,7 @@ var (
 		Ultiduo:    ultiduoClassMap,
 		Bball:      bballClassMap,
 		Debug:      debugClassMap,
+		Prolander:  prolanderClassMap,
 	}
 
 	typeClassList = map[Format][]string{
@@ -90,6 +94,7 @@ var (
 		Ultiduo:    ultiduoClassList,
 		Bball:      bballClassList,
 		Debug:      debugClassList,
+		Prolander:  prolanderClasses,
 	}
 
 	NumberOfClassesMap = map[Format]int{
@@ -99,6 +104,7 @@ var (
 		Ultiduo:    2,
 		Bball:      2,
 		Debug:      1,
+		Prolander:  7,
 	}
 
 	FriendlyNamesMap = map[Format]string{
@@ -108,6 +114,7 @@ var (
 		Ultiduo:    "Ultiduo",
 		Bball:      "Bball",
 		Debug:      "Debug",
+		Prolander:  "Prolander",
 	}
 )
 
@@ -116,12 +123,12 @@ var (
 func GetSlot(lobbytype Format, teamStr string, classStr string) (int, error) {
 	team, ok := teamMap[teamStr]
 	if !ok {
-		return -1, errors.New("Invalid team")
+		return -1, ErrorInvalidTeam(teamStr)
 	}
 
 	class, ok := typeClassMap[lobbytype][classStr]
 	if !ok {
-		return -1, errors.New("Invalid class")
+		return -1, ErrorInvalidClass(classStr)
 	}
 
 	return team*NumberOfClassesMap[lobbytype] + class, nil
@@ -148,7 +155,7 @@ func getSlotNums(lobbytype Format, slot int) (int, int, error) {
 	} else if slot < 2*len(classList) {
 		return 1, slot - len(classList), nil
 	} else {
-		return 0, 0, errors.New("Invalid slot")
+		return 0, 0, ErrorInvalidSlot(slot)
 	}
 }
 
