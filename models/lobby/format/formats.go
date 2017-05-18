@@ -73,9 +73,15 @@ var (
 	}
 	foursClassList = []string{"scout", "soldier", "demoman", "medic"}
 
-	prolanderClassMap = map[string]int{}
+	prolanderClassMap = map[string]int{
+		"scout":   0,
+		"soldier": 1,
+		"demoman": 2,
+		"medic":   3,
+		"sniper":  4,
+	}
 
-	prolanderClasses = []string{}
+	prolanderClasses = []string{"scout", "soldier", "demoman", "medic", "sniper", "flex1", "flex2"}
 
 	typeClassMap = map[Format]map[string]int{
 		Highlander: hlClassMap,

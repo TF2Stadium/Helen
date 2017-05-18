@@ -103,5 +103,7 @@ func (ps *PlayerStats) IncreaseClassCount(f format.Format, slot int) {
 	case "spy":
 		ps.Spy++
 	}
-	database.DB.Save(ps)
+	if class != "flex1" && class != "flex2" {
+		database.DB.Save(ps)
+	}
 }
