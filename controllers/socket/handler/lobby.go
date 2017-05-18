@@ -40,15 +40,16 @@ func (Lobby) Name(s string) string {
 
 var (
 	reDiscordInvite = regexp.MustCompile(`https:\/\/discord.gg\/[a-zA-Z0-9]+`)
-	reSteamGroup = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
-	reServer     = regexp.MustCompile(`\w+\:\d+`)
-	playermap    = map[string]format.Format{
+	reSteamGroup    = regexp.MustCompile(`steamcommunity\.com\/groups\/(.+)`)
+	reServer        = regexp.MustCompile(`\w+\:\d+`)
+	playermap       = map[string]format.Format{
 		"debug":      format.Debug,
 		"6s":         format.Sixes,
 		"highlander": format.Highlander,
 		"ultiduo":    format.Ultiduo,
 		"bball":      format.Bball,
 		"4v4":        format.Fours,
+		"prolander":  format.Prolander,
 	}
 )
 
@@ -87,7 +88,7 @@ func newRequirement(team, class string, requirement Requirement, lob *lobby.Lobb
 func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	Map         *string        `json:"map"`
 	Type        *string        `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
-	League      *string        `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress,bballtf"`
+	League      *string        `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress,bballtf,rgl"`
 	ServerType  *string        `json:"serverType" valid:"server,storedServer,serveme"`
 	Serveme     *servemeServer `json:"serveme" empty:"-"`
 	Server      *string        `json:"server" empty:"-"`
@@ -447,6 +448,7 @@ func (Lobby) LobbyClose(so *wsevent.Client, args struct {
 var lobbyJoinLastNotif = make(map[uint]time.Time)
 var notifThreshold = map[format.Format]int{
 	format.Highlander: 13,
+	format.Prolander:  8,
 	format.Sixes:      8,
 	format.Fours:      5,
 	format.Ultiduo:    2,
@@ -868,7 +870,7 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 }
 
 func (Lobby) LobbySetTeamName(so *wsevent.Client, args struct {
-	Id      uint `json:"id"`
+	Id      uint   `json:"id"`
 	Team    string `json:"team"`
 	NewName string `json:"name"`
 }) interface{} {
