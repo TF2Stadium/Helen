@@ -1032,6 +1032,7 @@ var maxSubs = map[format.Format]int{
 	format.Ultiduo:    2,
 	format.Debug:      2,
 	format.Fours:      2,
+	format.Prolander:  4,
 }
 
 //Substitute sets the needs_sub column of the given slot to true, and broadcasts the new

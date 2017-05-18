@@ -20,6 +20,7 @@ type PlayerStats struct {
 	PlayedFoursCount      int `sql:"played_fours_count",json:"playedFoursCount" `
 	PlayedUltiduoCount    int `sql:"played_ultiduo_count",json:"playedUltiduoCount"`
 	PlayedBballCount      int `sql:"played_bball_count",json:"playedBballCount"`
+	PlayedProlanderCount  int `sql:"played_prolander_count",json:"playedProlanderCount"`
 
 	Scout         int           `json:"scout"`
 	ScoutHours    time.Duration `json:"scoutHours"`
@@ -69,6 +70,8 @@ func (ps *PlayerStats) PlayedCountIncrease(lt format.Format) {
 		ps.PlayedBballCount++
 	case format.Ultiduo:
 		ps.PlayedUltiduoCount++
+	case format.Prolander:
+		ps.PlayedProlanderCount++
 	}
 	database.DB.Save(ps)
 }
@@ -100,5 +103,7 @@ func (ps *PlayerStats) IncreaseClassCount(f format.Format, slot int) {
 	case "spy":
 		ps.Spy++
 	}
-	database.DB.Save(ps)
+	if class != "flex1" && class != "flex2" {
+		database.DB.Save(ps)
+	}
 }
