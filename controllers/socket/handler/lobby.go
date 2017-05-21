@@ -87,7 +87,7 @@ func newRequirement(team, class string, requirement Requirement, lob *lobby.Lobb
 
 func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 	Map         *string        `json:"map"`
-	Type        *string        `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball"`
+	Type        *string        `json:"type" valid:"debug,6s,highlander,4v4,ultiduo,bball,prolander"`
 	League      *string        `json:"league" valid:"ugc,etf2l,esea,asiafortress,ozfortress,bballtf,rgl"`
 	ServerType  *string        `json:"serverType" valid:"server,storedServer,serveme"`
 	Serveme     *servemeServer `json:"serveme" empty:"-"`
