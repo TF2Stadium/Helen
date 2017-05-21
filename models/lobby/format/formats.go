@@ -79,6 +79,8 @@ var (
 		"demoman": 2,
 		"medic":   3,
 		"sniper":  4,
+		"flex1":   5,
+		"flex2":   6,
 	}
 
 	prolanderClasses = []string{"scout", "soldier", "demoman", "medic", "sniper", "flex1", "flex2"}
