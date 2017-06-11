@@ -136,7 +136,7 @@ func (player *Player) SetExternalLinks() {
 		json.NewDecoder(resp.Body).Decode(&reply)
 
 		if reply.Player != nil {
-			url := fmt.Sprintf(`http://beta.etf2l.org/forum/user/%d/`, reply.Player.ID)
+			url := fmt.Sprintf(`http://www.etf2l.org/forum/user/%d/`, reply.Player.ID)
 			player.ExternalLinks["etf2l"] = &url
 		}
 	}
