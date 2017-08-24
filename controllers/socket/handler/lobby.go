@@ -841,11 +841,19 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 
 	var n int64
 	var f float64
+	var deleted = false
 
 	switch *args.Type {
 	case "hours":
 		n, err = args.Value.Int64()
-		req.Hours = int(n)
+		if n == 0 {
+			// hours being 0 is a special case to allow players past the
+			// default 150 hr limit; so have to actually delete in this case
+			db.DB.Delete(&req)
+			deleted = true
+		} else {
+			req.Hours = int(n)
+		}
 	case "lobbies":
 		n, err = args.Value.Int64()
 		req.Lobbies = int(n)
@@ -862,7 +870,9 @@ func (Lobby) LobbySetRequirement(so *wsevent.Client, args struct {
 		return errors.New("Invalid requirement.")
 	}
 
-	req.Save()
+	if !deleted {
+		req.Save()
+	}
 	lobby.BroadcastLobby(lob)
 	lobby.BroadcastLobbyList()
 
