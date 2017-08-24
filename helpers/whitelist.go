@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"io/ioutil"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 type GroupXML struct {

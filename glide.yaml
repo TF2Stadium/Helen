@@ -1,6 +1,6 @@
 package: github.com/TF2Stadium/Helen
 import:
-- package: github.com/Sirupsen/logrus
+- package: github.com/sirupsen/logrus
   version: 0.9.0
 
 - package: github.com/TF2Stadium/PlayerStatsScraper

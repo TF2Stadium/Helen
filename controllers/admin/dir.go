@@ -8,7 +8,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"golang.org/x/net/xsrftoken"
 )
