@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"

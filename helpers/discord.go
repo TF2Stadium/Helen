@@ -7,7 +7,7 @@ package helpers
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	dg "github.com/bwmarrin/discordgo"
 )

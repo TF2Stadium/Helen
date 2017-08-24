@@ -1,6 +1,6 @@
 package: github.com/TF2Stadium/Helen
 import:
-- package: github.com/Sirupsen/logrus
+- package: github.com/sirupsen/logrus
   version: 0.9.0
 
 - package: github.com/TF2Stadium/PlayerStatsScraper
@@ -39,7 +39,7 @@ import:
   version: ac55b72a85f5967224eb9d31d445a149e1508b16
 
 - package: github.com/rs/cors
-  version: 5950cf11d77f8a61b432a25dd4d444b4ced01379
+  version: eabcc6af4bbe5ad3a949d36450326a2b0b9894b8
 
 - package: github.com/streadway/amqp
   version: 2e25825abdbd7752ff08b270d313b93519a0a232

@@ -5,7 +5,7 @@
 package migrations
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/blang/semver"
 )

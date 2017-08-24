@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/config"
 	_ "github.com/TF2Stadium/Helen/helpers"
 	"github.com/stretchr/testify/assert"

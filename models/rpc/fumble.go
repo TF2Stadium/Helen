@@ -1,6 +1,6 @@
 package rpc
 
-import "github.com/Sirupsen/logrus"
+import "github.com/sirupsen/logrus"
 
 func FumbleLobbyCreated(lobbyID uint) error {
 	if *fumbleDisabled {

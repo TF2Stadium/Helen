@@ -4,7 +4,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/assets"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/oschwald/geoip2-golang"
