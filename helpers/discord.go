@@ -20,7 +20,11 @@ var (
 
 func DiscordSendToChannel(channelName string, msg string) {
 	if channel, ok := channels[channelName]; ok {
-		Discord.ChannelMessageSend(channel.ID, msg)
+		msg, err := Discord.ChannelMessageSend(channel.ID, msg)
+		if err != nil {
+			logrus.Error("Error sending Discord message")
+			logrus.Error(err)
+		}
 	}
 }
 
@@ -42,6 +46,7 @@ func init() {
 	var err error
 	Discord, err = dg.New(token)
 	if err != nil {
+		logrus.Fatal("Error creating Discord")
 		logrus.Fatal(err)
 		return
 	}
@@ -49,6 +54,7 @@ func init() {
 	guild, err := Discord.Guild(guildId)
 	if err != nil {
 		Discord = nil
+		logrus.Fatal("Error finding Discord Guild")
 		logrus.Fatal(err)
 		return
 	}
@@ -56,6 +62,7 @@ func init() {
 	rawChannels, err := Discord.GuildChannels(guildId)
 	if err != nil {
 		Discord = nil
+		logrus.Fatal("Error listing Discord guild ghannels")
 		logrus.Fatal(err)
 		return
 	}
