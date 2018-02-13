@@ -20,7 +20,7 @@ var (
 
 func DiscordSendToChannel(channelName string, msg string) {
 	if channel, ok := channels[channelName]; ok {
-		msg, err := Discord.ChannelMessageSend(channel.ID, msg)
+		_, err := Discord.ChannelMessageSend(channel.ID, msg)
 		if err != nil {
 			logrus.Error("Error sending Discord message")
 			logrus.Error(err)
