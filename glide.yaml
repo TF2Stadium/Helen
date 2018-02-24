@@ -55,4 +55,4 @@ import:
 - package: github.com/stretchr/testify
 
 - package: github.com/bwmarrin/discordgo
-  version: f878362d73b01a051091faaa012deeb7a85204af
+  version: 0.18.0
