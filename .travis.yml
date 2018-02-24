@@ -8,13 +8,11 @@ go:
 env:
   - GO15VENDOREXPERIMENT=1
 before_install:
-  - env | grep -i travis
   - go get github.com/jteeuwen/go-bindata/...
   - go get github.com/Masterminds/glide
 install:
   - bash build_assets.bash production
   - glide install
-  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 script:
