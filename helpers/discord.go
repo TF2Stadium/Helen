@@ -62,8 +62,7 @@ func init() {
 	rawChannels, err := Discord.GuildChannels(guildId)
 	if err != nil {
 		Discord = nil
-		logrus.Fatal("Error listing Discord guild ghannels")
-		logrus.Fatal(err)
+		logrus.Fatalf("Error listing Discord guild ghannels, %v", err)
 		return
 	}
 
