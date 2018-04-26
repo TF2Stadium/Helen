@@ -102,7 +102,7 @@ func SteamLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.Constants.LoginRedirectPath, 303)
 }
 
-var reSteamID = regexp.MustCompile(`http://steamcommunity.com/openid/id/(\d+)`)
+var reSteamID = regexp.MustCompile(`https?://steamcommunity.com/openid/id/(\d+)`)
 
 func SteamLoginCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	refererURL := r.URL.Query().Get("referer")
