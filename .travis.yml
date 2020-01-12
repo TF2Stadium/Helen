@@ -4,8 +4,7 @@ services:
   - postgresql
 language: go
 go:
-  - 1.8.3
-env:
+  - 1.9.1
   - GO15VENDOREXPERIMENT=1
 before_install:
   - go get github.com/jteeuwen/go-bindata/...
