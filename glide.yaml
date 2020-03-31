@@ -5,6 +5,8 @@ import:
 
 - package: github.com/TF2Stadium/PlayerStatsScraper
 - package: github.com/TF2Stadium/servemetf
+  version: 2282b050105aaee51b120930308a544d064decbc
+
 - package: github.com/TF2Stadium/wsevent
 
 - package: github.com/bitly/go-simplejson
