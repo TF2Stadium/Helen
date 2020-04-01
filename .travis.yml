@@ -4,7 +4,7 @@ services:
   - postgresql
 language: go
 go:
-  - 1.8.3
+  - 1.14.1
 env:
   - GO15VENDOREXPERIMENT=1
 before_install:
