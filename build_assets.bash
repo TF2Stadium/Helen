@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 function download_assets {
-    if [ -z "${MAXMIND_API_KEY}" ] {
+    if [ -z "${MAXMIND_API_KEY}" ]; then
        echo "Must set MAXMIND_API_KEY to download required GeoIP files"
        exit 1
-    }
+    fi
 
     echo "Downloading assets"
     curl -o "assets/geoip.mmdb.gz" \
