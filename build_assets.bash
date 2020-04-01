@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 
 function download_assets {
+    if [ -z "${MAXMIND_API_KEY}" ] {
+       echo "Must set MAXMIND_API_KEY to download required GeoIP files"
+       exit 1
+    }
+
     echo "Downloading assets"
     curl -o "assets/geoip.mmdb.gz" \
-	 "http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.mmdb.gz"
+	 "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=${MAXMIND_API_KEY}&suffix=tar.gz\"
     gzip -d -f assets/geoip.mmdb.gz
 }
 
@@ -23,4 +28,3 @@ else
 	       -o assets/bindata.go assets/
 
 fi
-
