@@ -7,8 +7,7 @@ function download_assets {
     fi
 
     echo "Downloading assets"
-    curl -o "assets/geoip.mmdb.gz" \
-	 "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=${MAXMIND_API_KEY}&suffix=tar.gz\"
+    curl -o "assets/geoip.mmdb.gz" "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=${MAXMIND_API_KEY}&suffix=tar.gz"
     gzip -d -f assets/geoip.mmdb.gz
 }
 
