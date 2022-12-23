@@ -4,10 +4,10 @@ import (
 	"net"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"github.com/TF2Stadium/Helen/assets"
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/oschwald/geoip2-golang"
+	"github.com/sirupsen/logrus"
 )
 
 var geodb *geoip2.Reader
@@ -18,7 +18,7 @@ func InitGeoIPDB() {
 	}
 
 	var err error
-	geodb, err = geoip2.FromBytes(assets.MustAsset("assets/geoip.mmdb"))
+	geodb, err = geoip2.FromBytes(assets.GeoIPDB)
 
 	if err != nil {
 		logrus.Fatal(err.Error())
