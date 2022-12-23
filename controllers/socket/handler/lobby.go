@@ -292,7 +292,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			if err != nil {
 				logrus.Error(err)
 			}
-			if status == "ready" {
+			if status == "Ready" {
 				break
 			}
 
