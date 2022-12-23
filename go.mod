@@ -28,6 +28,7 @@ require (
 	github.com/vibhavp/amqp-rpc v0.0.0-20160309123414-8433bc7f29b2
 	github.com/yohcop/openid-go v0.0.0-20160304164425-f38c0087a377
 	golang.org/x/net v0.4.1-0.20221213214114-ad92d3db360b
+	golang.org/x/text v0.5.0
 )
 
 require (

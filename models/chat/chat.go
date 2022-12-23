@@ -2,11 +2,10 @@ package chat
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"encoding/json"
-	"github.com/TF2Stadium/Helen/config"
+
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models/player"
@@ -33,6 +32,7 @@ func NewChatMessage(message string, room int, player *player.Player) *ChatMessag
 		PlayerID: player.ID,
 
 		Room:    room,
+		Deleted: filteredMessage(message),
 		Message: message,
 	}
 
@@ -45,6 +45,7 @@ func NewInGameChatMessage(lobbyID uint, player *player.Player, message string) *
 
 		Room:    int(lobbyID),
 		Message: message,
+		Deleted: filteredMessage(message),
 		InGame:  true,
 	}
 }
@@ -93,10 +94,6 @@ func (m *ChatMessage) MarshalJSON() ([]byte, error) {
 		}
 
 		message["player"] = player
-	}
-
-	for _, word := range config.Constants.FilteredWords {
-		message["message"] = strings.Replace(message["message"].(string), word, "<redacted>", -1)
 	}
 
 	return json.Marshal(message)
