@@ -6,6 +6,7 @@ import (
 
 	"encoding/json"
 
+	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
 	"github.com/TF2Stadium/Helen/models/player"
@@ -50,7 +51,21 @@ func NewInGameChatMessage(lobbyID uint, player *player.Player, message string) *
 	}
 }
 
-func (m *ChatMessage) Save() { db.DB.Save(m) }
+func (m *ChatMessage) Save() {
+	if !m.Bot {
+		var count int
+		db.DB.Table("chat_messages").
+			Where("player_id = ? AND timestamp >= ?",
+				m.PlayerID,
+				time.Now().Add(-1*config.Constants.ChatRateLimit)).
+			Count(&count)
+		if count > 0 {
+			return
+		}
+
+	}
+	db.DB.Save(m)
+}
 
 func (m *ChatMessage) Send() {
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%d_public", m.Room), "chatReceive", m)
