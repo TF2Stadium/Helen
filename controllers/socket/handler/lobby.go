@@ -297,7 +297,7 @@ func (Lobby) LobbyCreate(so *wsevent.Client, args struct {
 			}
 
 			time.Sleep(10 * time.Second)
-			if time.Since(now) >= 3*time.Minute {
+			if time.Since(now) >= 5*time.Minute {
 				lob.Delete()
 				return errors.New("Couldn't get Serveme reservation, try another server.")
 			}
