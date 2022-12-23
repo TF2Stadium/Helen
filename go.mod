@@ -6,7 +6,7 @@ require (
 	github.com/TF2Stadium/PlayerStatsScraper v0.0.0-20160321044610-c2109c66ae06
 	github.com/TF2Stadium/TF2RconWrapper v0.0.0-20160403121525-3f8ba97e297c
 	github.com/TF2Stadium/logstf v0.0.0-20160615154040-251bc96664fd
-	github.com/TF2Stadium/servemetf v0.0.0-20200331210202-2282b050105a
+	github.com/TF2Stadium/servemetf v0.0.0-20221223224722-14d332817129
 	github.com/TF2Stadium/wsevent v0.0.0-20160322154148-1b422452cdad
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/blang/semver v3.1.0+incompatible
