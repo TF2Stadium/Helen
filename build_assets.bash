@@ -18,16 +18,3 @@ function download_assets {
 if [ ! -f assets/geoip.mmdb ]; then
     download_assets
 fi
-
-if [ "$1" = "production" ]; then
-    echo "Compiling assets"
-    go-bindata -nomemcopy -ignore="bindata\.go" \
-	       -pkg assets 		        \
-	       -o assets/bindata.go assets/{geoip.mmdb,lobbySettingsData.json}
-else
-    echo "Compiling assets (debug)"
-    go-bindata -debug -ignore="bindata\.go" \
-	       -pkg assets    		    \
-	       -o assets/bindata.go assets/{geoip.mmdb,lobbySettingsData.json}
-
-fi

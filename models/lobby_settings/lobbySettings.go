@@ -119,8 +119,7 @@ func GetLobbyWhitelist(whitelistId int) (*LobbyWhitelist, bool) {
 }
 
 func LoadLobbySettingsFromFile(fileName string) error {
-	data := assets.MustAsset(fileName)
-	return LoadLobbySettings(data)
+	return LoadLobbySettings(assets.LobbySettingsJSON)
 }
 
 func LoadLobbySettings(data []byte) error {
