@@ -9,6 +9,7 @@ import (
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/models/chat/internal/filter"
 	"github.com/TF2Stadium/Helen/models/player"
 )
 
@@ -33,7 +34,7 @@ func NewChatMessage(message string, room int, player *player.Player) *ChatMessag
 		PlayerID: player.ID,
 
 		Room:    room,
-		Deleted: filteredMessage(message),
+		Deleted: filter.FilteredMessage(message, config.Constants.FilteredWords),
 		Message: message,
 	}
 
@@ -46,7 +47,7 @@ func NewInGameChatMessage(lobbyID uint, player *player.Player, message string) *
 
 		Room:    int(lobbyID),
 		Message: message,
-		Deleted: filteredMessage(message),
+		Deleted: filter.FilteredMessage(message, config.Constants.FilteredWords),
 		InGame:  true,
 	}
 }

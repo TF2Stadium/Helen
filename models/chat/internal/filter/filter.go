@@ -1,18 +1,17 @@
-package chat
+package filter
 
 import (
 	"regexp"
 	"strings"
 
-	"github.com/TF2Stadium/Helen/config"
 	"golang.org/x/text/unicode/norm"
 )
 
 var regexLeadCloseWhitepace = regexp.MustCompile(`^[\s\p{Zs}]+|[\s\p{Zs}]+$`)
 var regexInsideWhitespace = regexp.MustCompile(`[\s\p{Zs}]{2,}`)
 
-func filteredMessage(text string) bool {
-	if len(config.Constants.FilteredWords) == 0 {
+func FilteredMessage(text string, filteredWords []string) bool {
+	if len(filteredWords) == 0 {
 		return false
 	}
 
@@ -24,7 +23,7 @@ func filteredMessage(text string) bool {
 
 	textNoSpaces := strings.ReplaceAll(text, " ", "")
 
-	for _, word := range config.Constants.FilteredWords {
+	for _, word := range filteredWords {
 		if strings.Contains(text, word) {
 			return true
 		}
