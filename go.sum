@@ -11,6 +11,8 @@ github.com/TF2Stadium/rcon v0.0.0-20160403104014-1fcab576012d h1:Hl5sI0Ma1pJX94R
 github.com/TF2Stadium/rcon v0.0.0-20160403104014-1fcab576012d/go.mod h1:vTb1ediPEdeB01WGX6huwJ1KZm0Ww2OXuVTKERj7EW4=
 github.com/TF2Stadium/servemetf v0.0.0-20200331210202-2282b050105a h1:YJ393bqpLkk0kGOEXyyWnBv1DXKvgMQ4uHBxPM3o9sY=
 github.com/TF2Stadium/servemetf v0.0.0-20200331210202-2282b050105a/go.mod h1:OyRbHHRAuu2iQ09ZtbipNDf76VuVaxoJBSLdi+m448M=
+github.com/TF2Stadium/servemetf v0.0.0-20221223224722-14d332817129 h1:fZO3XJjE2tJpAw4qF1GEBuyUeXzM6p0s4bSOTQi5dLI=
+github.com/TF2Stadium/servemetf v0.0.0-20221223224722-14d332817129/go.mod h1:7/BCrvW42sLGa/1qJ9Yn/Nkan1f4eRLlk4pBgaHMiRQ=
 github.com/TF2Stadium/wsevent v0.0.0-20160322154148-1b422452cdad h1:mTdYrt16zCSV0huy3S3za+Xw4X2QDCeiV0+YD4KnhTY=
 github.com/TF2Stadium/wsevent v0.0.0-20160322154148-1b422452cdad/go.mod h1:lWo2WmX3pFmpRYy9S79oe6gqmoC+7A8shYavkaEjxH0=
 github.com/bitly/go-simplejson v0.5.0 h1:6IH+V8/tVMab511d5bn4M7EwGXZf9Hj6i2xSwkNEM+Y=
