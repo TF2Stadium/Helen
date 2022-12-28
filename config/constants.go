@@ -9,9 +9,10 @@ import (
 	"os"
 	"reflect"
 	"text/template"
+	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -51,18 +52,19 @@ type constants struct {
 
 	ProfilerAddr string `envconfig:"PROFILER_ADDR" doc:"Address to serve the web-based profiler over"`
 
-	SlackbotURL        string   `envconfig:"SLACK_URL" doc:"Slack webhook URL"`
-	SentryDSN          string   `envconfig:"SENTRY_DSN" doc:"Sentry DSN"`
-	DiscordToken       string   `envconfig:"DISCORD_TOKEN" doc:"Discord Token"`
-	DiscordGuildId     string   `envconfig:"DISCORD_GUILD_ID" doc:"Discord Guild ID"`
-	Environment        string   `envconfig:"DEPLOYED_ENV" default:"development" doc:"Deployment environment"`
-	TwitchClientID     string   `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
-	TwitchClientSecret string   `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
-	ServemeAPIKey      string   `envconfig:"SERVEME_API_KEY" doc:"serveme.tf API Key"`
-	HealthChecks       bool     `envconfig:"HEALTH_CHECKS" default:"false" doc:"Enable health checks"`
-	SecureCookies      bool     `envconfig:"SECURE_COOKIE" doc:"Enable 'secure' flag on cookies" default:"false"`
-	FilteredWords      []string `envconfig:"FILTERED_WORDS"`
-	DemosFolder        string   `envconfig:"DEMOS_FOLDER" doc:"Folder to store STV demos in" default:"demos"`
+	SlackbotURL        string        `envconfig:"SLACK_URL" doc:"Slack webhook URL"`
+	SentryDSN          string        `envconfig:"SENTRY_DSN" doc:"Sentry DSN"`
+	DiscordToken       string        `envconfig:"DISCORD_TOKEN" doc:"Discord Token"`
+	DiscordGuildId     string        `envconfig:"DISCORD_GUILD_ID" doc:"Discord Guild ID"`
+	Environment        string        `envconfig:"DEPLOYED_ENV" default:"development" doc:"Deployment environment"`
+	TwitchClientID     string        `envconfig:"TWITCH_CLIENT_ID" doc:"Twitch API Client ID"`
+	TwitchClientSecret string        `envconfig:"TWITCH_CLIENT_SECRET" doc:"Twitch API Client Secret"`
+	ServemeAPIKey      string        `envconfig:"SERVEME_API_KEY" doc:"serveme.tf API Key"`
+	HealthChecks       bool          `envconfig:"HEALTH_CHECKS" default:"false" doc:"Enable health checks"`
+	SecureCookies      bool          `envconfig:"SECURE_COOKIE" doc:"Enable 'secure' flag on cookies" default:"false"`
+	FilteredWords      []string      `envconfig:"FILTERED_WORDS"`
+	ChatRateLimit      time.Duration `envconfig:"CHAT_RATE_LIMIT"`
+	DemosFolder        string        `envconfig:"DEMOS_FOLDER" doc:"Folder to store STV demos in" default:"demos"`
 }
 
 var Constants = constants{}

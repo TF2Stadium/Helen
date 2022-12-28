@@ -2,13 +2,14 @@ package chat
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"encoding/json"
+
 	"github.com/TF2Stadium/Helen/config"
 	"github.com/TF2Stadium/Helen/controllers/broadcaster"
 	db "github.com/TF2Stadium/Helen/database"
+	"github.com/TF2Stadium/Helen/models/chat/internal/filter"
 	"github.com/TF2Stadium/Helen/models/player"
 )
 
@@ -33,6 +34,7 @@ func NewChatMessage(message string, room int, player *player.Player) *ChatMessag
 		PlayerID: player.ID,
 
 		Room:    room,
+		Deleted: filter.FilteredMessage(message, config.Constants.FilteredWords),
 		Message: message,
 	}
 
@@ -45,11 +47,26 @@ func NewInGameChatMessage(lobbyID uint, player *player.Player, message string) *
 
 		Room:    int(lobbyID),
 		Message: message,
+		Deleted: filter.FilteredMessage(message, config.Constants.FilteredWords),
 		InGame:  true,
 	}
 }
 
-func (m *ChatMessage) Save() { db.DB.Save(m) }
+func (m *ChatMessage) Save() {
+	if !m.Bot {
+		var count int
+		db.DB.Table("chat_messages").
+			Where("player_id = ? AND timestamp >= ?",
+				m.PlayerID,
+				time.Now().Add(-1*config.Constants.ChatRateLimit)).
+			Count(&count)
+		if count > 0 {
+			return
+		}
+
+	}
+	db.DB.Save(m)
+}
 
 func (m *ChatMessage) Send() {
 	broadcaster.SendMessageToRoom(fmt.Sprintf("%d_public", m.Room), "chatReceive", m)
@@ -93,10 +110,6 @@ func (m *ChatMessage) MarshalJSON() ([]byte, error) {
 		}
 
 		message["player"] = player
-	}
-
-	for _, word := range config.Constants.FilteredWords {
-		message["message"] = strings.Replace(message["message"].(string), word, "<redacted>", -1)
 	}
 
 	return json.Marshal(message)
